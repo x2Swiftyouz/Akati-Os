@@ -90,6 +90,7 @@ $strings = @{
         'tw.gamemode' = 'Game Mode'; 'tw.gamemode.d' = 'Windows gives games priority and pauses some background work while you play.'
         'tw.maxperf' = 'Maximum Performance power plan'; 'tw.maxperf.d' = 'Atlas Power Scheme with power saving off. Best for desktops, uses more battery on laptops.'
         'tw.hibernation' = 'Hibernation'; 'tw.hibernation.d' = 'Off saves disk space. Shut down and restart work normally.'
+        'tw.store' = 'Microsoft Store'; 'tw.store.d' = 'Needed by the Xbox app and Game Pass. Installing it again can take a minute.'
         'theme.dark' = 'Akati OS Dark'; 'theme.light' = 'Akati OS Light'; 'theme.slideshow' = 'Akati OS Slideshow'
         'theme.slideshow.d' = 'Wallpaper changes every 30 minutes'
         'lang' = 'ภาษาไทย'
@@ -135,6 +136,7 @@ $strings = @{
         'tw.gamemode' = 'Game Mode'; 'tw.gamemode.d' = 'Windows ให้ความสำคัญกับเกมและพักงานเบื้องหลังบางอย่างระหว่างเล่น'
         'tw.maxperf' = 'Power plan ประสิทธิภาพสูงสุด'; 'tw.maxperf.d' = 'Atlas Power Scheme และปิดการประหยัดพลังงาน เหมาะกับคอมตั้งโต๊ะ โน้ตบุ๊กจะเปลืองแบต'
         'tw.hibernation' = 'Hibernation'; 'tw.hibernation.d' = 'ปิดไว้ช่วยประหยัดพื้นที่ดิสก์ ปิดเครื่องและรีสตาร์ตได้ตามปกติ'
+        'tw.store' = 'Microsoft Store'; 'tw.store.d' = 'แอป Xbox และ Game Pass ต้องใช้ การติดตั้งกลับอาจใช้เวลาประมาณ 1 นาที'
         'theme.dark' = 'Akati OS Dark'; 'theme.light' = 'Akati OS Light'; 'theme.slideshow' = 'Akati OS Slideshow'
         'theme.slideshow.d' = 'เปลี่ยน wallpaper ทุก 30 นาที'
         'lang' = 'English'
@@ -412,6 +414,8 @@ $tweaks = @(
     @{ Key = 'maxperf'; Glyph = [char]0xE945; Slow = $true
        Get = { [string](powercfg /getactivescheme) -match '11111111-1111-1111-1111-111111111111' }
        Set = { param($on) if ($on) { Invoke-AtlasScript '3. General Configuration\Power-saving' 'Disable Power-saving*.cmd' } else { Invoke-AtlasScript '3. General Configuration\Power-saving' 'Default Power-saving*.cmd' } } }
+    @{ Key = 'store'; Glyph = [char]0xE719; Slow = $true
+       Get = { [bool](Get-AppxPackage -Name 'Microsoft.WindowsStore' -ErrorAction SilentlyContinue) } }
     @{ Key = 'hibernation'; Glyph = [char]0xE708; Slow = $true
        Get = { (Get-RegValue 'HKLM:\SYSTEM\CurrentControlSet\Control\Power' 'HibernateEnabled') -eq 1 }
        Set = { param($on) if ($on) { Invoke-AtlasScript '3. General Configuration\Hibernation' 'Enable Hibernation*.cmd' } else { Invoke-AtlasScript '3. General Configuration\Hibernation' 'Disable Hibernation*.cmd' } } }
@@ -444,6 +448,23 @@ foreach ($tw in $tweaks) {
         }
         if ($t.Slow) {
             # Atlas scripts take a few seconds: run them in the background
+            if ($t.Key -eq 'store') {
+                Start-Work {
+                    param($on)
+                    if ($on) {
+                        # wsreset -i installs the Microsoft Store again in the background
+                        Start-Process wsreset.exe -ArgumentList '-i' -WindowStyle Hidden -Wait
+                        $deadline = (Get-Date).AddSeconds(90)
+                        while (!(Get-AppxPackage -Name 'Microsoft.WindowsStore') -and (Get-Date) -lt $deadline) { Start-Sleep -Seconds 3 }
+                    } else {
+                        Get-Process -Name 'WinStore.App' -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+                        Get-AppxPackage -AllUsers -Name 'Microsoft.WindowsStore' | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue
+                        Get-AppxProvisionedPackage -Online | Where-Object DisplayName -eq 'Microsoft.WindowsStore' |
+                            Remove-AppxProvisionedPackage -Online -ErrorAction SilentlyContinue | Out-Null
+                    }
+                } @($on) $finish $context
+                return
+            }
             Start-Work {
                 param($desktop, $relative, $pattern)
                 $file = Get-ChildItem -Path (Join-Path $desktop $relative) -Filter $pattern -ErrorAction SilentlyContinue | Select-Object -First 1

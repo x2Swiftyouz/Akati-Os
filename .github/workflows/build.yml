@@ -16,6 +16,10 @@ on:
         description: 'Publish release v<Version> from src/playbook.conf'
         type: boolean
         default: false
+      screenshots:
+        description: 'Push Akati OS Center screenshots to the ci-screenshots branch'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -78,6 +82,8 @@ jobs:
   build-windows:
     # Checks that build.ps1 works the same on Windows (the release uses the Linux build)
     runs-on: windows-latest
+    permissions:
+      contents: write   # only used by the optional screenshots step
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -94,6 +100,31 @@ jobs:
           }
           Write-Host "Checked $($files.Count) files, $bad errors"
           if ($bad) { exit 1 }
+
+      - name: Render Akati OS Center screenshots
+        shell: powershell
+        run: |
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File src\Executables\AtlasModules\AkatiCenter\AkatiCenter.ps1 -Screenshot "$env:GITHUB_WORKSPACE\screenshots" -Root src\Executables
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Get-ChildItem screenshots
+
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v5
+        with:
+          name: akati-center-screenshots
+          path: screenshots/
+
+      - name: Push screenshots to the ci-screenshots branch
+        if: inputs.screenshots
+        shell: bash
+        env:
+          TOKEN: ${{ github.token }}
+        run: |
+          cd screenshots
+          git init -q -b ci-screenshots
+          git add .
+          git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com commit -qm "Akati OS Center screenshots for $GITHUB_SHA"
+          git push -qf "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" ci-screenshots
 
       - name: Build with build.ps1
         run: .\build.ps1

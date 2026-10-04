@@ -88,6 +88,12 @@ Both are off by default. They do not help every PC. Try them and turn them off i
 - Hardware-accelerated GPU scheduling: ให้การ์ดจอจัดการหน่วยความจำเอง ต้องใช้การ์ดจอและไดรเวอร์ที่รองรับ มีผลหลังรีสตาร์ต
 - Optimizations for windowed games (เฉพาะ Windows 11): ลด latency ของเกม DirectX 10/11 ที่เล่นแบบหน้าต่างหรือ borderless
 
+## Akati OS Center
+
+The **Akati OS Center** app (desktop, Start menu and `AtlasDesktop\Akati OS`) puts the Akati OS tools in one window: live CPU, RAM and GPU usage, gaming apps, tweaks (the switches show the real state of your PC), temp file cleaner, themes and update check. It asks for administrator rights. Switch between English and Thai at the bottom left.
+
+**ภาษาไทย**: แอป Akati OS Center (บน Desktop, Start menu และในโฟลเดอร์ Akati OS) รวมเครื่องมือของ Akati OS ไว้ในหน้าต่างเดียว: ดูการใช้ CPU, RAM, GPU แบบเรียลไทม์, ติดตั้งแอปเกม, ปรับแต่ง (สวิตช์แสดงสถานะจริงของเครื่อง), ล้างไฟล์ชั่วคราว, เปลี่ยนธีม และตรวจอัปเดต ต้องใช้สิทธิ์ผู้ดูแลระบบ เปลี่ยนภาษาไทย/อังกฤษได้ที่มุมซ้ายล่าง
+
 ## Akati OS folder
 
 `AtlasDesktop\Akati OS` has:

@@ -30,6 +30,17 @@ function Test-Installed {
     return $false
 }
 
+# Discord starts itself after installing. Setup runs as administrator, so that copy would keep running
+# elevated while setup continues, and the user's own Discord then fails with "Attempt to install host
+# that is currently running". Close it after installing; it starts normally at the next sign-in.
+function Stop-AutoStartedApp {
+    if ($App -eq 'Discord') {
+        Start-Sleep -Seconds 5
+        Get-Process -Name 'Discord', 'Update' -ErrorAction SilentlyContinue |
+            Where-Object { $_.Path -like "$env:LOCALAPPDATA\Discord\*" } | Stop-Process -Force -ErrorAction SilentlyContinue
+    }
+}
+
 if (Test-Installed) { Write-Output "$App is already installed."; exit 0 }
 
 # Try WinGet
@@ -41,9 +52,9 @@ if (Get-Command winget -EA 0) {
     # Read Handle now, otherwise ExitCode is empty after the process exits (PowerShell quirk)
     $null = $proc.Handle
     $finished = $proc.WaitForExit(600000)
-    if ($finished -and $proc.ExitCode -eq 0) { Write-Output "$App installed."; exit 0 }
+    if ($finished -and $proc.ExitCode -eq 0) { Stop-AutoStartedApp; Write-Output "$App installed."; exit 0 }
     # Some installers make WinGet return an error even though the app was installed
-    if (Test-Installed) { Write-Output "$App installed."; exit 0 }
+    if (Test-Installed) { Stop-AutoStartedApp; Write-Output "$App installed."; exit 0 }
     Write-Warning "WinGet could not install $App (exit code $($proc.ExitCode))."
 }
 
@@ -62,6 +73,7 @@ if ($? -and (Test-Path $file)) {
     $null = $proc.Handle
     # Max 5 minutes so a stuck installer does not block setup
     if (!$proc.WaitForExit(300000)) { Write-Warning "$App installer timed out." }
+    Stop-AutoStartedApp
 } else {
     Write-Warning "Downloading $App failed. Install it later from its official website."
 }

@@ -234,6 +234,18 @@ Get-ChildItem "$env:PUBLIC\Desktop\*.url" | Select-Object Name
 - [ ] Windows Terminal (ถ้ามี): Settings > Color schemes มี "Akati OS" และมีโปรไฟล์ "Windows PowerShell (Akati OS)"
 - [ ] ปุ่ม "Learn more" ในหน้าติดตั้งเปิด `docs/OPTIONS.md` ไปยังหัวข้อที่ถูกต้อง
 
+### Akati OS Center
+- [ ] มีทางลัด "Akati OS Center" บน Desktop และใน Start menu ไอคอนเป็น "A" ของ Akati
+- [ ] เปิดแล้วขอสิทธิ์ admin (UAC) แล้วหน้าต่างขึ้น ไม่มีหน้าต่าง PowerShell ค้าง
+- [ ] แดชบอร์ด: ชื่อเครื่อง, Windows, CPU, GPU, RAM, ดิสก์ ถูกต้อง และตัวเลข CPU/RAM/GPU ขยับทุก 1-2 วินาที
+- [ ] แอปเกม: แอปที่ติดตั้งแล้วขึ้น "Installed" กด Install แอปที่ยังไม่มี (เช่น OBS) แล้วติดตั้งได้ สถานะเปลี่ยนเป็น Installed
+- [ ] ปรับแต่ง: สวิตช์ตรงกับสถานะจริง (เช่น Hibernation ปิด, Maximum Performance เปิด ถ้าใช้ค่าเริ่มต้น) ลองสลับ Hibernation แล้วเช็กด้วย `powercfg /a`
+- [ ] ล้างไฟล์ขยะ: สแกนแล้วขึ้นขนาด กด "ล้างเลย" แล้วขึ้นว่าล้างได้เท่าไร
+- [ ] ธีม: กด Apply แต่ละธีมแล้ว Windows เปลี่ยนธีม การ์ดที่ใช้อยู่มีกรอบสีม่วง
+- [ ] เกี่ยวกับ: กดตรวจอัปเดตแล้วขึ้นเวอร์ชันล่าสุด
+- [ ] ปุ่มภาษา: สลับไทย/อังกฤษได้ ปิดแล้วเปิดใหม่ยังจำภาษาเดิม
+- [ ] ลากหน้าต่างด้วยแถบด้านบน, ย่อ และปิดได้
+
 ### โฟลเดอร์ Atlas
 - [ ] มีโฟลเดอร์ `C:\Windows\AtlasDesktop` และเข้าจากเดสก์ท็อปได้
 - [ ] ลองสลับตัวเลือกในโฟลเดอร์ 1 อย่าง (เช่น `3. General Configuration\Power-saving`) แล้วทำงานได้

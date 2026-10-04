@@ -6,6 +6,7 @@ First Windows 10 version of Akati OS, based on AtlasOS v0.4.1 (Windows 10 22H2, 
 It has the same Akati OS changes as the Windows 11 version v1.3.0.
 
 ### Added
+- **Akati OS Center** app (desktop and Start menu shortcut, also in the Akati OS folder): dashboard with live CPU, RAM and GPU usage and system info, install gaming apps, tweaks with switches that show the real state (GPU scheduling, Game Mode, Maximum Performance, Hibernation), temp file cleaner, theme picker, update check, English and Thai. Written in PowerShell and WPF, so the source can be read; no `.exe`
 - Akati OS Dark, Light and Slideshow themes (the slideshow changes the wallpaper every 30 minutes), wallpapers, lock screen, playbook icon and default user picture
 - Setup pages for gaming software: Steam, Epic Games Launcher, EA app, Ubisoft Connect, Battle.net, Discord, OBS Studio
 - GPU driver download shortcut page (NVIDIA, AMD, Intel)
@@ -18,7 +19,7 @@ It has the same Akati OS changes as the Windows 11 version v1.3.0.
 - Warnings in the playbook description: back up your files, Windows 10 is out of support
 
 ### Fixed
-- Discord showed "A fatal Javascript error occured: Attempt to install host that is currently running" after setup. `GAMEAPPS.ps1` read the WinGet exit code wrongly, thought the install had failed and ran the Discord (and Steam) installer a second time. It now reads the exit code correctly and checks whether the app is already installed
+- Discord showed "A fatal Javascript error occured: Attempt to install host that is currently running" after setup. `GAMEAPPS.ps1` read the WinGet exit code wrongly, thought the install had failed and ran the Discord (and Steam) installer a second time. It now reads the exit code correctly and checks whether the app is already installed. Discord, which starts itself after installing, is now closed right after setup installs it, so no elevated copy keeps running
 
 ### Changed
 - Playbook name (AkatiOS10), version and UniqueId; supports Windows 10 22H2 (19045) only

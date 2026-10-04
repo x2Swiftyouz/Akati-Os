@@ -27,12 +27,18 @@ $latest = $release.tag_name
 Write-Host "Latest:    Akati OS $latest"
 Write-Host ''
 
+$isNewer = $false; $isAhead = $false
 try {
     $isNewer = [version]($latest.TrimStart('v')) -gt [version]($installed.TrimStart('v'))
+    $isAhead = [version]($installed.TrimStart('v')) -gt [version]($latest.TrimStart('v'))
 } catch {
     $isNewer = $latest -ne $installed
 }
 
+if ($isAhead) {
+    Write-Host 'Your version is newer than the latest release (test build).' -ForegroundColor Green
+    exit 0
+}
 if (!$isNewer) {
     Write-Host 'You have the latest version.' -ForegroundColor Green
     exit 0

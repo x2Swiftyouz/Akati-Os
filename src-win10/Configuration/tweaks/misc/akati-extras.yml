@@ -1,0 +1,21 @@
+---
+title: Akati OS Extras
+description: Optional gaming tweaks selected during setup and the Akati OS Windows Terminal color scheme (Akati OS)
+actions:
+  - !writeStatus: {status: 'Applying Akati OS extras'}
+    # Hardware-accelerated GPU scheduling (needs a supported GPU and driver, applies after restart)
+  - !registryValue:
+    path: 'HKLM\SYSTEM\CurrentControlSet\Control\GraphicsDrivers'
+    value: 'HwSchMode'
+    data: '2'
+    type: REG_DWORD
+    option: 'enable-hags'
+
+    # Windows Terminal color scheme and profile for all users (a Terminal "fragment")
+  - !powerShell:
+    command: |
+      $dir = Join-Path $env:ProgramData 'Microsoft\Windows Terminal\Fragments\AkatiOS'
+      New-Item -ItemType Directory -Path $dir -Force | Out-Null
+      Copy-Item -Path '.\AtlasModules\Other\AkatiOS\terminal-fragment.json' -Destination (Join-Path $dir 'akatios.json') -Force
+    exeDir: true
+    wait: true

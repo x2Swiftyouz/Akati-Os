@@ -1,5 +1,7 @@
 # Akati OS
 
+![Akati OS](docs/images/social-preview.png)
+
 Personal Windows 11 playbook for [AME Wizard](https://ameliorated.io), focused on gaming performance, privacy, debloat and a custom theme.
 
 Akati OS is based on [AtlasOS](https://github.com/Atlas-OS/Atlas) v0.5.0 (Windows 11) and v0.4.1 (Windows 10), and is licensed under GPL-3.0. It is **not** an official AtlasOS project. Every change from AtlasOS is listed in [docs/CHANGES-FROM-ATLAS.md](docs/CHANGES-FROM-ATLAS.md).
@@ -25,11 +27,14 @@ Akati OS คือ playbook สำหรับ Windows 11 เน้นเล่�
 
 ## Features
 
-- All AtlasOS v0.5.0 performance, privacy and debloat tweaks
-- Akati OS Dark and Akati OS Light themes, wallpapers and lock screen
+- All AtlasOS performance, privacy and debloat tweaks
+- Akati OS Dark, Light and Slideshow themes, wallpapers and lock screen (no AtlasOS logo)
 - Optional setup pages for gaming software: Steam, Epic Games Launcher, EA app, Ubisoft Connect, Battle.net, Discord and OBS Studio (installed with WinGet)
 - Visual C++ and DirectX runtimes are always installed (from AtlasOS)
 - GPU driver download shortcut for NVIDIA, AMD or Intel
+- Akati OS folder in `AtlasDesktop`: install gaming apps later, switch themes, GPU driver links, check for updates
+- Optional gaming tweaks: Hardware-accelerated GPU scheduling and Optimizations for windowed games (Windows 11)
+- Akati OS Slideshow theme and a Windows Terminal color scheme
 - Defaults: Maximum Performance and Disable Hibernation are checked
 
 ## Install
@@ -84,6 +89,7 @@ Every push also builds the playbook on GitHub Actions. The `.apbx` is under **Ar
 
 ## Documentation
 
+- [docs/OPTIONS.md](docs/OPTIONS.md): what each setup option does (English and Thai)
 - [docs/TESTING.md](docs/TESTING.md): VM test checklist (Windows 11 24H2, 25H2, 26H2 and Windows 10 22H2)
 - [docs/CHANGES-FROM-ATLAS.md](docs/CHANGES-FROM-ATLAS.md): every change from AtlasOS and what `GAMEAPPS.ps1` downloads
 - [src/CHANGELOG.md](src/CHANGELOG.md) and [src-win10/CHANGELOG.md](src-win10/CHANGELOG.md): changes per version

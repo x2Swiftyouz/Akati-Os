@@ -13,6 +13,18 @@ Windows 10 หมดซัพพอร์ตแล้ว ถ้าเครื�
 
 Microsoft ended support for Windows 10 on October 14, 2025. Extended Security Updates (ESU) for home users end on October 13, 2026. After that there are no security updates. Use the Windows 11 version of Akati OS if your PC can run Windows 11.
 
+## Features
+
+- All AtlasOS v0.4.1 performance, privacy and debloat tweaks
+- Akati OS Dark, Light and Slideshow themes, wallpapers and lock screen
+- Optional setup pages for gaming software: Steam, Epic Games Launcher, EA app, Ubisoft Connect, Battle.net, Discord and OBS Studio
+- GPU driver download shortcut for NVIDIA, AMD or Intel
+- Akati OS folder in `AtlasDesktop`: install gaming apps later, switch themes, GPU driver links, check for updates
+- Optional gaming tweaks: Hardware-accelerated GPU scheduling
+- Akati OS Slideshow theme and a Windows Terminal color scheme
+
+Options guide: https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/OPTIONS.md
+
 ## Requirements
 
 - Windows 10 22H2 (build 19045), fresh install

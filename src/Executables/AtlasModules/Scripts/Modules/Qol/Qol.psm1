@@ -1,9 +1,9 @@
 # PowerShell Module: SystemOptimizationModule.psm1
 
-# Function to add and set the Atlas themes by default
+# Function to add and set the Akati OS theme by default
 function Set-AtlasTheme {
     & "$windir\AtlasModules\initPowerShell.ps1"
-    Set-Theme -Path "$([Environment]::GetFolderPath('Windows'))\Resources\Themes\atlas-v0.4.x-dark.theme"
+    Set-Theme -Path "$([Environment]::GetFolderPath('Windows'))\Resources\Themes\akatios-dark.theme"
     Set-ThemeMRU
 
     reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\Personalization" /v "LockScreenOverlaysDisabled" /t REG_DWORD /d 1 /f
@@ -16,7 +16,7 @@ function Set-AtlasTheme {
     & "$windir\AtlasModules\initPowerShell.ps1"
     Set-LockscreenImage
 
-    reg add "HKCU\Software\Policies\Microsoft\Windows\Personalization" /v "ThemeFile" /t REG_SZ /d "%windir%\Resources\Themes\atlas-v0.4.x-dark.theme" /f
+    reg add "HKCU\Software\Policies\Microsoft\Windows\Personalization" /v "ThemeFile" /t REG_SZ /d "%windir%\Resources\Themes\akatios-dark.theme" /f
 }
 
 # Function to change the tooltip color to blue

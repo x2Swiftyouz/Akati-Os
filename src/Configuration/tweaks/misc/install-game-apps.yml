@@ -4,7 +4,7 @@ description: Installs gaming apps selected during setup (Akati OS)
 actions:
   - !writeStatus: {status: 'Installing Steam', option: 'install-steam'}
   - !powerShell:
-    command: '.\GAMEAPPS.ps1 -App Steam'
+    command: '.\AtlasModules\Scripts\GAMEAPPS.ps1 -App Steam'
     exeDir: true
     wait: true
     weight: 40
@@ -12,7 +12,7 @@ actions:
     runas: currentUserElevated
   - !writeStatus: {status: 'Installing Discord', option: 'install-discord'}
   - !powerShell:
-    command: '.\GAMEAPPS.ps1 -App Discord'
+    command: '.\AtlasModules\Scripts\GAMEAPPS.ps1 -App Discord'
     exeDir: true
     wait: true
     weight: 40
@@ -20,7 +20,7 @@ actions:
     runas: currentUserElevated
   - !writeStatus: {status: 'Installing Epic Games Launcher', option: 'install-epic'}
   - !powerShell:
-    command: '.\GAMEAPPS.ps1 -App Epic'
+    command: '.\AtlasModules\Scripts\GAMEAPPS.ps1 -App Epic'
     exeDir: true
     wait: true
     weight: 40
@@ -28,7 +28,7 @@ actions:
     runas: currentUserElevated
   - !writeStatus: {status: 'Installing EA app', option: 'install-ea'}
   - !powerShell:
-    command: '.\GAMEAPPS.ps1 -App EA'
+    command: '.\AtlasModules\Scripts\GAMEAPPS.ps1 -App EA'
     exeDir: true
     wait: true
     weight: 40
@@ -36,7 +36,7 @@ actions:
     runas: currentUserElevated
   - !writeStatus: {status: 'Installing Ubisoft Connect', option: 'install-ubisoft'}
   - !powerShell:
-    command: '.\GAMEAPPS.ps1 -App Ubisoft'
+    command: '.\AtlasModules\Scripts\GAMEAPPS.ps1 -App Ubisoft'
     exeDir: true
     wait: true
     weight: 40
@@ -44,7 +44,7 @@ actions:
     runas: currentUserElevated
   - !writeStatus: {status: 'Installing Battle.net', option: 'install-battlenet'}
   - !powerShell:
-    command: '.\GAMEAPPS.ps1 -App BattleNet'
+    command: '.\AtlasModules\Scripts\GAMEAPPS.ps1 -App BattleNet'
     exeDir: true
     wait: true
     weight: 40
@@ -52,7 +52,7 @@ actions:
     runas: currentUserElevated
   - !writeStatus: {status: 'Installing OBS Studio', option: 'install-obs'}
   - !powerShell:
-    command: '.\GAMEAPPS.ps1 -App OBS'
+    command: '.\AtlasModules\Scripts\GAMEAPPS.ps1 -App OBS'
     exeDir: true
     wait: true
     weight: 40

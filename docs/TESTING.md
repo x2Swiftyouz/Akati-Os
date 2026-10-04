@@ -218,6 +218,19 @@ Get-ChildItem "$env:PUBLIC\Desktop\*.url" | Select-Object Name
 
 - [ ] ดับเบิลคลิกไฟล์แล้วเปิดหน้าโหลดไดรเวอร์ของผู้ผลิตได้ถูกต้อง
 
+### Akati OS extras (v1.3.0)
+- [ ] ไม่มีภาพหรือธีมที่มีโลโก้ Atlas: `Get-ChildItem "$env:windir\AtlasModules\Wallpapers", "$env:windir\Resources\Themes" | Select-Object Name` ต้องไม่มีไฟล์ `atlas-*` หรือ `lockscreen*`
+- [ ] หน้า Gaming tweaks ทุกตัวไม่ติ๊กเป็นค่าเริ่มต้น (Windows 11 มี 2 ตัว, Windows 10 มี 1 ตัว)
+- [ ] รอบ B (ติ๊ก Gaming tweaks): `(Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\GraphicsDrivers').HwSchMode` = 2 และ Windows 11: `(Get-ItemProperty 'HKCU:\Software\Microsoft\DirectX\UserGpuPreferences').DirectXUserGlobalSettings` มี `SwapEffectUpgradeEnable=1`
+- [ ] รอบ A: ไม่มีค่า 2 ค่าข้างบน
+- [ ] `Get-ItemProperty 'HKLM:\SOFTWARE\AkatiOS'` มี `Version` และ `Edition` ถูกต้อง
+- [ ] โฟลเดอร์ `C:\Windows\AtlasDesktop\Akati OS` มีครบ: Install Gaming Apps, Themes, GPU Drivers, Check for Updates, ลิงก์ GitHub และ Options Guide
+- [ ] `Install Gaming Apps\Install OBS Studio.cmd` ขอสิทธิ์ admin แล้วติดตั้ง OBS ได้
+- [ ] `Themes\Akati OS Light.cmd` สลับเป็นธีมสว่าง และ `Akati OS Slideshow.cmd` ทำให้ wallpaper เปลี่ยนเอง (ตั้งเวลาไว้ 30 นาที ดูใน Settings > Personalization > Background ว่าเป็น Slideshow)
+- [ ] `Check for Updates.cmd` แสดงเวอร์ชันในเครื่องและเวอร์ชันล่าสุดบน GitHub ไม่มี error
+- [ ] Windows Terminal (ถ้ามี): Settings > Color schemes มี "Akati OS" และมีโปรไฟล์ "Windows PowerShell (Akati OS)"
+- [ ] ปุ่ม "Learn more" ในหน้าติดตั้งเปิด `docs/OPTIONS.md` ไปยังหัวข้อที่ถูกต้อง
+
 ### โฟลเดอร์ Atlas
 - [ ] มีโฟลเดอร์ `C:\Windows\AtlasDesktop` และเข้าจากเดสก์ท็อปได้
 - [ ] ลองสลับตัวเลือกในโฟลเดอร์ 1 อย่าง (เช่น `3. General Configuration\Power-saving`) แล้วทำงานได้

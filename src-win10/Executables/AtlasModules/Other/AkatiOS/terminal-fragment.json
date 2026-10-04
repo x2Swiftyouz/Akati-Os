@@ -1,0 +1,36 @@
+{
+  "$help": "https://aka.ms/terminal-documentation",
+  "schemes": [
+    {
+      "name": "Akati OS",
+      "background": "#15121F",
+      "foreground": "#E4DDF2",
+      "cursorColor": "#B07CF0",
+      "selectionBackground": "#3A2C5C",
+      "black": "#1E1A2A",
+      "red": "#F2557A",
+      "green": "#5FD38D",
+      "yellow": "#F2C55C",
+      "blue": "#6C8CFF",
+      "purple": "#A36BF0",
+      "cyan": "#4FD1D9",
+      "white": "#CFC8DD",
+      "brightBlack": "#5A5470",
+      "brightRed": "#FF7A98",
+      "brightGreen": "#84E6A8",
+      "brightYellow": "#FFD98A",
+      "brightBlue": "#93AAFF",
+      "brightPurple": "#C29BFF",
+      "brightCyan": "#7DE3E9",
+      "brightWhite": "#F5F2FA"
+    }
+  ],
+  "profiles": [
+    {
+      "guid": "{4b6f1d2e-8a3f-4d6c-9e21-6a6b61746931}",
+      "name": "Windows PowerShell (Akati OS)",
+      "commandline": "%SystemRoot%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "colorScheme": "Akati OS"
+    }
+  ]
+}

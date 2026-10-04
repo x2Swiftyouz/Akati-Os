@@ -12,14 +12,14 @@ CONF="$SRC/playbook.conf"
 
 [[ -f "$CONF" ]] || { echo "error: $CONF not found" >&2; exit 1; }
 
-# 1. playbook.conf must be valid XML
-if command -v xmllint >/dev/null; then
+# 1. playbook.conf must be valid XML with pages AME Wizard accepts
+if command -v python3 >/dev/null; then
+    python3 "$ROOT/tools/check-playbook.py" "$CONF" || exit 1
+elif command -v xmllint >/dev/null; then
+    echo "warning: no python3, only checking that playbook.conf is valid XML" >&2
     xmllint --noout "$CONF" || { echo "error: playbook.conf is not valid XML" >&2; exit 1; }
-elif command -v python3 >/dev/null; then
-    python3 -c 'import sys,xml.dom.minidom as m; m.parse(sys.argv[1])' "$CONF" \
-        || { echo "error: playbook.conf is not valid XML" >&2; exit 1; }
 else
-    echo "warning: no xmllint/python3, skipping XML check" >&2
+    echo "warning: no python3/xmllint, skipping playbook.conf check" >&2
 fi
 
 # 2. Version

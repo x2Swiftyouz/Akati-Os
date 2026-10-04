@@ -36,8 +36,8 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "tag=v$version" >> "$GITHUB_OUTPUT"
 
-      - name: Validate playbook.conf
-        run: python3 -c 'import sys, xml.dom.minidom as m; m.parse(sys.argv[1])' src/playbook.conf
+      - name: Check playbook.conf
+        run: python3 tools/check-playbook.py src/playbook.conf
 
       - name: Validate YAML
         run: |
@@ -67,8 +67,22 @@ jobs:
           name: AkatiOS-${{ github.sha }}
           path: dist/
 
+  build-windows:
+    # Checks that build.ps1 works the same on Windows (the release uses the Linux build)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Build with build.ps1
+        run: .\build.ps1
+
+      - name: Verify checksum
+        shell: bash
+        run: cd dist && sha256sum -c SHA256SUMS.txt
+
   release:
-    needs: build
+    needs: [build, build-windows]
     if: startsWith(github.ref, 'refs/tags/v') || (inputs.release && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     env:

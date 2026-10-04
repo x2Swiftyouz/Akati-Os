@@ -24,6 +24,29 @@ if (-not (Test-Path $conf)) { throw "$conf not found" }
 try { [xml]$xml = Get-Content -LiteralPath $conf -Raw -Encoding UTF8 }
 catch { throw "playbook.conf is not valid XML: $($_.Exception.Message)" }
 
+# Same checks as tools/check-playbook.py: AME Wizard refuses a RadioPage/CheckboxPage with more than 3 options
+$errors = @()
+$seen = @{}
+foreach ($tag in 'RadioPage', 'CheckboxPage', 'RadioImagePage') {
+    foreach ($page in $xml.SelectNodes("//$tag")) {
+        $desc = "$tag `"$($page.GetAttribute('Description'))`""
+        $opts = @($page.SelectNodes('Options/*'))
+        if ($opts.Count -eq 0) { $errors += "${desc}: no options" }
+        if ($tag -ne 'RadioImagePage' -and $opts.Count -gt 3) { $errors += "${desc}: $($opts.Count) options, max is 3" }
+        $names = @($opts | ForEach-Object { $n = $_.SelectSingleNode('Name'); if ($n) { $n.InnerText } else { '' } })
+        foreach ($n in $names) {
+            if (-not $n) { $errors += "${desc}: option without <Name>" }
+            elseif ($seen.ContainsKey($n)) { $errors += "option name `"$n`" is used twice" }
+            else { $seen[$n] = $true }
+        }
+        $default = $page.GetAttribute('DefaultOption')
+        if ($default -and $names -notcontains $default) {
+            $errors += "${desc}: DefaultOption `"$default`" is not one of its options"
+        }
+    }
+}
+if ($errors) { $errors | ForEach-Object { Write-Host "error: $_" -ForegroundColor Red }; throw 'playbook.conf check failed' }
+
 # 2. Version
 if (-not $Version) { $Version = $xml.Playbook.Version }
 if (-not $Version) { throw 'could not read <Version> from playbook.conf' }

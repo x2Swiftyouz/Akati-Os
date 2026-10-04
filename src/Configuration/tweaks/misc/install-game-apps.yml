@@ -1,0 +1,94 @@
+---
+title: Install Gaming Apps
+description: Installs gaming apps and runtimes selected during setup (Akati OS)
+actions:
+  - !writeStatus: {status: 'Installing Visual C++ Runtime', option: 'install-vcredist'}
+  - !powerShell:
+    command: '.\GAMEAPPS.ps1 -App VCRedist'
+    exeDir: true
+    wait: true
+    weight: 40
+    option: 'install-vcredist'
+    runas: currentUserElevated
+  - !writeStatus: {status: 'Installing DirectX Runtime', option: 'install-directx'}
+  - !powerShell:
+    command: '.\GAMEAPPS.ps1 -App DirectX'
+    exeDir: true
+    wait: true
+    weight: 40
+    option: 'install-directx'
+    runas: currentUserElevated
+  - !writeStatus: {status: 'Installing Steam', option: 'install-steam'}
+  - !powerShell:
+    command: '.\GAMEAPPS.ps1 -App Steam'
+    exeDir: true
+    wait: true
+    weight: 40
+    option: 'install-steam'
+    runas: currentUserElevated
+  - !writeStatus: {status: 'Installing Discord', option: 'install-discord'}
+  - !powerShell:
+    command: '.\GAMEAPPS.ps1 -App Discord'
+    exeDir: true
+    wait: true
+    weight: 40
+    option: 'install-discord'
+    runas: currentUserElevated
+  - !writeStatus: {status: 'Installing Epic Games Launcher', option: 'install-epic'}
+  - !powerShell:
+    command: '.\GAMEAPPS.ps1 -App Epic'
+    exeDir: true
+    wait: true
+    weight: 40
+    option: 'install-epic'
+    runas: currentUserElevated
+  - !writeStatus: {status: 'Installing EA app', option: 'install-ea'}
+  - !powerShell:
+    command: '.\GAMEAPPS.ps1 -App EA'
+    exeDir: true
+    wait: true
+    weight: 40
+    option: 'install-ea'
+    runas: currentUserElevated
+  - !writeStatus: {status: 'Installing Ubisoft Connect', option: 'install-ubisoft'}
+  - !powerShell:
+    command: '.\GAMEAPPS.ps1 -App Ubisoft'
+    exeDir: true
+    wait: true
+    weight: 40
+    option: 'install-ubisoft'
+    runas: currentUserElevated
+  - !writeStatus: {status: 'Installing Battle.net', option: 'install-battlenet'}
+  - !powerShell:
+    command: '.\GAMEAPPS.ps1 -App BattleNet'
+    exeDir: true
+    wait: true
+    weight: 40
+    option: 'install-battlenet'
+    runas: currentUserElevated
+  - !writeStatus: {status: 'Installing OBS Studio', option: 'install-obs'}
+  - !powerShell:
+    command: '.\GAMEAPPS.ps1 -App OBS'
+    exeDir: true
+    wait: true
+    weight: 40
+    option: 'install-obs'
+    runas: currentUserElevated
+  - !powerShell:
+    command: |
+      $desk = [Environment]::GetFolderPath('CommonDesktopDirectory')
+      Set-Content -Path """$desk\Download NVIDIA GPU Driver.url""" -Value """[InternetShortcut]`r`nURL=https://www.nvidia.com/en-us/drivers/""" -Force
+    wait: true
+    option: 'gpu-nvidia'
+  - !powerShell:
+    command: |
+      $desk = [Environment]::GetFolderPath('CommonDesktopDirectory')
+      Set-Content -Path """$desk\Download AMD GPU Driver.url""" -Value """[InternetShortcut]`r`nURL=https://www.amd.com/en/support/download/drivers.html""" -Force
+    wait: true
+    option: 'gpu-amd'
+  - !powerShell:
+    command: |
+      $desk = [Environment]::GetFolderPath('CommonDesktopDirectory')
+      Set-Content -Path """$desk\Download Intel GPU Driver.url""" -Value """[InternetShortcut]`r`nURL=https://www.intel.com/content/www/us/en/download-center/home.html""" -Force
+    wait: true
+    option: 'gpu-intel'

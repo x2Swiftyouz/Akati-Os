@@ -1,0 +1,23 @@
+---
+title: Configure OEM Information
+description: Configures OEM information to show the Akati OS version
+actions:
+  - !powerShell:
+    command: |
+      $version = 'v1.1.0'
+
+      Write-Output 'Setting boot entry name...'
+      bcdedit /set description """Akati OS $(('10', '11')[[int]([System.Environment]::OSVersion.Version.Build -ge 22000)]) $version"""
+
+      Write-Output 'Setting other versioned OEM information...'
+      $reportedVer = """Akati OS $version"""
+      # Shows in Settings
+      Set-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\OEMInformation' -Name 'Model' -Value $reportedVer -Force
+      # Shows in winver
+      Set-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name 'RegisteredOrganization' -Value $reportedVer -Force
+    wait: true
+  - !registryValue:
+    path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\OEMInformation'
+    value: 'Manufacturer'
+    data: 'Akati OS'
+    type: REG_SZ

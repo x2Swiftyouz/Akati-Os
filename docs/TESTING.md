@@ -11,7 +11,7 @@
 จุดเสี่ยงที่ต้องดูเป็นพิเศษ (มีเครื่องหมาย ⚠️ ในรายการด้านล่าง):
 1. `IsChecked` ใน `playbook.conf` (Atlas ทางการไม่เคยใช้)
 2. หน้าเลือกแอปเกม 3 หน้า และ `GAMEAPPS.ps1`
-3. หน้าเลือกการ์ดจอ
+3. หน้าเลือกการ์ดจอ (v1.2.0 โหลดไม่ได้เพราะหน้านี้มี 4 ตัวเลือก ตั้งแต่ v1.2.1 เป็น checkbox 3 ตัว)
 4. build 26300
 
 ---
@@ -35,7 +35,7 @@
 - 4 CPU, RAM 8 GB, ดิสก์ 64 GB, Network: NAT
 
 ### ติดตั้ง Windows ใน VM
-- [ ] ติดตั้งแบบปกติ ใช้ local account
+- [ ] ติดตั้งแบบปกติ ใช้ local account (ต้องเป็น ISO ของ **Windows 11** ไม่ใช่ Windows 10)
 - [ ] เช็ก build: เปิด PowerShell แล้วรัน
   ```powershell
   (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion') | Select-Object DisplayVersion, CurrentBuild, UBR
@@ -63,16 +63,16 @@
 | รอบ | ตั้งค่า | ทำบน |
 |---|---|---|
 | **A: ค่าเริ่มต้น** | ไม่แตะอะไรเลย กด Next ทุกหน้า | 24H2, 25H2, 26H2 |
-| **B: ติ๊กทุกอย่าง** | ติ๊กแอปเกมทุกตัว, ติ๊ก Disable Core Isolation, เลือก GPU = NVIDIA | 25H2 อย่างน้อย 1 เครื่อง |
-| **C: เอาออกทุกอย่าง** | เอาติ๊กแอปเกมออกทุกตัว, เอาติ๊ก Hibernation และ Maximum Performance ออก, เลือก GPU = AMD | 24H2 หรือ 26H2 |
-| **D: GPU Intel** | ค่าเริ่มต้น ยกเว้นเลือก GPU = Intel | build ใดก็ได้ |
+| **B: ติ๊กทุกอย่าง** | ติ๊กแอปเกมทุกตัว, ติ๊ก Disable Core Isolation, ติ๊ก GPU ทั้ง NVIDIA, AMD และ Intel | 25H2 อย่างน้อย 1 เครื่อง |
+| **C: เอาออกทุกอย่าง** | เอาติ๊กแอปเกมออกทุกตัว, เอาติ๊ก Hibernation และ Maximum Performance ออก, ติ๊ก GPU = AMD อย่างเดียว | 24H2 หรือ 26H2 |
+| **D: GPU Intel** | ค่าเริ่มต้น ยกเว้นติ๊ก GPU = Intel อย่างเดียว | build ใดก็ได้ |
 
 ---
 
 ## 2. ระหว่างรัน AME Wizard
 
 ### ก่อนเริ่ม
-- [ ] ลาก `.apbx` เข้า AME Wizard แล้วโหลดได้ ไม่ขึ้น error
+- [ ] ลาก `.apbx` เข้า AME Wizard แล้วโหลดได้ ไม่ขึ้น error (ถ้าขึ้น "There is an error in XML document" ให้จดบรรทัดและข้อความไว้ แล้วเพิ่มกฎนั้นใน `tools/check-playbook.py`)
 - [ ] ⚠️ 26H2: AME Wizard ยอมรับ build 26300 ไม่ขึ้นว่า unsupported
 - [ ] หน้า Requirements ทำตามที่ AME Wizard บอกได้ครบ (ปิด Defender, เสียบปลั๊ก, อินเทอร์เน็ต ฯลฯ)
 - [ ] จดไว้ว่าขึ้นป้าย "Malicious Playbook" หรือไม่ (ใช้ประกอบข้อความถึง Ameliorated)
@@ -98,7 +98,9 @@
 | ร้านเกมอื่น | Battle.net | ☐ | |
 | แชทและอัดหน้าจอ | Discord | ☑ | |
 | แชทและอัดหน้าจอ | OBS Studio | ☐ | |
-| การ์ดจอ | (radio) | Skip | |
+| การ์ดจอ | NVIDIA driver shortcut | ☐ | |
+| การ์ดจอ | AMD driver shortcut | ☐ | |
+| การ์ดจอ | Intel driver shortcut | ☐ | |
 
 ตัวเลือกจาก Atlas ที่ไม่มี `IsChecked` ให้จดไว้ด้วยว่าเริ่มต้นเป็นแบบไหน ใช้ดูว่า AME Wizard ตั้งค่า default เป็นอะไร:
 
@@ -204,8 +206,8 @@ Get-ChildItem "$env:PUBLIC\Desktop\*.url" | Select-Object Name
 ```
 | รอบ | ไฟล์ที่ต้องมี |
 |---|---|
-| A (Skip) | ไม่มีไฟล์ไดรเวอร์ |
-| B (NVIDIA) | `Download NVIDIA GPU Driver.url` ไฟล์เดียว |
+| A (ไม่ติ๊ก) | ไม่มีไฟล์ไดรเวอร์ |
+| B (ติ๊กทั้ง 3) | `Download NVIDIA GPU Driver.url`, `Download AMD GPU Driver.url` และ `Download Intel GPU Driver.url` |
 | C (AMD) | `Download AMD GPU Driver.url` ไฟล์เดียว |
 | D (Intel) | `Download Intel GPU Driver.url` ไฟล์เดียว |
 

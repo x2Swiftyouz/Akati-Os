@@ -12,3 +12,6 @@ src/** -text
 
 # GitHub Actions workflows
 .github/** text eol=lf
+
+# Tooling scripts
+tools/*.py text eol=lf

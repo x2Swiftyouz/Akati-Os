@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.2.1
+
+### Fixed
+- AME Wizard could not load v1.2.0: "RadioPage with a TopLine or BottomLine must not have more than 3 options". The GPU driver page is now a checkbox page with NVIDIA, AMD and Intel (leave all unticked to skip)
+
+### Added
+- `tools/check-playbook.py` and the build scripts check playbook.conf pages before building
+
 ## v1.2.0
 
 ### Changed

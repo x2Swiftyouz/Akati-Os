@@ -1,0 +1,122 @@
+name: Build playbook
+
+# Push / pull request: validate src/ and build the .apbx (download it from the run's Artifacts).
+# Release: Actions > Build playbook > Run workflow, branch main, tick "Publish release"
+# (or push a tag v<version>). The tag is v<Version> from src/playbook.conf; the release gets the .apbx and SHA256SUMS.txt.
+
+on:
+  push:
+    branches: ['**']
+    tags: ['v*']
+    paths-ignore: ['docs/**']
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      release:
+        description: 'Publish release v<Version> from src/playbook.conf'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read version
+        id: version
+        run: |
+          version=$(tr -d '\r' < src/playbook.conf | sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' | head -n1)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+
+      - name: Validate playbook.conf
+        run: xmllint --noout src/playbook.conf
+
+      - name: Validate YAML
+        run: |
+          pip install --quiet yamllint
+          yamllint -d "{extends: relaxed, rules: {empty-lines: disable, line-length: disable, new-line-at-end-of-file: disable, trailing-spaces: disable, new-lines: disable}}" src
+
+      - name: Check version is consistent
+        if: startsWith(github.ref, 'refs/tags/v') || (inputs.release && github.ref == 'refs/heads/main')
+        env:
+          version: ${{ steps.version.outputs.version }}
+        run: |
+          if [ "$GITHUB_REF_TYPE" = tag ] && [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match <Version>$version</Version> in playbook.conf"
+            exit 1
+          fi
+          grep -q "\$version = 'v$version'" src/Configuration/tweaks/misc/config-oem-information.yml \
+            || { echo "::error::config-oem-information.yml \$version is not v$version"; exit 1; }
+          grep -q "^## v$version" src/CHANGELOG.md \
+            || { echo "::error::CHANGELOG.md has no '## v$version' section"; exit 1; }
+
+      - name: Build
+        run: ./build.sh
+
+      - name: Upload build
+        uses: actions/upload-artifact@v4
+        with:
+          name: AkatiOS-${{ github.sha }}
+          path: dist/
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v') || (inputs.release && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ needs.build.outputs.tag }}
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download build
+        uses: actions/download-artifact@v4
+        with:
+          name: AkatiOS-${{ github.sha }}
+          path: dist/
+
+      - name: Verify checksum
+        run: cd dist && sha256sum -c SHA256SUMS.txt
+
+      - name: Release notes from CHANGELOG.md
+        run: |
+          version="${TAG#v}"
+          {
+            tr -d '\r' < src/CHANGELOG.md | awk -v h="## v$version" '$0==h {f=1; next} /^## / {f=0} f'
+            echo
+            echo "## Download"
+            echo
+            echo "Download \`AkatiOS_v$version.apbx\` and check it against \`SHA256SUMS.txt\`:"
+            echo
+            echo '```'
+            cat dist/SHA256SUMS.txt
+            echo '```'
+            echo
+            echo "Back up your files and test in a virtual machine first. See [docs/TESTING.md](https://github.com/$GITHUB_REPOSITORY/blob/$TAG/docs/TESTING.md)."
+            echo
+            echo "Based on [AtlasOS](https://github.com/Atlas-OS/Atlas) (GPL-3.0). Not an official AtlasOS project. Changes: [docs/CHANGES-FROM-ATLAS.md](https://github.com/$GITHUB_REPOSITORY/blob/$TAG/docs/CHANGES-FROM-ATLAS.md)."
+          } > notes.md
+          cat notes.md
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "::error::Release $TAG already exists. Bump the version first."
+            exit 1
+          fi
+          gh release create "$TAG" dist/*.apbx dist/SHA256SUMS.txt \
+            --target "$GITHUB_SHA" \
+            --title "Akati OS $TAG" \
+            --notes-file notes.md

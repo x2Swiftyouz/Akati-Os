@@ -9,3 +9,6 @@ src/** -text
 *.jpg binary
 *.ico binary
 *.exe binary
+
+# GitHub Actions workflows
+.github/** text eol=lf

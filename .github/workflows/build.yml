@@ -27,7 +27,7 @@ jobs:
       tag: ${{ steps.version.outputs.tag }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Read version
         id: version
@@ -37,11 +37,11 @@ jobs:
           echo "tag=v$version" >> "$GITHUB_OUTPUT"
 
       - name: Validate playbook.conf
-        run: xmllint --noout src/playbook.conf
+        run: python3 -c 'import sys, xml.dom.minidom as m; m.parse(sys.argv[1])' src/playbook.conf
 
       - name: Validate YAML
         run: |
-          pip install --quiet yamllint
+          command -v yamllint >/dev/null || pipx install yamllint
           yamllint -d "{extends: relaxed, rules: {empty-lines: disable, line-length: disable, new-line-at-end-of-file: disable, trailing-spaces: disable, new-lines: disable}}" src
 
       - name: Check version is consistent
@@ -62,7 +62,7 @@ jobs:
         run: ./build.sh
 
       - name: Upload build
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: AkatiOS-${{ github.sha }}
           path: dist/
@@ -77,10 +77,10 @@ jobs:
       contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download build
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: AkatiOS-${{ github.sha }}
           path: dist/

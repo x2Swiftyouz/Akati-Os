@@ -7,6 +7,7 @@
 | 24H2 | 26100 | Atlas ทางการรองรับ |
 | 25H2 | 26200 | Atlas ทางการรองรับ |
 | 26H2 | 26300 | **Akati เพิ่มเอง Atlas ไม่รองรับ** เสี่ยงที่สุด |
+| Windows 10 22H2 | 19045 | ใช้ไฟล์ `AkatiOS-Win10_v<version>.apbx` (ฐาน Atlas 0.4.1) ต้องลง Windows ใหม่ (fresh install) |
 
 จุดเสี่ยงที่ต้องดูเป็นพิเศษ (มีเครื่องหมาย ⚠️ ในรายการด้านล่าง):
 1. `IsChecked` ใน `playbook.conf` (Atlas ทางการไม่เคยใช้)
@@ -21,6 +22,7 @@
 ### ISO
 - [ ] 24H2 และ 25H2: โหลดจาก https://www.microsoft.com/software-download/windows11 เท่านั้น
 - [ ] 26H2: ถ้ายังไม่มี ISO ทางการ ใช้ Windows Insider Preview ISO จาก https://www.microsoft.com/software-download/windowsinsiderpreviewiso (ต้องล็อกอิน Insider)
+- [ ] Windows 10 22H2: https://www.microsoft.com/software-download/windows10 (ใช้ Media Creation Tool สร้าง ISO) ไม่ต้องมี TPM
 - [ ] จด build ของแต่ละ ISO ไว้ในตารางผลทดสอบท้ายไฟล์
 
 ### สร้าง VM (เลือกอย่างใดอย่างหนึ่ง)
@@ -49,7 +51,7 @@
 - [ ] ก๊อป `dist\AkatiOS_v<version>.apbx` และ `dist\SHA256SUMS.txt` เข้า VM
 - [ ] ตรวจ hash ใน VM:
   ```powershell
-  (Get-FileHash .\AkatiOS_v1.2.0.apbx -Algorithm SHA256).Hash.ToLower()
+  (Get-FileHash .\AkatiOS_v1.3.0.apbx -Algorithm SHA256).Hash.ToLower()
   Get-Content .\SHA256SUMS.txt
   ```
   สองค่าต้องตรงกัน
@@ -66,6 +68,9 @@
 | **B: ติ๊กทุกอย่าง** | ติ๊กแอปเกมทุกตัว, ติ๊ก Disable Core Isolation, ติ๊ก GPU ทั้ง NVIDIA, AMD และ Intel | 25H2 อย่างน้อย 1 เครื่อง |
 | **C: เอาออกทุกอย่าง** | เอาติ๊กแอปเกมออกทุกตัว, เอาติ๊ก Hibernation และ Maximum Performance ออก, ติ๊ก GPU = AMD อย่างเดียว | 24H2 หรือ 26H2 |
 | **D: GPU Intel** | ค่าเริ่มต้น ยกเว้นติ๊ก GPU = Intel อย่างเดียว | build ใดก็ได้ |
+| **W10: Windows 10** | ค่าเริ่มต้นทั้งหมด ใช้ `AkatiOS-Win10_v<version>.apbx` | Windows 10 22H2 |
+
+รอบ W10 ใช้ checklist เดียวกันทั้งหมด ยกเว้น: บูตเมนูต้องเป็น `Akati OS 10 v<version>`, ไม่มีหน้า Atlas Toolbox, ไม่มีการตั้ง ThemeMRU (Windows 10 ไม่ใช้) และใน AME Wizard ต้องไม่ยอมรันไฟล์ Windows 10 บน Windows 11 และกลับกัน
 
 ---
 
@@ -78,7 +83,7 @@
 - [ ] จดไว้ว่าขึ้นป้าย "Malicious Playbook" หรือไม่ (ใช้ประกอบข้อความถึง Ameliorated)
 
 ### ข้อความในหน้าต่าง ๆ
-- [ ] Title แสดง `Akati OS v1.2.0`
+- [ ] Title แสดง `Akati OS v1.3.0`
 - [ ] Description มีคำเตือนให้สำรองไฟล์และข้อความ "Not an official AtlasOS project"
 - [ ] หน้า Defender มีคำเตือน anti-cheat (Valorant, FACEIT)
 - [ ] ลิงก์ "Install guide" เปิด https://github.com/x2Swiftyouz/Akati-Os#readme
@@ -135,10 +140,10 @@
 bcdedit /enum '{current}' | Select-String description
 Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\OEMInformation'
 ```
-- [ ] บูตเมนูเป็น `Akati OS 11 v1.2.0`
-- [ ] `Model` = `Akati OS v1.2.0`, `Manufacturer` = `Akati OS`
+- [ ] บูตเมนูเป็น `Akati OS 11 v1.3.0`
+- [ ] `Model` = `Akati OS v1.3.0`, `Manufacturer` = `Akati OS`
 - [ ] ไม่มี `SupportURL` และ `SupportPhone`
-- [ ] `winver` และ Settings > System > About แสดง Akati OS v1.2.0
+- [ ] `winver` และ Settings > System > About แสดง Akati OS v1.3.0
 
 ### ธีม
 ```powershell
@@ -266,6 +271,7 @@ Select-String -Path "$($log.FullName)\*" -Pattern 'error|GAMEAPPS|exception' | S
 | 24H2 | 26100.____ | A | | | |
 | 25H2 | 26200.____ | A | | | |
 | 26H2 | 26300.____ | A | | | |
+| Windows 10 22H2 | 19045.____ | W10 | | | |
 | 25H2 | 26200.____ | B | | | |
 | ____ | ____ | C | | | |
 | ____ | ____ | D | | | |

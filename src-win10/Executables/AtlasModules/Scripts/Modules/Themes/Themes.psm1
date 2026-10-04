@@ -83,6 +83,8 @@ function Set-ThemeMRU {
     if ([System.Environment]::OSVersion.Version.Build -ge 22000) {
         Stop-ThemeProcesses
         Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes" -Name "ThemeMRU" -Value "$((@(
+            "akatios-dark.theme",
+            "akatios-light.theme",
             "atlas-v0.4.x-dark.theme",
             "atlas-v0.4.x-light.theme",
             "atlas-v0.3.x-dark.theme",
@@ -97,7 +99,7 @@ function Set-ThemeMRU {
 function Set-LockscreenImage {
     param (
         [ValidateNotNullOrEmpty()]
-        [string]$Path = "$([Environment]::GetFolderPath('Windows'))\AtlasModules\Wallpapers\lockscreen.png"
+        [string]$Path = "$([Environment]::GetFolderPath('Windows'))\AtlasModules\Wallpapers\akatios-lockscreen.png"
     )
 
     if (!(Test-Path $Path)) {

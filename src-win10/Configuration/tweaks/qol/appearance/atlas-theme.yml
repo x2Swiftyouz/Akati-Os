@@ -6,7 +6,7 @@ actions:
   - !powerShell:
     command: |
       .\AtlasModules\initPowerShell.ps1
-      Set-Theme -Path """$([Environment]::GetFolderPath('Windows'))\Resources\Themes\atlas-v0.4.x-dark.theme"""
+      Set-Theme -Path """$([Environment]::GetFolderPath('Windows'))\Resources\Themes\akatios-dark.theme"""
       Set-ThemeMRU
     wait: true
     exeDir: true
@@ -43,5 +43,5 @@ actions:
   - !registryValue:
     path: 'HKCU\Software\Policies\Microsoft\Windows\Personalization'
     value: 'ThemeFile'
-    data: '%windir%\Resources\Themes\atlas-v0.4.x-dark.theme'
+    data: '%windir%\Resources\Themes\akatios-dark.theme'
     type: REG_SZ

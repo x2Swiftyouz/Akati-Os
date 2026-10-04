@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.3.0
+
+### Added
+- Akati OS for Windows 10 22H2 (build 19045): a separate playbook, `AkatiOS-Win10_v1.3.0.apbx`, based on AtlasOS v0.4.1 (the last AtlasOS version that supports Windows 10). Source in `src-win10/`
+
+### Changed
+- Version 1.3.0 (no other changes to the Windows 11 playbook)
+
 ## v1.2.1
 
 ### Fixed

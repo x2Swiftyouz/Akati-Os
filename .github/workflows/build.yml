@@ -95,6 +95,19 @@ jobs:
           Write-Host "Checked $($files.Count) files, $bad errors"
           if ($bad) { exit 1 }
 
+      - name: Render Akati OS Center screenshots
+        shell: powershell
+        run: |
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File src\Executables\AtlasModules\AkatiCenter\AkatiCenter.ps1 -Screenshot "$env:GITHUB_WORKSPACE\screenshots" -Root src\Executables
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Get-ChildItem screenshots
+
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v5
+        with:
+          name: akati-center-screenshots
+          path: screenshots/
+
       - name: Build with build.ps1
         run: .\build.ps1
 

@@ -1,6 +1,6 @@
 ---
 title: Akati OS Extras
-description: Optional gaming tweaks selected during setup and the Akati OS Windows Terminal color scheme (Akati OS)
+description: Optional gaming tweaks selected during setup, the Akati OS Windows Terminal color scheme and Akati OS Center shortcuts (Akati OS)
 actions:
   - !writeStatus: {status: 'Applying Akati OS extras'}
     # Hardware-accelerated GPU scheduling (needs a supported GPU and driver, applies after restart)
@@ -25,4 +25,20 @@ actions:
       New-Item -ItemType Directory -Path $dir -Force | Out-Null
       Copy-Item -Path '.\AtlasModules\Other\AkatiOS\terminal-fragment.json' -Destination (Join-Path $dir 'akatios.json') -Force
     exeDir: true
+    wait: true
+
+    # Akati OS Center shortcuts on the desktop and in the Start menu (all users)
+  - !powerShell:
+    command: |
+      $windir = [Environment]::GetFolderPath('Windows')
+      $shell = New-Object -ComObject WScript.Shell
+      foreach ($folder in @([Environment]::GetFolderPath('CommonDesktopDirectory'), (Join-Path ([Environment]::GetFolderPath('CommonStartMenu')) 'Programs'))) {
+          $lnk = $shell.CreateShortcut((Join-Path $folder 'Akati OS Center.lnk'))
+          $lnk.TargetPath = Join-Path $windir 'System32\WindowsPowerShell\v1.0\powershell.exe'
+          $lnk.Arguments = '-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "' + (Join-Path $windir 'AtlasModules\AkatiCenter\AkatiCenter.ps1') + '"'
+          $lnk.IconLocation = (Join-Path $windir 'AtlasModules\Other\akatios-folder.ico') + ',0'
+          $lnk.Description = 'Akati OS Center'
+          $lnk.WindowStyle = 7
+          $lnk.Save()
+      }
     wait: true

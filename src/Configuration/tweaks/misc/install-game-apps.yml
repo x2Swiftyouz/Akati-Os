@@ -1,23 +1,7 @@
 ---
 title: Install Gaming Apps
-description: Installs gaming apps and runtimes selected during setup (Akati OS)
+description: Installs gaming apps selected during setup (Akati OS)
 actions:
-  - !writeStatus: {status: 'Installing Visual C++ Runtime', option: 'install-vcredist'}
-  - !powerShell:
-    command: '.\GAMEAPPS.ps1 -App VCRedist'
-    exeDir: true
-    wait: true
-    weight: 40
-    option: 'install-vcredist'
-    runas: currentUserElevated
-  - !writeStatus: {status: 'Installing DirectX Runtime', option: 'install-directx'}
-  - !powerShell:
-    command: '.\GAMEAPPS.ps1 -App DirectX'
-    exeDir: true
-    wait: true
-    weight: 40
-    option: 'install-directx'
-    runas: currentUserElevated
   - !writeStatus: {status: 'Installing Steam', option: 'install-steam'}
   - !powerShell:
     command: '.\GAMEAPPS.ps1 -App Steam'

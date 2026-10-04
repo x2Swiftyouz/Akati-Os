@@ -54,11 +54,9 @@ try {
 }
 finally { Pop-Location }
 
-# 6. Checksums (sha256sum format, covers every .apbx in dist\)
-$lines = Get-ChildItem -LiteralPath $dist -Filter '*.apbx' | Sort-Object Name | ForEach-Object {
-    '{0}  {1}' -f (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name
-}
-[IO.File]::WriteAllText((Join-Path $dist 'SHA256SUMS.txt'), (($lines -join "`n") + "`n"))
+# 6. Checksum of the file just built (sha256sum format)
+$hash = (Get-FileHash -LiteralPath $out -Algorithm SHA256).Hash.ToLower()
+[IO.File]::WriteAllText((Join-Path $dist 'SHA256SUMS.txt'), ('{0}  {1}' -f $hash, (Split-Path $out -Leaf)) + "`n")
 
 Write-Host "built: dist\AkatiOS_v$Version.apbx"
 Get-Content (Join-Path $dist 'SHA256SUMS.txt')

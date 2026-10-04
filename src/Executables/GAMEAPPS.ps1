@@ -14,8 +14,6 @@ $apps = @{
     Ubisoft   = @{ Id = 'Ubisoft.Connect' }
     BattleNet = @{ Id = 'Blizzard.BattleNet'; Extra = @('--location', "$env:ProgramFiles\Battle.net") }
     OBS       = @{ Id = 'OBSProject.OBSStudio' }
-    VCRedist  = @{ Id = 'Microsoft.VCRedist.2015+.x64'; Url = 'https://aka.ms/vs/17/release/vc_redist.x64.exe'; Args = '/install /quiet /norestart' }
-    DirectX   = @{ Id = 'Microsoft.DirectX' }
 }
 
 if (!$apps.ContainsKey($App)) { Write-Error "Unknown app: $App"; exit 0 }

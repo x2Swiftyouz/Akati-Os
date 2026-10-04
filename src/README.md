@@ -19,7 +19,8 @@ Akati OS คือ playbook สำหรับ Windows 11 เน้นเล่�
 
 - All AtlasOS v0.5.0 performance, privacy and debloat tweaks
 - Akati OS Dark and Akati OS Light themes, wallpapers and lock screen
-- Optional setup pages for gaming software: Visual C++ Runtime, DirectX Runtime, Steam, Discord, Epic Games Launcher, EA app, Ubisoft Connect, Battle.net and OBS Studio
+- Optional setup pages for gaming software: Steam, Epic Games Launcher, EA app, Ubisoft Connect, Battle.net, Discord and OBS Studio
+- Visual C++ and DirectX runtimes are always installed (from AtlasOS)
 - GPU driver download shortcut for NVIDIA, AMD or Intel
 - Defaults: Maximum Performance and Disable Hibernation are checked
 
@@ -27,7 +28,7 @@ Akati OS คือ playbook สำหรับ Windows 11 เน้นเล่�
 
 1. Back up your files. This playbook cannot be fully undone. To go back, reinstall Windows.
 2. Test in a virtual machine first.
-3. Download `AkatiOS_v1_1_0.apbx` and check its SHA256 hash against `SHA256SUMS.txt`.
+3. Download `AkatiOS_v1.2.0.apbx` from Releases and check its SHA256 hash against `SHA256SUMS.txt`.
 4. Open AME Wizard and drag the `.apbx` file into it.
 5. Follow the setup pages.
 
@@ -37,11 +38,14 @@ Some anti-cheat systems (for example Valorant Vanguard and FACEIT) need Defender
 
 ## Build from source
 
-The `.apbx` file is a zip archive with the password `malte`:
+The playbook source is in `src/`. The `.apbx` file is a zip archive of it with the password `malte`. From the repository root:
 
 ```
-7z a -tzip -pmalte AkatiOS_v1_1_0.apbx .\*
+.\build.ps1     # Windows, needs 7-Zip
+./build.sh      # Linux/macOS, needs 7z or zip
 ```
+
+The output is `dist/AkatiOS_v<version>.apbx` and `dist/SHA256SUMS.txt`.
 
 ## Credits
 

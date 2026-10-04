@@ -50,8 +50,8 @@ else
     echo "error: need 7z or zip" >&2; exit 1
 fi
 
-# 5. Checksums (sha256sum format, covers every .apbx in dist/)
-(cd "$DIST" && sha256sum -- *.apbx > SHA256SUMS.txt)
+# 5. Checksum of the file just built (sha256sum format)
+(cd "$DIST" && sha256sum -- "$OUT" > SHA256SUMS.txt)
 
 echo "built: dist/$OUT"
 cat "$DIST/SHA256SUMS.txt"

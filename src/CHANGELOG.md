@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.2.0
+
+### Changed
+- Gaming app pages regrouped: game stores (Steam, Epic, EA), more game stores (Ubisoft, Battle.net), chat and recording (Discord, OBS)
+- Install guide link in playbook.conf points to the Akati OS GitHub page instead of the AtlasOS docs
+- Added the Akati OS GitHub source link (Git) to playbook.conf
+- Boot menu, Settings and winver show "Akati OS v1.2.0"
+- Theme files use CRLF line endings
+
+### Removed
+- Visual C++ Runtime and DirectX Runtime options: AtlasOS already installs them on every setup (SOFTWARE.ps1)
+
 ## v1.1.0
 
 ### Added
@@ -18,6 +30,7 @@ First release of Akati OS, based on AtlasOS v0.5.0.
 
 ### Changed
 - Playbook name, version and UniqueId
+- Setup status texts "Installing Atlas Toolbox (optional)" and "Deleting old system folders"
 - Boot menu, Settings and winver show "Akati OS v1.0.0"
 - Maximum Performance and Disable Hibernation are checked by default
 

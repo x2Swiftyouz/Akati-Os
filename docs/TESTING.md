@@ -193,6 +193,7 @@ Test-Path "$env:LOCALAPPDATA\Discord"
 | OBS Studio | ไม่มี | มี | ไม่มี |
 
 - [ ] แอปที่ติดตั้งแล้วเปิดได้ (ไม่ต้องล็อกอิน)
+- [ ] หลังติดตั้งเสร็จ ไม่มีหน้าต่าง error ของ Discord ("Attempt to install host that is currently running") แปลว่าไม่มีการรัน installer ซ้ำ
 - [ ] Discord ติดตั้งให้ user ที่รัน playbook ไม่ได้ไปอยู่ในโปรไฟล์ admin อื่น
 
 ### VC++ และ DirectX (Atlas ติดตั้งให้ทุกรอบ)

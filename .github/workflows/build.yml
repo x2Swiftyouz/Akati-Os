@@ -82,6 +82,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Check PowerShell syntax
+        shell: pwsh
+        run: |
+          $files = Get-ChildItem src, src-win10, build.ps1 -Recurse -Include *.ps1, *.psm1
+          $bad = 0
+          foreach ($f in $files) {
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($f.FullName, [ref]$null, [ref]$errors) | Out-Null
+            foreach ($e in $errors) { Write-Host "::error file=$($f.FullName),line=$($e.Extent.StartLineNumber)::$($e.Message)"; $bad++ }
+          }
+          Write-Host "Checked $($files.Count) files, $bad errors"
+          if ($bad) { exit 1 }
+
       - name: Build with build.ps1
         run: .\build.ps1
 

@@ -17,6 +17,9 @@ It has the same Akati OS changes as the Windows 11 version v1.3.0.
 - Warnings about anti-cheat games on the Defender and Core Isolation options
 - Warnings in the playbook description: back up your files, Windows 10 is out of support
 
+### Fixed
+- Discord showed "A fatal Javascript error occured: Attempt to install host that is currently running" after setup. `GAMEAPPS.ps1` read the WinGet exit code wrongly, thought the install had failed and ran the Discord (and Steam) installer a second time. It now reads the exit code correctly and checks whether the app is already installed
+
 ### Changed
 - Playbook name (AkatiOS10), version and UniqueId; supports Windows 10 22H2 (19045) only
 - Boot menu shows "Akati OS 10 v1.3.0", Settings and winver show "Akati OS v1.3.0"; the version is also saved to `HKLM\SOFTWARE\AkatiOS`

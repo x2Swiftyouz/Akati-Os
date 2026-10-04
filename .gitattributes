@@ -15,3 +15,6 @@ src/** -text
 
 # Tooling scripts
 tools/*.py text eol=lf
+
+# Windows 10 playbook source: same as src/
+src-win10/** -text

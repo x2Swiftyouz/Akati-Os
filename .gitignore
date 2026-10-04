@@ -1,0 +1,11 @@
+# Build output and packed playbooks
+dist/
+*.apbx
+*.zip
+*.7z
+
+# OS / editor noise
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/

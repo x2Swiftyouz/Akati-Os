@@ -1,0 +1,11 @@
+# Playbook sources: store bytes exactly as-is (they must stay CRLF; no git conversion)
+src/** -text
+
+# Build scripts
+*.ps1 text eol=crlf
+*.sh  text eol=lf
+
+*.png binary
+*.jpg binary
+*.ico binary
+*.exe binary

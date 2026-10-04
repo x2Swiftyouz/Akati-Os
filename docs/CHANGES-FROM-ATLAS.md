@@ -41,10 +41,11 @@ W11 = Windows 11 playbook, W10 = Windows 10 playbook.
 | `Executables/AtlasModules/Scripts/newUsers.ps1` | W11 | Default theme for new users is `akatios-dark.theme` |
 | `Executables/AtlasModules/Scripts/Modules/Themes/Themes.psm1` | W11, W10 | Akati OS themes in `Set-ThemeMRU` (AtlasOS themes removed), default lock screen image |
 | `Executables/AtlasModules/Scripts/Modules/Qol/Qol.psm1` | W11 | `Set-AtlasTheme` uses `akatios-dark.theme` |
+| `Executables/SHORTCUTS.ps1` | W11, W10 | The Atlas folder shortcut uses the Akati OS icon (`akatios-folder.ico`) |
 
 ## Removed files
 
-The AtlasOS wallpapers and themes are removed, so the Atlas logo is not used: `Executables/AtlasModules/Wallpapers/atlas-*.png`, `lockscreen*.png` and `Executables/Themes/atlas-*.theme`.
+The AtlasOS wallpapers and themes are removed, so the Atlas logo is not used: `Executables/AtlasModules/Wallpapers/atlas-*.png`, `lockscreen*.png`, `Executables/Themes/atlas-*.theme` and the folder icon `Executables/AtlasModules/Other/atlas-folder.ico`.
 
 ## New files
 
@@ -58,6 +59,7 @@ The AtlasOS wallpapers and themes are removed, so the Atlas logo is not used: `E
 | `Executables/AtlasDesktop/Akati OS/` | Akati OS folder: install gaming apps later, switch themes, GPU driver links, check for updates, links |
 | `Executables/Themes/akatios-dark.theme`, `akatios-light.theme`, `akatios-slideshow.theme` | Themes |
 | `Executables/AtlasModules/Wallpapers/akatios-*.png` | Wallpapers and lock screen |
+| `Executables/AtlasModules/Other/akatios-folder.ico` | Icon of the Atlas folder shortcut |
 | `README.md`, `CHANGELOG.md`, `CREDITS.txt` | Documentation and credits |
 
 ## Gaming tweaks (registry)

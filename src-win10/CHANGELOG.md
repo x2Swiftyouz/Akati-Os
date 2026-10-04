@@ -22,7 +22,9 @@ It has the same Akati OS changes as the Windows 11 version v1.3.0.
 - Boot menu shows "Akati OS 10 v1.3.0", Settings and winver show "Akati OS v1.3.0"; the version is also saved to `HKLM\SOFTWARE\AkatiOS`
 - Maximum Performance and Disable Hibernation are checked by default
 - Install guide and Git links point to the Akati OS GitHub page
+- The "Akati OS" text on the wallpapers moved inwards, so it is not cut off on 4:3 and 5:4 screens
+- The Atlas folder shortcut on the desktop and in the Start menu uses the Akati OS icon instead of the Atlas logo
 
 ### Removed
-- AtlasOS wallpapers and themes (no Atlas logo)
+- AtlasOS wallpapers, themes and folder icon (no Atlas logo)
 - AtlasOS website, donate, Git and support links from playbook.conf and OEM information

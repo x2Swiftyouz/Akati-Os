@@ -219,6 +219,8 @@ Get-ChildItem "$env:PUBLIC\Desktop\*.url" | Select-Object Name
 - [ ] ดับเบิลคลิกไฟล์แล้วเปิดหน้าโหลดไดรเวอร์ของผู้ผลิตได้ถูกต้อง
 
 ### Akati OS extras (v1.3.0)
+- [ ] ทางลัด "Atlas" บน Desktop และใน Start menu ใช้ไอคอน "A" ของ Akati OS
+- [ ] ตั้งความละเอียด VM เป็น 1024×768 (4:3): ตัวอักษร "Akati OS" บน wallpaper ต้องไม่ถูกตัดขอบ
 - [ ] ไม่มีภาพหรือธีมที่มีโลโก้ Atlas: `Get-ChildItem "$env:windir\AtlasModules\Wallpapers", "$env:windir\Resources\Themes" | Select-Object Name` ต้องไม่มีไฟล์ `atlas-*` หรือ `lockscreen*`
 - [ ] หน้า Gaming tweaks ทุกตัวไม่ติ๊กเป็นค่าเริ่มต้น (Windows 11 มี 2 ตัว, Windows 10 มี 1 ตัว)
 - [ ] รอบ B (ติ๊ก Gaming tweaks): `(Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\GraphicsDrivers').HwSchMode` = 2 และ Windows 11: `(Get-ItemProperty 'HKCU:\Software\Microsoft\DirectX\UserGpuPreferences').DirectXUserGlobalSettings` มี `SwapEffectUpgradeEnable=1`

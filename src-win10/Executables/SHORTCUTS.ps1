@@ -5,7 +5,7 @@ Write-Title "Creating Desktop & Start Menu shortcuts..."
 
 # Default user
 $defaultShortcut = "$(Get-UserPath)\Atlas.lnk"
-New-Shortcut -Source "$windir\AtlasDesktop" -Destination $defaultShortcut -Icon "$windir\AtlasModules\Other\atlas-folder.ico,0"
+New-Shortcut -Source "$windir\AtlasDesktop" -Destination $defaultShortcut -Icon "$windir\AtlasModules\Other\akatios-folder.ico,0"
 
 # Copy shortcut to every user
 foreach ($userKey in (Get-RegUserPaths -NoDefault).PsPath) {

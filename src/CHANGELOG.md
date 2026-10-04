@@ -16,6 +16,8 @@
 - `GAMEAPPS.ps1` moved to `AtlasModules\Scripts` so it stays on disk after setup
 - Installed version is saved to `HKLM\SOFTWARE\AkatiOS`
 - Setup screen (OOBE) text describes Akati OS
+- The "Akati OS" text on the wallpapers moved inwards, so it is not cut off on 4:3 and 5:4 screens
+- The Atlas folder shortcut on the desktop and in the Start menu uses the Akati OS icon instead of the Atlas logo
 
 ## v1.2.1
 

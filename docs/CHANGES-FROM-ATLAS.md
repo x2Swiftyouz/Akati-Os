@@ -56,6 +56,7 @@ The AtlasOS wallpapers and themes are removed, so the Atlas logo is not used: `E
 | `Executables/AtlasModules/Scripts/GAMEAPPS.ps1` | Installs one gaming app (see below). Stays on disk so apps can be installed later |
 | `Executables/AtlasModules/Scripts/AkatiUpdate.ps1` | Update checker, only runs when the user opens it (see below) |
 | `Executables/AtlasModules/Other/AkatiOS/terminal-fragment.json` | Windows Terminal color scheme and profile, copied to `%ProgramData%\Microsoft\Windows Terminal\Fragments\AkatiOS` |
+| `Executables/AtlasModules/AkatiCenter/` | Akati OS Center app: `AkatiCenter.ps1` (PowerShell + WPF), `AkatiCenter.xaml` (window layout), `logo.png`. Shortcuts are created by `akati-extras.yml` |
 | `Executables/AtlasDesktop/Akati OS/` | Akati OS folder: install gaming apps later, switch themes, GPU driver links, check for updates, links |
 | `Executables/Themes/akatios-dark.theme`, `akatios-light.theme`, `akatios-slideshow.theme` | Themes |
 | `Executables/AtlasModules/Wallpapers/akatios-*.png` | Wallpapers and lock screen |
@@ -87,6 +88,18 @@ Only apps the user ticks on the setup pages are installed, or the app the user p
 | Ubisoft Connect | `Ubisoft.Connect` | none |
 | Battle.net | `Blizzard.BattleNet` | none |
 | OBS Studio | `OBSProject.OBSStudio` | none |
+
+## What Akati OS Center does
+
+It runs only when the user opens it and asks for administrator rights. Everything it changes is listed here:
+
+- **Gaming apps**: runs `GAMEAPPS.ps1 -App <name>` (see above)
+- **Tweaks**: the registry values in [Gaming tweaks](#gaming-tweaks-registry), plus Game Mode (`HKCU\Software\Microsoft\GameBar` `AutoGameModeEnabled`), and runs the unchanged AtlasOS scripts in `AtlasDesktop\3. General Configuration\Power-saving` and `\Hibernation` with `/silent`
+- **Cleaner**: deletes the contents of `%TEMP%`, `%windir%\Temp`, `%LOCALAPPDATA%\CrashDumps` and empties the Recycle Bin, only for the items the user ticks
+- **Appearance**: opens an Akati OS `.theme` file, which Windows applies
+- **Update check**: the same GitHub API request as `AkatiUpdate.ps1`
+- Saves the chosen language to `HKCU\Software\AkatiOS\Center`
+- Reads usage with CIM (`Win32_PerfFormattedData_*`); nothing is sent anywhere
 
 ## What AkatiUpdate.ps1 does
 

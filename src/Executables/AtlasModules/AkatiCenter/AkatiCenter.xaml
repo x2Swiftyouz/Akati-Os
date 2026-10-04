@@ -346,7 +346,7 @@
                     <!-- Dashboard -->
                     <ScrollViewer x:Name="PageDashboard" VerticalScrollBarVisibility="Auto">
                         <StackPanel>
-                            <Grid Margin="0,0,0,16">
+                            <Grid Margin="0,0,0,16" Height="150">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="16"/>

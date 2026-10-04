@@ -669,10 +669,13 @@ $ui.LangButton.Add_Click({
         if (!(Test-Path $settingsKey)) { New-Item -Path $settingsKey -Force | Out-Null }
         Set-ItemProperty -Path $settingsKey -Name Language -Value $lang -Force
     } catch { }
+    Update-Language
+})
+function Update-Language {
     Set-Language
     foreach ($a in $apps) { Update-AppRow $a }
     Update-ThemeCards
-})
+}
 
 Set-Language
 Set-Status (T 'ready')
@@ -692,7 +695,7 @@ if ($Screenshot) {
             $id = [Globalization.CultureInfo]::InvariantCulture.TextInfo.ToTitleCase($p)
             $ui["Nav$id"].IsChecked = $true
             Show-Page $p
-            Set-Language
+            Update-Language
             if ($p -eq 'cleaner') { $ui.CleanTotal.Text = '0 KB' }
             $size = New-Object System.Windows.Size $window.Width, $window.Height
             $rootEl.Measure($size)

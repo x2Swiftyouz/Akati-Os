@@ -22,13 +22,16 @@ Akati OS คือ playbook สำหรับ Windows 11 เน้นเล่�
 - Optional setup pages for gaming software: Steam, Epic Games Launcher, EA app, Ubisoft Connect, Battle.net, Discord and OBS Studio
 - Visual C++ and DirectX runtimes are always installed (from AtlasOS)
 - GPU driver download shortcut for NVIDIA, AMD or Intel
+- Akati OS folder in `AtlasDesktop`: install gaming apps later, switch themes, GPU driver links, check for updates
+- Optional gaming tweaks: Hardware-accelerated GPU scheduling and Optimizations for windowed games
+- Akati OS Slideshow theme and a Windows Terminal color scheme
 - Defaults: Maximum Performance and Disable Hibernation are checked
 
 ## Install
 
 1. Back up your files. This playbook cannot be fully undone. To go back, reinstall Windows.
 2. Test in a virtual machine first.
-3. Download `AkatiOS_v1.2.1.apbx` from Releases and check its SHA256 hash against `SHA256SUMS.txt`.
+3. Download `AkatiOS_v1.3.0.apbx` from Releases and check its SHA256 hash against `SHA256SUMS.txt`.
 4. Open AME Wizard and drag the `.apbx` file into it.
 5. Follow the setup pages.
 

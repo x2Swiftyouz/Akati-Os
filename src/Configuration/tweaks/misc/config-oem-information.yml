@@ -4,7 +4,7 @@ description: Configures OEM information to show the Akati OS version
 actions:
   - !powerShell:
     command: |
-      $version = 'v1.2.1'
+      $version = 'v1.3.0'
 
       Write-Output 'Setting boot entry name...'
       bcdedit /set description """Akati OS $(('10', '11')[[int]([System.Environment]::OSVersion.Version.Build -ge 22000)]) $version"""
@@ -13,6 +13,10 @@ actions:
       $reportedVer = """Akati OS $version"""
       # Shows in Settings
       Set-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\OEMInformation' -Name 'Model' -Value $reportedVer -Force
+      # Used by the Akati OS update checker
+      New-Item 'HKLM:\SOFTWARE\AkatiOS' -Force | Out-Null
+      Set-ItemProperty 'HKLM:\SOFTWARE\AkatiOS' -Name 'Version' -Value $version -Force
+      Set-ItemProperty 'HKLM:\SOFTWARE\AkatiOS' -Name 'Edition' -Value 'Windows 11' -Force
       # Shows in winver
       Set-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name 'RegisteredOrganization' -Value $reportedVer -Force
     wait: true

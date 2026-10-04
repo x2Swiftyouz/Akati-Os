@@ -37,12 +37,14 @@ jobs:
           echo "tag=v$version" >> "$GITHUB_OUTPUT"
 
       - name: Check playbook.conf
-        run: python3 tools/check-playbook.py src/playbook.conf
+        run: |
+          python3 tools/check-playbook.py src/playbook.conf
+          python3 tools/check-playbook.py src-win10/playbook.conf
 
       - name: Validate YAML
         run: |
           command -v yamllint >/dev/null || pipx install yamllint
-          yamllint -d "{extends: relaxed, rules: {empty-lines: disable, line-length: disable, new-line-at-end-of-file: disable, trailing-spaces: disable, new-lines: disable}}" src
+          yamllint -d "{extends: relaxed, rules: {empty-lines: disable, line-length: disable, new-line-at-end-of-file: disable, trailing-spaces: disable, new-lines: disable}}" src src-win10
 
       - name: Check version is consistent
         if: startsWith(github.ref, 'refs/tags/v') || (inputs.release && github.ref == 'refs/heads/main')
@@ -53,10 +55,16 @@ jobs:
             echo "::error::Tag $GITHUB_REF_NAME does not match <Version>$version</Version> in playbook.conf"
             exit 1
           fi
-          grep -q "\$version = 'v$version'" src/Configuration/tweaks/misc/config-oem-information.yml \
-            || { echo "::error::config-oem-information.yml \$version is not v$version"; exit 1; }
-          grep -q "^## v$version" src/CHANGELOG.md \
-            || { echo "::error::CHANGELOG.md has no '## v$version' section"; exit 1; }
+          for d in src src-win10; do
+            v=$(tr -d '\r' < $d/playbook.conf | sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' | head -n1)
+            [ "$v" = "$version" ] || { echo "::error::$d/playbook.conf version $v is not $version"; exit 1; }
+            grep -q "\$version = 'v$version'" $d/Configuration/tweaks/misc/config-oem-information.yml \
+              || { echo "::error::$d config-oem-information.yml \$version is not v$version"; exit 1; }
+            grep -q "^## v$version" $d/CHANGELOG.md \
+              || { echo "::error::$d/CHANGELOG.md has no '## v$version' section"; exit 1; }
+            grep -q "v$version" $d/CREDITS.txt \
+              || { echo "::error::$d/CREDITS.txt does not mention v$version"; exit 1; }
+          done
 
       - name: Build
         run: ./build.sh
@@ -73,6 +81,19 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+
+      - name: Check PowerShell syntax
+        shell: pwsh
+        run: |
+          $files = Get-ChildItem src, src-win10, build.ps1 -Recurse -Include *.ps1, *.psm1
+          $bad = 0
+          foreach ($f in $files) {
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($f.FullName, [ref]$null, [ref]$errors) | Out-Null
+            foreach ($e in $errors) { Write-Host "::error file=$($f.FullName),line=$($e.Extent.StartLineNumber)::$($e.Message)"; $bad++ }
+          }
+          Write-Host "Checked $($files.Count) files, $bad errors"
+          if ($bad) { exit 1 }
 
       - name: Build with build.ps1
         run: .\build.ps1
@@ -110,7 +131,10 @@ jobs:
             echo
             echo "## Download"
             echo
-            echo "Download \`AkatiOS_v$version.apbx\` and check it against \`SHA256SUMS.txt\`:"
+            echo "- Windows 11 (24H2, 25H2, 26H2): \`AkatiOS_v$version.apbx\`"
+            echo "- Windows 10 22H2: \`AkatiOS-Win10_v$version.apbx\` (Windows 10 is out of support, use the Windows 11 version if you can)"
+            echo
+            echo "Check the file against \`SHA256SUMS.txt\`:"
             echo
             echo '```'
             cat dist/SHA256SUMS.txt

@@ -85,10 +85,7 @@ function Set-ThemeMRU {
         Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes" -Name "ThemeMRU" -Value "$((@(
             "akatios-dark.theme",
             "akatios-light.theme",
-            "atlas-v0.4.x-dark.theme",
-            "atlas-v0.4.x-light.theme",
-            "atlas-v0.5.x-dark.theme",
-            "atlas-v0.5.x-light.theme",
+            "akatios-slideshow.theme",
             "dark.theme",
             "aero.theme"
         ) | ForEach-Object { "$windir\resources\Themes\$_" }) -join ';');" -Type String -Force

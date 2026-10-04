@@ -193,6 +193,8 @@ Test-Path "$env:LOCALAPPDATA\Discord"
 | OBS Studio | ไม่มี | มี | ไม่มี |
 
 - [ ] แอปที่ติดตั้งแล้วเปิดได้ (ไม่ต้องล็อกอิน)
+- [ ] หน้า "Remove Microsoft Store" ติ๊กไว้เป็นค่าเริ่มต้น หลังติดตั้ง Microsoft Store ต้องไม่มีใน Start menu และ taskbar แต่ Steam/Discord ยังติดตั้งได้
+- [ ] Akati OS Center > ปรับแต่ง > เปิดสวิตช์ Microsoft Store แล้ว Store กลับมา (อาจใช้เวลาประมาณ 1 นาที)
 - [ ] หลังติดตั้งเสร็จ ไม่มีหน้าต่าง error ของ Discord ("Attempt to install host that is currently running") แปลว่าไม่มีการรัน installer ซ้ำ
 - [ ] Discord ติดตั้งให้ user ที่รัน playbook ไม่ได้ไปอยู่ในโปรไฟล์ admin อื่น
 

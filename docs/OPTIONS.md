@@ -77,6 +77,12 @@ Akati OS does not install GPU drivers. Tick your GPU to get a download link on t
 **ภาษาไทย**: Akati OS ไม่ติดตั้งไดรเวอร์การ์ดจอให้ ติ๊กยี่ห้อการ์ดจอเพื่อให้มีลิงก์ดาวน์โหลดไดรเวอร์บน Desktop
 Later: `AtlasDesktop\Akati OS\GPU Drivers`
 
+## Microsoft Store
+
+**Remove Microsoft Store** is ticked by default. Without the Store you cannot install Store apps, and the **Xbox app and Xbox Game Pass do not work**. Gaming apps from Akati OS still install, because they use WinGet. To get the Store back, open Akati OS Center > Tweaks and turn on **Microsoft Store**, or run `wsreset -i` as administrator.
+
+**ภาษาไทย**: "Remove Microsoft Store" ติ๊กไว้เป็นค่าเริ่มต้น ถ้าลบ Store จะติดตั้งแอปจาก Store ไม่ได้ และ**แอป Xbox กับ Game Pass จะใช้ไม่ได้** แอปเกมของ Akati OS ยังติดตั้งได้ตามปกติเพราะใช้ WinGet ถ้าต้องการ Store กลับมา เปิด Akati OS Center > ปรับแต่ง แล้วเปิดสวิตช์ Microsoft Store หรือรัน `wsreset -i` แบบผู้ดูแลระบบ
+
 ## Gaming tweaks
 
 Both are off by default. They do not help every PC. Try them and turn them off if games run worse.

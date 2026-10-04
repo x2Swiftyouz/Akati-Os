@@ -52,7 +52,7 @@ The AtlasOS wallpapers and themes are removed, so the Atlas logo is not used: `E
 | File | Purpose |
 |---|---|
 | `Configuration/tweaks/misc/install-game-apps.yml` | Runs `GAMEAPPS.ps1` for each gaming app the user ticked; creates GPU driver download shortcuts (`.url`) on the Public Desktop |
-| `Configuration/tweaks/misc/akati-extras.yml` | Optional gaming tweaks (registry values, only if ticked) and the Windows Terminal color scheme |
+| `Configuration/tweaks/misc/akati-extras.yml` | Optional gaming tweaks (registry values, only if ticked), Microsoft Store removal (option `remove-store`, ticked by default, `!appx` family `Microsoft.WindowsStore*`), the Windows Terminal color scheme and the Akati OS Center shortcuts |
 | `Executables/AtlasModules/Scripts/GAMEAPPS.ps1` | Installs one gaming app (see below). Stays on disk so apps can be installed later |
 | `Executables/AtlasModules/Scripts/AkatiUpdate.ps1` | Update checker, only runs when the user opens it (see below) |
 | `Executables/AtlasModules/Other/AkatiOS/terminal-fragment.json` | Windows Terminal color scheme and profile, copied to `%ProgramData%\Microsoft\Windows Terminal\Fragments\AkatiOS` |
@@ -76,7 +76,7 @@ Only applied if ticked on the gaming tweaks page. Both are off by default.
 
 Only apps the user ticks on the setup pages are installed, or the app the user picks later in `AtlasDesktop\Akati OS\Install Gaming Apps`.
 
-1. **WinGet first** (`winget install --id <Id> --exact --silent`). WinGet checks the installer hash from the WinGet manifest.
+1. **WinGet first** (`winget install --id <Id> --exact --source winget --silent`). WinGet checks the installer hash from the WinGet manifest.
 2. **Fallback, only for Steam and Discord**, if WinGet is missing or fails: the installer is downloaded with `curl.exe` from the vendor's own URL and run silently:
 
 | App | WinGet Id | Fallback URL |
@@ -89,6 +89,8 @@ Only apps the user ticks on the setup pages are installed, or the app the user p
 | Battle.net | `Blizzard.BattleNet` | none |
 | OBS Studio | `OBSProject.OBSStudio` | none |
 
+Discord installs per user. When `GAMEAPPS.ps1` runs elevated (during setup or from Akati OS Center), it registers a one-time scheduled task `AkatiOS Install Discord` that runs the same script as the signed-in user with limited rights, waits for it and deletes the task.
+
 ## What Akati OS Center does
 
 It runs only when the user opens it and asks for administrator rights. Everything it changes is listed here:
@@ -96,6 +98,7 @@ It runs only when the user opens it and asks for administrator rights. Everythin
 - **Gaming apps**: runs `GAMEAPPS.ps1 -App <name>` (see above)
 - **Tweaks**: the registry values in [Gaming tweaks](#gaming-tweaks-registry), plus Game Mode (`HKCU\Software\Microsoft\GameBar` `AutoGameModeEnabled`), and runs the unchanged AtlasOS scripts in `AtlasDesktop\3. General Configuration\Power-saving` and `\Hibernation` with `/silent`
 - **Cleaner**: deletes the contents of `%TEMP%`, `%windir%\Temp`, `%LOCALAPPDATA%\CrashDumps` and empties the Recycle Bin, only for the items the user ticks
+- **Microsoft Store switch**: off removes the `Microsoft.WindowsStore` package for all users; on runs `wsreset -i`, which installs it again
 - **Appearance**: opens an Akati OS `.theme` file, which Windows applies
 - **Update check**: the same GitHub API request as `AkatiUpdate.ps1`
 - Saves the chosen language to `HKCU\Software\AkatiOS\Center`

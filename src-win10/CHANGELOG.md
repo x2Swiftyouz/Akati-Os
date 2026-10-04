@@ -19,7 +19,7 @@ It has the same Akati OS changes as the Windows 11 version v1.3.0.
 - Warnings in the playbook description: back up your files, Windows 10 is out of support
 
 ### Fixed
-- Discord showed "A fatal Javascript error occured: Attempt to install host that is currently running" after setup. `GAMEAPPS.ps1` read the WinGet exit code wrongly, thought the install had failed and ran the Discord (and Steam) installer a second time. It now reads the exit code correctly and checks whether the app is already installed
+- Discord showed "A fatal Javascript error occured: Attempt to install host that is currently running" after setup. `GAMEAPPS.ps1` read the WinGet exit code wrongly, thought the install had failed and ran the Discord (and Steam) installer a second time. It now reads the exit code correctly and checks whether the app is already installed. Discord, which starts itself after installing, is now closed right after setup installs it, so no elevated copy keeps running
 
 ### Changed
 - Playbook name (AkatiOS10), version and UniqueId; supports Windows 10 22H2 (19045) only

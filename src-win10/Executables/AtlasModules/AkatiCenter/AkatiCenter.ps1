@@ -79,6 +79,7 @@ $strings = @{
         'status.theme' = 'Theme applied: {0}'
         'status.checking' = 'Checking for updates...'
         'update.latest' = 'You have the latest version ({0}).'
+        'update.ahead' = 'Your version is newer than the latest release ({0}): test build.'
         'update.new' = 'New version available: {0}. A new version needs a fresh Windows install.'
         'update.error' = 'Could not reach GitHub.'
         'update.open' = 'Open release page'
@@ -123,6 +124,7 @@ $strings = @{
         'status.theme' = 'เปลี่ยนธีมเป็น {0} แล้ว'
         'status.checking' = 'กำลังตรวจอัปเดต...'
         'update.latest' = 'ใช้เวอร์ชันล่าสุดอยู่แล้ว ({0})'
+        'update.ahead' = 'เวอร์ชันในเครื่องใหม่กว่า release ล่าสุด ({0}) เป็นตัวทดสอบ'
         'update.new' = 'มีเวอร์ชันใหม่: {0} ต้องลง Windows ใหม่พร้อมไฟล์ .apbx ตัวใหม่'
         'update.error' = 'เชื่อมต่อ GitHub ไม่ได้'
         'update.open' = 'เปิดหน้า release'
@@ -617,9 +619,15 @@ function Start-UpdateCheck {
             Set-Status (T 'update.error'); return
         }
         $script:releaseUrl = $release.html_url
-        $newer = $false
-        try { $newer = [version]($release.tag_name.TrimStart('v')) -gt [version]($version.TrimStart('v')) } catch { $newer = $release.tag_name -ne $version }
-        if ($newer) {
+        $newer = $false; $ahead = $false
+        try {
+            $newer = [version]($release.tag_name.TrimStart('v')) -gt [version]($version.TrimStart('v'))
+            $ahead = [version]($version.TrimStart('v')) -gt [version]($release.tag_name.TrimStart('v'))
+        } catch { $newer = $release.tag_name -ne $version }
+        if ($ahead) {
+            $msg = (T 'update.ahead') -f $release.tag_name
+            $ui.UpdateStatus.Foreground = $window.FindResource('Good')
+        } elseif ($newer) {
             $msg = (T 'update.new') -f $release.tag_name
             $ui.UpdateStatus.Foreground = $window.FindResource('Accent2')
             $ui.UpdateButton.Content = T 'update.open'

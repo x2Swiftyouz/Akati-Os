@@ -29,7 +29,9 @@ VERSION="${1:-$(tr -d '\r' < "$CONF" | sed -n 's:.*<Version>\(.*\)</Version>.*:\
 # 3. Warn about text files that lost CRLF line endings
 bad=0
 while IFS= read -r -d '' f; do
-    if grep -qv $'\r$' "$f"; then
+    # UTF-16 files (BOM FF FE, e.g. some .reg) are skipped: byte check does not apply
+    [[ "$(head -c2 "$f" | od -An -tx1 | tr -d ' ')" == "fffe" ]] && continue
+    if perl -0777 -ne 'exit(/(?<!\r)\n/ ? 0 : 1)' "$f"; then
         echo "warning: LF line endings in ${f#$ROOT/}" >&2; bad=1
     fi
 done < <(find "$SRC" -type f \( -iname '*.yml' -o -iname '*.conf' -o -iname '*.ps1' -o -iname '*.psm1' \
@@ -48,8 +50,8 @@ else
     echo "error: need 7z or zip" >&2; exit 1
 fi
 
-# 5. Checksums (sha256sum format, covers every .apbx in dist/)
-(cd "$DIST" && sha256sum -- *.apbx > SHA256SUMS.txt)
+# 5. Checksum of the file just built (sha256sum format)
+(cd "$DIST" && sha256sum -- "$OUT" > SHA256SUMS.txt)
 
 echo "built: dist/$OUT"
 cat "$DIST/SHA256SUMS.txt"

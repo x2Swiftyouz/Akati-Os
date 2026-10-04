@@ -1,8 +1,8 @@
-# Build output and packed playbooks
+# Build output and packed playbooks (zips inside src/ are part of the playbook)
 dist/
 *.apbx
-*.zip
-*.7z
+/*.zip
+/*.7z
 
 # OS / editor noise
 Thumbs.db

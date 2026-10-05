@@ -61,21 +61,20 @@ actions:
     weight: 40
     option: 'install-obs'
     runas: currentUserElevated
+    # "Recommended" on the gaming apps page: Steam and Discord (the app pages are not shown)
+  - !writeStatus: {status: 'Installing Steam', option: 'akati-recommended'}
+  - !powerShell:
+    command: '.\AtlasModules\Scripts\GAMEAPPS.ps1 -App Steam'
+    exeDir: true
+    wait: true
+    weight: 40
+    option: 'akati-recommended'
+    runas: currentUserElevated
+  - !writeStatus: {status: 'Discord will be installed after restart', option: 'akati-recommended'}
   - !powerShell:
     command: |
-      $desk = [Environment]::GetFolderPath('CommonDesktopDirectory')
-      Set-Content -Path """$desk\Download NVIDIA GPU Driver.url""" -Value """[InternetShortcut]`r`nURL=https://www.nvidia.com/en-us/drivers/""" -Force
+      $script = Join-Path ([Environment]::GetFolderPath('Windows')) 'AtlasModules\Scripts\GAMEAPPS.ps1'
+      Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\RunOnce' -Name 'AkatiOS Install Discord' -Value ('powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "' + $script + '" -App Discord') -Force
     wait: true
-    option: 'gpu-nvidia'
-  - !powerShell:
-    command: |
-      $desk = [Environment]::GetFolderPath('CommonDesktopDirectory')
-      Set-Content -Path """$desk\Download AMD GPU Driver.url""" -Value """[InternetShortcut]`r`nURL=https://www.amd.com/en/support/download/drivers.html""" -Force
-    wait: true
-    option: 'gpu-amd'
-  - !powerShell:
-    command: |
-      $desk = [Environment]::GetFolderPath('CommonDesktopDirectory')
-      Set-Content -Path """$desk\Download Intel GPU Driver.url""" -Value """[InternetShortcut]`r`nURL=https://www.intel.com/content/www/us/en/download-center/home.html""" -Force
-    wait: true
-    option: 'gpu-intel'
+    option: 'akati-recommended'
+    runas: currentUserElevated

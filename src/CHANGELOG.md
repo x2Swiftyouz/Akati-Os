@@ -11,12 +11,12 @@
 - Akati OS for Windows 10 22H2 (build 19045): a separate playbook, `AkatiOS-Win10_v1.3.0.apbx`, based on AtlasOS v0.4.1 (the last AtlasOS version that supports Windows 10). Source in `src-win10/`
 - Akati OS folder in `AtlasDesktop`: install gaming apps later, switch themes (Dark, Light, Slideshow), GPU driver links, Check for Updates, GitHub and options guide links
 - Akati OS Slideshow theme: the wallpaper changes every 30 minutes
-- Optional gaming tweaks page (off by default): Hardware-accelerated GPU scheduling and Optimizations for windowed games
 - Update checker (`Check for Updates` in the Akati OS folder): compares the installed version with the latest GitHub release, downloads nothing
 - Windows Terminal "Akati OS" color scheme and profile
 - Options guide (`docs/OPTIONS.md`, English and Thai). The "Learn more" links on the setup pages open it
 
 ### Changed
+- Fewer setup pages: a new gaming apps page with "Recommended" (Steam, Discord, remove the Microsoft Store) skips the app pages; "Choose apps myself" shows them. The GPU driver page is removed (the links are in `Akati OS\GPU Drivers`)
 - AtlasOS wallpapers and themes removed, so the Atlas logo is no longer used. The `.apbx` file is much smaller
 - `GAMEAPPS.ps1` moved to `AtlasModules\Scripts` so it stays on disk after setup
 - Installed version is saved to `HKLM\SOFTWARE\AkatiOS`

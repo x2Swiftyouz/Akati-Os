@@ -32,7 +32,7 @@ W11 = Windows 11 playbook, W10 = Windows 10 playbook.
 
 | File | In | Change |
 |---|---|---|
-| `playbook.conf` | W11, W10 | Name (`AkatiOS` / `AkatiOS10`), title, version, own UniqueId, descriptions, own Git and install guide links, AtlasOS website/donate/Git links removed, "Learn more" links point to [OPTIONS.md](OPTIONS.md); `IsChecked` defaults; anti-cheat warnings; gaming app pages, GPU driver page, gaming tweaks page. W11: `UpgradableFrom` removed, build 26300 added, OOBE text. W10: build 19045 only, Windows 10 end of support warning |
+| `playbook.conf` | W11, W10 | Name (`AkatiOS` / `AkatiOS10`), title, version, own UniqueId, descriptions, own Git and install guide links, AtlasOS website/donate/Git links removed, "Learn more" links point to [OPTIONS.md](OPTIONS.md); `IsChecked` defaults; anti-cheat warnings; gaming apps page (`akati-recommended` / `akati-custom`), app pages and Microsoft Store page shown only with `akati-custom` (`DependsOn`). W11: `UpgradableFrom` removed, build 26300 added, OOBE text. W10: build 19045 only, Windows 10 end of support warning |
 | `playbook.png`, `Executables/user.png` | W11, W10 | Akati OS images |
 | `Configuration/custom.yml` | W11, W10 | Runs `tweaks\misc\install-game-apps.yml` and `tweaks\misc\akati-extras.yml` after `atlas\start.yml`. W11: one status text |
 | `Configuration/atlas/start.yml` | W11 | One status text |
@@ -51,8 +51,8 @@ The AtlasOS wallpapers and themes are removed, so the Atlas logo is not used: `E
 
 | File | Purpose |
 |---|---|
-| `Configuration/tweaks/misc/install-game-apps.yml` | Runs `GAMEAPPS.ps1` for each gaming app the user ticked; creates GPU driver download shortcuts (`.url`) on the Public Desktop |
-| `Configuration/tweaks/misc/akati-extras.yml` | Optional gaming tweaks (registry values, only if ticked), Microsoft Store removal (option `remove-store`, ticked by default, `!appx` family `Microsoft.WindowsStore*`), the Windows Terminal color scheme and the Akati OS Center shortcuts |
+| `Configuration/tweaks/misc/install-game-apps.yml` | Runs `GAMEAPPS.ps1` for each gaming app the user ticked, or Steam and Discord with `akati-recommended` |
+| `Configuration/tweaks/misc/akati-extras.yml` | Microsoft Store removal (option `remove-store` or `akati-recommended`, `!appx` family `Microsoft.WindowsStore*`), the Windows Terminal color scheme and the Akati OS Center shortcuts |
 | `Executables/AtlasModules/Scripts/GAMEAPPS.ps1` | Installs one gaming app (see below). Stays on disk so apps can be installed later |
 | `Executables/AtlasModules/Scripts/AkatiUpdate.ps1` | Update checker, only runs when the user opens it (see below) |
 | `Executables/AtlasModules/Other/AkatiOS/terminal-fragment.json` | Windows Terminal color scheme and profile, copied to `%ProgramData%\Microsoft\Windows Terminal\Fragments\AkatiOS` |
@@ -65,7 +65,7 @@ The AtlasOS wallpapers and themes are removed, so the Atlas logo is not used: `E
 
 ## Gaming tweaks (registry)
 
-Only applied if ticked on the gaming tweaks page. Both are off by default.
+Not set during setup. Only set when the user turns them on in Akati OS Center.
 
 | Option | Registry value | Playbook |
 |---|---|---|

@@ -63,34 +63,38 @@ Brave, LibreWolf and Firefox are privacy friendly. Chrome is not recommended for
 
 ## Gaming apps
 
-Steam (ticked), Epic Games Launcher, EA app, Ubisoft Connect, Battle.net, Discord (ticked) and OBS Studio.
+The gaming apps page has two choices:
+
+- **Recommended** (default): installs Steam and Discord and removes the Microsoft Store. The app pages are skipped.
+- **Choose apps myself**: shows the app pages and the Microsoft Store page. Pick from Steam, Epic Games Launcher, EA app, Ubisoft Connect, Battle.net, Discord and OBS Studio.
+
+Discord is installed 1-2 minutes after your first sign-in, not during setup.
 They are installed with WinGet, which checks each installer. If WinGet is not available, Steam and Discord are downloaded from their official websites. The other apps are skipped and you can install them later.
 Visual C++ and DirectX runtimes are always installed.
 
-**ภาษาไทย**: ติดตั้งผ่าน WinGet ซึ่งตรวจไฟล์ติดตั้งทุกครั้ง ถ้าไม่มี WinGet จะโหลด Steam และ Discord จากเว็บไซต์ทางการ ส่วนแอปอื่นจะข้ามไป ติดตั้งทีหลังได้
+**ภาษาไทย**: หน้าแอปเกมมี 2 ตัวเลือก "Recommended" (ค่าเริ่มต้น) ติดตั้ง Steam กับ Discord และลบ Microsoft Store โดยข้ามหน้าเลือกแอป ส่วน "Choose apps myself" จะแสดงหน้าเลือกแอปและหน้า Microsoft Store ให้เลือกเอง Discord จะติดตั้งหลังล็อกอินครั้งแรก 1-2 นาที แอปติดตั้งผ่าน WinGet ซึ่งตรวจไฟล์ติดตั้งทุกครั้ง ถ้าไม่มี WinGet จะโหลด Steam และ Discord จากเว็บไซต์ทางการ ส่วนแอปอื่นจะข้ามไป ติดตั้งทีหลังได้
 Install later: `AtlasDesktop\Akati OS\Install Gaming Apps`
 
 ## GPU drivers
 
-Akati OS does not install GPU drivers. Tick your GPU to get a download link on the desktop. Leave all unticked to skip.
+Akati OS does not install GPU drivers. Download links for NVIDIA, AMD and Intel are in `AtlasDesktop\Akati OS\GPU Drivers`.
 
-**ภาษาไทย**: Akati OS ไม่ติดตั้งไดรเวอร์การ์ดจอให้ ติ๊กยี่ห้อการ์ดจอเพื่อให้มีลิงก์ดาวน์โหลดไดรเวอร์บน Desktop
-Later: `AtlasDesktop\Akati OS\GPU Drivers`
+**ภาษาไทย**: Akati OS ไม่ติดตั้งไดรเวอร์การ์ดจอให้ ลิงก์ดาวน์โหลดไดรเวอร์ NVIDIA, AMD และ Intel อยู่ในโฟลเดอร์ `AtlasDesktop\Akati OS\GPU Drivers`
 
 ## Microsoft Store
 
-**Remove Microsoft Store** is ticked by default. Without the Store you cannot install Store apps, and the **Xbox app and Xbox Game Pass do not work**. Gaming apps from Akati OS still install, because they use WinGet. To get the Store back, open Akati OS Center > Tweaks and turn on **Microsoft Store**, or run `wsreset -i` as administrator.
+The Microsoft Store is removed with **Recommended** on the gaming apps page. With **Choose apps myself**, **Remove Microsoft Store** is ticked by default. Without the Store you cannot install Store apps, and the **Xbox app and Xbox Game Pass do not work**. Gaming apps from Akati OS still install, because they use WinGet. To get the Store back, open Akati OS Center > Tweaks and turn on **Microsoft Store**, or run `wsreset -i` as administrator.
 
-**ภาษาไทย**: "Remove Microsoft Store" ติ๊กไว้เป็นค่าเริ่มต้น ถ้าลบ Store จะติดตั้งแอปจาก Store ไม่ได้ และ**แอป Xbox กับ Game Pass จะใช้ไม่ได้** แอปเกมของ Akati OS ยังติดตั้งได้ตามปกติเพราะใช้ WinGet ถ้าต้องการ Store กลับมา เปิด Akati OS Center > ปรับแต่ง แล้วเปิดสวิตช์ Microsoft Store หรือรัน `wsreset -i` แบบผู้ดูแลระบบ
+**ภาษาไทย**: ถ้าเลือก Recommended จะลบ Store ให้ ถ้าเลือก Choose apps myself ตัวเลือก "Remove Microsoft Store" จะติ๊กไว้เป็นค่าเริ่มต้น ถ้าลบ Store จะติดตั้งแอปจาก Store ไม่ได้ และ**แอป Xbox กับ Game Pass จะใช้ไม่ได้** แอปเกมของ Akati OS ยังติดตั้งได้ตามปกติเพราะใช้ WinGet ถ้าต้องการ Store กลับมา เปิด Akati OS Center > ปรับแต่ง แล้วเปิดสวิตช์ Microsoft Store หรือรัน `wsreset -i` แบบผู้ดูแลระบบ
 
 ## Gaming tweaks
 
-Both are off by default. They do not help every PC. Try them and turn them off if games run worse.
+These are not on the setup pages. Turn them on in **Akati OS Center > Tweaks** if you want them. They do not help every PC. Try them and turn them off if games run worse.
 
 - **Hardware-accelerated GPU scheduling**: lets the GPU manage its own memory. Needs a supported GPU and driver (for example NVIDIA GTX 10 series or newer, AMD RX 5000 series or newer). Applies after a restart. Turn off in Settings > System > Display > Graphics > Change default graphics settings.
 - **Optimizations for windowed games** (Windows 11 only): lower latency for DirectX 10/11 games in windowed and borderless mode. Turn off in Settings > System > Display > Graphics > Change default graphics settings.
 
-**ภาษาไทย**: ปิดไว้ทั้งสองข้อเป็นค่าเริ่มต้น เพราะไม่ได้ช่วยทุกเครื่อง ถ้าเปิดแล้วเกมแย่ลงให้ปิดกลับ
+**ภาษาไทย**: ไม่มีในหน้าติดตั้งแล้ว เปิดได้ใน Akati OS Center > ปรับแต่ง เพราะไม่ได้ช่วยทุกเครื่อง ถ้าเปิดแล้วเกมแย่ลงให้ปิดกลับ
 - Hardware-accelerated GPU scheduling: ให้การ์ดจอจัดการหน่วยความจำเอง ต้องใช้การ์ดจอและไดรเวอร์ที่รองรับ มีผลหลังรีสตาร์ต
 - Optimizations for windowed games (เฉพาะ Windows 11): ลด latency ของเกม DirectX 10/11 ที่เล่นแบบหน้าต่างหรือ borderless
 

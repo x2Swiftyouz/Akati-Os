@@ -34,9 +34,11 @@ function Test-Elevated {
     ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 }
 
-# Fallback only: if Discord had to be installed elevated, close the copy it starts by itself
+# Fallback only: if Discord had to be installed elevated, close the copy it starts by itself.
+# Never as the user: Discord installs and updates itself after the installer exits, and stopping
+# Update.exe then leaves Discord half installed (no shortcut, does not start).
 function Stop-AutoStartedApp {
-    if ($App -eq 'Discord') {
+    if ($App -eq 'Discord' -and (Test-Elevated)) {
         Start-Sleep -Seconds 5
         Get-Process -Name 'Discord', 'Update' -ErrorAction SilentlyContinue |
             Where-Object { $_.Path -like "$env:LOCALAPPDATA\Discord\*" } | Stop-Process -Force -ErrorAction SilentlyContinue

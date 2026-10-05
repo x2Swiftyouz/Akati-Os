@@ -24,15 +24,17 @@ $info = $apps[$App]
 function Test-Installed {
     if ($info.Installed) { return [bool](& $info.Installed) }
     if (Get-Command winget -EA 0) {
-        & winget list --id $info.Id --exact --accept-source-agreements --disable-interactivity *> $null
+        & winget list --id $info.Id --exact --source winget --accept-source-agreements --disable-interactivity *> $null
         return $LASTEXITCODE -eq 0
     }
     return $false
 }
 
-# Discord starts itself after installing. Setup runs as administrator, so that copy would keep running
-# elevated while setup continues, and the user's own Discord then fails with "Attempt to install host
-# that is currently running". Close it after installing; it starts normally at the next sign-in.
+function Test-Elevated {
+    ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+}
+
+# Fallback only: if Discord had to be installed elevated, close the copy it starts by itself
 function Stop-AutoStartedApp {
     if ($App -eq 'Discord') {
         Start-Sleep -Seconds 5
@@ -43,10 +45,34 @@ function Stop-AutoStartedApp {
 
 if (Test-Installed) { Write-Output "$App is already installed."; exit 0 }
 
+# Discord installs per user. Installed from an elevated process (setup, Akati OS Center), the user's own
+# Discord later fails with "Attempt to install host that is currently running". So when elevated, run
+# this script again as the signed-in user without admin rights, through a one-time scheduled task.
+if ($App -eq 'Discord' -and (Test-Elevated)) {
+    $task = 'AkatiOS Install Discord'
+    try {
+        $action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$PSCommandPath`" -App Discord"
+        $principal = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive -RunLevel Limited
+        Register-ScheduledTask -TaskName $task -Action $action -Principal $principal -Force | Out-Null
+        Write-Output "Installing $App as $env:USERNAME (without admin rights)..."
+        Start-ScheduledTask -TaskName $task
+        Start-Sleep -Seconds 3
+        $deadline = (Get-Date).AddMinutes(10)
+        while ((Get-ScheduledTask -TaskName $task).State -eq 'Running' -and (Get-Date) -lt $deadline) { Start-Sleep -Seconds 2 }
+        Unregister-ScheduledTask -TaskName $task -Confirm:$false -ErrorAction SilentlyContinue
+        if (Test-Installed) { Write-Output "$App installed."; exit 0 }
+        Write-Warning "$App was not installed as the user, trying again as administrator."
+    } catch {
+        Unregister-ScheduledTask -TaskName $task -Confirm:$false -ErrorAction SilentlyContinue
+        Write-Warning "Could not start the user install of ${App}: $($_.Exception.Message)"
+    }
+}
+
 # Try WinGet
 if (Get-Command winget -EA 0) {
     Write-Output "Installing $App with WinGet..."
-    $wingetArgs = @('install', '--id', $info.Id, '--exact', '--silent', '--accept-package-agreements', '--accept-source-agreements', '--disable-interactivity')
+    # --source winget: the apps are in the WinGet community repository, so the Microsoft Store is not needed
+    $wingetArgs = @('install', '--id', $info.Id, '--exact', '--source', 'winget', '--silent', '--accept-package-agreements', '--accept-source-agreements', '--disable-interactivity')
     if ($info.Extra) { $wingetArgs += $info.Extra }
     $proc = Start-Process winget -ArgumentList $wingetArgs -WindowStyle Hidden -PassThru
     # Read Handle now, otherwise ExitCode is empty after the process exits (PowerShell quirk)

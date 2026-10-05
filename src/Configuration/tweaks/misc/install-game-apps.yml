@@ -10,12 +10,15 @@ actions:
     weight: 40
     option: 'install-steam'
     runas: currentUserElevated
-  - !writeStatus: {status: 'Installing Discord', option: 'install-discord'}
+    # Discord updates itself right after installing. If setup restarts the PC during that update, Discord
+    # fails with "Attempt to install host that is currently running". So install it at the next sign-in
+    # instead, as the user, when nothing restarts the PC.
+  - !writeStatus: {status: 'Discord will be installed after restart', option: 'install-discord'}
   - !powerShell:
-    command: '.\AtlasModules\Scripts\GAMEAPPS.ps1 -App Discord'
-    exeDir: true
+    command: |
+      $script = Join-Path ([Environment]::GetFolderPath('Windows')) 'AtlasModules\Scripts\GAMEAPPS.ps1'
+      Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\RunOnce' -Name 'AkatiOS Install Discord' -Value ('powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "' + $script + '" -App Discord') -Force
     wait: true
-    weight: 40
     option: 'install-discord'
     runas: currentUserElevated
   - !writeStatus: {status: 'Installing Epic Games Launcher', option: 'install-epic'}

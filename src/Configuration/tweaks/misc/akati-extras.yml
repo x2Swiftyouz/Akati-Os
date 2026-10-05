@@ -7,9 +7,6 @@ actions:
   - !writeStatus: {status: 'Removing Microsoft Store', option: 'remove-store'}
   - !taskKill: {name: 'WinStore.App', ignoreErrors: true, option: 'remove-store'}
   - !appx: {name: 'Microsoft.WindowsStore*', type: family, option: 'remove-store'}
-  - !writeStatus: {status: 'Removing Microsoft Store', option: 'akati-recommended'}
-  - !taskKill: {name: 'WinStore.App', ignoreErrors: true, option: 'akati-recommended'}
-  - !appx: {name: 'Microsoft.WindowsStore*', type: family, option: 'akati-recommended'}
 
     # Windows Terminal color scheme and profile for all users (a Terminal "fragment")
   - !powerShell:

@@ -58,9 +58,17 @@ $strings = @{
         'quick' = 'Quick actions'
         'quick.clean' = 'Clean temp files'; 'quick.clean.d' = 'Free up disk space'
         'quick.update' = 'Check for updates'; 'quick.update.d' = 'Compare with GitHub'
-        'quick.atlas' = 'Open Atlas folder'; 'quick.atlas.d' = 'All other settings'
+        'quick.system' = 'System settings'; 'quick.system.d' = 'All other settings'
+        'nav.system' = 'System settings'; 'system.title' = 'System settings'
+        'system.sub' = 'All AtlasOS settings. A button applies that option; scripts open in a window that explains what they change. (default) marks the Akati OS default.'
+        'system.search' = 'Search settings'; 'system.links' = 'Links and tools'
+        'system.cat.Software' = 'Software'; 'system.cat.Drivers' = 'Drivers'; 'system.cat.General Configuration' = 'General'
+        'system.cat.Interface Tweaks' = 'Interface'; 'system.cat.Windows Settings' = 'Windows Settings'
+        'system.cat.Advanced Configuration' = 'Advanced'; 'system.cat.Security' = 'Security'
+        'system.cat.Additional Tools' = 'Additional tools'; 'system.cat.Troubleshooting' = 'Troubleshooting'; 'system.cat.AtlasOS' = 'AtlasOS'
+        'status.applied' = 'Applied: {0}'; 'status.opened' = 'Opened: {0}'
         'gaming.title' = 'Gaming apps'
-        'gaming.sub' = 'Installed with WinGet from official sources. Apps that are already installed are skipped.'
+        'gaming.sub' = 'Akati OS does not install apps during setup. Install them here, from official sources (WinGet, or the official installer for Steam and Discord).'
         'gpu.title' = 'GPU drivers'; 'gpu.sub' = 'Opens the official driver download page.'
         'tweaks.title' = 'Tweaks'
         'tweaks.sub' = 'Each switch shows the current state of your PC. Turn a tweak off again if games run worse.'
@@ -104,9 +112,17 @@ $strings = @{
         'quick' = 'ทางลัด'
         'quick.clean' = 'ล้างไฟล์ชั่วคราว'; 'quick.clean.d' = 'เพิ่มพื้นที่ดิสก์'
         'quick.update' = 'ตรวจอัปเดต'; 'quick.update.d' = 'เทียบกับ GitHub'
-        'quick.atlas' = 'เปิดโฟลเดอร์ Atlas'; 'quick.atlas.d' = 'การตั้งค่าอื่น ๆ ทั้งหมด'
+        'quick.system' = 'ตั้งค่าระบบ'; 'quick.system.d' = 'การตั้งค่าอื่น ๆ ทั้งหมด'
+        'nav.system' = 'ตั้งค่าระบบ'; 'system.title' = 'ตั้งค่าระบบ'
+        'system.sub' = 'การตั้งค่าทั้งหมดของ AtlasOS กดปุ่มเพื่อใช้ตัวเลือกนั้น สคริปต์จะเปิดในหน้าต่างที่อธิบายว่าเปลี่ยนอะไร (default) คือค่าเริ่มต้นของ Akati OS ชื่อตัวเลือกเป็นภาษาอังกฤษตาม AtlasOS'
+        'system.search' = 'ค้นหาการตั้งค่า'; 'system.links' = 'ลิงก์และเครื่องมือ'
+        'system.cat.Software' = 'ซอฟต์แวร์'; 'system.cat.Drivers' = 'ไดรเวอร์'; 'system.cat.General Configuration' = 'ทั่วไป'
+        'system.cat.Interface Tweaks' = 'หน้าตา'; 'system.cat.Windows Settings' = 'การตั้งค่า Windows'
+        'system.cat.Advanced Configuration' = 'ขั้นสูง'; 'system.cat.Security' = 'ความปลอดภัย'
+        'system.cat.Additional Tools' = 'เครื่องมือเพิ่มเติม'; 'system.cat.Troubleshooting' = 'แก้ปัญหา'; 'system.cat.AtlasOS' = 'AtlasOS'
+        'status.applied' = 'ใช้แล้ว: {0}'; 'status.opened' = 'เปิดแล้ว: {0}'
         'gaming.title' = 'แอปเกม'
-        'gaming.sub' = 'ติดตั้งผ่าน WinGet จากแหล่งทางการ แอปที่ติดตั้งแล้วจะถูกข้าม'
+        'gaming.sub' = 'Akati OS ไม่ได้ติดตั้งแอปให้ตอนลง กดติดตั้งได้ที่นี่ โหลดจากแหล่งทางการ (WinGet หรือตัวติดตั้งทางการของ Steam และ Discord)'
         'gpu.title' = 'ไดรเวอร์การ์ดจอ'; 'gpu.sub' = 'เปิดหน้าดาวน์โหลดไดรเวอร์ทางการ'
         'tweaks.title' = 'ปรับแต่ง'
         'tweaks.sub' = 'สวิตช์แสดงสถานะจริงของเครื่อง ถ้าเปิดแล้วเกมแย่ลงให้ปิดกลับ'
@@ -663,17 +679,113 @@ function Start-UpdateCheck {
 }
 $ui.UpdateButton.Add_Click({ if ($this.Tag -eq 'open') { Start-Process $script:releaseUrl } else { Start-UpdateCheck } })
 $ui.QuickUpdate.Add_Click({ $ui.NavAbout.IsChecked = $true; Start-UpdateCheck })
-$openAtlas = { if (Test-Path $desktop) { Start-Process explorer.exe -ArgumentList "`"$desktop`"" } }
-$ui.QuickAtlas.Add_Click($openAtlas)
-$ui.LinkAtlasFolder.Add_Click($openAtlas)
+$ui.QuickAtlas.Add_Click({ $ui.NavSystem.IsChecked = $true })
 $ui.LinkGithub.Add_Click({ Start-Process "https://github.com/$repo" })
 $ui.LinkOptions.Add_Click({ Start-Process "https://github.com/$repo/blob/main/docs/OPTIONS.md" })
 $ui.LinkAtlas.Add_Click({ Start-Process 'https://github.com/Atlas-OS/Atlas' })
 
 # ---------------------------------------------------------------------------------------------
+# System settings: every setting of the AtlasOS folder (AtlasDesktop), built from its folders, so
+# nothing has to be copied and new AtlasOS settings show up by themselves. A folder with files is one
+# row, each file is one button.
+# ---------------------------------------------------------------------------------------------
+function Invoke-AtlasItem([IO.FileInfo]$file) {
+    $name = $file.BaseName
+    switch ($file.Extension.ToLowerInvariant()) {
+        '.reg' {
+            Start-Process reg.exe -ArgumentList "import `"$($file.FullName)`"" -WindowStyle Hidden -Wait
+            Set-Status ((T 'status.applied') -f $name)
+        }
+        '.cmd' {
+            # AtlasOS scripts explain what they change and wait for a key, so they get a visible window
+            Start-Process cmd.exe -ArgumentList "/c `"`"$($file.FullName)`"`"" -WorkingDirectory $file.DirectoryName
+            Set-Status ((T 'status.opened') -f $name)
+        }
+        '.ps1' {
+            Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$($file.FullName)`"" -WorkingDirectory $file.DirectoryName
+            Set-Status ((T 'status.opened') -f $name)
+        }
+        default {
+            Start-Process -FilePath $file.FullName
+            Set-Status ((T 'status.opened') -f $name)
+        }
+    }
+}
+
+$script:systemCards = New-Object System.Collections.ArrayList
+function Add-SystemCard([string]$key, [string]$title, [System.IO.DirectoryInfo[]]$dirs, [string]$topPath) {
+    $card = New-Object System.Windows.Controls.Border
+    $card.Style = $window.FindResource('Card'); $card.Margin = '0,0,0,16'
+    $stack = New-Object System.Windows.Controls.StackPanel
+    $head = New-Text $title 16 'SemiBold' "t:system.cat.$key"
+    $head.Text = T "system.cat.$key"; $head.Margin = '0,0,0,6'
+    [void]$stack.Children.Add($head)
+    $rows = New-Object System.Collections.ArrayList
+    foreach ($d in $dirs) {
+        $files = @(Get-ChildItem -LiteralPath $d.FullName -File -ErrorAction SilentlyContinue | Where-Object { $_.Extension -ne '.xml' } | Sort-Object Name)
+        if ($files.Count -eq 0) { continue }
+        $row = New-Object System.Windows.Controls.Border
+        $row.Padding = '10,8'; $row.CornerRadius = 8; $row.Margin = '-10,2'
+        $rowStack = New-Object System.Windows.Controls.StackPanel
+        if ($d.FullName -eq $topPath) {
+            $label = New-Text (T 'system.links') 13 'SemiBold' 't:system.links'
+            $rel = ''
+        } else {
+            $rel = $d.FullName.Substring($topPath.Length + 1).Replace('\', ' > ')
+            $label = New-Text $rel 13 'SemiBold'
+        }
+        $label.Foreground = $window.FindResource('Accent2')
+        [void]$rowStack.Children.Add($label)
+        $wrap = New-Object System.Windows.Controls.WrapPanel
+        foreach ($f in $files) {
+            $btn = New-Object System.Windows.Controls.Button
+            $btn.Style = $window.FindResource('Secondary'); $btn.Margin = '0,6,8,0'
+            $btn.Content = $f.BaseName; $btn.ToolTip = $f.Name; $btn.Tag = $f
+            $btn.Add_Click({ Invoke-AtlasItem $this.Tag })
+            [void]$wrap.Children.Add($btn)
+        }
+        [void]$rowStack.Children.Add($wrap)
+        $row.Child = $rowStack
+        $row.Add_MouseEnter({ $this.Background = '#1C1626' })
+        $row.Add_MouseLeave({ $this.Background = $null })
+        $row.Tag = ("$title $key $rel " + (($files | ForEach-Object { $_.BaseName }) -join ' ')).ToLowerInvariant()
+        [void]$stack.Children.Add($row)
+        [void]$rows.Add($row)
+    }
+    if ($rows.Count -eq 0) { return }
+    $card.Child = $stack
+    [void]$ui.SystemList.Children.Add($card)
+    [void]$script:systemCards.Add(@{ Card = $card; Rows = $rows })
+}
+
+if (Test-Path -LiteralPath $desktop) {
+    foreach ($top in Get-ChildItem -LiteralPath $desktop -Directory | Sort-Object Name) {
+        $key = $top.Name -replace '^\d+\.\s*', ''
+        $dirs = @($top) + @(Get-ChildItem -LiteralPath $top.FullName -Directory -Recurse | Sort-Object FullName)
+        Add-SystemCard $key $key $dirs $top.FullName
+    }
+    # Files directly in the folder: AtlasOS links (and the Atlas Toolbox installer on Windows 11)
+    Add-SystemCard 'AtlasOS' 'AtlasOS' @(Get-Item -LiteralPath $desktop) (Get-Item -LiteralPath $desktop).FullName
+}
+
+$ui.SystemSearch.Add_TextChanged({
+    $q = $this.Text.Trim().ToLowerInvariant()
+    $ui.SystemSearchHint.Visibility = if ($q) { 'Collapsed' } else { 'Visible' }
+    foreach ($c in $script:systemCards) {
+        $shown = 0
+        foreach ($r in $c.Rows) {
+            $match = !$q -or $r.Tag.Contains($q)
+            $r.Visibility = if ($match) { 'Visible' } else { 'Collapsed' }
+            if ($match) { $shown++ }
+        }
+        $c.Card.Visibility = if ($shown) { 'Visible' } else { 'Collapsed' }
+    }
+})
+
+# ---------------------------------------------------------------------------------------------
 # Navigation, title bar, language
 # ---------------------------------------------------------------------------------------------
-$pages = 'dashboard', 'gaming', 'tweaks', 'cleaner', 'appearance', 'about'
+$pages = 'dashboard', 'gaming', 'tweaks', 'cleaner', 'appearance', 'system', 'about'
 $script:page = 'dashboard'
 function Show-Page([string]$name) {
     $script:page = $name

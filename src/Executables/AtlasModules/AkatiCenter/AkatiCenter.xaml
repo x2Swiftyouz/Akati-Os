@@ -316,6 +316,9 @@
                         <RadioButton x:Name="NavAppearance" Style="{StaticResource Nav}">
                             <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE771;" Margin="0,0,14,0"/><TextBlock Tag="t:nav.appearance" Text="Appearance"/></StackPanel>
                         </RadioButton>
+                        <RadioButton x:Name="NavSystem" Style="{StaticResource Nav}">
+                            <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE713;" Margin="0,0,14,0"/><TextBlock Tag="t:nav.system" Text="System settings"/></StackPanel>
+                        </RadioButton>
                         <RadioButton x:Name="NavAbout" Style="{StaticResource Nav}">
                             <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE946;" Margin="0,0,14,0"/><TextBlock Tag="t:nav.about" Text="About"/></StackPanel>
                         </RadioButton>
@@ -437,7 +440,7 @@
                                         <Button x:Name="QuickAtlas" Style="{StaticResource Action}" Margin="5,0">
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Style="{StaticResource Glyph}" Text="&#xE8B7;" Foreground="{StaticResource Accent2}" Margin="0,0,12,0"/>
-                                                <StackPanel><TextBlock Tag="t:quick.atlas" Text="Open Atlas folder" FontWeight="SemiBold"/><TextBlock Tag="t:quick.atlas.d" Text="All other settings" Style="{StaticResource Muted}" FontSize="11"/></StackPanel>
+                                                <StackPanel><TextBlock Tag="t:quick.system" Text="System settings" FontWeight="SemiBold"/><TextBlock Tag="t:quick.system.d" Text="All other settings" Style="{StaticResource Muted}" FontSize="11"/></StackPanel>
                                             </StackPanel>
                                         </Button>
                                     </UniformGrid>
@@ -450,7 +453,7 @@
                     <ScrollViewer x:Name="PageGaming" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
                         <StackPanel>
                             <TextBlock Tag="t:gaming.title" Text="Gaming apps" FontSize="24" FontWeight="Bold"/>
-                            <TextBlock Tag="t:gaming.sub" Text="Installed with WinGet from official sources. Apps that are already installed are skipped." Style="{StaticResource Muted}" Margin="0,4,0,18"/>
+                            <TextBlock Tag="t:gaming.sub" Text="Akati OS does not install apps during setup. Install them here, from official sources." Style="{StaticResource Muted}" Margin="0,4,0,18"/>
                             <Border Style="{StaticResource Card}" Padding="8" Margin="0,0,0,16">
                                 <StackPanel x:Name="AppsList"/>
                             </Border>
@@ -516,6 +519,24 @@
                         </StackPanel>
                     </ScrollViewer>
 
+                    <!-- System settings: every setting of the AtlasOS folder (AtlasDesktop) -->
+                    <ScrollViewer x:Name="PageSystem" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
+                        <StackPanel>
+                            <TextBlock Tag="t:system.title" Text="System settings" FontSize="24" FontWeight="Bold"/>
+                            <TextBlock Tag="t:system.sub" Text="All AtlasOS settings. A button applies that option; scripts open in a window that explains what they change." Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,4,0,14"/>
+                            <Border Style="{StaticResource Card}" Padding="14,10" Margin="0,0,0,16">
+                                <DockPanel>
+                                    <TextBlock Style="{StaticResource Glyph}" Text="&#xE721;" Foreground="{StaticResource MutedBrush}" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                    <Grid>
+                                        <TextBlock x:Name="SystemSearchHint" Tag="t:system.search" Text="Search settings" Foreground="{StaticResource MutedBrush}" FontSize="14" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                                        <TextBox x:Name="SystemSearch" Background="Transparent" BorderThickness="0" Foreground="White" CaretBrush="White" FontSize="14" VerticalContentAlignment="Center"/>
+                                    </Grid>
+                                </DockPanel>
+                            </Border>
+                            <StackPanel x:Name="SystemList"/>
+                        </StackPanel>
+                    </ScrollViewer>
+
                     <!-- About -->
                     <ScrollViewer x:Name="PageAbout" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
                         <StackPanel>
@@ -543,7 +564,6 @@
                                     <WrapPanel>
                                         <Button x:Name="LinkGithub" Style="{StaticResource Secondary}" Margin="0,0,10,10"><StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE774;" FontSize="13" Margin="0,0,8,0"/><TextBlock Text="GitHub"/></StackPanel></Button>
                                         <Button x:Name="LinkOptions" Style="{StaticResource Secondary}" Margin="0,0,10,10"><StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE897;" FontSize="13" Margin="0,0,8,0"/><TextBlock Tag="t:link.options" Text="Options guide"/></StackPanel></Button>
-                                        <Button x:Name="LinkAtlasFolder" Style="{StaticResource Secondary}" Margin="0,0,10,10"><StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE8B7;" FontSize="13" Margin="0,0,8,0"/><TextBlock Tag="t:quick.atlas" Text="Open Atlas folder"/></StackPanel></Button>
                                         <Button x:Name="LinkAtlas" Style="{StaticResource Secondary}" Margin="0,0,10,10"><StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE71B;" FontSize="13" Margin="0,0,8,0"/><TextBlock Text="AtlasOS"/></StackPanel></Button>
                                     </WrapPanel>
                                 </StackPanel>

@@ -3,24 +3,8 @@ $windir = [Environment]::GetFolderPath('Windows')
 
 Write-Title "Creating Desktop & Start Menu shortcuts..."
 
-# Default user
-$defaultShortcut = "$(Get-UserPath)\Atlas.lnk"
-New-Shortcut -Source "$windir\AtlasDesktop" -Destination $defaultShortcut -Icon "$windir\AtlasModules\Other\akatios-folder.ico,0"
-
-# Copy shortcut to every user
-foreach ($userKey in (Get-RegUserPaths -NoDefault).PsPath) {
-	$folders = Get-ItemProperty -path "$userKey\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders"
-	$deskPath = $folders.Desktop
-	if (Test-Path $deskPath -PathType Container) {
-		Write-Output "Copying Desktop shortcut for '$userKey'..."
-		Copy-Item $defaultShortcut -Destination $deskPath -Force
-	} else {
-		Write-Error "Desktop path not found for '$userKey', shortcuts can't be copied."
-	}
-}
-
-# Start menu shortcut
-Copy-Item $defaultShortcut -Destination "$([Environment]::GetFolderPath('CommonStartMenu'))\Programs" -Force
+# Akati OS: no "Atlas" shortcut on the desktop or in the Start menu. Every setting of the Atlas folder
+# (AtlasDesktop) is in Akati OS Center > System settings.
 
 Write-Title "Creating services restore shortcut..."
 $desktop = "$windir\AtlasDesktop"

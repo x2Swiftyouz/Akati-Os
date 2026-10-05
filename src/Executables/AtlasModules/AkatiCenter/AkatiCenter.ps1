@@ -679,15 +679,24 @@ $ui.CheckUpdatesButton.Add_Click({
     if (!(Get-Command winget -ErrorAction SilentlyContinue)) { Set-Status (T 'status.nowinget'); return }
     $this.IsEnabled = $false
     Set-Status (T 'status.checkingapps') $true
+    # One WinGet query per app: "list --upgrade-available" finds the app only when a newer version exists
+    # (the table of "winget upgrade" cuts long names, so it is not parsed)
+    $ids = @($apps | Where-Object { $_.Id -and (Test-App $_) } | ForEach-Object { $_.Id })
     Start-Work {
-        (& winget upgrade --source winget --accept-source-agreements --disable-interactivity 2>$null | Out-String)
-    } @() {
+        param($ids)
+        $found = @{}
+        foreach ($id in $ids) {
+            & winget list --id $id --exact --upgrade-available --source winget --accept-source-agreements --disable-interactivity *> $null
+            $found[$id] = ($LASTEXITCODE -eq 0)
+        }
+        $found
+    } @(, $ids) {
         param($r, $ctx)
         $ui.CheckUpdatesButton.IsEnabled = $true
-        $list = [string](Get-LastOutput $r)
+        $found = Get-LastOutput $r
         $count = 0
         foreach ($a in $apps) {
-            $a.HasUpdate = [bool]($a.Id -and (Test-App $a) -and $list -match [regex]::Escape($a.Id))
+            $a.HasUpdate = [bool]($a.Id -and $found -and $found[$a.Id])
             if ($a.HasUpdate) { $count++ }
             if ($a.State -eq 'idle') { Update-AppRow $a }
         }
@@ -769,7 +778,7 @@ function Start-Boost {
             if ($p.Name -eq 'OneDrive' -and $path) { & $path /shutdown } else { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue }
             if ($path -and $closed -notcontains $path) { $closed += $path }
         }
-        Set-ItemProperty -Path $boostKey -Name Closed -Value ([string[]]$closed) -Type MultiString
+        if ($closed.Count) { Set-ItemProperty -Path $boostKey -Name Closed -Value ([string[]]$closed) -Type MultiString }
     }
     if ($ui.BoostNotify.IsChecked) {
         $prev = Get-RegValue $toastKey 'ToastEnabled'
@@ -1247,7 +1256,8 @@ function Set-TerminalAccent($a) {
     $c = ConvertTo-Color $a.Base
     $sel = '#{0:X2}{1:X2}{2:X2}' -f [int]($c.R * 0.45), [int]($c.G * 0.45), [int]($c.B * 0.45)
     foreach ($scheme in $json.schemes) { $scheme.cursorColor = $a.Light; $scheme.selectionBackground = $sel; $scheme.purple = $a.G1; $scheme.brightPurple = $a.Light }
-    $json | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $fragment -Encoding UTF8
+    # UTF-8 without BOM, like the file Windows Terminal reads
+    [IO.File]::WriteAllText($fragment, ($json | ConvertTo-Json -Depth 5), (New-Object Text.UTF8Encoding $false))
 }
 
 $savedAccent = Get-RegValue $settingsKey 'Accent'
@@ -1504,16 +1514,19 @@ $atlasVerbs = @{
     'Default' = @('Windows default', 'ค่าของ Windows'); 'Atlas' = @('Atlas', 'แบบ Atlas'); 'Legacy' = @('Legacy', 'แบบเก่า')
 }
 
+# "Disable Hibernation (default)" in the Hibernation row becomes "Disable": the verb alone, when the
+# rest of the name only repeats the row name. Files directly in a category ($leaf empty) keep their name.
+$atlasFiller = 'support', 'settings', 'service', 'services', 'context', 'menu', 'in', 'to', 'the', 'all', 'ls', 'windows'
 function Get-AtlasLabel([IO.FileInfo]$file, [string]$leaf) {
     $name = $file.BaseName -replace '\s*\(default\)', '' -replace '\s+copy$', ''
-    if ($file.Extension -notin '.cmd', '.reg', '.ps1' -or $name -notmatch '^(\S+)\s+(.+)$' -or !$atlasVerbs.ContainsKey($Matches[1])) { return $name }
+    if (!$leaf -or $file.Extension -notin '.cmd', '.reg', '.ps1' -or $name -notmatch '^(\S+)\s+(.+)$' -or !$atlasVerbs.ContainsKey($Matches[1])) { return $name }
     $verb = $atlasVerbs[$Matches[1]][$(if ($lang -eq 'th') { 1 } else { 0 })]
     $rest = $Matches[2]
     $extra = if ($rest -match '(\([^)]*\))\s*$') { ' ' + $Matches[1] } else { '' }
-    $restCore = ($rest -replace '\([^)]*\)', '').Trim().ToLowerInvariant()
-    $leafCore = ($leaf -replace '\([^)]*\)', '').Trim().ToLowerInvariant()
-    $same = $restCore.Contains($leafCore) -or $leafCore.Contains($restCore) -or ($restCore.Split(' ')[0] -eq $leafCore.Split(' ')[0])
-    if ($same) { return "$verb$extra" }
+    $leafWords = @(($leaf -replace '\([^)]*\)', '').ToLowerInvariant().Split(' ', [StringSplitOptions]::RemoveEmptyEntries))
+    $left = @(($rest -replace '\([^)]*\)', '').ToLowerInvariant().Split(' ', [StringSplitOptions]::RemoveEmptyEntries) |
+        Where-Object { $_ -notin $leafWords -and "${_}s" -notin $leafWords -and $_ -notin $atlasFiller })
+    if ($left.Count -eq 0) { return "$verb$extra" }
     if ($lang -eq 'th') { return "$verb $rest" }
     return $name
 }
@@ -1634,7 +1647,8 @@ function Add-SystemCard([string]$key, [System.IO.DirectoryInfo[]]$dirs, [string]
             [void]$rowStack.Children.Add($dt)
         }
         $wrap = New-Object System.Windows.Controls.WrapPanel
-        foreach ($f in $files) { [void]$wrap.Children.Add((New-AtlasButton $f $d.Name)) }
+        $leaf = if ($d.FullName -eq $topPath) { '' } else { $d.Name }
+        foreach ($f in $files) { [void]$wrap.Children.Add((New-AtlasButton $f $leaf)) }
         [void]$rowStack.Children.Add($wrap)
         $row.Child = $rowStack
         $row.Add_MouseEnter({ $this.Background = '#1C1626' })
@@ -1750,9 +1764,9 @@ function Show-Page([string]$name) {
         if (!$Screenshot) {
             $ease = New-Object System.Windows.Media.Animation.CubicEase
             $ease.EasingMode = 'EaseOut'
-            $fade = New-Object System.Windows.Media.Animation.DoubleAnimation 0, 1, ([TimeSpan]::FromMilliseconds(220))
+            $fade = New-Object System.Windows.Media.Animation.DoubleAnimation 0, 1, (New-Object System.Windows.Duration ([TimeSpan]::FromMilliseconds(220)))
             $fade.EasingFunction = $ease
-            $move = New-Object System.Windows.Media.Animation.DoubleAnimation 14, 0, ([TimeSpan]::FromMilliseconds(260))
+            $move = New-Object System.Windows.Media.Animation.DoubleAnimation 14, 0, (New-Object System.Windows.Duration ([TimeSpan]::FromMilliseconds(260)))
             $move.EasingFunction = $ease
             $shift = New-Object System.Windows.Media.TranslateTransform
             $el.RenderTransform = $shift
@@ -1805,6 +1819,8 @@ $ui.WelcomeTh.Add_Click({ Set-AppLanguage 'th' })
 $ui.WelcomeApps.Add_Click({ Close-Welcome; $ui.NavGaming.IsChecked = $true })
 $ui.WelcomeLook.Add_Click({ Close-Welcome; $ui.NavAppearance.IsChecked = $true })
 $ui.WelcomeDone.Add_Click({ Close-Welcome })
+# The welcome covers the title bar, so the window can be moved from anywhere on it
+$ui.Welcome.Add_MouseLeftButtonDown({ $window.DragMove() })
 if (!(Get-RegValue $settingsKey 'Welcomed') -and !$Screenshot) { $ui.Welcome.Visibility = 'Visible' }
 
 # Keyboard: Ctrl+1 to Ctrl+8 switch pages, Ctrl+F searches the system settings, Esc closes the welcome or clears the search
@@ -1881,6 +1897,10 @@ if ($Screenshot) {
         Save-Shot "welcome-$l.png"
         $ui.Welcome.Visibility = 'Collapsed'
     }
+    # Accent colors recolor the window
+    Set-CenterAccent $accents[1]; $ui.NavGaming.IsChecked = $true; Save-Shot 'accent-blue.png'
+    Set-CenterAccent $accents[6]; $ui.NavBoost.IsChecked = $true; Save-Shot 'accent-orange.png'
+    Set-CenterAccent $accents[0]
     Write-Output "Screenshots saved to $Screenshot"
     exit 0
 }

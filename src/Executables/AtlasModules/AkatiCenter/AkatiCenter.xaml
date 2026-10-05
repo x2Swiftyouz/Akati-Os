@@ -371,7 +371,7 @@
                                             <TextBlock Style="{StaticResource Glyph}" Text="&#xE946;" FontSize="13" Foreground="{StaticResource Accent2}" Margin="0,0,8,0"/>
                                             <TextBlock Tag="t:version" Text="Akati OS version" Style="{StaticResource Label}" VerticalAlignment="Center"/>
                                         </StackPanel>
-                                        <TextBlock x:Name="VersionBig" Text="v1.3.0" FontSize="30" FontWeight="Bold" Margin="0,8,0,0"/>
+                                        <TextBlock x:Name="VersionBig" Text="v1.3.1" FontSize="30" FontWeight="Bold" Margin="0,8,0,0"/>
                                         <TextBlock x:Name="EditionText" Text="Windows 11" Style="{StaticResource Muted}"/>
                                         <TextBlock x:Name="UpdateHint" Text="" Foreground="{StaticResource Good}" FontSize="12" Margin="0,6,0,0" TextWrapping="Wrap"/>
                                     </StackPanel>
@@ -529,7 +529,7 @@
                                     <Image x:Name="AboutLogo" Width="72" Height="72" Margin="0,0,20,0"/>
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock Text="Akati OS" FontSize="26" FontWeight="Bold"/>
-                                        <TextBlock x:Name="AboutVersion" Text="v1.3.0" Style="{StaticResource Muted}"/>
+                                        <TextBlock x:Name="AboutVersion" Text="v1.3.1" Style="{StaticResource Muted}"/>
                                         <TextBlock x:Name="UpdateStatus" Text="" Margin="0,6,0,0" TextWrapping="Wrap"/>
                                     </StackPanel>
                                     <Button x:Name="UpdateButton" Grid.Column="2" Style="{StaticResource Primary}" VerticalAlignment="Center">

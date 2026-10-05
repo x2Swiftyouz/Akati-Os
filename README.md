@@ -29,7 +29,7 @@ Akati OS คือ playbook สำหรับ Windows 11 เน้นเล่�
 
 - All AtlasOS performance, privacy and debloat tweaks
 - Akati OS Dark, Light and Slideshow themes, wallpapers and lock screen (no AtlasOS logo)
-- One setup page for gaming software: "Recommended" installs Steam and removes the Microsoft Store, or choose from Steam, Epic Games Launcher, EA app, Ubisoft Connect, Battle.net and OBS Studio (Discord: known issue, get it from discord.com) (installed with WinGet)
+- One setup page for gaming software: "Recommended" installs Steam and Discord and removes the Microsoft Store, or choose from Steam, Epic Games Launcher, EA app, Ubisoft Connect, Battle.net, Discord and OBS Studio (installed with WinGet)
 - Visual C++ and DirectX runtimes are always installed (from AtlasOS)
 - Akati OS folder in `AtlasDesktop`: install gaming apps later, switch themes, GPU driver links, check for updates
 - Akati OS Center app: live CPU/RAM/GPU usage, gaming apps, tweaks (GPU scheduling, windowed games optimizations on Windows 11, Game Mode), cleaner, themes
@@ -42,7 +42,7 @@ Akati OS คือ playbook สำหรับ Windows 11 เน้นเล่�
 2. Download the `.apbx` for your Windows version and `SHA256SUMS.txt` from [Releases](../../releases/latest).
 3. Check the hash in PowerShell. The value must match the line for your file in `SHA256SUMS.txt`:
    ```powershell
-   (Get-FileHash .\AkatiOS_v1.3.0.apbx -Algorithm SHA256).Hash.ToLower()
+   (Get-FileHash .\AkatiOS_v1.3.1.apbx -Algorithm SHA256).Hash.ToLower()
    Get-Content .\SHA256SUMS.txt
    ```
 4. Open AME Wizard and drag the `.apbx` file into it.
@@ -80,8 +80,8 @@ Every push also builds the playbook on GitHub Actions. The `.apbx` is under **Ar
 2. Run the checklist in [docs/TESTING.md](docs/TESTING.md).
 3. Merge to `main`, then tag and push:
    ```
-   git tag v1.3.0
-   git push origin v1.3.0
+   git tag v1.3.1
+   git push origin v1.3.1
    ```
    Or without git: Actions > Build playbook > Run workflow, branch `main`, tick **Publish release**.
 4. GitHub Actions checks the versions, builds both `.apbx` files and publishes the release with `SHA256SUMS.txt`. Release notes come from `src/CHANGELOG.md`.

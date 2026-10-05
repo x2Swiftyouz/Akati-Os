@@ -17,7 +17,7 @@ Microsoft ended support for Windows 10 on October 14, 2025. Extended Security Up
 
 - All AtlasOS v0.4.1 performance, privacy and debloat tweaks
 - Akati OS Dark, Light and Slideshow themes, wallpapers and lock screen
-- Optional setup pages for gaming software: Steam, Epic Games Launcher, EA app, Ubisoft Connect, Battle.net and OBS Studio (Discord: get it from discord.com, see the known issue in the changelog)
+- Optional setup pages for gaming software: Steam, Epic Games Launcher, EA app, Ubisoft Connect, Battle.net, Discord and OBS Studio
 - Akati OS folder in `AtlasDesktop`: install gaming apps later, switch themes, GPU driver links, check for updates
 - Gaming tweaks in Akati OS Center: Hardware-accelerated GPU scheduling
 - Akati OS Slideshow theme and a Windows Terminal color scheme
@@ -33,7 +33,7 @@ Options guide: https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/OPTIONS.md
 ## Install
 
 1. Back up your files. This playbook cannot be fully undone. To go back, reinstall Windows.
-2. Download `AkatiOS-Win10_v1.3.0.apbx` and `SHA256SUMS.txt` from https://github.com/x2Swiftyouz/Akati-Os/releases and check the hash.
+2. Download `AkatiOS-Win10_v1.3.1.apbx` and `SHA256SUMS.txt` from https://github.com/x2Swiftyouz/Akati-Os/releases and check the hash.
 3. Open AME Wizard and drag the `.apbx` file into it.
 4. Follow the setup pages.
 

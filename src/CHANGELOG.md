@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.3.1
+
+### Fixed
+- Discord is installed automatically again (known issue of v1.3.0). The cause was the silent install: after `DiscordSetup.exe -s` (also used by WinGet), the first start of Discord quits at once without moving the install to its new updater, and every later start fails with "A fatal Javascript error occured: Attempt to install host that is currently running". It was not caused by an AtlasOS tweak (`tools/discord-probe.ps1` compared stock Windows and Akati OS). Discord is now installed with its normal installer, which shows a small Discord window and opens Discord when it is done. Setup downloads the installer, and a scheduled task installs Discord as the user right after the first sign-in, with a notification
+
+### Added
+- `tools/discord-probe.ps1`: collects Discord install state, Discord logs and the Windows settings AtlasOS changes, to compare two PCs
+
 ## v1.3.0
 
 ### Known issues

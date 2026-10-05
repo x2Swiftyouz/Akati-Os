@@ -51,7 +51,7 @@
 - [ ] ก๊อป `dist\AkatiOS_v<version>.apbx` และ `dist\SHA256SUMS.txt` เข้า VM
 - [ ] ตรวจ hash ใน VM:
   ```powershell
-  (Get-FileHash .\AkatiOS_v1.3.0.apbx -Algorithm SHA256).Hash.ToLower()
+  (Get-FileHash .\AkatiOS_v1.3.1.apbx -Algorithm SHA256).Hash.ToLower()
   Get-Content .\SHA256SUMS.txt
   ```
   สองค่าต้องตรงกัน
@@ -82,7 +82,7 @@
 - [ ] จดไว้ว่าขึ้นป้าย "Malicious Playbook" หรือไม่ (ใช้ประกอบข้อความถึง Ameliorated)
 
 ### ข้อความในหน้าต่าง ๆ
-- [ ] Title แสดง `Akati OS v1.3.0`
+- [ ] Title แสดง `Akati OS v1.3.1`
 - [ ] Description มีคำเตือนให้สำรองไฟล์และข้อความ "Not an official AtlasOS project"
 - [ ] หน้า Defender มีคำเตือน anti-cheat (Valorant, FACEIT)
 - [ ] ลิงก์ "Install guide" เปิด https://github.com/x2Swiftyouz/Akati-Os#readme
@@ -100,7 +100,8 @@
 | ร้านเกม | EA app | ☐ | |
 | ร้านเกมอื่น | Ubisoft Connect | ☐ | |
 | ร้านเกมอื่น | Battle.net | ☐ | |
-| อัดหน้าจอ | OBS Studio | ☐ | |
+| แชทและอัดหน้าจอ | Discord | ☑ | |
+| แชทและอัดหน้าจอ | OBS Studio | ☐ | |
 | การ์ดจอ | NVIDIA driver shortcut | ☐ | |
 | การ์ดจอ | AMD driver shortcut | ☐ | |
 | การ์ดจอ | Intel driver shortcut | ☐ | |
@@ -117,7 +118,7 @@
 ถ้าค่าที่เห็นไม่ตรงกับคอลัมน์ "ควรเป็น" แปลว่า `IsChecked` ไม่ทำงาน ให้หยุดแล้วแจ้งพร้อมภาพหน้าจอ
 
 ### ระหว่างติดตั้ง
-- [ ] ข้อความสถานะ "Installing Steam" ขึ้นเฉพาะแอปที่ติ๊ก และไม่มีขั้นติดตั้ง Discord
+- [ ] ข้อความสถานะ "Installing Steam" และ "Installing Discord" ขึ้นเฉพาะแอปที่ติ๊ก
 - [ ] ไม่มีขั้นไหนค้างเกิน 10 นาที (`GAMEAPPS.ps1` มี timeout: WinGet 10 นาที, installer สำรอง 5 นาที)
 - [ ] ติดตั้งจบและรีสตาร์ตเองได้
 - [ ] จดเวลาที่ใช้ทั้งหมด (ตั้งไว้ 15 นาที)
@@ -138,10 +139,10 @@
 bcdedit /enum '{current}' | Select-String description
 Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\OEMInformation'
 ```
-- [ ] บูตเมนูเป็น `Akati OS 11 v1.3.0`
-- [ ] `Model` = `Akati OS v1.3.0`, `Manufacturer` = `Akati OS`
+- [ ] บูตเมนูเป็น `Akati OS 11 v1.3.1`
+- [ ] `Model` = `Akati OS v1.3.1`, `Manufacturer` = `Akati OS`
 - [ ] ไม่มี `SupportURL` และ `SupportPhone`
-- [ ] `winver` และ Settings > System > About แสดง Akati OS v1.3.0
+- [ ] `winver` และ Settings > System > About แสดง Akati OS v1.3.1
 
 ### ธีม
 ```powershell
@@ -177,11 +178,13 @@ Get-CimInstance -Namespace root\Microsoft\Windows\DeviceGuard -ClassName Win32_D
 
 ### ⚠️ แอปเกม
 ```powershell
-winget list --accept-source-agreements | Select-String 'Steam|Epic|EA|Ubisoft|Battle.net|OBS'
+winget list --accept-source-agreements | Select-String 'Steam|Discord|Epic|EA|Ubisoft|Battle.net|OBS'
+Test-Path "$env:LOCALAPPDATA\Discord"
 ```
 | แอป | รอบ A | รอบ B | รอบ C |
 |---|---|---|---|
 | Steam | มี | มี | ไม่มี |
+| Discord | มี | มี | ไม่มี |
 | Epic Games Launcher | ไม่มี | มี | ไม่มี |
 | EA app | ไม่มี | มี | ไม่มี |
 | Ubisoft Connect | ไม่มี | มี | ไม่มี |
@@ -189,10 +192,11 @@ winget list --accept-source-agreements | Select-String 'Steam|Epic|EA|Ubisoft|Ba
 | OBS Studio | ไม่มี | มี | ไม่มี |
 
 - [ ] แอปที่ติดตั้งแล้วเปิดได้ (ไม่ต้องล็อกอิน)
-- [ ] หน้า "Remove Microsoft Store" ติ๊กไว้เป็นค่าเริ่มต้น หลังติดตั้ง Microsoft Store ต้องไม่มีใน Start menu และ taskbar แต่ Steam ยังติดตั้งได้
+- [ ] หน้า "Remove Microsoft Store" ติ๊กไว้เป็นค่าเริ่มต้น หลังติดตั้ง Microsoft Store ต้องไม่มีใน Start menu และ taskbar แต่ Steam/Discord ยังติดตั้งได้
 - [ ] Akati OS Center > ปรับแต่ง > เปิดสวิตช์ Microsoft Store แล้ว Store กลับมา (อาจใช้เวลาประมาณ 1 นาที)
-- [ ] Discord ไม่ถูกติดตั้งอัตโนมัติ (known issue) ปุ่ม Discord ใน Akati OS Center และ `Install Gaming Apps\Download Discord` เปิดหน้า discord.com/download
-- [ ] (หาต้นเหตุ known issue) ติดตั้ง Discord จาก discord.com แล้วเปิด: ยังขึ้น "Attempt to install host that is currently running" ไหม
+- [ ] Discord ติดตั้งตอนล็อกอินครั้งแรกหลังรีบูต (รอ 2-5 นาทีหลังเข้า Desktop จะมีหน้าต่าง Discord ขึ้นเอง ถ้าไม่ขึ้นดู log ที่ `%LOCALAPPDATA%\AkatiOS\Logs\GAMEAPPS-Discord.log`)
+- [ ] หลังติดตั้งเสร็จ ไม่มีหน้าต่าง error ของ Discord ("Attempt to install host that is currently running") แปลว่าไม่มีการรัน installer ซ้ำ
+- [ ] Discord ติดตั้งให้ user ที่รัน playbook ไม่ได้ไปอยู่ในโปรไฟล์ admin อื่น
 
 ### VC++ และ DirectX (Atlas ติดตั้งให้ทุกรอบ)
 ```powershell
@@ -205,7 +209,7 @@ Test-Path "$env:windir\System32\d3dx9_43.dll"
 - [ ] รอบ C ก็ต้องมีทั้งสองอย่าง
 
 ### หน้าแอปเกม (Recommended / Choose apps myself)
-- [ ] รอบ A (Recommended): หน้าเลือกแอปและหน้า Microsoft Store **ไม่แสดง** ได้ Steam และไม่มี Microsoft Store
+- [ ] รอบ A (Recommended): หน้าเลือกแอปและหน้า Microsoft Store **ไม่แสดง** ได้ Steam, Discord (หลังล็อกอิน 2-5 นาที) และไม่มี Microsoft Store
 - [ ] รอบ B/C (Choose apps myself): หน้าเลือกแอป 3 หน้าและหน้า Microsoft Store แสดงขึ้นมา และได้เฉพาะแอปที่ติ๊ก
 - [ ] รอบ C: Microsoft Store ยังอยู่
 - [ ] ไม่มีหน้า GPU และหน้า Gaming tweaks แล้ว
@@ -248,9 +252,10 @@ Windows Sandbox ไม่มี WinGet จึงใช้ทดสอบทา�
 - [ ] รัน:
   ```powershell
   powershell -ExecutionPolicy Bypass -File .\GAMEAPPS.ps1 -App Steam
+  powershell -ExecutionPolicy Bypass -File .\GAMEAPPS.ps1 -App Discord
   powershell -ExecutionPolicy Bypass -File .\GAMEAPPS.ps1 -App Epic
   ```
-- [ ] Steam ดาวน์โหลดจากลิงก์ทางการและติดตั้งได้
+- [ ] Steam และ Discord ดาวน์โหลดจากลิงก์ทางการและติดตั้งได้
 - [ ] Epic ขึ้นข้อความ "skipped. Install it later from its official website." ไม่ error
 
 ### ไม่มีอินเทอร์เน็ตกลางทาง

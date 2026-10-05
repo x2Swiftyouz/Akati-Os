@@ -53,11 +53,17 @@ function Get-Download([string]$url, [string]$out, [string[]]$curlArgs) {
         $m = [regex]::Matches(($head -join "`n"), '(?im)^content-length:\s*(\d+)')
         if ($m.Count) { $length = [double]$m[$m.Count - 1].Groups[1].Value }
     } catch {}
+    # A tiny size is the length of a redirect or error page, not of the installer: percent unknown
+    if ($length -lt 100KB) { $length = 0 }
     Set-Progress download $(if ($length -gt 0) { 0 } else { -1 })
     $p = Start-Process curl.exe -ArgumentList (@('-LSs', "`"$url`"", '-o', "`"$out`"") + $curlArgs) -WindowStyle Hidden -PassThru
     $null = $p.Handle
     while (!$p.HasExited) {
-        if ($length -gt 0 -and (Test-Path $out)) { Set-Progress download ([Math]::Min(100, [int](100 * (Get-Item $out).Length / $length))) }
+        if ($length -gt 0 -and (Test-Path $out)) {
+            $size = (Get-Item $out).Length
+            # Bigger than announced: the size was wrong, show the download without a percentage
+            if ($size -gt $length) { $length = 0; Set-Progress download } else { Set-Progress download ([int](100 * $size / $length)) }
+        }
         Start-Sleep -Milliseconds 500
     }
     return ($p.ExitCode -eq 0 -and (Test-Path $out))

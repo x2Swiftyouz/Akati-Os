@@ -524,8 +524,10 @@ $progressDir = Join-Path $env:LOCALAPPDATA 'AkatiOS\Logs'
 function Update-AppRow($app) {
     $installed = Test-App $app
     $btn = $app.Button
-    $app.Check.Visibility = if ($installed) { 'Hidden' } else { 'Visible' }
-    if ($installed) { $app.Check.IsChecked = $false }
+    # No tick box for apps that are installed, installing or waiting in the queue
+    $busy = $app.State -ne 'idle'
+    $app.Check.Visibility = if ($installed -or $busy) { 'Hidden' } else { 'Visible' }
+    if ($installed -or $busy) { $app.Check.IsChecked = $false }
     switch ($app.State) {
         'install' { $btn.Content = T 'cancel'; $btn.Style = $window.FindResource('Secondary'); $btn.IsEnabled = $true; $app.Bar.Visibility = 'Visible'; return }
         'update'  { $btn.Content = T 'cancel'; $btn.Style = $window.FindResource('Secondary'); $btn.IsEnabled = $true; $app.Bar.Visibility = 'Visible'; $app.Bar.IsIndeterminate = $true; $app.Sub.Text = T 'updating'; return }

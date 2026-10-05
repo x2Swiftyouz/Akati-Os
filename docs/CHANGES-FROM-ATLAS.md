@@ -89,7 +89,7 @@ Only apps the user ticks on the setup pages are installed, or the app the user p
 | Battle.net | `Blizzard.BattleNet` | none |
 | OBS Studio | `OBSProject.OBSStudio` | none |
 
-Discord installs per user. When `GAMEAPPS.ps1` runs elevated (during setup or from Akati OS Center), it registers a one-time scheduled task `AkatiOS Install Discord` that runs the same script as the signed-in user with limited rights, waits for it and deletes the task.
+Discord is not installed during setup: setup adds `HKCU\Software\Microsoft\Windows\CurrentVersion\RunOnce` value `AkatiOS Install Discord`, which runs `GAMEAPPS.ps1 -App Discord` once at the next sign-in, as the user. (Discord updates itself right after installing; a restart during that update breaks it.) When `GAMEAPPS.ps1` runs elevated (from Akati OS Center), it installs Discord through a one-time scheduled task `AkatiOS Install Discord` that runs the same script as the signed-in user with limited rights, waits for it and deletes the task.
 
 ## What Akati OS Center does
 

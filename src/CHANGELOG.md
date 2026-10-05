@@ -3,7 +3,7 @@
 ## v1.3.0
 
 ### Fixed
-- Discord showed "A fatal Javascript error occured: Attempt to install host that is currently running" after setup. `GAMEAPPS.ps1` read the WinGet exit code wrongly, thought the install had failed and ran the Discord (and Steam) installer a second time. It now reads the exit code correctly and checks whether the app is already installed. Discord installs per user, so when setup or Akati OS Center runs as administrator it is now installed as the signed-in user without admin rights (a one-time scheduled task); installed elevated, it failed with that error at the next sign-in
+- Discord showed "A fatal Javascript error occured: Attempt to install host that is currently running" after setup. `GAMEAPPS.ps1` read the WinGet exit code wrongly, thought the install had failed and ran the Discord (and Steam) installer a second time. It now reads the exit code correctly and checks whether the app is already installed. Discord updates itself right after installing, and setup restarted the PC in the middle of that update. Setup now installs Discord at the first sign-in after the restart (RunOnce), as the user. Akati OS Center installs it as the signed-in user without admin rights (a one-time scheduled task)
 
 ### Added
 - Option to remove the Microsoft Store (ticked by default). The Xbox app and Game Pass need it; install it again from Akati OS Center (Tweaks)

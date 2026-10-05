@@ -1209,10 +1209,10 @@ function ConvertTo-Color([string]$hex) { [System.Windows.Media.ColorConverter]::
 # (brushes inside styles are frozen and cannot be recolored in place).
 function Set-CenterAccent($a) {
     $res = $window.Resources
-    $res['Accent'] = New-Object System.Windows.Media.SolidColorBrush (ConvertTo-Color $a.Base)
-    $res['Accent2'] = New-Object System.Windows.Media.SolidColorBrush (ConvertTo-Color $a.Light)
-    $g = New-Object System.Windows.Media.LinearGradientBrush (ConvertTo-Color $a.G1), (ConvertTo-Color $a.G2), (New-Object System.Windows.Point 0, 0), (New-Object System.Windows.Point 1, 1)
-    $res['AccentGradient'] = $g
+    # ::new, not New-Object: New-Object wraps the brush in a PSObject, which WPF does not accept as a brush
+    $res['Accent'] = [System.Windows.Media.SolidColorBrush]::new((ConvertTo-Color $a.Base))
+    $res['Accent2'] = [System.Windows.Media.SolidColorBrush]::new((ConvertTo-Color $a.Light))
+    $res['AccentGradient'] = [System.Windows.Media.LinearGradientBrush]::new((ConvertTo-Color $a.G1), (ConvertTo-Color $a.G2), [System.Windows.Point]::new(0, 0), [System.Windows.Point]::new(1, 1))
 }
 
 # Windows keeps the accent as 0xAABBGGRR (and a palette of 8 shades from light to dark)

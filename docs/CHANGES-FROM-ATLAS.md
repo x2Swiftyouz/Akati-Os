@@ -51,7 +51,7 @@ The AtlasOS wallpapers and themes are removed, so the Atlas logo is not used: `E
 
 | File | Purpose |
 |---|---|
-| `Configuration/tweaks/misc/install-game-apps.yml` | Runs `GAMEAPPS.ps1` for each gaming app the user ticked, or Steam and Discord with `akati-recommended` |
+| `Configuration/tweaks/misc/install-game-apps.yml` | Runs `GAMEAPPS.ps1` for each gaming app the user ticked, or Steam with `akati-recommended` |
 | `Configuration/tweaks/misc/akati-extras.yml` | Microsoft Store removal (option `remove-store` or `akati-recommended`, `!appx` family `Microsoft.WindowsStore*`), the Windows Terminal color scheme and the Akati OS Center shortcuts |
 | `Executables/AtlasModules/Scripts/GAMEAPPS.ps1` | Installs one gaming app (see below). Stays on disk so apps can be installed later |
 | `Executables/AtlasModules/Scripts/AkatiUpdate.ps1` | Update checker, only runs when the user opens it (see below) |
@@ -89,7 +89,7 @@ Only apps the user ticks on the setup pages are installed, or the app the user p
 | Battle.net | `Blizzard.BattleNet` | none |
 | OBS Studio | `OBSProject.OBSStudio` | none |
 
-Discord is not installed during setup: setup runs `GAMEAPPS.ps1 -App Discord -AtSignIn`, which registers a scheduled task `AkatiOS Install Discord at sign-in` (trigger: sign-in of the console user, 2 minutes delay; limited rights) that runs `GAMEAPPS.ps1 -App Discord -FromTask` as that user, and adds `HKCU\Software\Microsoft\Windows\CurrentVersion\RunOnce` value `AkatiOS Install Discord` that starts the task (`schtasks.exe /run`) at the next sign-in, because the sign-in trigger alone did not start it. After the install the script writes `HKCU\Software\AkatiOS\InstalledAtSignIn` `Discord` = 1, so the task never installs Discord again. The task does not remove itself (removing a running task stops Discord's first update); it expires and Windows deletes it after 7 days. To make the install at sign-in fast, `-AtSignIn` also downloads the Discord installer during setup (same official URL as below) to `%ProgramData%\AkatiOS\Installers` (Users may modify the folder). The task uses that file only if it has a valid Authenticode signature from Discord, then deletes it; otherwise it downloads the installer again. While it installs, it shows a notification at the bottom right. (Discord installs and updates itself after its installer exits; a restart, or an install started right at sign-in, stopped it half way.) `GAMEAPPS.ps1` writes a log to `%LOCALAPPDATA%\AkatiOS\Logs\GAMEAPPS-<app>.log`. When `GAMEAPPS.ps1` runs elevated (from Akati OS Center), it installs Discord through a one-time scheduled task `AkatiOS Install Discord` that runs the same script as the signed-in user with limited rights, waits for it and deletes the task.
+Discord is not installed in this version (known issue: on Akati OS it fails on its first start with "Attempt to install host that is currently running"). `GAMEAPPS.ps1 -App Discord`, Akati OS Center and `Install Gaming Apps\Download Discord.url` open `https://discord.com/download`. The Discord install code (sign-in scheduled task, `-AtSignIn`) stays in `GAMEAPPS.ps1` for testing and only runs with `-Force`.
 
 ## What Akati OS Center does
 

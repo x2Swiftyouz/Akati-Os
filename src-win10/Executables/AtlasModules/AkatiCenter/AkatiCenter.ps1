@@ -70,7 +70,7 @@ $strings = @{
         'links' = 'Links'; 'link.options' = 'Options guide'; 'credits' = 'Credits'
         'credits.text' = 'Akati OS is based on AtlasOS by the Atlas team and is licensed under GPL-3.0. It is not an official AtlasOS project. AME Wizard by Ameliorated.'
         'ready' = 'Ready'
-        'installed' = 'Installed'; 'notinstalled' = 'Not installed'; 'install' = 'Install'; 'installing' = 'Installing...'
+        'installed' = 'Installed'; 'notinstalled' = 'Not installed'; 'install' = 'Install'; 'installing' = 'Installing...'; 'download' = 'Download'
         'apply' = 'Apply'; 'active' = 'Active'
         'restart' = 'Restart to apply'
         'status.installing' = 'Installing {0}...'; 'status.installed' = '{0} installed'; 'status.notinstalled' = '{0} was not installed. Get it from its official website.'
@@ -116,7 +116,7 @@ $strings = @{
         'links' = 'ลิงก์'; 'link.options' = 'คู่มือตัวเลือก'; 'credits' = 'เครดิต'
         'credits.text' = 'Akati OS ดัดแปลงจาก AtlasOS ของทีม Atlas ใช้สัญญาอนุญาต GPL-3.0 ไม่ใช่โปรเจกต์ทางการของ AtlasOS ใช้งานผ่าน AME Wizard ของ Ameliorated'
         'ready' = 'พร้อมใช้งาน'
-        'installed' = 'ติดตั้งแล้ว'; 'notinstalled' = 'ยังไม่ได้ติดตั้ง'; 'install' = 'ติดตั้ง'; 'installing' = 'กำลังติดตั้ง...'
+        'installed' = 'ติดตั้งแล้ว'; 'notinstalled' = 'ยังไม่ได้ติดตั้ง'; 'install' = 'ติดตั้ง'; 'installing' = 'กำลังติดตั้ง...'; 'download' = 'ดาวน์โหลด'
         'apply' = 'ใช้ธีมนี้'; 'active' = 'ใช้อยู่'
         'restart' = 'รีสตาร์ตเพื่อให้มีผล'
         'status.installing' = 'กำลังติดตั้ง {0}...'; 'status.installed' = 'ติดตั้ง {0} แล้ว'; 'status.notinstalled' = 'ติดตั้ง {0} ไม่สำเร็จ ให้ติดตั้งจากเว็บไซต์ทางการ'
@@ -304,7 +304,7 @@ function Update-Stats {
 # ---------------------------------------------------------------------------------------------
 $apps = @(
     @{ Key = 'Steam';     Name = 'Steam';               Glyph = [char]0xE7FC; Path = "${env:ProgramFiles(x86)}\Steam\steam.exe" }
-    @{ Key = 'Discord';   Name = 'Discord';             Glyph = [char]0xE8BD; Path = "$env:LOCALAPPDATA\Discord\packages\RELEASES" }
+    @{ Key = 'Discord';   Name = 'Discord';             Glyph = [char]0xE8BD; Path = "$env:LOCALAPPDATA\Discord\packages\RELEASES"; Url = 'https://discord.com/download' }
     @{ Key = 'Epic';      Name = 'Epic Games Launcher'; Glyph = [char]0xE7FC; Path = "${env:ProgramFiles(x86)}\Epic Games\Launcher" }
     @{ Key = 'EA';        Name = 'EA app';              Glyph = [char]0xE7FC; Path = "$env:ProgramFiles\Electronic Arts\EA Desktop" }
     @{ Key = 'Ubisoft';   Name = 'Ubisoft Connect';     Glyph = [char]0xE7FC; Path = "${env:ProgramFiles(x86)}\Ubisoft\Ubisoft Game Launcher" }
@@ -353,7 +353,7 @@ function Update-AppRow($app) {
     $installed = Test-App $app
     $app.Sub.Text = if ($installed) { T 'installed' } else { T 'notinstalled' }
     $app.Sub.Foreground = if ($installed) { $window.FindResource('Good') } else { $window.FindResource('MutedBrush') }
-    $app.Button.Content = if ($installed) { T 'installed' } else { T 'install' }
+    $app.Button.Content = if ($installed) { T 'installed' } elseif ($app.Url) { T 'download' } else { T 'install' }
     $app.Button.IsEnabled = !$installed
 }
 
@@ -365,6 +365,8 @@ foreach ($app in $apps) {
     $btn.Tag = $app
     $btn.Add_Click({
         $a = $this.Tag
+        # Discord is not installed automatically (see GAMEAPPS.ps1): open its download page
+        if ($a.Url) { Start-Process $a.Url; return }
         $this.IsEnabled = $false; $this.Content = T 'installing'
         Set-Status ((T 'status.installing') -f $a.Name) $true
         Start-Work {

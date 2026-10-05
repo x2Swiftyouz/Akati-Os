@@ -17,7 +17,7 @@ Microsoft ended support for Windows 10 on October 14, 2025. Extended Security Up
 
 - All AtlasOS v0.4.1 performance, privacy and debloat tweaks
 - Akati OS Dark, Light and Slideshow themes, wallpapers and lock screen
-- Optional setup pages for gaming software: Steam, Epic Games Launcher, EA app, Ubisoft Connect, Battle.net, Discord and OBS Studio
+- Optional setup pages for gaming software: Steam, Epic Games Launcher, EA app, Ubisoft Connect, Battle.net and OBS Studio (Discord: get it from discord.com, see the known issue in the changelog)
 - Akati OS folder in `AtlasDesktop`: install gaming apps later, switch themes, GPU driver links, check for updates
 - Gaming tweaks in Akati OS Center: Hardware-accelerated GPU scheduling
 - Akati OS Slideshow theme and a Windows Terminal color scheme

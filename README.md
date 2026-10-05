@@ -29,7 +29,7 @@ Akati OS คือ playbook สำหรับ Windows 11 เน้นเล่�
 
 - All AtlasOS performance, privacy and debloat tweaks
 - Akati OS Dark, Light and Slideshow themes, wallpapers and lock screen (no AtlasOS logo)
-- One setup page for gaming software: "Recommended" installs Steam and Discord and removes the Microsoft Store, or choose from Steam, Epic Games Launcher, EA app, Ubisoft Connect, Battle.net, Discord and OBS Studio (installed with WinGet)
+- One setup page for gaming software: "Recommended" installs Steam and removes the Microsoft Store, or choose from Steam, Epic Games Launcher, EA app, Ubisoft Connect, Battle.net and OBS Studio (Discord: known issue, get it from discord.com) (installed with WinGet)
 - Visual C++ and DirectX runtimes are always installed (from AtlasOS)
 - Akati OS folder in `AtlasDesktop`: install gaming apps later, switch themes, GPU driver links, check for updates
 - Akati OS Center app: live CPU/RAM/GPU usage, gaming apps, tweaks (GPU scheduling, windowed games optimizations on Windows 11, Game Mode), cleaner, themes

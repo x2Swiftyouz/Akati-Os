@@ -4,7 +4,9 @@ param (
     # at their next sign-in (used by setup for Discord). Needs admin rights.
     [switch]$AtSignIn,
     # Set by that scheduled task
-    [switch]$FromTask
+    [switch]$FromTask,
+    # Install Discord anyway (testing only, see the known issue below)
+    [switch]$Force
 )
 
 # Akati OS: installs one gaming app (used during setup and by AtlasDesktop\Akati OS\Install Gaming Apps).
@@ -29,6 +31,16 @@ $apps = @{
     Ubisoft   = @{ Id = 'Ubisoft.Connect' }
     BattleNet = @{ Id = 'Blizzard.BattleNet'; Extra = @('--location', "$env:ProgramFiles\Battle.net") }
     OBS       = @{ Id = 'OBSProject.OBSStudio' }
+}
+
+# Known issue: on Akati OS, Discord installed this way shows "A fatal Javascript error occured: Attempt to
+# install host that is currently running" (it works on stock Windows; the AtlasOS tweak that causes it is not
+# found yet). Until then Discord is not installed automatically: open its download page instead.
+# The install code below is kept for testing with -Force.
+if ($App -eq 'Discord' -and !$Force) {
+    Start-Process 'https://discord.com/download'
+    Write-Output 'Opened the Discord download page.'
+    exit 0
 }
 
 if (!$apps.ContainsKey($App)) { Write-Error "Unknown app: $App"; exit 0 }

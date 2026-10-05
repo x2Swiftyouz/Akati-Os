@@ -65,14 +65,14 @@ Brave, LibreWolf and Firefox are privacy friendly. Chrome is not recommended for
 
 The gaming apps page has two choices:
 
-- **Recommended** (default): installs Steam and Discord and removes the Microsoft Store. The app pages are skipped.
-- **Choose apps myself**: shows the app pages and the Microsoft Store page. Pick from Steam, Epic Games Launcher, EA app, Ubisoft Connect, Battle.net, Discord and OBS Studio.
+- **Recommended** (default): installs Steam and removes the Microsoft Store. The app pages are skipped.
+- **Choose apps myself**: shows the app pages and the Microsoft Store page. Pick from Steam, Epic Games Launcher, EA app, Ubisoft Connect, Battle.net and OBS Studio.
 
-Discord is installed in the background right after your first sign-in (usually within a minute, a notification shows while it installs) and opens by itself. It cannot be installed during setup like Steam, because Discord installs per user and updates itself on its first start.
-They are installed with WinGet, which checks each installer. If WinGet is not available, Steam and Discord are downloaded from their official websites. The other apps are skipped and you can install them later.
+**Discord is not installed automatically** in this version: on Akati OS it currently shows "A fatal Javascript error occured" on its first start (known issue, being fixed). Get it from [discord.com/download](https://discord.com/download).
+They are installed with WinGet, which checks each installer. If WinGet is not available, Steam is downloaded from its official website. The other apps are skipped and you can install them later.
 Visual C++ and DirectX runtimes are always installed.
 
-**ภาษาไทย**: หน้าแอปเกมมี 2 ตัวเลือก "Recommended" (ค่าเริ่มต้น) ติดตั้ง Steam กับ Discord และลบ Microsoft Store โดยข้ามหน้าเลือกแอป ส่วน "Choose apps myself" จะแสดงหน้าเลือกแอปและหน้า Microsoft Store ให้เลือกเอง Discord จะติดตั้งเบื้องหลังทันทีหลังล็อกอินครั้งแรก (ปกติไม่เกิน 1 นาที มีแจ้งเตือนมุมขวาล่าง) แล้วเปิดขึ้นมาเอง แอปติดตั้งผ่าน WinGet ซึ่งตรวจไฟล์ติดตั้งทุกครั้ง ถ้าไม่มี WinGet จะโหลด Steam และ Discord จากเว็บไซต์ทางการ ส่วนแอปอื่นจะข้ามไป ติดตั้งทีหลังได้
+**ภาษาไทย**: หน้าแอปเกมมี 2 ตัวเลือก "Recommended" (ค่าเริ่มต้น) ติดตั้ง Steam และลบ Microsoft Store โดยข้ามหน้าเลือกแอป ส่วน "Choose apps myself" จะแสดงหน้าเลือกแอปและหน้า Microsoft Store ให้เลือกเอง เวอร์ชันนี้ยังไม่ติดตั้ง Discord ให้อัตโนมัติ เพราะบน Akati OS Discord ขึ้น error ตอนเปิดครั้งแรก (กำลังแก้) ให้โหลดเองจาก discord.com/download แอปติดตั้งผ่าน WinGet ซึ่งตรวจไฟล์ติดตั้งทุกครั้ง ถ้าไม่มี WinGet จะโหลด Steam จากเว็บไซต์ทางการ ส่วนแอปอื่นจะข้ามไป ติดตั้งทีหลังได้
 Install later: `AtlasDesktop\Akati OS\Install Gaming Apps`
 
 ## GPU drivers

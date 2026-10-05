@@ -134,7 +134,9 @@ $strings = @{
         'status.restoring' = 'Creating a restore point...'
         'status.restore.made' = 'Restore point created'
         'status.restore.recent' = 'No new restore point: Windows made one less than 24 hours ago'
-        'status.restore.off' = 'No restore point: System Restore is off'
+        'status.restore.off' = 'No restore point: System Restore is off. Turn it on with the System Restore button (Configure > Turn on system protection).'
+        'status.boostpartial' = 'Game boost is on, but these steps failed: {0}'
+        'status.sound.play' = 'Playing: {0}'
         'report.title' = 'Report a problem'
         'report.sub' = 'Saves one .zip on your desktop with the Akati OS logs and PC details. No personal files; your user name and PC name are removed. Attach it to a GitHub issue.'
         'report.button' = 'Create problem report'; 'report.issues' = 'GitHub issues'
@@ -244,7 +246,9 @@ $strings = @{
         'status.restoring' = 'กำลังสร้างจุดคืนค่า...'
         'status.restore.made' = 'สร้างจุดคืนค่าแล้ว'
         'status.restore.recent' = 'ไม่ได้สร้างจุดคืนค่าใหม่ เพราะ Windows สร้างไว้แล้วในช่วง 24 ชั่วโมง'
-        'status.restore.off' = 'สร้างจุดคืนค่าไม่ได้ เพราะ System Restore ปิดอยู่'
+        'status.restore.off' = 'สร้างจุดคืนค่าไม่ได้ เพราะ System Restore ปิดอยู่ เปิดได้ที่ปุ่ม System Restore (Configure > Turn on system protection)'
+        'status.boostpartial' = 'เปิดบูสต์เกมแล้ว แต่ขั้นเหล่านี้ไม่สำเร็จ: {0}'
+        'status.sound.play' = 'กำลังเล่น: {0}'
         'report.title' = 'แจ้งปัญหา'
         'report.sub' = 'บันทึกไฟล์ .zip ไฟล์เดียวไว้บนเดสก์ท็อป มี log ของ Akati OS และข้อมูลเครื่อง ไม่มีไฟล์ส่วนตัว และลบชื่อผู้ใช้กับชื่อเครื่องออกแล้ว แนบไฟล์นี้ใน GitHub issue'
         'report.button' = 'สร้างรายงานปัญหา'; 'report.issues' = 'GitHub issues'
@@ -361,7 +365,9 @@ function Receive-Work {
             try { $result = $job.PS.EndInvoke($job.Handle) } catch { $result = $null }
             $job.PS.Dispose()
             $script:jobs.Remove($job)
-            if ($job.Done) { & $job.Done $result $job.Context }
+            if ($job.Done) {
+                try { & $job.Done $result $job.Context } catch { Set-Status $_.Exception.Message }
+            }
         }
     }
 }
@@ -559,11 +565,12 @@ function Update-AppsToolbar {
 }
 
 function Start-NextApp {
-    if (@($apps | Where-Object { $_.State -in 'install', 'update' }).Count) { return }
+    # Discord keeps updating itself after its installer ("finish"); the next app does not wait for that
+    if (@($apps | Where-Object { $_.State -in 'install', 'update' -and $_.Stage -ne 'finish' }).Count) { return }
     $next = $apps | Where-Object { $_.State -eq 'queued' } | Select-Object -First 1
     if (!$next) { Set-Status (T 'ready'); return }
     $mode = if ($next.QueuedMode) { $next.QueuedMode } else { 'install' }
-    $next.State = $mode
+    $next.State = $mode; $next.Stage = $null
     $next.Shared = [hashtable]::Synchronized(@{ Pid = 0 })
     $progressFile = Join-Path $progressDir "GAMEAPPS-$($next.Key).progress"
     Remove-Item -LiteralPath $progressFile -Force -ErrorAction SilentlyContinue
@@ -637,6 +644,10 @@ function Update-AppProgress {
         if (!$line) { continue }
         $stage, $percent = $line.Trim() -split '\|'
         $percent = [int]$percent
+        if ($stage -ne $app.Stage) {
+            $app.Stage = $stage
+            if ($stage -eq 'finish') { Start-NextApp }
+        }
         if ($stage -eq 'download' -and $percent -ge 0) {
             $app.Bar.IsIndeterminate = $false; $app.Bar.Value = $percent
             $app.Sub.Text = (T 'stage.download') + " $percent%"
@@ -762,44 +773,75 @@ function Update-BoostCard {
     }
 }
 
+# The notification switch is copied as it is (value and registry type), so Stop restores exactly that
+$toastSubKey = 'Software\Microsoft\Windows\CurrentVersion\PushNotifications'
 function Start-Boost {
     New-Item -Path $boostKey -Force | Out-Null
-    if ($ui.BoostPower.IsChecked) {
-        $before = Get-ActiveScheme
-        $list = [string](powercfg /list)
-        $target = $powerSchemes | Where-Object { $list -match $_ } | Select-Object -First 1
-        if ($target -and $before -and $target -ne $before) {
-            Set-ItemProperty -Path $boostKey -Name PrevScheme -Value $before
-            powercfg /setactive $target | Out-Null
-        }
-    }
-    if ($ui.BoostApps.IsChecked) {
-        $closed = @()
-        foreach ($p in Get-Process -Name $boostCandidates -ErrorAction SilentlyContinue) {
-            $path = try { $p.Path } catch { $null }
-            if ($p.Name -eq 'OneDrive' -and $path) { & $path /shutdown } else { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue }
-            if ($path -and $closed -notcontains $path) { $closed += $path }
-        }
-        if ($closed.Count) { Set-ItemProperty -Path $boostKey -Name Closed -Value ([string[]]$closed) -Type MultiString }
-    }
-    if ($ui.BoostNotify.IsChecked) {
-        $prev = Get-RegValue $toastKey 'ToastEnabled'
-        Set-ItemProperty -Path $boostKey -Name PrevToast -Value $(if ($null -eq $prev) { -1 } else { [int]$prev }) -Type DWord
-        if (!(Test-Path $toastKey)) { New-Item -Path $toastKey -Force | Out-Null }
-        Set-ItemProperty -Path $toastKey -Name ToastEnabled -Value 0 -Type DWord
-    }
+    # Marked as on first: if a step fails, Stop still undoes the steps that worked
     Set-ItemProperty -Path $boostKey -Name Since -Value (Get-Date -Format 'HH:mm')
     Set-ItemProperty -Path $boostKey -Name Active -Value 1 -Type DWord
+    $failed = @()
+    if ($ui.BoostPower.IsChecked) {
+        try {
+            $before = Get-ActiveScheme
+            $list = [string](powercfg /list)
+            $target = $powerSchemes | Where-Object { $list -match $_ } | Select-Object -First 1
+            if ($target -and $before -and $target -ne $before) {
+                Set-ItemProperty -Path $boostKey -Name PrevScheme -Value $before
+                powercfg /setactive $target | Out-Null
+            }
+        } catch { $failed += 'power' }
+    }
+    if ($ui.BoostApps.IsChecked) {
+        try {
+            $closed = @()
+            foreach ($p in Get-Process -Name $boostCandidates -ErrorAction SilentlyContinue) {
+                $path = try { $p.Path } catch { $null }
+                if ($p.Name -eq 'OneDrive' -and $path) { & $path /shutdown } else { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue }
+                if ($path -and $closed -notcontains $path) { $closed += $path }
+            }
+            if ($closed.Count) { Set-ItemProperty -Path $boostKey -Name Closed -Value ([string[]]$closed) -Type MultiString }
+        } catch { $failed += 'apps' }
+    }
+    if ($ui.BoostNotify.IsChecked) {
+        try {
+            $key = [Microsoft.Win32.Registry]::CurrentUser.CreateSubKey($toastSubKey)
+            $old = $key.GetValue('ToastEnabled', $null, 'DoNotExpandEnvironmentNames')
+            if ($null -eq $old) { Set-ItemProperty -Path $boostKey -Name PrevToastKind -Value 'none' }
+            else {
+                Set-ItemProperty -Path $boostKey -Name PrevToastKind -Value ([string]$key.GetValueKind('ToastEnabled'))
+                Set-ItemProperty -Path $boostKey -Name PrevToast -Value ([string]$old)
+            }
+            $key.SetValue('ToastEnabled', 0, 'DWord')
+            $key.Close()
+        } catch { $failed += 'notify' }
+    }
+    if ($failed.Count) { throw ((T 'status.boostpartial') -f ($failed -join ', ')) }
 }
 
 function Stop-Boost {
-    $prevScheme = Get-RegValue $boostKey 'PrevScheme'
-    if ($prevScheme) { powercfg /setactive $prevScheme | Out-Null }
-    $prevToast = Get-RegValue $boostKey 'PrevToast'
-    if ($null -ne $prevToast) {
-        if ($prevToast -eq -1) { Remove-ItemProperty -Path $toastKey -Name ToastEnabled -ErrorAction SilentlyContinue }
-        else { Set-ItemProperty -Path $toastKey -Name ToastEnabled -Value $prevToast -Type DWord }
-    }
+    try {
+        $prevScheme = Get-RegValue $boostKey 'PrevScheme'
+        if ($prevScheme) { powercfg /setactive $prevScheme | Out-Null }
+    } catch { }
+    try {
+        $kind = Get-RegValue $boostKey 'PrevToastKind'
+        if ($kind) {
+            $key = [Microsoft.Win32.Registry]::CurrentUser.CreateSubKey($toastSubKey)
+            if ($kind -eq 'none') { $key.DeleteValue('ToastEnabled', $false) }
+            else {
+                $text = [string](Get-RegValue $boostKey 'PrevToast')
+                # A DWord comes back as the number written out; keep its 32 bits as they were
+                $value = switch ($kind) {
+                    'DWord' { [BitConverter]::ToInt32([BitConverter]::GetBytes([int64]$text), 0) }
+                    'QWord' { [int64]$text }
+                    default { $text }
+                }
+                $key.SetValue('ToastEnabled', $value, $kind)
+            }
+            $key.Close()
+        }
+    } catch { }
     # Open the closed apps again. explorer.exe starts them as the signed-in user, not elevated like this window.
     foreach ($path in @(Get-RegValue $boostKey 'Closed')) {
         if ($path -and (Test-Path -LiteralPath $path)) { Start-Process explorer.exe -ArgumentList "`"$path`"" }
@@ -1189,6 +1231,7 @@ Add-Type -Namespace AkatiOS -Name Native -MemberDefinition @'
 [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern bool SystemParametersInfo(int action, int param, string value, int flags);
 [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern IntPtr SendMessageTimeout(IntPtr hWnd, int msg, IntPtr wParam, string lParam, int flags, int timeout, out IntPtr result);
 [DllImport("dwmapi.dll")] public static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
+[DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern IntPtr LoadCursorFromFile(string file);
 '@
 function Send-SettingChange([string]$area) {
     $r = [IntPtr]::Zero
@@ -1322,6 +1365,9 @@ function Set-Cursors([bool]$akati) {
     $key = 'HKCU:\Control Panel\Cursors'
     foreach ($name in $windowsCursors.Keys) { Set-ItemProperty -Path $key -Name $name -Value $windowsCursors[$name] -Type ExpandString }
     if ($akati) {
+        foreach ($f in 'akatios-arrow.cur', 'akatios-busy.ani', 'akatios-working.ani') {
+            if ([AkatiOS.Native]::LoadCursorFromFile((Join-Path $akatiCursors $f)) -eq [IntPtr]::Zero) { throw "Windows cannot load $f" }
+        }
         Set-ItemProperty -Path $key -Name Arrow -Value (Join-Path $akatiCursors 'akatios-arrow.cur') -Type ExpandString
         Set-ItemProperty -Path $key -Name Wait -Value (Join-Path $akatiCursors 'akatios-busy.ani') -Type ExpandString
         Set-ItemProperty -Path $key -Name AppStarting -Value (Join-Path $akatiCursors 'akatios-working.ani') -Type ExpandString
@@ -1362,9 +1408,13 @@ function Set-Sounds([string]$scheme) {
 $ui.SoundAkati.Add_Click({ try { Set-Sounds 'akati'; Set-Status (T 'status.sound.akati') } catch { Set-Status $_.Exception.Message } })
 $ui.SoundWindows.Add_Click({ try { Set-Sounds 'windows'; Set-Status (T 'status.sound.windows') } catch { Set-Status $_.Exception.Message } })
 $ui.SoundNone.Add_Click({ try { Set-Sounds 'none'; Set-Status (T 'status.sound.none') } catch { Set-Status $_.Exception.Message } })
+# Play the notification sound that is set now, so the three choices can be compared
 $ui.SoundPreview.Add_Click({
-    $f = Join-Path $akatiSounds 'akatios-logon.wav'
-    if (Test-Path -LiteralPath $f) { try { (New-Object System.Media.SoundPlayer $f).Play() } catch { } }
+    $f = [string](Get-ItemProperty -LiteralPath 'HKCU:\AppEvents\Schemes\Apps\.Default\Notification.Default\.Current' -ErrorAction SilentlyContinue).'(default)'
+    $f = [Environment]::ExpandEnvironmentVariables($f)
+    if ($f -and (Test-Path -LiteralPath $f)) {
+        try { (New-Object System.Media.SoundPlayer $f).Play(); Set-Status ((T 'status.sound.play') -f [IO.Path]::GetFileNameWithoutExtension($f)) } catch { Set-Status $_.Exception.Message }
+    } else { Set-Status (T 'status.sound.none') }
 })
 
 # ---------------------------------------------------------------------------------------------
@@ -1540,7 +1590,8 @@ $ui.RestoreToggle.Add_Click({
         Set-ItemProperty -Path $settingsKey -Name RestorePoint -Value $(if ($this.IsChecked) { 1 } else { 0 }) -Type DWord
     } catch { }
 })
-$ui.RestoreOpen.Add_Click({ Start-Process rstrui.exe })
+# System Protection: turn System Restore on for a drive, or open System Restore from there
+$ui.RestoreOpen.Add_Click({ Start-Process SystemPropertiesProtection.exe })
 
 function Invoke-AtlasItem([IO.FileInfo]$file) {
     $changes = $file.Extension.ToLowerInvariant() -in '.reg', '.cmd', '.ps1'
@@ -1900,6 +1951,11 @@ if ($Screenshot) {
     Set-CenterAccent $accents[1]; $ui.NavGaming.IsChecked = $true; Save-Shot 'accent-blue.png'
     Set-CenterAccent $accents[6]; $ui.NavBoost.IsChecked = $true; Save-Shot 'accent-orange.png'
     Set-CenterAccent $accents[0]
+    # The Akati OS cursors must load in Windows
+    foreach ($c in Get-ChildItem -LiteralPath $akatiCursors -File) {
+        if ([AkatiOS.Native]::LoadCursorFromFile($c.FullName) -eq [IntPtr]::Zero) { Write-Output "Windows cannot load the cursor $($c.Name)"; exit 1 }
+        Write-Output "Cursor OK: $($c.Name)"
+    }
     Write-Output "Screenshots saved to $Screenshot"
     exit 0
 }

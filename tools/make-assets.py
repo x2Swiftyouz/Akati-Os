@@ -8,7 +8,6 @@ repository. Needs numpy and Pillow. Run from the repository root:
 
 Writes to src/ and src-win10/ (Executables/AtlasModules/Wallpapers and .../Other/AkatiOS).
 """
-import io
 import math
 import os
 import struct
@@ -81,6 +80,7 @@ def make_wallpapers():
 PURPLE = (176, 124, 240)
 PURPLE2 = (138, 63, 214)
 SIZES = [32, 48, 64, 96, 128]
+ANI_SIZES = [32, 48, 64, 96]  # animated cursors: 18 frames each, so no 128 px
 SS = 8  # supersampling
 
 
@@ -127,14 +127,29 @@ def draw_ring(size, angle, offset=(0, 0), ring_scale=1.0):
     return img.resize((size, size), Image.LANCZOS)
 
 
+def dib_bytes(img):
+    """One cursor image as a classic 32-bit DIB with an AND mask (PNG entries are not always loaded
+    as cursors, DIBs always are)."""
+    w, h = img.size
+    px = np.asarray(img.convert('RGBA'), dtype=np.uint8)
+    header = struct.pack('<IiiHHIIiiII', 40, w, h * 2, 1, 32, 0, 0, 0, 0, 0, 0)
+    # Rows bottom-up, BGRA
+    xor = px[::-1, :, [2, 1, 0, 3]].tobytes()
+    # AND mask: 1 bit per pixel, 1 = transparent, rows padded to 4 bytes
+    row_bytes = ((w + 31) // 32) * 4
+    mask = bytearray()
+    for y in range(h - 1, -1, -1):
+        bits = np.packbits((px[y, :, 3] == 0).astype(np.uint8))
+        mask += bits.tobytes() + b'\0' * (row_bytes - len(bits))
+    return header + xor + bytes(mask)
+
+
 def cur_bytes(images, hotspots):
-    """A .cur file with one PNG image per size."""
+    """A .cur file with one image per size."""
     entries, blobs = [], []
     offset = 6 + 16 * len(images)
     for img, (hx, hy) in zip(images, hotspots):
-        buf = io.BytesIO()
-        img.save(buf, 'PNG')
-        data = buf.getvalue()
+        data = dib_bytes(img)
         w, h = img.size
         entries.append(struct.pack('<BBBBHHII', w % 256, h % 256, 0, 0, hx, hy, len(data), offset))
         blobs.append(data)
@@ -160,17 +175,19 @@ def make_cursors():
     # Busy: ring only, hotspot in the middle
     frames = []
     for i in range(18):
-        imgs = [draw_ring(s, i * 20) for s in SIZES]
-        frames.append(cur_bytes(imgs, [(s // 2, s // 2) for s in SIZES]))
+        imgs = [draw_ring(s, i * 20) for s in ANI_SIZES]
+        frames.append(cur_bytes(imgs, [(s // 2, s // 2) for s in ANI_SIZES]))
     files['akatios-busy.ani'] = ani_bytes(frames, 3)
     # Working in background: arrow with a small ring
     frames = []
     for i in range(18):
         imgs = []
         for s, a in zip(SIZES, arrow_imgs):
+            if s not in ANI_SIZES:
+                continue
             ring = draw_ring(s, i * 20, offset=(0.2, 0.22), ring_scale=0.42)
             imgs.append(Image.alpha_composite(a, ring))
-        frames.append(cur_bytes(imgs, arrow_hot))
+        frames.append(cur_bytes(imgs, [h for s, h in zip(SIZES, arrow_hot) if s in ANI_SIZES]))
     files['akatios-working.ani'] = ani_bytes(frames, 3)
     for tree in TREES:
         folder = os.path.join(tree, 'Executables', 'AtlasModules', 'Other', 'AkatiOS', 'Cursors')

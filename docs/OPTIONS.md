@@ -3,8 +3,8 @@
 What each option on the Akati OS setup pages does. The "Learn more" links in AME Wizard open this page.
 คู่มือตัวเลือกในหน้าติดตั้ง Akati OS ภาษาไทยอยู่ใต้ภาษาอังกฤษในแต่ละหัวข้อ
 
-Most options can be changed later in the **Atlas folder** (`AtlasDesktop`, shortcut on the desktop and in the Start menu).
-ตัวเลือกส่วนใหญ่เปลี่ยนทีหลังได้ในโฟลเดอร์ Atlas (ทางลัดบน Desktop และ Start menu)
+Most options can be changed later in **Akati OS Center > System settings** (all AtlasOS settings, with search).
+ตัวเลือกส่วนใหญ่เปลี่ยนทีหลังได้ใน Akati OS Center > ตั้งค่าระบบ (รวมการตั้งค่าทั้งหมดของ AtlasOS ค้นหาได้)
 
 > If you play online games with anti-cheat (for example Valorant or FACEIT), keep the recommended defaults. Some anti-cheat systems need Windows security features such as Core Isolation (VBS), TPM 2.0 or Secure Boot.
 >
@@ -16,7 +16,7 @@ Most options can be changed later in the **Atlas folder** (`AtlasDesktop`, short
 - **Disable Defender**: removes Defender. Your PC has no antivirus unless you install one. For advanced users only.
 
 **ภาษาไทย**: เปิด Defender (แนะนำ) คือเก็บโปรแกรมป้องกันไวรัสของ Windows ไว้ ส่วนปิด Defender คือเอาออก เครื่องจะไม่มีโปรแกรมป้องกันไวรัสจนกว่าจะติดตั้งเอง เหมาะกับผู้ใช้ที่รู้ว่ากำลังทำอะไรเท่านั้น
-Change later: `AtlasDesktop\7. Security\Defender`
+Change later: Akati OS Center > System settings > Security > Defender
 
 ## Mitigations
 
@@ -24,7 +24,7 @@ Change later: `AtlasDesktop\7. Security\Defender`
 - **Disable All Mitigations**: can improve performance on older CPUs, but reduces security and can make modern CPUs slower.
 
 **ภาษาไทย**: ค่าแนะนำคือคงระบบป้องกันช่องโหว่ CPU ไว้ การปิดอาจทำให้ CPU รุ่นเก่าเร็วขึ้นเล็กน้อย แต่ปลอดภัยน้อยลง และ CPU รุ่นใหม่อาจช้าลง
-Change later: `AtlasDesktop\7. Security\Mitigations`
+Change later: Akati OS Center > System settings > Security > Mitigations
 
 ## Automatic updates
 
@@ -32,7 +32,7 @@ Change later: `AtlasDesktop\7. Security\Mitigations`
 - **Enable Automatic Windows Updates**: the normal Windows behaviour.
 
 **ภาษาไทย**: ค่าเริ่มต้นคือปิดการอัปเดตอัตโนมัติ Windows จะแค่แจ้งเตือน คุณต้องเข้า Settings ไปอัปเดตเองเป็นประจำ เพราะอัปเดตความปลอดภัยสำคัญมาก
-Change later: `AtlasDesktop\3. General Configuration\Automatic Updates`
+Change later: Akati OS Center > System settings > General Configuration > Automatic Updates
 
 ## General options
 
@@ -45,7 +45,7 @@ Change later: `AtlasDesktop\3. General Configuration\Automatic Updates`
 - Maximum Performance (ติ๊กไว้): ใช้ power plan ประสิทธิภาพสูงสุดและปิดการประหยัดพลังงาน เหมาะกับคอมตั้งโต๊ะ ถ้าเป็นโน้ตบุ๊กจะเปลืองแบตและร้อนขึ้น
 - ปิด Core Isolation (ไม่ติ๊ก): อาจเร็วขึ้นเล็กน้อย แต่ปลอดภัยน้อยลง และเกมที่มี anti-cheat บางเกมอาจเปิดไม่ได้
 
-Change later: `AtlasDesktop\3. General Configuration` (Hibernation, Power-saving) and `AtlasDesktop\7. Security\Core Isolation (VBS)`
+Change later: Akati OS Center > System settings > General Configuration (Hibernation, Power-saving) and Akati OS Center > System settings > Security > Core Isolation (VBS)
 
 ## Software options
 
@@ -63,29 +63,22 @@ Brave, LibreWolf and Firefox are privacy friendly. Chrome is not recommended for
 
 ## Gaming apps
 
-The gaming apps page has two choices:
+Akati OS does not install gaming apps during setup. Install them when you want in **Akati OS Center > Gaming apps**: Steam, Epic Games Launcher, EA app, Ubisoft Connect, Battle.net, Discord and OBS Studio. They are installed with WinGet, which checks each installer. If WinGet is not available, Steam is downloaded from its official website. Discord is always downloaded from discord.com and installed with its normal installer (a silent install breaks Discord), as the signed-in user; it opens when it is done.
+Visual C++ and DirectX runtimes are always installed during setup.
 
-- **Recommended** (default): installs Steam and Discord and removes the Microsoft Store. The app pages are skipped.
-- **Choose apps myself**: shows the app pages and the Microsoft Store page. Pick from Steam, Epic Games Launcher, EA app, Ubisoft Connect, Battle.net, Discord and OBS Studio.
-
-Discord is installed in the background right after your first sign-in (usually within a minute, a notification shows while it installs) and opens by itself. It cannot be installed during setup like Steam, because Discord installs per user and updates itself on its first start.
-They are installed with WinGet, which checks each installer. If WinGet is not available, Steam is downloaded from its official website. Discord is always downloaded from discord.com and installed with its normal installer. The other apps are skipped and you can install them later.
-Visual C++ and DirectX runtimes are always installed.
-
-**ภาษาไทย**: หน้าแอปเกมมี 2 ตัวเลือก "Recommended" (ค่าเริ่มต้น) ติดตั้ง Steam กับ Discord และลบ Microsoft Store โดยข้ามหน้าเลือกแอป ส่วน "Choose apps myself" จะแสดงหน้าเลือกแอปและหน้า Microsoft Store ให้เลือกเอง Discord จะติดตั้งเบื้องหลังทันทีหลังล็อกอินครั้งแรก (ปกติไม่เกิน 1 นาที มีแจ้งเตือนมุมขวาล่าง) แล้วเปิดขึ้นมาเอง แอปติดตั้งผ่าน WinGet ซึ่งตรวจไฟล์ติดตั้งทุกครั้ง ถ้าไม่มี WinGet จะโหลด Steam และ Discord จากเว็บไซต์ทางการ ส่วนแอปอื่นจะข้ามไป ติดตั้งทีหลังได้
-Install later: `AtlasDesktop\Akati OS\Install Gaming Apps`
+**ภาษาไทย**: Akati OS ไม่ติดตั้งแอปเกมให้ตอนลง กดติดตั้งเองได้ใน Akati OS Center > แอปเกม (Steam, Epic, EA, Ubisoft, Battle.net, Discord, OBS) ติดตั้งผ่าน WinGet ซึ่งตรวจไฟล์ติดตั้งทุกครั้ง ถ้าไม่มี WinGet จะโหลด Steam จากเว็บไซต์ทางการ ส่วน Discord โหลดจาก discord.com และติดตั้งแบบปกติเสมอ แล้วเปิดขึ้นมาเองเมื่อเสร็จ
 
 ## GPU drivers
 
-Akati OS does not install GPU drivers. Download links for NVIDIA, AMD and Intel are in `AtlasDesktop\Akati OS\GPU Drivers`.
+Akati OS does not install GPU drivers. **Akati OS Center > Gaming apps** has buttons that open the NVIDIA, AMD and Intel driver download pages.
 
-**ภาษาไทย**: Akati OS ไม่ติดตั้งไดรเวอร์การ์ดจอให้ ลิงก์ดาวน์โหลดไดรเวอร์ NVIDIA, AMD และ Intel อยู่ในโฟลเดอร์ `AtlasDesktop\Akati OS\GPU Drivers`
+**ภาษาไทย**: Akati OS ไม่ติดตั้งไดรเวอร์การ์ดจอให้ ในหน้าแอปเกมของ Akati OS Center มีปุ่มเปิดหน้าโหลดไดรเวอร์ NVIDIA, AMD และ Intel
 
 ## Microsoft Store
 
-The Microsoft Store is removed with **Recommended** on the gaming apps page. With **Choose apps myself**, **Remove Microsoft Store** is ticked by default. Without the Store you cannot install Store apps, and the **Xbox app and Xbox Game Pass do not work**. Gaming apps from Akati OS still install, because they use WinGet. To get the Store back, open Akati OS Center > Tweaks and turn on **Microsoft Store**, or run `wsreset -i` as administrator.
+**Remove Microsoft Store** is ticked by default. Without the Store you cannot install Store apps, and the **Xbox app and Xbox Game Pass do not work**. Gaming apps from Akati OS still install, because they use WinGet. To get the Store back, open Akati OS Center > Tweaks and turn on **Microsoft Store**, or run `wsreset -i` as administrator.
 
-**ภาษาไทย**: ถ้าเลือก Recommended จะลบ Store ให้ ถ้าเลือก Choose apps myself ตัวเลือก "Remove Microsoft Store" จะติ๊กไว้เป็นค่าเริ่มต้น ถ้าลบ Store จะติดตั้งแอปจาก Store ไม่ได้ และ**แอป Xbox กับ Game Pass จะใช้ไม่ได้** แอปเกมของ Akati OS ยังติดตั้งได้ตามปกติเพราะใช้ WinGet ถ้าต้องการ Store กลับมา เปิด Akati OS Center > ปรับแต่ง แล้วเปิดสวิตช์ Microsoft Store หรือรัน `wsreset -i` แบบผู้ดูแลระบบ
+**ภาษาไทย**: "Remove Microsoft Store" ติ๊กไว้เป็นค่าเริ่มต้น ถ้าลบ Store จะติดตั้งแอปจาก Store ไม่ได้ และ**แอป Xbox กับ Game Pass จะใช้ไม่ได้** แอปเกมของ Akati OS ยังติดตั้งได้ตามปกติเพราะใช้ WinGet ถ้าต้องการ Store กลับมา เปิด Akati OS Center > ปรับแต่ง แล้วเปิดสวิตช์ Microsoft Store หรือรัน `wsreset -i` แบบผู้ดูแลระบบ
 
 ## Gaming tweaks
 
@@ -100,20 +93,8 @@ These are not on the setup pages. Turn them on in **Akati OS Center > Tweaks** i
 
 ## Akati OS Center
 
-The **Akati OS Center** app (desktop, Start menu and `AtlasDesktop\Akati OS`) puts the Akati OS tools in one window: live CPU, RAM and GPU usage, gaming apps, tweaks (the switches show the real state of your PC), temp file cleaner, themes and update check. It asks for administrator rights. Switch between English and Thai at the bottom left.
-
-**ภาษาไทย**: แอป Akati OS Center (บน Desktop, Start menu และในโฟลเดอร์ Akati OS) รวมเครื่องมือของ Akati OS ไว้ในหน้าต่างเดียว: ดูการใช้ CPU, RAM, GPU แบบเรียลไทม์, ติดตั้งแอปเกม, ปรับแต่ง (สวิตช์แสดงสถานะจริงของเครื่อง), ล้างไฟล์ชั่วคราว, เปลี่ยนธีม และตรวจอัปเดต ต้องใช้สิทธิ์ผู้ดูแลระบบ เปลี่ยนภาษาไทย/อังกฤษได้ที่มุมซ้ายล่าง
-
-## Akati OS folder
-
-`AtlasDesktop\Akati OS` has:
-
-- **Install Gaming Apps**: install any of the gaming apps later
-- **Themes**: switch between Akati OS Dark, Akati OS Light and Akati OS Slideshow (wallpaper changes every 30 minutes)
-- **GPU Drivers**: driver download pages for NVIDIA, AMD and Intel
-- **Check for Updates**: compares your version with the latest release on GitHub. Nothing is downloaded or installed
-- **Akati OS on GitHub** and this **Options Guide**
+The **Akati OS Center** app (desktop and Start menu) is the one place for everything Akati OS adds: live CPU, RAM and GPU usage, gaming apps and GPU driver links, tweaks (the switches show the real state of your PC), temp file cleaner, themes (Dark, Light, Slideshow), **System settings** (every AtlasOS setting, with search) and the update check. There is no Atlas folder shortcut any more; the files stay in `C:\Windows\AtlasDesktop` because AtlasOS scripts use them. It asks for administrator rights. Switch between English and Thai at the bottom left.
 
 Windows Terminal also gets an **Akati OS** color scheme and a "Windows PowerShell (Akati OS)" profile.
 
-**ภาษาไทย**: ในโฟลเดอร์ `AtlasDesktop\Akati OS` ติดตั้งแอปเกมทีหลังได้, สลับธีม (มืด, สว่าง, สไลด์โชว์), เปิดหน้าโหลดไดรเวอร์การ์ดจอ และตรวจอัปเดต (แค่ตรวจ ไม่ดาวน์โหลดอะไร) ส่วน Windows Terminal จะมีธีมสี Akati OS และโปรไฟล์ "Windows PowerShell (Akati OS)" ให้เลือก
+**ภาษาไทย**: แอป Akati OS Center (บน Desktop และ Start menu) รวมทุกอย่างของ Akati OS ไว้ที่เดียว: ดูการใช้ CPU, RAM, GPU แบบเรียลไทม์, ติดตั้งแอปเกมและลิงก์ไดรเวอร์การ์ดจอ, ปรับแต่ง (สวิตช์แสดงสถานะจริงของเครื่อง), ล้างไฟล์ชั่วคราว, ธีม (มืด, สว่าง, สไลด์โชว์), **ตั้งค่าระบบ** (การตั้งค่าทั้งหมดของ AtlasOS ค้นหาได้) และตรวจอัปเดต ไม่มีทางลัดโฟลเดอร์ Atlas แล้ว ไฟล์ยังอยู่ที่ `C:\Windows\AtlasDesktop` เพราะสคริปต์ของ AtlasOS ใช้อยู่ ต้องใช้สิทธิ์ผู้ดูแลระบบ เปลี่ยนภาษาไทย/อังกฤษได้ที่มุมซ้ายล่าง Windows Terminal จะมีธีมสี Akati OS และโปรไฟล์ "Windows PowerShell (Akati OS)" ด้วย

@@ -439,7 +439,7 @@
                                         </Button>
                                         <Button x:Name="QuickAtlas" Style="{StaticResource Action}" Margin="5,0">
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock Style="{StaticResource Glyph}" Text="&#xE8B7;" Foreground="{StaticResource Accent2}" Margin="0,0,12,0"/>
+                                                <TextBlock Style="{StaticResource Glyph}" Text="&#xE713;" Foreground="{StaticResource Accent2}" Margin="0,0,12,0"/>
                                                 <StackPanel><TextBlock Tag="t:quick.system" Text="System settings" FontWeight="SemiBold"/><TextBlock Tag="t:quick.system.d" Text="All other settings" Style="{StaticResource Muted}" FontSize="11"/></StackPanel>
                                             </StackPanel>
                                         </Button>

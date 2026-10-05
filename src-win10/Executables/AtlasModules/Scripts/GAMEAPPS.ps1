@@ -1,5 +1,8 @@
 param (
-    [Parameter(Mandatory)][string]$App
+    [Parameter(Mandatory)][string]$App,
+    # Do not install now: register a scheduled task that runs this script as the signed-in user
+    # 2 minutes after their next sign-in (used by setup for Discord). Needs admin rights.
+    [switch]$AtSignIn
 )
 
 # Akati OS: installs one gaming app (used during setup and by AtlasDesktop\Akati OS\Install Gaming Apps).
@@ -53,7 +56,31 @@ function Stop-AutoStartedApp {
     }
 }
 
-if (Test-Installed) { Write-Output "$App is already installed."; exit 0 }
+if ($AtSignIn) {
+    # The user who is signed in on the console (setup may run this script in another context)
+    $user = (Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction SilentlyContinue).UserName
+    if (!$user) { $user = "$env:USERDOMAIN\$env:USERNAME" }
+    $task = "AkatiOS Install $App at sign-in"
+    try {
+        $action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$PSCommandPath`" -App $App"
+        $trigger = New-ScheduledTaskTrigger -AtLogOn -User $user
+        $trigger.Delay = 'PT2M'
+        $principal = New-ScheduledTaskPrincipal -UserId $user -LogonType Interactive -RunLevel Limited
+        $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Minutes 30)
+        Register-ScheduledTask -TaskName $task -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force -ErrorAction Stop | Out-Null
+        Write-Output "$App will be installed for $user 2 minutes after the next sign-in (scheduled task '$task')."
+    } catch {
+        Write-Warning "Could not register the scheduled task for ${App}: $($_.Exception.Message)"
+    }
+    exit 0
+}
+
+# Started by the sign-in task: remove the task once the app is installed
+function Remove-SignInTask {
+    if (Test-Installed) { Unregister-ScheduledTask -TaskName "AkatiOS Install $App at sign-in" -Confirm:$false -ErrorAction SilentlyContinue }
+}
+
+if (Test-Installed) { Write-Output "$App is already installed."; Remove-SignInTask; exit 0 }
 
 # Discord installs itself after its installer exits (Update.exe). This script must not exit before
 # that is done: started at sign-in (RunOnce) from a hidden window, Update.exe stops when this script
@@ -109,9 +136,9 @@ if (Get-Command winget -EA 0) {
     $null = $proc.Handle
     $finished = $proc.WaitForExit(600000)
     Wait-DiscordSetup
-    if ($finished -and $proc.ExitCode -eq 0) { Stop-AutoStartedApp; Write-Output "$App installed."; exit 0 }
+    if ($finished -and $proc.ExitCode -eq 0) { Stop-AutoStartedApp; Write-Output "$App installed."; Remove-SignInTask; exit 0 }
     # Some installers make WinGet return an error even though the app was installed
-    if (Test-Installed) { Stop-AutoStartedApp; Write-Output "$App installed."; exit 0 }
+    if (Test-Installed) { Stop-AutoStartedApp; Write-Output "$App installed."; Remove-SignInTask; exit 0 }
     Write-Warning "WinGet could not install $App (exit code $($proc.ExitCode))."
 }
 
@@ -131,7 +158,7 @@ if ($? -and (Test-Path $file)) {
     # Max 5 minutes so a stuck installer does not block setup
     if (!$proc.WaitForExit(300000)) { Write-Warning "$App installer timed out." } else { Write-Output "$App installer exit code: $($proc.ExitCode)" }
     Wait-DiscordSetup
-    if (Test-Installed) { Write-Output "$App installed." } else { Write-Warning "$App is not fully installed." }
+    if (Test-Installed) { Write-Output "$App installed."; Remove-SignInTask } else { Write-Warning "$App is not fully installed." }
     Stop-AutoStartedApp
 } else {
     Write-Warning "Downloading $App failed. Install it later from its official website."

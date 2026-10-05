@@ -55,8 +55,9 @@ function Stop-AutoStartedApp {
 
 if (Test-Installed) { Write-Output "$App is already installed."; exit 0 }
 
-# Discord installs itself after its installer exits (Update.exe). Wait for that, so the app and
-# its shortcuts are complete before this script checks the result or exits.
+# Discord installs itself after its installer exits (Update.exe). This script must not exit before
+# that is done: started at sign-in (RunOnce) from a hidden window, Update.exe stops when this script
+# exits and leaves Discord half installed. So wait until Discord is installed and its setup has ended.
 function Wait-DiscordSetup {
     if ($App -ne 'Discord') { return }
     $deadline = (Get-Date).AddMinutes(5)
@@ -64,7 +65,9 @@ function Wait-DiscordSetup {
         Start-Sleep -Seconds 3
         $busy = Get-Process -Name 'Update', 'DiscordSetup' -ErrorAction SilentlyContinue |
             Where-Object { $_.Name -eq 'DiscordSetup' -or $_.Path -like "$env:LOCALAPPDATA\Discord\*" -or $_.Path -like "$env:LOCALAPPDATA\SquirrelTemp\*" }
-    } while ($busy -and (Get-Date) -lt $deadline)
+    } while ((!(Test-Installed) -or $busy) -and (Get-Date) -lt $deadline)
+    # Give Discord a moment to create its shortcuts
+    Start-Sleep -Seconds 10
 }
 
 # Discord installs per user. Installed from an elevated process (setup, Akati OS Center), the user's own

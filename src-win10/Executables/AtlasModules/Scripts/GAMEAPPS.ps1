@@ -10,7 +10,8 @@ $apps = @{
     Steam     = @{ Id = 'Valve.Steam';                  Url = 'https://cdn.akamai.steamstatic.com/client/installer/SteamSetup.exe'; Args = '/S'
                    Installed = { Test-Path "${env:ProgramFiles(x86)}\Steam\steam.exe" } }
     Discord   = @{ Id = 'Discord.Discord';              Url = 'https://discord.com/api/downloads/distributions/app/installers/latest?channel=stable&platform=win&arch=x64'; Args = '-s'
-                   Installed = { Test-Path "$env:LOCALAPPDATA\Discord\Update.exe" } }
+                   # Update.exe alone is not enough: an interrupted install leaves it without the app
+                   Installed = { (Test-Path "$env:LOCALAPPDATA\Discord\packages\RELEASES") -and (Test-Path "$env:LOCALAPPDATA\Discord\app-*\Discord.exe") } }
     Epic      = @{ Id = 'EpicGames.EpicGamesLauncher' }
     EA        = @{ Id = 'ElectronicArts.EADesktop' }
     Ubisoft   = @{ Id = 'Ubisoft.Connect' }
@@ -47,6 +48,18 @@ function Stop-AutoStartedApp {
 
 if (Test-Installed) { Write-Output "$App is already installed."; exit 0 }
 
+# Discord installs itself after its installer exits (Update.exe). Wait for that, so the app and
+# its shortcuts are complete before this script checks the result or exits.
+function Wait-DiscordSetup {
+    if ($App -ne 'Discord') { return }
+    $deadline = (Get-Date).AddMinutes(5)
+    do {
+        Start-Sleep -Seconds 3
+        $busy = Get-Process -Name 'Update', 'DiscordSetup' -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -eq 'DiscordSetup' -or $_.Path -like "$env:LOCALAPPDATA\Discord\*" }
+    } while ($busy -and (Get-Date) -lt $deadline)
+}
+
 # Discord installs per user. Installed from an elevated process (setup, Akati OS Center), the user's own
 # Discord later fails with "Attempt to install host that is currently running". So when elevated, run
 # this script again as the signed-in user without admin rights, through a one-time scheduled task.
@@ -70,6 +83,11 @@ if ($App -eq 'Discord' -and (Test-Elevated)) {
     }
 }
 
+# A half-installed Discord (only Update.exe) cannot be repaired by its installer, so remove it first
+if ($App -eq 'Discord' -and (Test-Path "$env:LOCALAPPDATA\Discord") -and !(Get-Process -Name 'Discord' -ErrorAction SilentlyContinue)) {
+    Remove-Item -Path "$env:LOCALAPPDATA\Discord" -Recurse -Force -ErrorAction SilentlyContinue
+}
+
 # Try WinGet
 if (Get-Command winget -EA 0) {
     Write-Output "Installing $App with WinGet..."
@@ -80,6 +98,7 @@ if (Get-Command winget -EA 0) {
     # Read Handle now, otherwise ExitCode is empty after the process exits (PowerShell quirk)
     $null = $proc.Handle
     $finished = $proc.WaitForExit(600000)
+    Wait-DiscordSetup
     if ($finished -and $proc.ExitCode -eq 0) { Stop-AutoStartedApp; Write-Output "$App installed."; exit 0 }
     # Some installers make WinGet return an error even though the app was installed
     if (Test-Installed) { Stop-AutoStartedApp; Write-Output "$App installed."; exit 0 }
@@ -101,6 +120,7 @@ if ($? -and (Test-Path $file)) {
     $null = $proc.Handle
     # Max 5 minutes so a stuck installer does not block setup
     if (!$proc.WaitForExit(300000)) { Write-Warning "$App installer timed out." }
+    Wait-DiscordSetup
     Stop-AutoStartedApp
 } else {
     Write-Warning "Downloading $App failed. Install it later from its official website."

@@ -18,7 +18,7 @@
   - short button labels (Enable / Disable) and a **default** badge
   - a restore point is created before the first change (can be turned off)
 - Appearance:
-  - 7 **accent colors** for Akati OS Center, Windows (Start, taskbar, window borders) and the Akati OS Terminal colors
+  - 7 **accent colors** for Akati OS Center, the Windows accent color and the Akati OS Terminal colors
   - wallpaper picker and 4 new wallpapers (Aurora, Sunset, Ocean, Mist), also in the Slideshow theme
   - **Akati OS cursor** (arrow and busy cursors) and **Akati OS sounds**, or back to the Windows ones, or no sounds
 - About: **Create problem report** saves a .zip on the desktop with the Akati OS logs and PC details (user name and PC name removed)

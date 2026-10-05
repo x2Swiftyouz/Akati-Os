@@ -660,7 +660,7 @@
                             <Border Style="{StaticResource Card}" Margin="0,0,0,16">
                                 <StackPanel>
                                     <TextBlock Tag="t:accent.title" Text="Accent color" Style="{StaticResource CardTitle}"/>
-                                    <TextBlock Tag="t:accent.sub" Text="Used by Akati OS Center, Windows (Start, taskbar, window borders) and the Akati OS Terminal colors." Style="{StaticResource Muted}" Margin="0,4,0,12"/>
+                                    <TextBlock Tag="t:accent.sub" Text="Used by Akati OS Center, the Windows accent color and the Akati OS Terminal colors." Style="{StaticResource Muted}" Margin="0,4,0,12"/>
                                     <WrapPanel x:Name="AccentPanel"/>
                                 </StackPanel>
                             </Border>

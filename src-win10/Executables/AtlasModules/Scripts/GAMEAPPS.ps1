@@ -1,8 +1,10 @@
 param (
     [Parameter(Mandatory)][string]$App,
     # Do not install now: register a scheduled task that runs this script as the signed-in user
-    # 2 minutes after their next sign-in (used by setup for Discord). Needs admin rights.
-    [switch]$AtSignIn
+    # at their next sign-in (used by setup for Discord). Needs admin rights.
+    [switch]$AtSignIn,
+    # Set by that scheduled task
+    [switch]$FromTask
 )
 
 # Akati OS: installs one gaming app (used during setup and by AtlasDesktop\Akati OS\Install Gaming Apps).
@@ -62,23 +64,34 @@ if ($AtSignIn) {
     if (!$user) { $user = "$env:USERDOMAIN\$env:USERNAME" }
     $task = "AkatiOS Install $App at sign-in"
     try {
-        $action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$PSCommandPath`" -App $App"
+        $action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$PSCommandPath`" -App $App -FromTask"
         $trigger = New-ScheduledTaskTrigger -AtLogOn -User $user
         $trigger.Delay = 'PT2M'
         $principal = New-ScheduledTaskPrincipal -UserId $user -LogonType Interactive -RunLevel Limited
         $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Minutes 30)
         Register-ScheduledTask -TaskName $task -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force -ErrorAction Stop | Out-Null
-        Write-Output "$App will be installed for $user 2 minutes after the next sign-in (scheduled task '$task')."
+        # The sign-in trigger alone did not always start the task, so RunOnce also starts it at the next
+        # sign-in. schtasks.exe only starts the task and exits; the install itself runs in the task.
+        Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\RunOnce' -Name "AkatiOS Install $App" -Value "schtasks.exe /run /tn `"$task`"" -Force
+        Write-Output "$App will be installed for $user after the next sign-in (scheduled task '$task')."
     } catch {
         Write-Warning "Could not register the scheduled task for ${App}: $($_.Exception.Message)"
     }
     exit 0
 }
 
-# Started by the sign-in task: remove the task once the app is installed
+# Started by the sign-in task: remember that the app was installed, so the task does not install it
+# again if the user removes it later, and try to remove the task (needs rights the user may not have)
+$doneKey = 'HKCU:\Software\AkatiOS\InstalledAtSignIn'
 function Remove-SignInTask {
-    if (Test-Installed) { Unregister-ScheduledTask -TaskName "AkatiOS Install $App at sign-in" -Confirm:$false -ErrorAction SilentlyContinue }
+    if (!$FromTask -or !(Test-Installed)) { return }
+    New-Item -Path $doneKey -Force -ErrorAction SilentlyContinue | Out-Null
+    Set-ItemProperty -Path $doneKey -Name $App -Value 1 -Type DWord -ErrorAction SilentlyContinue
+    try { Unregister-ScheduledTask -TaskName "AkatiOS Install $App at sign-in" -Confirm:$false -ErrorAction Stop } catch {}
 }
+if ($FromTask -and (Get-ItemProperty -Path $doneKey -Name $App -ErrorAction SilentlyContinue)) { exit 0 }
+# Let the sign-in finish first (programs started right at sign-in were stopped before)
+if ($FromTask) { Start-Sleep -Seconds 30 }
 
 if (Test-Installed) { Write-Output "$App is already installed."; Remove-SignInTask; exit 0 }
 

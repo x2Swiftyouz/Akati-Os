@@ -6,6 +6,13 @@ param (
 # Uses WinGet first (installer hashes are verified by WinGet).
 # Falls back to the official direct download where one exists.
 
+# Log for troubleshooting: %LOCALAPPDATA%\AkatiOS\Logs\GAMEAPPS-<App>.log
+try {
+    $logDir = Join-Path $env:LOCALAPPDATA 'AkatiOS\Logs'
+    New-Item -ItemType Directory -Path $logDir -Force | Out-Null
+    Start-Transcript -Path (Join-Path $logDir "GAMEAPPS-$App.log") -Append | Out-Null
+} catch {}
+
 $apps = @{
     Steam     = @{ Id = 'Valve.Steam';                  Url = 'https://cdn.akamai.steamstatic.com/client/installer/SteamSetup.exe'; Args = '/S'
                    Installed = { Test-Path "${env:ProgramFiles(x86)}\Steam\steam.exe" } }
@@ -56,7 +63,7 @@ function Wait-DiscordSetup {
     do {
         Start-Sleep -Seconds 3
         $busy = Get-Process -Name 'Update', 'DiscordSetup' -ErrorAction SilentlyContinue |
-            Where-Object { $_.Name -eq 'DiscordSetup' -or $_.Path -like "$env:LOCALAPPDATA\Discord\*" }
+            Where-Object { $_.Name -eq 'DiscordSetup' -or $_.Path -like "$env:LOCALAPPDATA\Discord\*" -or $_.Path -like "$env:LOCALAPPDATA\SquirrelTemp\*" }
     } while ($busy -and (Get-Date) -lt $deadline)
 }
 
@@ -119,8 +126,9 @@ if ($? -and (Test-Path $file)) {
     $proc = Start-Process -FilePath $file -ArgumentList $info.Args -WindowStyle Hidden -PassThru
     $null = $proc.Handle
     # Max 5 minutes so a stuck installer does not block setup
-    if (!$proc.WaitForExit(300000)) { Write-Warning "$App installer timed out." }
+    if (!$proc.WaitForExit(300000)) { Write-Warning "$App installer timed out." } else { Write-Output "$App installer exit code: $($proc.ExitCode)" }
     Wait-DiscordSetup
+    if (Test-Installed) { Write-Output "$App installed." } else { Write-Warning "$App is not fully installed." }
     Stop-AutoStartedApp
 } else {
     Write-Warning "Downloading $App failed. Install it later from its official website."

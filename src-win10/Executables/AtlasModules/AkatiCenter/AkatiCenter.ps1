@@ -379,7 +379,7 @@ function Format-Size([double]$bytes) {
 function Get-RegValue($path, $name) { (Get-ItemProperty -Path $path -Name $name -ErrorAction SilentlyContinue).$name }
 
 $akati = Get-ItemProperty -Path 'HKLM:\SOFTWARE\AkatiOS' -ErrorAction SilentlyContinue
-$version = if ($akati.Version) { $akati.Version } else { 'v1.3.1' }
+$version = if ($akati.Version) { $akati.Version } else { 'v1.4.0' }
 $build = [Environment]::OSVersion.Version.Build
 $edition = if ($akati.Edition) { $akati.Edition } elseif ($build -ge 22000) { 'Windows 11' } else { 'Windows 10' }
 $ui.VersionBig.Text = $version
@@ -484,7 +484,7 @@ function New-Row([string]$glyph, [string]$title, [string]$titleTag, [System.Wind
     if ($left) { $left.Margin = '0,0,14,0'; $left.VerticalAlignment = 'Center'; [void]$grid.Children.Add($left) }
     $icon = New-Object System.Windows.Controls.Border
     $icon.Width = 38; $icon.Height = 38; $icon.CornerRadius = 10; $icon.Background = '#241C30'; $icon.Margin = '0,0,14,0'
-    $g = New-Text $glyph 16; $g.Style = $window.FindResource('Glyph'); $g.HorizontalAlignment = 'Center'; $g.Foreground = $window.FindResource('Accent2')
+    $g = New-Text $glyph 16; $g.Style = $window.FindResource('Glyph'); $g.HorizontalAlignment = 'Center'; $g.SetResourceReference([System.Windows.Controls.TextBlock]::ForegroundProperty, 'Accent2')
     $icon.Child = $g
     [System.Windows.Controls.Grid]::SetColumn($icon, 1)
     $text = New-Object System.Windows.Controls.StackPanel
@@ -748,7 +748,7 @@ function Update-BoostCard {
         $ui.BoostState.Foreground = $window.FindResource('Good')
         $ui.BoostButton.Content = T 'boost.stop'
         $ui.BoostButton.Style = $window.FindResource('Secondary')
-        $ui.BoostIcon.Background = $window.FindResource('AccentGradient')
+        $ui.BoostIcon.SetResourceReference([System.Windows.Controls.Border]::BackgroundProperty, 'AccentGradient')
         foreach ($c in 'BoostPower', 'BoostApps', 'BoostNotify') { $ui[$c].IsEnabled = $false }
     } else {
         $ui.BoostState.Text = T 'boost.off'
@@ -843,7 +843,7 @@ foreach ($t in $pingTargets) {
     $chart = New-Object System.Windows.Controls.Canvas
     $chart.Width = 160; $chart.Height = 30; $chart.Margin = '0,0,18,0'; $chart.ClipToBounds = $true
     $line = New-Object System.Windows.Shapes.Polyline
-    $line.Stroke = $window.FindResource('Accent2'); $line.StrokeThickness = 2; $line.StrokeLineJoin = 'Round'
+    $line.SetResourceReference([System.Windows.Shapes.Shape]::StrokeProperty, 'Accent2'); $line.StrokeThickness = 2; $line.StrokeLineJoin = 'Round'
     [void]$chart.Children.Add($line)
     $value = New-Text '-' 18 'Bold'; $value.MinWidth = 80; $value.TextAlignment = 'Right'; $value.VerticalAlignment = 'Center'
     [void]$right.Children.Add($chart); [void]$right.Children.Add($value)
@@ -1146,7 +1146,7 @@ function Update-ThemeCards {
     $current = [string](Get-RegValue 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes' 'CurrentTheme')
     foreach ($th in $themes) {
         $active = $current -like "*$($th.File)"
-        $th.Card.BorderBrush = if ($active) { $window.FindResource('Accent2') } else { $window.FindResource('CardBorder') }
+        if ($active) { $th.Card.SetResourceReference([System.Windows.Controls.Border]::BorderBrushProperty, 'Accent2') } else { $th.Card.BorderBrush = $window.FindResource('CardBorder') }
         $th.Button.Content = if ($active) { T 'active' } else { T 'apply' }
     }
 }
@@ -1205,18 +1205,14 @@ $accents = @(
 )
 function ConvertTo-Color([string]$hex) { [System.Windows.Media.ColorConverter]::ConvertFromString($hex) }
 
-# Recolor the brushes of this window (the styles use them, so every button follows)
+# New brushes for this window. The XAML uses them as DynamicResource, so every style follows at once
+# (brushes inside styles are frozen and cannot be recolored in place).
 function Set-CenterAccent($a) {
     $res = $window.Resources
-    foreach ($pair in @(@('Accent', $a.Base), @('Accent2', $a.Light))) {
-        $b = $res[$pair[0]]
-        if ($b.IsFrozen) { $b = $b.Clone(); $res[$pair[0]] = $b }
-        $b.Color = ConvertTo-Color $pair[1]
-    }
-    $g = $res['AccentGradient']
-    if ($g.IsFrozen) { $g = $g.Clone(); $res['AccentGradient'] = $g }
-    $g.GradientStops[0].Color = ConvertTo-Color $a.G1
-    $g.GradientStops[1].Color = ConvertTo-Color $a.G2
+    $res['Accent'] = New-Object System.Windows.Media.SolidColorBrush (ConvertTo-Color $a.Base)
+    $res['Accent2'] = New-Object System.Windows.Media.SolidColorBrush (ConvertTo-Color $a.Light)
+    $g = New-Object System.Windows.Media.LinearGradientBrush (ConvertTo-Color $a.G1), (ConvertTo-Color $a.G2), (New-Object System.Windows.Point 0, 0), (New-Object System.Windows.Point 1, 1)
+    $res['AccentGradient'] = $g
 }
 
 # Windows keeps the accent as 0xAABBGGRR (and a palette of 8 shades from light to dark)
@@ -1527,7 +1523,8 @@ function Get-AtlasLabel([IO.FileInfo]$file, [string]$leaf) {
     $left = @(($rest -replace '\([^)]*\)', '').ToLowerInvariant().Split(' ', [StringSplitOptions]::RemoveEmptyEntries) |
         Where-Object { $_ -notin $leafWords -and "${_}s" -notin $leafWords -and $_ -notin $atlasFiller })
     if ($left.Count -eq 0) { return "$verb$extra" }
-    if ($lang -eq 'th') { return "$verb $rest" }
+    # Thai: translate the verb only for short names ("ปิด VBS"), longer ones stay as AtlasOS wrote them
+    if ($lang -eq 'th' -and $rest.Split(' ').Count -le 2) { return "$verb $rest" }
     return $name
 }
 
@@ -1601,7 +1598,7 @@ function New-AtlasButton([IO.FileInfo]$file, [string]$leaf) {
     if ($file.BaseName -match '\(default\)') {
         $badge = New-Object System.Windows.Controls.Border
         $badge.Style = $window.FindResource('Badge'); $badge.Margin = '8,0,0,0'
-        $bt = New-Text (T 'system.default') 10 'SemiBold'; $bt.Foreground = $window.FindResource('Accent2')
+        $bt = New-Text (T 'system.default') 10 'SemiBold'; $bt.SetResourceReference([System.Windows.Controls.TextBlock]::ForegroundProperty, 'Accent2')
         $badge.Child = $bt
         [void]$content.Children.Add($badge)
     }

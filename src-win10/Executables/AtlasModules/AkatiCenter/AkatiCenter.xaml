@@ -64,7 +64,7 @@
                             </Trigger>
                             <Trigger Property="IsChecked" Value="True">
                                 <Setter TargetName="Bd" Property="Background" Value="#2A1F3D"/>
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource Accent2}"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource Accent2}"/>
                                 <Setter Property="Foreground" Value="White"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -81,7 +81,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="{StaticResource AccentGradient}" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                        <Border x:Name="Bd" Background="{DynamicResource AccentGradient}" CornerRadius="8" Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -110,7 +110,7 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Bd" Property="Background" Value="#2C2240"/>
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource Accent}"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource Accent}"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="Bd" Property="Opacity" Value="0.4"/>
@@ -134,7 +134,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource Accent}"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource Accent}"/>
                                 <Setter TargetName="Bd" Property="Background" Value="#221A2E"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
@@ -178,8 +178,8 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="Track" Property="Background" Value="{StaticResource AccentGradient}"/>
-                                <Setter TargetName="Track" Property="BorderBrush" Value="{StaticResource Accent2}"/>
+                                <Setter TargetName="Track" Property="Background" Value="{DynamicResource AccentGradient}"/>
+                                <Setter TargetName="Track" Property="BorderBrush" Value="{DynamicResource Accent2}"/>
                                 <Setter TargetName="Thumb" Property="HorizontalAlignment" Value="Right"/>
                                 <Setter TargetName="Thumb" Property="Fill" Value="White"/>
                             </Trigger>
@@ -206,8 +206,8 @@
                         </StackPanel>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="Box" Property="Background" Value="{StaticResource Accent}"/>
-                                <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource Accent2}"/>
+                                <Setter TargetName="Box" Property="Background" Value="{DynamicResource Accent}"/>
+                                <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource Accent2}"/>
                                 <Setter TargetName="Mark" Property="Visibility" Value="Visible"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -225,7 +225,7 @@
                     <ControlTemplate TargetType="ProgressBar">
                         <Grid>
                             <Border x:Name="PART_Track" Background="#2A2238" CornerRadius="3"/>
-                            <Border x:Name="PART_Indicator" Background="{StaticResource AccentGradient}" CornerRadius="3" HorizontalAlignment="Left"/>
+                            <Border x:Name="PART_Indicator" Background="{DynamicResource AccentGradient}" CornerRadius="3" HorizontalAlignment="Left"/>
                         </Grid>
                     </ControlTemplate>
                 </Setter.Value>
@@ -241,8 +241,8 @@
                     <ControlTemplate TargetType="ProgressBar">
                         <Grid ClipToBounds="True">
                             <Border x:Name="PART_Track" Background="#2A2238" CornerRadius="2"/>
-                            <Border x:Name="PART_Indicator" Background="{StaticResource AccentGradient}" CornerRadius="2" HorizontalAlignment="Left"/>
-                            <Border x:Name="Pulse" Width="90" Background="{StaticResource AccentGradient}" CornerRadius="2" HorizontalAlignment="Left" Visibility="Collapsed">
+                            <Border x:Name="PART_Indicator" Background="{DynamicResource AccentGradient}" CornerRadius="2" HorizontalAlignment="Left"/>
+                            <Border x:Name="Pulse" Width="90" Background="{DynamicResource AccentGradient}" CornerRadius="2" HorizontalAlignment="Left" Visibility="Collapsed">
                                 <Border.RenderTransform><TranslateTransform X="-90"/></Border.RenderTransform>
                             </Border>
                         </Grid>
@@ -345,7 +345,7 @@
                                     <Image x:Name="LogoImage" Width="30" Height="30" Margin="0,0,10,0"/>
                                     <TextBlock Text="AKATI OS" FontSize="20" FontWeight="Bold" VerticalAlignment="Center"/>
                                 </StackPanel>
-                                <TextBlock Text="CENTER" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Accent2}" Margin="40,0,0,0"/>
+                                <TextBlock Text="CENTER" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Accent2}" Margin="40,0,0,0"/>
                             </StackPanel>
                         </Grid>
                     </Border>
@@ -359,7 +359,7 @@
                         </Button>
                         <Border Background="#1C1626" CornerRadius="8" Padding="12,9" BorderBrush="#2A2238" BorderThickness="1">
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                <TextBlock Style="{StaticResource Glyph}" Text="&#xE83D;" FontSize="13" Foreground="{StaticResource Accent2}" Margin="0,0,8,0"/>
+                                <TextBlock Style="{StaticResource Glyph}" Text="&#xE83D;" FontSize="13" Foreground="{DynamicResource Accent2}" Margin="0,0,8,0"/>
                                 <TextBlock x:Name="AdminLabel" Tag="t:admin" Text="Administrator mode" FontSize="12" FontWeight="SemiBold"/>
                             </StackPanel>
                         </Border>
@@ -428,7 +428,7 @@
                                     <Grid>
                                         <Image x:Name="HeroImage" Stretch="UniformToFill" Opacity="0.55"/>
                                         <StackPanel Margin="24,22">
-                                            <TextBlock Tag="t:welcome" Text="Welcome back" Foreground="{StaticResource Accent2}" FontWeight="SemiBold"/>
+                                            <TextBlock Tag="t:welcome" Text="Welcome back" Foreground="{DynamicResource Accent2}" FontWeight="SemiBold"/>
                                             <TextBlock x:Name="PcName" Text="PC" FontSize="30" FontWeight="Bold" Margin="0,4,0,6"/>
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Style="{StaticResource Glyph}" Text="&#xE7F8;" FontSize="12" Foreground="{StaticResource MutedBrush}" Margin="0,0,8,0"/>
@@ -440,10 +440,10 @@
                                 <Border Grid.Column="2" Style="{StaticResource Card}">
                                     <StackPanel>
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Style="{StaticResource Glyph}" Text="&#xE946;" FontSize="13" Foreground="{StaticResource Accent2}" Margin="0,0,8,0"/>
+                                            <TextBlock Style="{StaticResource Glyph}" Text="&#xE946;" FontSize="13" Foreground="{DynamicResource Accent2}" Margin="0,0,8,0"/>
                                             <TextBlock Tag="t:version" Text="Akati OS version" Style="{StaticResource Label}" VerticalAlignment="Center"/>
                                         </StackPanel>
-                                        <TextBlock x:Name="VersionBig" Text="v1.3.1" FontSize="30" FontWeight="Bold" Margin="0,8,0,0"/>
+                                        <TextBlock x:Name="VersionBig" Text="v1.4.0" FontSize="30" FontWeight="Bold" Margin="0,8,0,0"/>
                                         <TextBlock x:Name="EditionText" Text="Windows 11" Style="{StaticResource Muted}"/>
                                         <TextBlock x:Name="UpdateHint" Text="" Foreground="{StaticResource Good}" FontSize="12" Margin="0,6,0,0" TextWrapping="Wrap"/>
                                     </StackPanel>
@@ -496,19 +496,19 @@
                                     <UniformGrid Columns="3" Margin="-5,0">
                                         <Button x:Name="QuickClean" Style="{StaticResource Action}" Margin="5,0">
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock Style="{StaticResource Glyph}" Text="&#xE74D;" Foreground="{StaticResource Accent2}" Margin="0,0,12,0"/>
+                                                <TextBlock Style="{StaticResource Glyph}" Text="&#xE74D;" Foreground="{DynamicResource Accent2}" Margin="0,0,12,0"/>
                                                 <StackPanel><TextBlock Tag="t:quick.clean" Text="Clean temp files" FontWeight="SemiBold"/><TextBlock Tag="t:quick.clean.d" Text="Free up disk space" Style="{StaticResource Muted}" FontSize="11"/></StackPanel>
                                             </StackPanel>
                                         </Button>
                                         <Button x:Name="QuickUpdate" Style="{StaticResource Action}" Margin="5,0">
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock Style="{StaticResource Glyph}" Text="&#xE895;" Foreground="{StaticResource Accent2}" Margin="0,0,12,0"/>
+                                                <TextBlock Style="{StaticResource Glyph}" Text="&#xE895;" Foreground="{DynamicResource Accent2}" Margin="0,0,12,0"/>
                                                 <StackPanel><TextBlock Tag="t:quick.update" Text="Check for updates" FontWeight="SemiBold"/><TextBlock Tag="t:quick.update.d" Text="Compare with GitHub" Style="{StaticResource Muted}" FontSize="11"/></StackPanel>
                                             </StackPanel>
                                         </Button>
                                         <Button x:Name="QuickAtlas" Style="{StaticResource Action}" Margin="5,0">
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock Style="{StaticResource Glyph}" Text="&#xE713;" Foreground="{StaticResource Accent2}" Margin="0,0,12,0"/>
+                                                <TextBlock Style="{StaticResource Glyph}" Text="&#xE713;" Foreground="{DynamicResource Accent2}" Margin="0,0,12,0"/>
                                                 <StackPanel><TextBlock Tag="t:quick.system" Text="System settings" FontWeight="SemiBold"/><TextBlock Tag="t:quick.system.d" Text="All other settings" Style="{StaticResource Muted}" FontSize="11"/></StackPanel>
                                             </StackPanel>
                                         </Button>
@@ -546,7 +546,7 @@
                                 <StackPanel>
                                     <TextBlock Tag="t:gpu.title" Text="GPU drivers" Style="{StaticResource CardTitle}"/>
                                     <TextBlock Tag="t:gpu.sub" Text="Opens the official driver download page." Style="{StaticResource Muted}" Margin="0,4,0,4"/>
-                                    <TextBlock x:Name="GpuDetected" Text="" Foreground="{StaticResource Accent2}" FontSize="12" Margin="0,0,0,14" TextWrapping="Wrap"/>
+                                    <TextBlock x:Name="GpuDetected" Text="" Foreground="{DynamicResource Accent2}" FontSize="12" Margin="0,0,0,14" TextWrapping="Wrap"/>
                                     <StackPanel Orientation="Horizontal">
                                         <Button x:Name="GpuNvidia" Style="{StaticResource Secondary}" Content="NVIDIA" Margin="0,0,10,0" MinWidth="110"/>
                                         <Button x:Name="GpuAmd" Style="{StaticResource Secondary}" Content="AMD" Margin="0,0,10,0" MinWidth="110"/>
@@ -571,7 +571,7 @@
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <Border x:Name="BoostIcon" Width="52" Height="52" CornerRadius="14" Background="#241C30" Margin="0,0,16,0">
-                                            <TextBlock Style="{StaticResource Glyph}" Text="&#xE945;" FontSize="22" HorizontalAlignment="Center" Foreground="{StaticResource Accent2}"/>
+                                            <TextBlock Style="{StaticResource Glyph}" Text="&#xE945;" FontSize="22" HorizontalAlignment="Center" Foreground="{DynamicResource Accent2}"/>
                                         </Border>
                                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                             <TextBlock Tag="t:boost.mode" Text="Game Mode" FontSize="17" FontWeight="SemiBold"/>
@@ -720,7 +720,7 @@
                                     <Button x:Name="RestoreOpen" DockPanel.Dock="Right" Style="{StaticResource Secondary}" VerticalAlignment="Center">
                                         <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE777;" FontSize="13" Margin="0,0,8,0"/><TextBlock Tag="t:restore.open" Text="System Restore"/></StackPanel>
                                     </Button>
-                                    <TextBlock Style="{StaticResource Glyph}" Text="&#xE81C;" Foreground="{StaticResource Accent2}" Margin="0,0,14,0"/>
+                                    <TextBlock Style="{StaticResource Glyph}" Text="&#xE81C;" Foreground="{DynamicResource Accent2}" Margin="0,0,14,0"/>
                                     <StackPanel VerticalAlignment="Center">
                                         <TextBlock Tag="t:restore.title" Text="Create a restore point first" FontWeight="SemiBold"/>
                                         <TextBlock x:Name="RestoreSub" Tag="t:restore.sub" Text="Before the first change in this window. Needs System Restore turned on." Style="{StaticResource Muted}" FontSize="12" Margin="0,2,12,0"/>
@@ -744,7 +744,7 @@
                                     <Image x:Name="AboutLogo" Width="72" Height="72" Margin="0,0,20,0"/>
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock Text="Akati OS" FontSize="26" FontWeight="Bold"/>
-                                        <TextBlock x:Name="AboutVersion" Text="v1.3.1" Style="{StaticResource Muted}"/>
+                                        <TextBlock x:Name="AboutVersion" Text="v1.4.0" Style="{StaticResource Muted}"/>
                                         <TextBlock x:Name="UpdateStatus" Text="" Margin="0,6,0,0" TextWrapping="Wrap"/>
                                     </StackPanel>
                                     <Button x:Name="UpdateButton" Grid.Column="2" Style="{StaticResource Primary}" VerticalAlignment="Center">
@@ -809,7 +809,7 @@
                         <TextBlock Tag="t:welcome.sub" Text="Three quick steps. You can change everything later." Style="{StaticResource Muted}" Margin="0,0,0,20"/>
                         <Grid Margin="0,0,0,14">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                            <Border Width="30" Height="30" CornerRadius="15" Background="{StaticResource AccentGradient}" Margin="0,0,14,0"><TextBlock Text="1" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
+                            <Border Width="30" Height="30" CornerRadius="15" Background="{DynamicResource AccentGradient}" Margin="0,0,14,0"><TextBlock Text="1" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
                             <TextBlock Grid.Column="1" Tag="t:welcome.lang" Text="Language" FontWeight="SemiBold" VerticalAlignment="Center"/>
                             <StackPanel Grid.Column="2" Orientation="Horizontal">
                                 <Button x:Name="WelcomeEn" Style="{StaticResource Secondary}" Content="English" Margin="0,0,8,0"/>
@@ -818,7 +818,7 @@
                         </Grid>
                         <Grid Margin="0,0,0,14">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                            <Border Width="30" Height="30" CornerRadius="15" Background="{StaticResource AccentGradient}" Margin="0,0,14,0"><TextBlock Text="2" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
+                            <Border Width="30" Height="30" CornerRadius="15" Background="{DynamicResource AccentGradient}" Margin="0,0,14,0"><TextBlock Text="2" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                 <TextBlock Tag="t:welcome.apps" Text="Install your gaming apps" FontWeight="SemiBold"/>
                                 <TextBlock Tag="t:welcome.apps.d" Text="Steam, Discord, Epic and more" Style="{StaticResource Muted}" FontSize="12"/>
@@ -827,7 +827,7 @@
                         </Grid>
                         <Grid Margin="0,0,0,24">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                            <Border Width="30" Height="30" CornerRadius="15" Background="{StaticResource AccentGradient}" Margin="0,0,14,0"><TextBlock Text="3" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
+                            <Border Width="30" Height="30" CornerRadius="15" Background="{DynamicResource AccentGradient}" Margin="0,0,14,0"><TextBlock Text="3" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                 <TextBlock Tag="t:welcome.look" Text="Pick a theme and accent color" FontWeight="SemiBold"/>
                                 <TextBlock Tag="t:welcome.look.d" Text="Dark, light or slideshow" Style="{StaticResource Muted}" FontSize="12"/>

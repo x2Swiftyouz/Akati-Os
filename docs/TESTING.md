@@ -51,7 +51,7 @@
 - [ ] ก๊อป `dist\AkatiOS_v<version>.apbx` และ `dist\SHA256SUMS.txt` เข้า VM
 - [ ] ตรวจ hash ใน VM:
   ```powershell
-  (Get-FileHash .\AkatiOS_v1.3.1.apbx -Algorithm SHA256).Hash.ToLower()
+  (Get-FileHash .\AkatiOS_v1.4.0.apbx -Algorithm SHA256).Hash.ToLower()
   Get-Content .\SHA256SUMS.txt
   ```
   สองค่าต้องตรงกัน
@@ -82,7 +82,7 @@
 - [ ] จดไว้ว่าขึ้นป้าย "Malicious Playbook" หรือไม่ (ใช้ประกอบข้อความถึง Ameliorated)
 
 ### ข้อความในหน้าต่าง ๆ
-- [ ] Title แสดง `Akati OS v1.3.1`
+- [ ] Title แสดง `Akati OS v1.4.0`
 - [ ] Description มีคำเตือนให้สำรองไฟล์และข้อความ "Not an official AtlasOS project"
 - [ ] หน้า Defender มีคำเตือน anti-cheat (Valorant, FACEIT)
 - [ ] ลิงก์ "Install guide" เปิด https://github.com/x2Swiftyouz/Akati-Os#readme
@@ -130,10 +130,10 @@
 bcdedit /enum '{current}' | Select-String description
 Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\OEMInformation'
 ```
-- [ ] บูตเมนูเป็น `Akati OS 11 v1.3.1`
-- [ ] `Model` = `Akati OS v1.3.1`, `Manufacturer` = `Akati OS`
+- [ ] บูตเมนูเป็น `Akati OS 11 v1.4.0`
+- [ ] `Model` = `Akati OS v1.4.0`, `Manufacturer` = `Akati OS`
 - [ ] ไม่มี `SupportURL` และ `SupportPhone`
-- [ ] `winver` และ Settings > System > About แสดง Akati OS v1.3.1
+- [ ] `winver` และ Settings > System > About แสดง Akati OS v1.4.0
 
 ### ธีม
 ```powershell
@@ -209,10 +209,29 @@ Test-Path "$env:windir\System32\d3dx9_43.dll"
 - [ ] เกี่ยวกับ: กดตรวจอัปเดตแล้วขึ้นเวอร์ชันล่าสุด
 - [ ] ปุ่มภาษา: สลับไทย/อังกฤษได้ ปิดแล้วเปิดใหม่ยังจำภาษาเดิม
 - [ ] ลากหน้าต่างด้วยแถบด้านบน, ย่อ และปิดได้
+- [ ] เปิดครั้งแรกมีหน้าต้อนรับ 3 ขั้น ปุ่มภาษาเปลี่ยนภาษาได้ กด "เริ่มใช้งาน" แล้วเปิดครั้งต่อไปไม่ขึ้นอีก
+- [ ] Windows 11: พื้นหลังของ Center โปร่งเห็นสีวอลเปเปอร์จาง ๆ (Mica) และมุมหน้าต่างโค้ง ไม่มีขอบดำ
+
+### Akati OS Center v1.4.0
+- [ ] แอปเกม: แอปที่ติดตั้งแล้วแสดงไอคอนจริง กดติดตั้ง Steam แล้วมีแถบดาวน์โหลดเป็น % กดยกเลิกระหว่างติดตั้งได้ และกลับเป็น "ติดตั้ง"
+- [ ] แอปเกม: ติ๊ก 2 แอป (เช่น OBS กับ Epic) แล้วกด "ติดตั้งที่เลือก" ตัวที่สองขึ้น "รอคิว" แล้วติดตั้งต่อเองหลังตัวแรกเสร็จ
+- [ ] แอปเกม: "ตรวจอัปเดต" ไม่มี error (ขึ้นว่าแอปเป็นเวอร์ชันล่าสุด หรือมีปุ่ม "อัปเดต")
+- [ ] ไดรเวอร์การ์ดจอ: บนเครื่องจริงปุ่มของยี่ห้อการ์ดจอเป็นสีม่วง ใน VM ขึ้นว่าไม่พบการ์ดจอ
+- [ ] บูสต์เกม: กด "เริ่ม" แล้ว `powercfg /getactivescheme` เป็น plan ประสิทธิภาพสูง กด "หยุด" แล้วกลับเป็น plan เดิม
+- [ ] บูสต์เกม: กด "เริ่มทดสอบ" แล้วปิงขึ้นเป็น ms ทั้ง 4 ที่ และกราฟขยับ
+- [ ] บูสต์เกม: ปิดสวิตช์ของแอปที่เปิดตอนบูต 1 ตัว แล้ว Task Manager > Startup ขึ้นเป็น Disabled ตรงกัน
+- [ ] ตั้งค่าระบบ: ชื่อหัวข้อเป็นภาษาไทย ปุ่มสั้นเป็น "เปิด" / "ปิด" ตัวที่เป็นค่าเริ่มต้นมีป้าย "ค่าเริ่มต้น"
+- [ ] ตั้งค่าระบบ: กดปุ่มแรกแล้วขึ้น "กำลังสร้างจุดคืนค่า..." ก่อน และ System Restore (`rstrui`) มีจุดคืนค่า "Akati OS Center" (ถ้า System Restore เปิดอยู่)
+- [ ] ธีม: เลือกสีหลักสีฟ้า ปุ่มใน Center เปลี่ยนสีทันที และ Start / taskbar ใช้สีนั้น (บางส่วนเปลี่ยนหลัง sign out)
+- [ ] ธีม: กดวอลเปเปอร์ Aurora แล้วพื้นหลังเปลี่ยน
+- [ ] ธีม: เคอร์เซอร์ "Akati OS" แล้วลูกศรมีขอบม่วง กด "Windows" แล้วกลับเป็นแบบเดิม
+- [ ] ธีม: เสียง "Akati OS" แล้ว "ลองฟัง" มีเสียง เสียบ USB แล้วมีเสียง connect กด "ไม่มีเสียง" แล้วเงียบ
+- [ ] เกี่ยวกับ: "สร้างรายงานปัญหา" ได้ไฟล์ .zip บนเดสก์ท็อป ข้างในไม่มีชื่อผู้ใช้และชื่อเครื่อง
+- [ ] คีย์ลัด: Ctrl+2 ไปหน้าแอปเกม, Ctrl+F ไปช่องค้นหาตั้งค่าระบบ, Esc ล้างคำค้น
 
 ### โฟลเดอร์ Atlas
-- [ ] มีโฟลเดอร์ `C:\Windows\AtlasDesktop` และเข้าจากเดสก์ท็อปได้
-- [ ] ลองสลับตัวเลือกในโฟลเดอร์ 1 อย่าง (เช่น `3. General Configuration\Power-saving`) แล้วทำงานได้
+- [ ] ไม่มีทางลัดบนเดสก์ท็อป แต่โฟลเดอร์ `C:\Windows\AtlasDesktop` ยังอยู่ (สคริปต์ของ Atlas ใช้)
+- [ ] ลองสลับตัวเลือก 1 อย่างจาก Akati OS Center > ตั้งค่าระบบ (เช่น Power-saving) แล้วทำงานได้
 
 ---
 

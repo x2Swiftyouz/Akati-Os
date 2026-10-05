@@ -90,6 +90,17 @@ if ($AtSignIn) {
     } catch {
         Write-Warning "Could not register the scheduled task for ${App}: $($_.Exception.Message)"
     }
+
+    # Download the installer now, during setup, so the install at sign-in takes seconds instead of minutes.
+    # Users may delete it (the sign-in install removes it when done).
+    if ($info.Url) {
+        $cacheDir = Join-Path $env:ProgramData 'AkatiOS\Installers'
+        New-Item -ItemType Directory -Path $cacheDir -Force | Out-Null
+        & icacls.exe $cacheDir /grant '*S-1-5-32-545:(OI)(CI)M' *> $null
+        & curl.exe -LSs $info.Url -o (Join-Path $cacheDir "$App-Setup.exe") --connect-timeout 10 --retry 3 --retry-all-errors
+        if ($?) { Write-Output "Downloaded the $App installer for the sign-in install." }
+        else { Write-Warning "Could not download the $App installer now, it is downloaded at sign-in instead." }
+    }
     exit 0
 }
 
@@ -103,9 +114,23 @@ function Remove-SignInTask {
 }
 if ($FromTask -and (Get-ItemProperty -Path $doneKey -Name $App -ErrorAction SilentlyContinue)) { exit 0 }
 # Let the sign-in finish first (programs started right at sign-in were stopped before)
-if ($FromTask) { Start-Sleep -Seconds 30 }
+if ($FromTask) { Start-Sleep -Seconds 5 }
 
 if (Test-Installed) { Write-Output "$App is already installed."; Remove-SignInTask; exit 0 }
+
+# Started by the sign-in task: tell the user what is happening (notification at the bottom right)
+if ($FromTask) {
+    try {
+        Add-Type -AssemblyName System.Windows.Forms, System.Drawing
+        $script:note = New-Object System.Windows.Forms.NotifyIcon
+        $script:note.Icon = [System.Drawing.SystemIcons]::Information
+        $script:note.Text = 'Akati OS'
+        $script:note.Visible = $true
+        $script:note.ShowBalloonTip(20000, 'Akati OS', "Installing $App. It opens by itself when it is ready.", 'Info')
+        # Remove the tray icon when this script exits
+        Register-EngineEvent -SourceIdentifier PowerShell.Exiting -Action { $script:note.Dispose() } | Out-Null
+    } catch {}
+}
 
 # Discord installs itself after its installer exits (Update.exe). This script must not exit before
 # that is done: started at sign-in (RunOnce) from a hidden window, Update.exe stops when this script
@@ -148,6 +173,23 @@ if ($App -eq 'Discord' -and (Test-Elevated)) {
 # A half-installed Discord (only Update.exe) cannot be repaired by its installer, so remove it first
 if ($App -eq 'Discord' -and (Test-Path "$env:LOCALAPPDATA\Discord") -and !(Get-Process -Name 'Discord' -ErrorAction SilentlyContinue)) {
     Remove-Item -Path "$env:LOCALAPPDATA\Discord" -Recurse -Force -ErrorAction SilentlyContinue
+}
+
+# Started by the sign-in task: use the installer downloaded during setup, if it is signed by Discord
+$cached = Join-Path $env:ProgramData "AkatiOS\Installers\$App-Setup.exe"
+if ($FromTask -and $info.Url -and (Test-Path $cached)) {
+    $sig = Get-AuthenticodeSignature -FilePath $cached
+    if ($sig.Status -eq 'Valid' -and $sig.SignerCertificate.Subject -like "*$App*") {
+        Write-Output "Installing $App with the installer downloaded during setup..."
+        $proc = Start-Process -FilePath $cached -ArgumentList $info.Args -WindowStyle Hidden -PassThru
+        $null = $proc.Handle
+        if ($proc.WaitForExit(300000)) { Write-Output "$App installer exit code: $($proc.ExitCode)" } else { Write-Warning "$App installer timed out." }
+        Wait-DiscordSetup
+    } else {
+        Write-Warning "The $App installer downloaded during setup is not signed by $App ($($sig.Status)), not using it."
+    }
+    Remove-Item -Path $cached -Force -ErrorAction SilentlyContinue
+    if (Test-Installed) { Write-Output "$App installed."; Remove-SignInTask; exit 0 }
 }
 
 # Try WinGet

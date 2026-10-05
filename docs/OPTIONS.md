@@ -68,11 +68,11 @@ The gaming apps page has two choices:
 - **Recommended** (default): installs Steam and Discord and removes the Microsoft Store. The app pages are skipped.
 - **Choose apps myself**: shows the app pages and the Microsoft Store page. Pick from Steam, Epic Games Launcher, EA app, Ubisoft Connect, Battle.net, Discord and OBS Studio.
 
-Discord is installed about 2-5 minutes after your first sign-in, not during setup.
+Discord is installed in the background right after your first sign-in (usually within a minute, a notification shows while it installs) and opens by itself. It cannot be installed during setup like Steam, because Discord installs per user and updates itself on its first start.
 They are installed with WinGet, which checks each installer. If WinGet is not available, Steam and Discord are downloaded from their official websites. The other apps are skipped and you can install them later.
 Visual C++ and DirectX runtimes are always installed.
 
-**ภาษาไทย**: หน้าแอปเกมมี 2 ตัวเลือก "Recommended" (ค่าเริ่มต้น) ติดตั้ง Steam กับ Discord และลบ Microsoft Store โดยข้ามหน้าเลือกแอป ส่วน "Choose apps myself" จะแสดงหน้าเลือกแอปและหน้า Microsoft Store ให้เลือกเอง Discord จะติดตั้งหลังล็อกอินครั้งแรกประมาณ 2-5 นาที แอปติดตั้งผ่าน WinGet ซึ่งตรวจไฟล์ติดตั้งทุกครั้ง ถ้าไม่มี WinGet จะโหลด Steam และ Discord จากเว็บไซต์ทางการ ส่วนแอปอื่นจะข้ามไป ติดตั้งทีหลังได้
+**ภาษาไทย**: หน้าแอปเกมมี 2 ตัวเลือก "Recommended" (ค่าเริ่มต้น) ติดตั้ง Steam กับ Discord และลบ Microsoft Store โดยข้ามหน้าเลือกแอป ส่วน "Choose apps myself" จะแสดงหน้าเลือกแอปและหน้า Microsoft Store ให้เลือกเอง Discord จะติดตั้งเบื้องหลังทันทีหลังล็อกอินครั้งแรก (ปกติไม่เกิน 1 นาที มีแจ้งเตือนมุมขวาล่าง) แล้วเปิดขึ้นมาเอง แอปติดตั้งผ่าน WinGet ซึ่งตรวจไฟล์ติดตั้งทุกครั้ง ถ้าไม่มี WinGet จะโหลด Steam และ Discord จากเว็บไซต์ทางการ ส่วนแอปอื่นจะข้ามไป ติดตั้งทีหลังได้
 Install later: `AtlasDesktop\Akati OS\Install Gaming Apps`
 
 ## GPU drivers

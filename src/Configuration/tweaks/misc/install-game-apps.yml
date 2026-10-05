@@ -10,14 +10,13 @@ actions:
     weight: 40
     option: 'install-steam'
     runas: currentUserElevated
-    # Discord updates itself right after installing. If setup restarts the PC during that update, Discord
-    # fails with "Attempt to install host that is currently running". So install it at the next sign-in
-    # instead, as the user, when nothing restarts the PC.
+    # Discord is not installed during setup: setup restarts the PC while Discord installs and updates itself,
+    # and programs started right at sign-in (RunOnce) were stopped half way. A scheduled task installs it
+    # as the user 2 minutes after sign-in (GAMEAPPS.ps1 -AtSignIn) and removes itself once Discord is installed.
   - !writeStatus: {status: 'Discord will be installed after restart', option: 'install-discord'}
   - !powerShell:
-    command: |
-      $script = Join-Path ([Environment]::GetFolderPath('Windows')) 'AtlasModules\Scripts\GAMEAPPS.ps1'
-      Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\RunOnce' -Name 'AkatiOS Install Discord' -Value ('powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "' + $script + '" -App Discord') -Force
+    command: '.\AtlasModules\Scripts\GAMEAPPS.ps1 -App Discord -AtSignIn'
+    exeDir: true
     wait: true
     option: 'install-discord'
     runas: currentUserElevated
@@ -61,21 +60,19 @@ actions:
     weight: 40
     option: 'install-obs'
     runas: currentUserElevated
+    # "Recommended" on the gaming apps page: Steam and Discord (the app pages are not shown)
+  - !writeStatus: {status: 'Installing Steam', option: 'akati-recommended'}
   - !powerShell:
-    command: |
-      $desk = [Environment]::GetFolderPath('CommonDesktopDirectory')
-      Set-Content -Path """$desk\Download NVIDIA GPU Driver.url""" -Value """[InternetShortcut]`r`nURL=https://www.nvidia.com/en-us/drivers/""" -Force
+    command: '.\AtlasModules\Scripts\GAMEAPPS.ps1 -App Steam'
+    exeDir: true
     wait: true
-    option: 'gpu-nvidia'
+    weight: 40
+    option: 'akati-recommended'
+    runas: currentUserElevated
+  - !writeStatus: {status: 'Discord will be installed after restart', option: 'akati-recommended'}
   - !powerShell:
-    command: |
-      $desk = [Environment]::GetFolderPath('CommonDesktopDirectory')
-      Set-Content -Path """$desk\Download AMD GPU Driver.url""" -Value """[InternetShortcut]`r`nURL=https://www.amd.com/en/support/download/drivers.html""" -Force
+    command: '.\AtlasModules\Scripts\GAMEAPPS.ps1 -App Discord -AtSignIn'
+    exeDir: true
     wait: true
-    option: 'gpu-amd'
-  - !powerShell:
-    command: |
-      $desk = [Environment]::GetFolderPath('CommonDesktopDirectory')
-      Set-Content -Path """$desk\Download Intel GPU Driver.url""" -Value """[InternetShortcut]`r`nURL=https://www.intel.com/content/www/us/en/download-center/home.html""" -Force
-    wait: true
-    option: 'gpu-intel'
+    option: 'akati-recommended'
+    runas: currentUserElevated

@@ -1,16 +1,27 @@
 param (
-    [Parameter(Mandatory)][string]$App
+    [Parameter(Mandatory)][string]$App,
+    # Do not install now: register a scheduled task that runs this script as the signed-in user
+    # 2 minutes after their next sign-in (used by setup for Discord). Needs admin rights.
+    [switch]$AtSignIn
 )
 
 # Akati OS: installs one gaming app (used during setup and by AtlasDesktop\Akati OS\Install Gaming Apps).
 # Uses WinGet first (installer hashes are verified by WinGet).
 # Falls back to the official direct download where one exists.
 
+# Log for troubleshooting: %LOCALAPPDATA%\AkatiOS\Logs\GAMEAPPS-<App>.log
+try {
+    $logDir = Join-Path $env:LOCALAPPDATA 'AkatiOS\Logs'
+    New-Item -ItemType Directory -Path $logDir -Force | Out-Null
+    Start-Transcript -Path (Join-Path $logDir "GAMEAPPS-$App.log") -Append | Out-Null
+} catch {}
+
 $apps = @{
     Steam     = @{ Id = 'Valve.Steam';                  Url = 'https://cdn.akamai.steamstatic.com/client/installer/SteamSetup.exe'; Args = '/S'
                    Installed = { Test-Path "${env:ProgramFiles(x86)}\Steam\steam.exe" } }
     Discord   = @{ Id = 'Discord.Discord';              Url = 'https://discord.com/api/downloads/distributions/app/installers/latest?channel=stable&platform=win&arch=x64'; Args = '-s'
-                   Installed = { Test-Path "$env:LOCALAPPDATA\Discord\Update.exe" } }
+                   # Update.exe alone is not enough: an interrupted install leaves it without the app
+                   Installed = { (Test-Path "$env:LOCALAPPDATA\Discord\packages\RELEASES") -and (Test-Path "$env:LOCALAPPDATA\Discord\app-*\Discord.exe") } }
     Epic      = @{ Id = 'EpicGames.EpicGamesLauncher' }
     EA        = @{ Id = 'ElectronicArts.EADesktop' }
     Ubisoft   = @{ Id = 'Ubisoft.Connect' }
@@ -34,16 +45,57 @@ function Test-Elevated {
     ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 }
 
-# Fallback only: if Discord had to be installed elevated, close the copy it starts by itself
+# Fallback only: if Discord had to be installed elevated, close the copy it starts by itself.
+# Never as the user: Discord installs and updates itself after the installer exits, and stopping
+# Update.exe then leaves Discord half installed (no shortcut, does not start).
 function Stop-AutoStartedApp {
-    if ($App -eq 'Discord') {
+    if ($App -eq 'Discord' -and (Test-Elevated)) {
         Start-Sleep -Seconds 5
         Get-Process -Name 'Discord', 'Update' -ErrorAction SilentlyContinue |
             Where-Object { $_.Path -like "$env:LOCALAPPDATA\Discord\*" } | Stop-Process -Force -ErrorAction SilentlyContinue
     }
 }
 
-if (Test-Installed) { Write-Output "$App is already installed."; exit 0 }
+if ($AtSignIn) {
+    # The user who is signed in on the console (setup may run this script in another context)
+    $user = (Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction SilentlyContinue).UserName
+    if (!$user) { $user = "$env:USERDOMAIN\$env:USERNAME" }
+    $task = "AkatiOS Install $App at sign-in"
+    try {
+        $action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$PSCommandPath`" -App $App"
+        $trigger = New-ScheduledTaskTrigger -AtLogOn -User $user
+        $trigger.Delay = 'PT2M'
+        $principal = New-ScheduledTaskPrincipal -UserId $user -LogonType Interactive -RunLevel Limited
+        $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Minutes 30)
+        Register-ScheduledTask -TaskName $task -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force -ErrorAction Stop | Out-Null
+        Write-Output "$App will be installed for $user 2 minutes after the next sign-in (scheduled task '$task')."
+    } catch {
+        Write-Warning "Could not register the scheduled task for ${App}: $($_.Exception.Message)"
+    }
+    exit 0
+}
+
+# Started by the sign-in task: remove the task once the app is installed
+function Remove-SignInTask {
+    if (Test-Installed) { Unregister-ScheduledTask -TaskName "AkatiOS Install $App at sign-in" -Confirm:$false -ErrorAction SilentlyContinue }
+}
+
+if (Test-Installed) { Write-Output "$App is already installed."; Remove-SignInTask; exit 0 }
+
+# Discord installs itself after its installer exits (Update.exe). This script must not exit before
+# that is done: started at sign-in (RunOnce) from a hidden window, Update.exe stops when this script
+# exits and leaves Discord half installed. So wait until Discord is installed and its setup has ended.
+function Wait-DiscordSetup {
+    if ($App -ne 'Discord') { return }
+    $deadline = (Get-Date).AddMinutes(5)
+    do {
+        Start-Sleep -Seconds 3
+        $busy = Get-Process -Name 'Update', 'DiscordSetup' -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -eq 'DiscordSetup' -or $_.Path -like "$env:LOCALAPPDATA\Discord\*" -or $_.Path -like "$env:LOCALAPPDATA\SquirrelTemp\*" }
+    } while ((!(Test-Installed) -or $busy) -and (Get-Date) -lt $deadline)
+    # Give Discord a moment to create its shortcuts
+    Start-Sleep -Seconds 10
+}
 
 # Discord installs per user. Installed from an elevated process (setup, Akati OS Center), the user's own
 # Discord later fails with "Attempt to install host that is currently running". So when elevated, run
@@ -68,6 +120,11 @@ if ($App -eq 'Discord' -and (Test-Elevated)) {
     }
 }
 
+# A half-installed Discord (only Update.exe) cannot be repaired by its installer, so remove it first
+if ($App -eq 'Discord' -and (Test-Path "$env:LOCALAPPDATA\Discord") -and !(Get-Process -Name 'Discord' -ErrorAction SilentlyContinue)) {
+    Remove-Item -Path "$env:LOCALAPPDATA\Discord" -Recurse -Force -ErrorAction SilentlyContinue
+}
+
 # Try WinGet
 if (Get-Command winget -EA 0) {
     Write-Output "Installing $App with WinGet..."
@@ -78,9 +135,10 @@ if (Get-Command winget -EA 0) {
     # Read Handle now, otherwise ExitCode is empty after the process exits (PowerShell quirk)
     $null = $proc.Handle
     $finished = $proc.WaitForExit(600000)
-    if ($finished -and $proc.ExitCode -eq 0) { Stop-AutoStartedApp; Write-Output "$App installed."; exit 0 }
+    Wait-DiscordSetup
+    if ($finished -and $proc.ExitCode -eq 0) { Stop-AutoStartedApp; Write-Output "$App installed."; Remove-SignInTask; exit 0 }
     # Some installers make WinGet return an error even though the app was installed
-    if (Test-Installed) { Stop-AutoStartedApp; Write-Output "$App installed."; exit 0 }
+    if (Test-Installed) { Stop-AutoStartedApp; Write-Output "$App installed."; Remove-SignInTask; exit 0 }
     Write-Warning "WinGet could not install $App (exit code $($proc.ExitCode))."
 }
 
@@ -98,7 +156,9 @@ if ($? -and (Test-Path $file)) {
     $proc = Start-Process -FilePath $file -ArgumentList $info.Args -WindowStyle Hidden -PassThru
     $null = $proc.Handle
     # Max 5 minutes so a stuck installer does not block setup
-    if (!$proc.WaitForExit(300000)) { Write-Warning "$App installer timed out." }
+    if (!$proc.WaitForExit(300000)) { Write-Warning "$App installer timed out." } else { Write-Output "$App installer exit code: $($proc.ExitCode)" }
+    Wait-DiscordSetup
+    if (Test-Installed) { Write-Output "$App installed."; Remove-SignInTask } else { Write-Warning "$App is not fully installed." }
     Stop-AutoStartedApp
 } else {
     Write-Warning "Downloading $App failed. Install it later from its official website."

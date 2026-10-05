@@ -1,27 +1,15 @@
 ---
 title: Akati OS Extras
-description: Optional gaming tweaks and Microsoft Store removal selected during setup, the Akati OS Windows Terminal color scheme and Akati OS Center shortcuts (Akati OS)
+description: Microsoft Store removal selected during setup, the Akati OS Windows Terminal color scheme and Akati OS Center shortcuts (Akati OS)
 actions:
   - !writeStatus: {status: 'Applying Akati OS extras'}
-    # Hardware-accelerated GPU scheduling (needs a supported GPU and driver, applies after restart)
-  - !registryValue:
-    path: 'HKLM\SYSTEM\CurrentControlSet\Control\GraphicsDrivers'
-    value: 'HwSchMode'
-    data: '2'
-    type: REG_DWORD
-    option: 'enable-hags'
-    # Optimizations for windowed games (Windows 11)
-  - !registryValue:
-    path: 'HKCU\Software\Microsoft\DirectX\UserGpuPreferences'
-    value: 'DirectXUserGlobalSettings'
-    data: 'SwapEffectUpgradeEnable=1;'
-    type: REG_SZ
-    option: 'enable-windowed-optimizations'
-
     # Remove the Microsoft Store (option, ticked by default). Get it back with Akati OS Center or "wsreset -i"
   - !writeStatus: {status: 'Removing Microsoft Store', option: 'remove-store'}
   - !taskKill: {name: 'WinStore.App', ignoreErrors: true, option: 'remove-store'}
   - !appx: {name: 'Microsoft.WindowsStore*', type: family, option: 'remove-store'}
+  - !writeStatus: {status: 'Removing Microsoft Store', option: 'akati-recommended'}
+  - !taskKill: {name: 'WinStore.App', ignoreErrors: true, option: 'akati-recommended'}
+  - !appx: {name: 'Microsoft.WindowsStore*', type: family, option: 'akati-recommended'}
 
     # Windows Terminal color scheme and profile for all users (a Terminal "fragment")
   - !powerShell:

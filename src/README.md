@@ -21,9 +21,8 @@ Akati OS คือ playbook สำหรับ Windows 11 เน้นเล่�
 - Akati OS Dark and Akati OS Light themes, wallpapers and lock screen
 - Optional setup pages for gaming software: Steam, Epic Games Launcher, EA app, Ubisoft Connect, Battle.net, Discord and OBS Studio
 - Visual C++ and DirectX runtimes are always installed (from AtlasOS)
-- GPU driver download shortcut for NVIDIA, AMD or Intel
 - Akati OS folder in `AtlasDesktop`: install gaming apps later, switch themes, GPU driver links, check for updates
-- Optional gaming tweaks: Hardware-accelerated GPU scheduling and Optimizations for windowed games
+- Gaming tweaks in Akati OS Center: Hardware-accelerated GPU scheduling and Optimizations for windowed games
 - Akati OS Slideshow theme and a Windows Terminal color scheme
 - Defaults: Maximum Performance and Disable Hibernation are checked
 

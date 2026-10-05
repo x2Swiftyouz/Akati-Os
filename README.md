@@ -29,11 +29,10 @@ Akati OS คือ playbook สำหรับ Windows 11 เน้นเล่�
 
 - All AtlasOS performance, privacy and debloat tweaks
 - Akati OS Dark, Light and Slideshow themes, wallpapers and lock screen (no AtlasOS logo)
-- Optional setup pages for gaming software: Steam, Epic Games Launcher, EA app, Ubisoft Connect, Battle.net, Discord and OBS Studio (installed with WinGet)
+- One setup page for gaming software: "Recommended" installs Steam and Discord and removes the Microsoft Store, or choose from Steam, Epic Games Launcher, EA app, Ubisoft Connect, Battle.net, Discord and OBS Studio (installed with WinGet)
 - Visual C++ and DirectX runtimes are always installed (from AtlasOS)
-- GPU driver download shortcut for NVIDIA, AMD or Intel
 - Akati OS folder in `AtlasDesktop`: install gaming apps later, switch themes, GPU driver links, check for updates
-- Optional gaming tweaks: Hardware-accelerated GPU scheduling and Optimizations for windowed games (Windows 11)
+- Akati OS Center app: live CPU/RAM/GPU usage, gaming apps, tweaks (GPU scheduling, windowed games optimizations on Windows 11, Game Mode), cleaner, themes
 - Akati OS Slideshow theme and a Windows Terminal color scheme
 - Defaults: Maximum Performance and Disable Hibernation are checked
 
@@ -51,7 +50,7 @@ Akati OS คือ playbook สำหรับ Windows 11 เน้นเล่�
 
 ## Windows 10
 
-`AkatiOS-Win10_v<version>.apbx` is a separate playbook for Windows 10 22H2 (build 19045). It is based on AtlasOS v0.4.1, the last AtlasOS version that supports Windows 10, and has the same Akati OS changes (themes, gaming app pages, GPU page, defaults). Source: `src-win10/`.
+`AkatiOS-Win10_v<version>.apbx` is a separate playbook for Windows 10 22H2 (build 19045). It is based on AtlasOS v0.4.1, the last AtlasOS version that supports Windows 10, and has the same Akati OS changes (themes, gaming apps page, Akati OS Center, defaults). Source: `src-win10/`.
 
 > ⚠️ Microsoft ended support for Windows 10 on October 14, 2025, and Extended Security Updates for home users end on October 13, 2026. After that there are no security updates. Use the Windows 11 version if your PC can run Windows 11.
 

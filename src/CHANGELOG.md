@@ -3,7 +3,7 @@
 ## v1.3.0
 
 ### Fixed
-- Discord showed "A fatal Javascript error occured: Attempt to install host that is currently running" after setup. `GAMEAPPS.ps1` read the WinGet exit code wrongly, thought the install had failed and ran the Discord (and Steam) installer a second time. It now reads the exit code correctly and checks whether the app is already installed. Discord updates itself right after installing, and setup restarted the PC in the middle of that update. Setup now installs Discord at the first sign-in after the restart (RunOnce), as the user. Akati OS Center installs it as the signed-in user without admin rights (a one-time scheduled task)
+- Discord showed "A fatal Javascript error occured: Attempt to install host that is currently running" after setup, or was only half installed (only `Update.exe`, no app and no shortcut). Causes: `GAMEAPPS.ps1` read the WinGet exit code wrongly and ran the installer twice; it stopped Discord 5 seconds after its installer exited, while Discord was still installing itself; setup restarted the PC during the install; and an install started right at sign-in (RunOnce) was stopped half way. Now Discord is installed by a scheduled task as the user 2 minutes after the first sign-in (the task removes itself once Discord is installed), `GAMEAPPS.ps1` waits until Discord is fully installed, checks for the app itself, removes a half install before installing again and writes a log to `%LOCALAPPDATA%\AkatiOS\Logs`. Akati OS Center installs Discord as the signed-in user without admin rights
 
 ### Added
 - Option to remove the Microsoft Store (ticked by default). The Xbox app and Game Pass need it; install it again from Akati OS Center (Tweaks)
@@ -11,12 +11,12 @@
 - Akati OS for Windows 10 22H2 (build 19045): a separate playbook, `AkatiOS-Win10_v1.3.0.apbx`, based on AtlasOS v0.4.1 (the last AtlasOS version that supports Windows 10). Source in `src-win10/`
 - Akati OS folder in `AtlasDesktop`: install gaming apps later, switch themes (Dark, Light, Slideshow), GPU driver links, Check for Updates, GitHub and options guide links
 - Akati OS Slideshow theme: the wallpaper changes every 30 minutes
-- Optional gaming tweaks page (off by default): Hardware-accelerated GPU scheduling and Optimizations for windowed games
 - Update checker (`Check for Updates` in the Akati OS folder): compares the installed version with the latest GitHub release, downloads nothing
 - Windows Terminal "Akati OS" color scheme and profile
 - Options guide (`docs/OPTIONS.md`, English and Thai). The "Learn more" links on the setup pages open it
 
 ### Changed
+- Fewer setup pages: a new gaming apps page with "Recommended" (Steam, Discord, remove the Microsoft Store) skips the app pages; "Choose apps myself" shows them. The GPU driver page is removed (the links are in `Akati OS\GPU Drivers`)
 - AtlasOS wallpapers and themes removed, so the Atlas logo is no longer used. The `.apbx` file is much smaller
 - `GAMEAPPS.ps1` moved to `AtlasModules\Scripts` so it stays on disk after setup
 - Installed version is saved to `HKLM\SOFTWARE\AkatiOS`

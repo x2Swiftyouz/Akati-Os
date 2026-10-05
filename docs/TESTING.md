@@ -65,9 +65,8 @@
 | รอบ | ตั้งค่า | ทำบน |
 |---|---|---|
 | **A: ค่าเริ่มต้น** | ไม่แตะอะไรเลย กด Next ทุกหน้า | 24H2, 25H2, 26H2 |
-| **B: ติ๊กทุกอย่าง** | ติ๊กแอปเกมทุกตัว, ติ๊ก Disable Core Isolation, ติ๊ก GPU ทั้ง NVIDIA, AMD และ Intel | 25H2 อย่างน้อย 1 เครื่อง |
-| **C: เอาออกทุกอย่าง** | เอาติ๊กแอปเกมออกทุกตัว, เอาติ๊ก Hibernation และ Maximum Performance ออก, ติ๊ก GPU = AMD อย่างเดียว | 24H2 หรือ 26H2 |
-| **D: GPU Intel** | ค่าเริ่มต้น ยกเว้นติ๊ก GPU = Intel อย่างเดียว | build ใดก็ได้ |
+| **B: ติ๊กทุกอย่าง** | หน้าแอปเกมเลือก Choose apps myself, ติ๊กแอปเกมทุกตัว, ติ๊ก Disable Core Isolation | 25H2 อย่างน้อย 1 เครื่อง |
+| **C: เอาออกทุกอย่าง** | หน้าแอปเกมเลือก Choose apps myself, เอาติ๊กแอปเกมและ Remove Microsoft Store ออกทุกตัว, เอาติ๊ก Hibernation และ Maximum Performance ออก | 24H2 หรือ 26H2 |
 | **W10: Windows 10** | ค่าเริ่มต้นทั้งหมด ใช้ `AkatiOS-Win10_v<version>.apbx` | Windows 10 22H2 |
 
 รอบ W10 ใช้ checklist เดียวกันทั้งหมด ยกเว้น: บูตเมนูต้องเป็น `Akati OS 10 v<version>`, ไม่มีหน้า Atlas Toolbox, ไม่มีการตั้ง ThemeMRU (Windows 10 ไม่ใช้) และใน AME Wizard ต้องไม่ยอมรันไฟล์ Windows 10 บน Windows 11 และกลับกัน
@@ -195,7 +194,7 @@ Test-Path "$env:LOCALAPPDATA\Discord"
 - [ ] แอปที่ติดตั้งแล้วเปิดได้ (ไม่ต้องล็อกอิน)
 - [ ] หน้า "Remove Microsoft Store" ติ๊กไว้เป็นค่าเริ่มต้น หลังติดตั้ง Microsoft Store ต้องไม่มีใน Start menu และ taskbar แต่ Steam/Discord ยังติดตั้งได้
 - [ ] Akati OS Center > ปรับแต่ง > เปิดสวิตช์ Microsoft Store แล้ว Store กลับมา (อาจใช้เวลาประมาณ 1 นาที)
-- [ ] Discord ติดตั้งตอนล็อกอินครั้งแรกหลังรีบูต (รอ 1-2 นาทีหลังเข้า Desktop จะมีหน้าต่าง Discord ขึ้นเอง)
+- [ ] Discord ติดตั้งตอนล็อกอินครั้งแรกหลังรีบูต (รอ 2-5 นาทีหลังเข้า Desktop จะมีหน้าต่าง Discord ขึ้นเอง ถ้าไม่ขึ้นดู log ที่ `%LOCALAPPDATA%\AkatiOS\Logs\GAMEAPPS-Discord.log`)
 - [ ] หลังติดตั้งเสร็จ ไม่มีหน้าต่าง error ของ Discord ("Attempt to install host that is currently running") แปลว่าไม่มีการรัน installer ซ้ำ
 - [ ] Discord ติดตั้งให้ user ที่รัน playbook ไม่ได้ไปอยู่ในโปรไฟล์ admin อื่น
 
@@ -209,26 +208,16 @@ Test-Path "$env:windir\System32\d3dx9_43.dll"
 - [ ] `d3dx9_43.dll` มีอยู่ (`True`)
 - [ ] รอบ C ก็ต้องมีทั้งสองอย่าง
 
-### ⚠️ ลิงก์ไดรเวอร์การ์ดจอ
-```powershell
-Get-ChildItem "$env:PUBLIC\Desktop\*.url" | Select-Object Name
-```
-| รอบ | ไฟล์ที่ต้องมี |
-|---|---|
-| A (ไม่ติ๊ก) | ไม่มีไฟล์ไดรเวอร์ |
-| B (ติ๊กทั้ง 3) | `Download NVIDIA GPU Driver.url`, `Download AMD GPU Driver.url` และ `Download Intel GPU Driver.url` |
-| C (AMD) | `Download AMD GPU Driver.url` ไฟล์เดียว |
-| D (Intel) | `Download Intel GPU Driver.url` ไฟล์เดียว |
-
-- [ ] ดับเบิลคลิกไฟล์แล้วเปิดหน้าโหลดไดรเวอร์ของผู้ผลิตได้ถูกต้อง
+### หน้าแอปเกม (Recommended / Choose apps myself)
+- [ ] รอบ A (Recommended): หน้าเลือกแอปและหน้า Microsoft Store **ไม่แสดง** ได้ Steam, Discord (หลังล็อกอิน 2-5 นาที) และไม่มี Microsoft Store
+- [ ] รอบ B/C (Choose apps myself): หน้าเลือกแอป 3 หน้าและหน้า Microsoft Store แสดงขึ้นมา และได้เฉพาะแอปที่ติ๊ก
+- [ ] รอบ C: Microsoft Store ยังอยู่
+- [ ] ไม่มีหน้า GPU และหน้า Gaming tweaks แล้ว
 
 ### Akati OS extras (v1.3.0)
 - [ ] ทางลัด "Atlas" บน Desktop และใน Start menu ใช้ไอคอน "A" ของ Akati OS
 - [ ] ตั้งความละเอียด VM เป็น 1024×768 (4:3): ตัวอักษร "Akati OS" บน wallpaper ต้องไม่ถูกตัดขอบ
 - [ ] ไม่มีภาพหรือธีมที่มีโลโก้ Atlas: `Get-ChildItem "$env:windir\AtlasModules\Wallpapers", "$env:windir\Resources\Themes" | Select-Object Name` ต้องไม่มีไฟล์ `atlas-*` หรือ `lockscreen*`
-- [ ] หน้า Gaming tweaks ทุกตัวไม่ติ๊กเป็นค่าเริ่มต้น (Windows 11 มี 2 ตัว, Windows 10 มี 1 ตัว)
-- [ ] รอบ B (ติ๊ก Gaming tweaks): `(Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\GraphicsDrivers').HwSchMode` = 2 และ Windows 11: `(Get-ItemProperty 'HKCU:\Software\Microsoft\DirectX\UserGpuPreferences').DirectXUserGlobalSettings` มี `SwapEffectUpgradeEnable=1`
-- [ ] รอบ A: ไม่มีค่า 2 ค่าข้างบน
 - [ ] `Get-ItemProperty 'HKLM:\SOFTWARE\AkatiOS'` มี `Version` และ `Edition` ถูกต้อง
 - [ ] โฟลเดอร์ `C:\Windows\AtlasDesktop\Akati OS` มีครบ: Install Gaming Apps, Themes, GPU Drivers, Check for Updates, ลิงก์ GitHub และ Options Guide
 - [ ] `Install Gaming Apps\Install OBS Studio.cmd` ขอสิทธิ์ admin แล้วติดตั้ง OBS ได้

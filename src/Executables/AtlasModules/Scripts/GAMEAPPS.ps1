@@ -69,7 +69,20 @@ if ($AtSignIn) {
         $trigger.Delay = 'PT2M'
         $principal = New-ScheduledTaskPrincipal -UserId $user -LogonType Interactive -RunLevel Limited
         $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Minutes 30)
-        Register-ScheduledTask -TaskName $task -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force -ErrorAction Stop | Out-Null
+        # The task must not remove itself: removing a running task stops everything it started, including
+        # Discord's first update, and Discord then fails with "Attempt to install host that is currently
+        # running". So Windows deletes the task when it expires after 7 days.
+        try {
+            $trigger.EndBoundary = (Get-Date).AddDays(7).ToString('s')
+            $settings.DeleteExpiredTaskAfter = 'PT0S'
+            Register-ScheduledTask -TaskName $task -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force -ErrorAction Stop | Out-Null
+        } catch {
+            Write-Warning "Registering the task with an expiry date failed ($($_.Exception.Message)), registering it without."
+            $trigger = New-ScheduledTaskTrigger -AtLogOn -User $user
+            $trigger.Delay = 'PT2M'
+            $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Minutes 30)
+            Register-ScheduledTask -TaskName $task -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force -ErrorAction Stop | Out-Null
+        }
         # The sign-in trigger alone did not always start the task, so RunOnce also starts it at the next
         # sign-in. schtasks.exe only starts the task and exits; the install itself runs in the task.
         Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\RunOnce' -Name "AkatiOS Install $App" -Value "schtasks.exe /run /tn `"$task`"" -Force
@@ -80,14 +93,13 @@ if ($AtSignIn) {
     exit 0
 }
 
-# Started by the sign-in task: remember that the app was installed, so the task does not install it
-# again if the user removes it later, and try to remove the task (needs rights the user may not have)
+# Started by the sign-in task: remember that the app was installed, so the task does nothing at later
+# sign-ins and does not install it again if the user removes it. The task is not removed here (see -AtSignIn).
 $doneKey = 'HKCU:\Software\AkatiOS\InstalledAtSignIn'
 function Remove-SignInTask {
     if (!$FromTask -or !(Test-Installed)) { return }
     New-Item -Path $doneKey -Force -ErrorAction SilentlyContinue | Out-Null
     Set-ItemProperty -Path $doneKey -Name $App -Value 1 -Type DWord -ErrorAction SilentlyContinue
-    try { Unregister-ScheduledTask -TaskName "AkatiOS Install $App at sign-in" -Confirm:$false -ErrorAction Stop } catch {}
 }
 if ($FromTask -and (Get-ItemProperty -Path $doneKey -Name $App -ErrorAction SilentlyContinue)) { exit 0 }
 # Let the sign-in finish first (programs started right at sign-in were stopped before)

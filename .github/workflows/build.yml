@@ -91,7 +91,7 @@ jobs:
       - name: Check PowerShell syntax
         shell: pwsh
         run: |
-          $files = Get-ChildItem src, src-win10, build.ps1 -Recurse -Include *.ps1, *.psm1
+          $files = Get-ChildItem src, src-win10, tools, build.ps1 -Recurse -Include *.ps1, *.psm1
           $bad = 0
           foreach ($f in $files) {
             $errors = $null

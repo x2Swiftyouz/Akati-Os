@@ -73,7 +73,6 @@ actions:
 
   # Main tasks
   - !task: { path: 'atlas\start.yml' }
-  - !task: { path: 'tweaks\misc\install-game-apps.yml' }
   - !task: { path: 'tweaks\misc\akati-extras.yml' }
   - !task: { path: 'atlas\services.yml' }
   - !task: { path: 'atlas\components.yml' }

@@ -1,5 +1,19 @@
 # Changelog: Akati OS for Windows 10
 
+## v1.3.1
+
+### Changed
+- **Akati OS Center is the one place for everything.** Setup no longer installs gaming apps: Steam, Discord, Epic Games Launcher, EA app, Ubisoft Connect, Battle.net and OBS Studio are installed from Akati OS Center > Gaming apps. The gaming apps pages are removed from setup; the Remove Microsoft Store page stays
+- New **System settings** page in Akati OS Center with every AtlasOS setting (the whole Atlas folder), grouped and searchable
+- No "Atlas" shortcut on the desktop or in the Start menu, and the Akati OS folder in `AtlasDesktop` is removed (its tools are in Akati OS Center). `AtlasDesktop` stays on disk because AtlasOS scripts use it
+- `AkatiUpdate.ps1` is removed; the update check is in Akati OS Center
+
+### Fixed
+- Discord works again when installed from Akati OS Center (known issue of v1.3.0). The cause was the silent install: after `DiscordSetup.exe -s` (also used by WinGet), the first start of Discord quits at once without moving the install to its new updater, and every later start fails with "A fatal Javascript error occured: Attempt to install host that is currently running". It was not caused by an AtlasOS tweak (`tools/discord-probe.ps1` compared stock Windows and Akati OS). Discord is now installed with its normal installer, which shows a small Discord window and opens Discord when it is done
+
+### Added
+- `tools/discord-probe.ps1`: collects Discord install state, Discord logs and the Windows settings AtlasOS changes, to compare two PCs
+
 ## v1.3.0
 
 First Windows 10 version of Akati OS, based on AtlasOS v0.4.1 (Windows 10 22H2, build 19045).

@@ -51,7 +51,7 @@
 - [ ] ก๊อป `dist\AkatiOS_v<version>.apbx` และ `dist\SHA256SUMS.txt` เข้า VM
 - [ ] ตรวจ hash ใน VM:
   ```powershell
-  (Get-FileHash .\AkatiOS_v1.3.0.apbx -Algorithm SHA256).Hash.ToLower()
+  (Get-FileHash .\AkatiOS_v1.3.1.apbx -Algorithm SHA256).Hash.ToLower()
   Get-Content .\SHA256SUMS.txt
   ```
   สองค่าต้องตรงกัน
@@ -65,8 +65,8 @@
 | รอบ | ตั้งค่า | ทำบน |
 |---|---|---|
 | **A: ค่าเริ่มต้น** | ไม่แตะอะไรเลย กด Next ทุกหน้า | 24H2, 25H2, 26H2 |
-| **B: ติ๊กทุกอย่าง** | หน้าแอปเกมเลือก Choose apps myself, ติ๊กแอปเกมทุกตัว, ติ๊ก Disable Core Isolation | 25H2 อย่างน้อย 1 เครื่อง |
-| **C: เอาออกทุกอย่าง** | หน้าแอปเกมเลือก Choose apps myself, เอาติ๊กแอปเกมและ Remove Microsoft Store ออกทุกตัว, เอาติ๊ก Hibernation และ Maximum Performance ออก | 24H2 หรือ 26H2 |
+| **B: ติ๊กทุกอย่าง** | ติ๊ก Disable Core Isolation แล้วติดตั้งแอปเกมทุกตัวจาก Akati OS Center | 25H2 อย่างน้อย 1 เครื่อง |
+| **C: เอาออกทุกอย่าง** | เอาติ๊ก Remove Microsoft Store, Hibernation และ Maximum Performance ออก | 24H2 หรือ 26H2 |
 | **W10: Windows 10** | ค่าเริ่มต้นทั้งหมด ใช้ `AkatiOS-Win10_v<version>.apbx` | Windows 10 22H2 |
 
 รอบ W10 ใช้ checklist เดียวกันทั้งหมด ยกเว้น: บูตเมนูต้องเป็น `Akati OS 10 v<version>`, ไม่มีหน้า Atlas Toolbox, ไม่มีการตั้ง ThemeMRU (Windows 10 ไม่ใช้) และใน AME Wizard ต้องไม่ยอมรันไฟล์ Windows 10 บน Windows 11 และกลับกัน
@@ -82,7 +82,7 @@
 - [ ] จดไว้ว่าขึ้นป้าย "Malicious Playbook" หรือไม่ (ใช้ประกอบข้อความถึง Ameliorated)
 
 ### ข้อความในหน้าต่าง ๆ
-- [ ] Title แสดง `Akati OS v1.3.0`
+- [ ] Title แสดง `Akati OS v1.3.1`
 - [ ] Description มีคำเตือนให้สำรองไฟล์และข้อความ "Not an official AtlasOS project"
 - [ ] หน้า Defender มีคำเตือน anti-cheat (Valorant, FACEIT)
 - [ ] ลิงก์ "Install guide" เปิด https://github.com/x2Swiftyouz/Akati-Os#readme
@@ -95,15 +95,7 @@
 | ตัวเลือกทั่วไป | Disable Hibernation | ☑ | |
 | ตัวเลือกทั่วไป | Maximum Performance | ☑ | |
 | ตัวเลือกทั่วไป | Disable Core Isolation (may break anti-cheat games) | ☐ | |
-| ร้านเกม | Steam | ☑ | |
-| ร้านเกม | Epic Games Launcher | ☐ | |
-| ร้านเกม | EA app | ☐ | |
-| ร้านเกมอื่น | Ubisoft Connect | ☐ | |
-| ร้านเกมอื่น | Battle.net | ☐ | |
-| อัดหน้าจอ | OBS Studio | ☐ | |
-| การ์ดจอ | NVIDIA driver shortcut | ☐ | |
-| การ์ดจอ | AMD driver shortcut | ☐ | |
-| การ์ดจอ | Intel driver shortcut | ☐ | |
+| Microsoft Store | Remove Microsoft Store | ☑ | |
 
 ตัวเลือกจาก Atlas ที่ไม่มี `IsChecked` ให้จดไว้ด้วยว่าเริ่มต้นเป็นแบบไหน ใช้ดูว่า AME Wizard ตั้งค่า default เป็นอะไร:
 
@@ -117,8 +109,8 @@
 ถ้าค่าที่เห็นไม่ตรงกับคอลัมน์ "ควรเป็น" แปลว่า `IsChecked` ไม่ทำงาน ให้หยุดแล้วแจ้งพร้อมภาพหน้าจอ
 
 ### ระหว่างติดตั้ง
-- [ ] ข้อความสถานะ "Installing Steam" ขึ้นเฉพาะแอปที่ติ๊ก และไม่มีขั้นติดตั้ง Discord
-- [ ] ไม่มีขั้นไหนค้างเกิน 10 นาที (`GAMEAPPS.ps1` มี timeout: WinGet 10 นาที, installer สำรอง 5 นาที)
+- [ ] ไม่มีหน้าเลือกแอปเกม และไม่มีขั้น "Installing Steam" หรือ "Installing Discord" (แอปติดตั้งจาก Akati OS Center)
+- [ ] ไม่มีขั้นไหนค้างเกิน 10 นาที
 - [ ] ติดตั้งจบและรีสตาร์ตเองได้
 - [ ] จดเวลาที่ใช้ทั้งหมด (ตั้งไว้ 15 นาที)
 
@@ -138,10 +130,10 @@
 bcdedit /enum '{current}' | Select-String description
 Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\OEMInformation'
 ```
-- [ ] บูตเมนูเป็น `Akati OS 11 v1.3.0`
-- [ ] `Model` = `Akati OS v1.3.0`, `Manufacturer` = `Akati OS`
+- [ ] บูตเมนูเป็น `Akati OS 11 v1.3.1`
+- [ ] `Model` = `Akati OS v1.3.1`, `Manufacturer` = `Akati OS`
 - [ ] ไม่มี `SupportURL` และ `SupportPhone`
-- [ ] `winver` และ Settings > System > About แสดง Akati OS v1.3.0
+- [ ] `winver` และ Settings > System > About แสดง Akati OS v1.3.1
 
 ### ธีม
 ```powershell
@@ -175,24 +167,14 @@ Get-CimInstance -Namespace root\Microsoft\Windows\DeviceGuard -ClassName Win32_D
 
 ใน VM บางเครื่อง VBS ปิดอยู่แล้วตั้งแต่ก่อนติดตั้ง ให้จดค่าก่อนรัน playbook ไว้ด้วย
 
-### ⚠️ แอปเกม
-```powershell
-winget list --accept-source-agreements | Select-String 'Steam|Epic|EA|Ubisoft|Battle.net|OBS'
-```
-| แอป | รอบ A | รอบ B | รอบ C |
-|---|---|---|---|
-| Steam | มี | มี | ไม่มี |
-| Epic Games Launcher | ไม่มี | มี | ไม่มี |
-| EA app | ไม่มี | มี | ไม่มี |
-| Ubisoft Connect | ไม่มี | มี | ไม่มี |
-| Battle.net (ใน `C:\Program Files\Battle.net`) | ไม่มี | มี | ไม่มี |
-| OBS Studio | ไม่มี | มี | ไม่มี |
-
-- [ ] แอปที่ติดตั้งแล้วเปิดได้ (ไม่ต้องล็อกอิน)
-- [ ] หน้า "Remove Microsoft Store" ติ๊กไว้เป็นค่าเริ่มต้น หลังติดตั้ง Microsoft Store ต้องไม่มีใน Start menu และ taskbar แต่ Steam ยังติดตั้งได้
+### ⚠️ แอปเกม (ติดตั้งจาก Akati OS Center > แอปเกม)
+- [ ] หลังติดตั้ง playbook ไม่มีแอปเกมในเครื่อง (Steam, Discord ฯลฯ)
+- [ ] กดติดตั้ง Steam: ติดตั้งได้ ปุ่มเปลี่ยนเป็น "ติดตั้งแล้ว"
+- [ ] กดติดตั้ง Discord: มีหน้าต่างเล็กของ Discord ขึ้น แล้ว Discord เปิดถึงหน้าล็อกอิน Quit แล้วเปิดใหม่จาก Desktop ต้อง**ไม่มี** error "Attempt to install host that is currently running"
+- [ ] Discord ติดตั้งให้ user ที่ใช้อยู่ (`%LOCALAPPDATA%\Discord`) ไม่ไปอยู่ในโปรไฟล์ admin อื่น ถ้าไม่ผ่านดู log ที่ `%LOCALAPPDATA%\AkatiOS\Logs\GAMEAPPS-Discord.log`
+- [ ] รอบ B: ติดตั้งครบทุกตัว (Epic, EA, Ubisoft, Battle.net ใน `C:\Program Files\Battle.net`, OBS) และเปิดได้
+- [ ] หน้า "Remove Microsoft Store" ติ๊กไว้เป็นค่าเริ่มต้น หลังติดตั้ง Microsoft Store ต้องไม่มีใน Start menu และ taskbar แต่แอปเกมยังติดตั้งจาก Center ได้
 - [ ] Akati OS Center > ปรับแต่ง > เปิดสวิตช์ Microsoft Store แล้ว Store กลับมา (อาจใช้เวลาประมาณ 1 นาที)
-- [ ] Discord ไม่ถูกติดตั้งอัตโนมัติ (known issue) ปุ่ม Discord ใน Akati OS Center และ `Install Gaming Apps\Download Discord` เปิดหน้า discord.com/download
-- [ ] (หาต้นเหตุ known issue) ติดตั้ง Discord จาก discord.com แล้วเปิด: ยังขึ้น "Attempt to install host that is currently running" ไหม
 
 ### VC++ และ DirectX (Atlas ติดตั้งให้ทุกรอบ)
 ```powershell
@@ -204,21 +186,15 @@ Test-Path "$env:windir\System32\d3dx9_43.dll"
 - [ ] `d3dx9_43.dll` มีอยู่ (`True`)
 - [ ] รอบ C ก็ต้องมีทั้งสองอย่าง
 
-### หน้าแอปเกม (Recommended / Choose apps myself)
-- [ ] รอบ A (Recommended): หน้าเลือกแอปและหน้า Microsoft Store **ไม่แสดง** ได้ Steam และไม่มี Microsoft Store
-- [ ] รอบ B/C (Choose apps myself): หน้าเลือกแอป 3 หน้าและหน้า Microsoft Store แสดงขึ้นมา และได้เฉพาะแอปที่ติ๊ก
-- [ ] รอบ C: Microsoft Store ยังอยู่
-- [ ] ไม่มีหน้า GPU และหน้า Gaming tweaks แล้ว
-
 ### Akati OS extras (v1.3.0)
-- [ ] ทางลัด "Atlas" บน Desktop และใน Start menu ใช้ไอคอน "A" ของ Akati OS
+- [ ] **ไม่มี**ทางลัด "Atlas" บน Desktop และใน Start menu และไม่มีโฟลเดอร์ `C:\Windows\AtlasDesktop\Akati OS`
 - [ ] ตั้งความละเอียด VM เป็น 1024×768 (4:3): ตัวอักษร "Akati OS" บน wallpaper ต้องไม่ถูกตัดขอบ
 - [ ] ไม่มีภาพหรือธีมที่มีโลโก้ Atlas: `Get-ChildItem "$env:windir\AtlasModules\Wallpapers", "$env:windir\Resources\Themes" | Select-Object Name` ต้องไม่มีไฟล์ `atlas-*` หรือ `lockscreen*`
 - [ ] `Get-ItemProperty 'HKLM:\SOFTWARE\AkatiOS'` มี `Version` และ `Edition` ถูกต้อง
-- [ ] โฟลเดอร์ `C:\Windows\AtlasDesktop\Akati OS` มีครบ: Install Gaming Apps, Themes, GPU Drivers, Check for Updates, ลิงก์ GitHub และ Options Guide
-- [ ] `Install Gaming Apps\Install OBS Studio.cmd` ขอสิทธิ์ admin แล้วติดตั้ง OBS ได้
-- [ ] `Themes\Akati OS Light.cmd` สลับเป็นธีมสว่าง และ `Akati OS Slideshow.cmd` ทำให้ wallpaper เปลี่ยนเอง (ตั้งเวลาไว้ 30 นาที ดูใน Settings > Personalization > Background ว่าเป็น Slideshow)
-- [ ] `Check for Updates.cmd` แสดงเวอร์ชันในเครื่องและเวอร์ชันล่าสุดบน GitHub ไม่มี error
+- [ ] Akati OS Center > ธีม: Akati OS Light สลับเป็นธีมสว่าง และ Akati OS Slideshow ทำให้ wallpaper เปลี่ยนเอง (ตั้งเวลาไว้ 30 นาที)
+- [ ] Akati OS Center > เกี่ยวกับ > ตรวจอัปเดต แสดงเวอร์ชันในเครื่องและเวอร์ชันล่าสุดบน GitHub ไม่มี error
+- [ ] Akati OS Center > ตั้งค่าระบบ: มีทุกหมวดของ Atlas (Software ถึง Troubleshooting และ AtlasOS) ช่องค้นหากรองได้ (ลองพิมพ์ "hibernation")
+- [ ] ตั้งค่าระบบ: กดปุ่ม `.reg` (เช่น Lock Screen > Hide Lock Screen) แถบสถานะขึ้น "ใช้แล้ว" กดปุ่ม `.cmd` (เช่น Hibernation > Enable Hibernation) เปิดหน้าต่างสคริปต์ของ Atlas
 - [ ] Windows Terminal (ถ้ามี): Settings > Color schemes มี "Akati OS" และมีโปรไฟล์ "Windows PowerShell (Akati OS)"
 - [ ] ปุ่ม "Learn more" ในหน้าติดตั้งเปิด `docs/OPTIONS.md` ไปยังหัวข้อที่ถูกต้อง
 
@@ -254,7 +230,8 @@ Windows Sandbox ไม่มี WinGet จึงใช้ทดสอบทา�
 - [ ] Epic ขึ้นข้อความ "skipped. Install it later from its official website." ไม่ error
 
 ### ไม่มีอินเทอร์เน็ตกลางทาง
-- [ ] เริ่มรัน playbook แล้วตัดเน็ตตอนขึ้น "Installing Steam": setup ต้องทำต่อจนจบ (แค่ข้าม Steam)
+- [ ] เริ่มรัน playbook แล้วตัดเน็ตตอนขึ้น "Installing software" (7-Zip, Visual C++, DirectX ของ Atlas): setup ต้องทำต่อจนจบ
+- [ ] Akati OS Center > แอปเกม ตอนไม่มีเน็ต: กดติดตั้งแล้วขึ้นว่าติดตั้งไม่สำเร็จ ไม่ค้าง
 
 ### build ที่ไม่รองรับ
 - [ ] (ถ้ามี ISO 26H1 / 28000) AME Wizard ต้องไม่ยอมรัน playbook

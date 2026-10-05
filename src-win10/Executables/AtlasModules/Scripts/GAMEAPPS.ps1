@@ -4,9 +4,7 @@ param (
     # at their next sign-in (used by setup for Discord). Needs admin rights.
     [switch]$AtSignIn,
     # Set by that scheduled task
-    [switch]$FromTask,
-    # Install Discord anyway (testing only, see the known issue below)
-    [switch]$Force
+    [switch]$FromTask
 )
 
 # Akati OS: installs one gaming app (used during setup and by AtlasDesktop\Akati OS\Install Gaming Apps).
@@ -23,7 +21,11 @@ try {
 $apps = @{
     Steam     = @{ Id = 'Valve.Steam';                  Url = 'https://cdn.akamai.steamstatic.com/client/installer/SteamSetup.exe'; Args = '/S'
                    Installed = { Test-Path "${env:ProgramFiles(x86)}\Steam\steam.exe" } }
-    Discord   = @{ Id = 'Discord.Discord';              Url = 'https://discord.com/api/downloads/distributions/app/installers/latest?channel=stable&platform=win&arch=x64'; Args = '-s'
+    # Discord: no silent switch and no WinGet (which installs it silently). After a silent install ("-s"), the
+    # first start of Discord quits at once without moving the install to its new updater, and every later
+    # start fails with "Attempt to install host that is currently running". The normal install shows a small
+    # Discord window and opens Discord when it is done.
+    Discord   = @{ Id = 'Discord.Discord';              Url = 'https://discord.com/api/downloads/distributions/app/installers/latest?channel=stable&platform=win&arch=x64'; NoWinget = $true
                    # Update.exe alone is not enough: an interrupted install leaves it without the app
                    Installed = { (Test-Path "$env:LOCALAPPDATA\Discord\packages\RELEASES") -and (Test-Path "$env:LOCALAPPDATA\Discord\app-*\Discord.exe") } }
     Epic      = @{ Id = 'EpicGames.EpicGamesLauncher' }
@@ -31,16 +33,6 @@ $apps = @{
     Ubisoft   = @{ Id = 'Ubisoft.Connect' }
     BattleNet = @{ Id = 'Blizzard.BattleNet'; Extra = @('--location', "$env:ProgramFiles\Battle.net") }
     OBS       = @{ Id = 'OBSProject.OBSStudio' }
-}
-
-# Known issue: on Akati OS, Discord installed this way shows "A fatal Javascript error occured: Attempt to
-# install host that is currently running" (it works on stock Windows; the AtlasOS tweak that causes it is not
-# found yet). Until then Discord is not installed automatically: open its download page instead.
-# The install code below is kept for testing with -Force.
-if ($App -eq 'Discord' -and !$Force) {
-    Start-Process 'https://discord.com/download'
-    Write-Output 'Opened the Discord download page.'
-    exit 0
 }
 
 if (!$apps.ContainsKey($App)) { Write-Error "Unknown app: $App"; exit 0 }
@@ -187,13 +179,19 @@ if ($App -eq 'Discord' -and (Test-Path "$env:LOCALAPPDATA\Discord") -and !(Get-P
     Remove-Item -Path "$env:LOCALAPPDATA\Discord" -Recurse -Force -ErrorAction SilentlyContinue
 }
 
+# Runs an installer with the app's switches (hidden, silent), or without any (visible) when it has none
+function Start-Installer([string]$file) {
+    if ($info.Args) { Start-Process -FilePath $file -ArgumentList $info.Args -WindowStyle Hidden -PassThru }
+    else { Start-Process -FilePath $file -PassThru }
+}
+
 # Started by the sign-in task: use the installer downloaded during setup, if it is signed by Discord
 $cached = Join-Path $env:ProgramData "AkatiOS\Installers\$App-Setup.exe"
 if ($FromTask -and $info.Url -and (Test-Path $cached)) {
     $sig = Get-AuthenticodeSignature -FilePath $cached
     if ($sig.Status -eq 'Valid' -and $sig.SignerCertificate.Subject -like "*$App*") {
         Write-Output "Installing $App with the installer downloaded during setup..."
-        $proc = Start-Process -FilePath $cached -ArgumentList $info.Args -WindowStyle Hidden -PassThru
+        $proc = Start-Installer $cached
         $null = $proc.Handle
         if ($proc.WaitForExit(300000)) { Write-Output "$App installer exit code: $($proc.ExitCode)" } else { Write-Warning "$App installer timed out." }
         Wait-DiscordSetup
@@ -205,7 +203,7 @@ if ($FromTask -and $info.Url -and (Test-Path $cached)) {
 }
 
 # Try WinGet
-if (Get-Command winget -EA 0) {
+if (!$info.NoWinget -and (Get-Command winget -EA 0)) {
     Write-Output "Installing $App with WinGet..."
     # --source winget: the apps are in the WinGet community repository, so the Microsoft Store is not needed
     $wingetArgs = @('install', '--id', $info.Id, '--exact', '--source', 'winget', '--silent', '--accept-package-agreements', '--accept-source-agreements', '--disable-interactivity')
@@ -232,7 +230,7 @@ $file = "$tempDir\$App-Setup.exe"
 Write-Output "Downloading $App from the official site..."
 & curl.exe -LSs $info.Url -o $file $timeouts
 if ($? -and (Test-Path $file)) {
-    $proc = Start-Process -FilePath $file -ArgumentList $info.Args -WindowStyle Hidden -PassThru
+    $proc = Start-Installer $file
     $null = $proc.Handle
     # Max 5 minutes so a stuck installer does not block setup
     if (!$proc.WaitForExit(300000)) { Write-Warning "$App installer timed out." } else { Write-Output "$App installer exit code: $($proc.ExitCode)" }

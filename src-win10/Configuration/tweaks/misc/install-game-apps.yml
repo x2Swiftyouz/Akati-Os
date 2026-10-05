@@ -10,14 +10,22 @@ actions:
     weight: 40
     option: 'install-steam'
     runas: currentUserElevated
-    # Discord updates itself right after installing. If setup restarts the PC during that update, Discord
-    # fails with "Attempt to install host that is currently running". So install it at the next sign-in
-    # instead, as the user, when nothing restarts the PC.
+    # Discord is not installed during setup: setup restarts the PC while Discord installs and updates itself,
+    # and programs started right at sign-in (RunOnce) were stopped half way. A scheduled task installs it
+    # as the user 2 minutes after sign-in. GAMEAPPS.ps1 exits at once if Discord is installed; the task
+    # deletes itself after 7 days.
   - !writeStatus: {status: 'Discord will be installed after restart', option: 'install-discord'}
   - !powerShell:
     command: |
       $script = Join-Path ([Environment]::GetFolderPath('Windows')) 'AtlasModules\Scripts\GAMEAPPS.ps1'
-      Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\RunOnce' -Name 'AkatiOS Install Discord' -Value ('powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "' + $script + '" -App Discord') -Force
+      $user = "$env:USERDOMAIN\$env:USERNAME"
+      $action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument ('-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "' + $script + '" -App Discord')
+      $trigger = New-ScheduledTaskTrigger -AtLogOn -User $user
+      $trigger.Delay = 'PT2M'
+      $trigger.EndBoundary = (Get-Date).AddDays(7).ToString('s')
+      $principal = New-ScheduledTaskPrincipal -UserId $user -LogonType Interactive -RunLevel Limited
+      $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Minutes 30) -DeleteExpiredTaskAfter (New-TimeSpan -Seconds 0)
+      Register-ScheduledTask -TaskName 'AkatiOS Install Discord at sign-in' -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force | Out-Null
     wait: true
     option: 'install-discord'
     runas: currentUserElevated
@@ -74,7 +82,14 @@ actions:
   - !powerShell:
     command: |
       $script = Join-Path ([Environment]::GetFolderPath('Windows')) 'AtlasModules\Scripts\GAMEAPPS.ps1'
-      Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\RunOnce' -Name 'AkatiOS Install Discord' -Value ('powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "' + $script + '" -App Discord') -Force
+      $user = "$env:USERDOMAIN\$env:USERNAME"
+      $action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument ('-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "' + $script + '" -App Discord')
+      $trigger = New-ScheduledTaskTrigger -AtLogOn -User $user
+      $trigger.Delay = 'PT2M'
+      $trigger.EndBoundary = (Get-Date).AddDays(7).ToString('s')
+      $principal = New-ScheduledTaskPrincipal -UserId $user -LogonType Interactive -RunLevel Limited
+      $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Minutes 30) -DeleteExpiredTaskAfter (New-TimeSpan -Seconds 0)
+      Register-ScheduledTask -TaskName 'AkatiOS Install Discord at sign-in' -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force | Out-Null
     wait: true
     option: 'akati-recommended'
     runas: currentUserElevated

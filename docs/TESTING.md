@@ -194,7 +194,7 @@ Test-Path "$env:LOCALAPPDATA\Discord"
 - [ ] แอปที่ติดตั้งแล้วเปิดได้ (ไม่ต้องล็อกอิน)
 - [ ] หน้า "Remove Microsoft Store" ติ๊กไว้เป็นค่าเริ่มต้น หลังติดตั้ง Microsoft Store ต้องไม่มีใน Start menu และ taskbar แต่ Steam/Discord ยังติดตั้งได้
 - [ ] Akati OS Center > ปรับแต่ง > เปิดสวิตช์ Microsoft Store แล้ว Store กลับมา (อาจใช้เวลาประมาณ 1 นาที)
-- [ ] Discord ติดตั้งตอนล็อกอินครั้งแรกหลังรีบูต (รอ 1-2 นาทีหลังเข้า Desktop จะมีหน้าต่าง Discord ขึ้นเอง)
+- [ ] Discord ติดตั้งตอนล็อกอินครั้งแรกหลังรีบูต (รอ 2-5 นาทีหลังเข้า Desktop จะมีหน้าต่าง Discord ขึ้นเอง ถ้าไม่ขึ้นดู log ที่ `%LOCALAPPDATA%\AkatiOS\Logs\GAMEAPPS-Discord.log`)
 - [ ] หลังติดตั้งเสร็จ ไม่มีหน้าต่าง error ของ Discord ("Attempt to install host that is currently running") แปลว่าไม่มีการรัน installer ซ้ำ
 - [ ] Discord ติดตั้งให้ user ที่รัน playbook ไม่ได้ไปอยู่ในโปรไฟล์ admin อื่น
 
@@ -209,7 +209,7 @@ Test-Path "$env:windir\System32\d3dx9_43.dll"
 - [ ] รอบ C ก็ต้องมีทั้งสองอย่าง
 
 ### หน้าแอปเกม (Recommended / Choose apps myself)
-- [ ] รอบ A (Recommended): หน้าเลือกแอปและหน้า Microsoft Store **ไม่แสดง** ได้ Steam, Discord (หลังล็อกอิน 1-2 นาที) และไม่มี Microsoft Store
+- [ ] รอบ A (Recommended): หน้าเลือกแอปและหน้า Microsoft Store **ไม่แสดง** ได้ Steam, Discord (หลังล็อกอิน 2-5 นาที) และไม่มี Microsoft Store
 - [ ] รอบ B/C (Choose apps myself): หน้าเลือกแอป 3 หน้าและหน้า Microsoft Store แสดงขึ้นมา และได้เฉพาะแอปที่ติ๊ก
 - [ ] รอบ C: Microsoft Store ยังอยู่
 - [ ] ไม่มีหน้า GPU และหน้า Gaming tweaks แล้ว

@@ -2,8 +2,11 @@
 
 ## v1.3.0
 
+### Known issues
+- Discord is not installed automatically. On Akati OS, Discord (from discord.com or WinGet) shows "A fatal Javascript error occured: Attempt to install host that is currently running" on its first start, while it works on stock Windows. The AtlasOS tweak that causes it is not found yet (Long paths is not the cause). The setup page, Akati OS Center and `Akati OS\Install Gaming Apps\Download Discord` open the Discord download page instead
+
 ### Fixed
-- Discord showed "A fatal Javascript error occured: Attempt to install host that is currently running" after setup, or was only half installed (only `Update.exe`, no app and no shortcut). Causes: `GAMEAPPS.ps1` read the WinGet exit code wrongly and ran the installer twice; it stopped Discord 5 seconds after its installer exited, while Discord was still installing itself; setup restarted the PC during the install; and an install started right at sign-in (RunOnce) was stopped half way. Now Discord is installed by a scheduled task as the user 2 minutes after the first sign-in (the task removes itself once Discord is installed), `GAMEAPPS.ps1` waits until Discord is fully installed, checks for the app itself, removes a half install before installing again and writes a log to `%LOCALAPPDATA%\AkatiOS\Logs`. Akati OS Center installs Discord as the signed-in user without admin rights
+- WinGet exit codes were read wrongly (an empty exit code), so `GAMEAPPS.ps1` thought installs had failed and ran the Steam installer a second time. It now reads the exit code correctly and checks whether an app is already installed
 
 ### Added
 - Option to remove the Microsoft Store (ticked by default). The Xbox app and Game Pass need it; install it again from Akati OS Center (Tweaks)
@@ -16,7 +19,7 @@
 - Options guide (`docs/OPTIONS.md`, English and Thai). The "Learn more" links on the setup pages open it
 
 ### Changed
-- Fewer setup pages: a new gaming apps page with "Recommended" (Steam, Discord, remove the Microsoft Store) skips the app pages; "Choose apps myself" shows them. The GPU driver page is removed (the links are in `Akati OS\GPU Drivers`)
+- Fewer setup pages: a new gaming apps page with "Recommended" (Steam, remove the Microsoft Store) skips the app pages; "Choose apps myself" shows them. The GPU driver page is removed (the links are in `Akati OS\GPU Drivers`)
 - AtlasOS wallpapers and themes removed, so the Atlas logo is no longer used. The `.apbx` file is much smaller
 - `GAMEAPPS.ps1` moved to `AtlasModules\Scripts` so it stays on disk after setup
 - Installed version is saved to `HKLM\SOFTWARE\AkatiOS`

@@ -100,8 +100,7 @@
 | ร้านเกม | EA app | ☐ | |
 | ร้านเกมอื่น | Ubisoft Connect | ☐ | |
 | ร้านเกมอื่น | Battle.net | ☐ | |
-| แชทและอัดหน้าจอ | Discord | ☑ | |
-| แชทและอัดหน้าจอ | OBS Studio | ☐ | |
+| อัดหน้าจอ | OBS Studio | ☐ | |
 | การ์ดจอ | NVIDIA driver shortcut | ☐ | |
 | การ์ดจอ | AMD driver shortcut | ☐ | |
 | การ์ดจอ | Intel driver shortcut | ☐ | |
@@ -118,7 +117,7 @@
 ถ้าค่าที่เห็นไม่ตรงกับคอลัมน์ "ควรเป็น" แปลว่า `IsChecked` ไม่ทำงาน ให้หยุดแล้วแจ้งพร้อมภาพหน้าจอ
 
 ### ระหว่างติดตั้ง
-- [ ] ข้อความสถานะ "Installing Steam" และ "Installing Discord" ขึ้นเฉพาะแอปที่ติ๊ก
+- [ ] ข้อความสถานะ "Installing Steam" ขึ้นเฉพาะแอปที่ติ๊ก และไม่มีขั้นติดตั้ง Discord
 - [ ] ไม่มีขั้นไหนค้างเกิน 10 นาที (`GAMEAPPS.ps1` มี timeout: WinGet 10 นาที, installer สำรอง 5 นาที)
 - [ ] ติดตั้งจบและรีสตาร์ตเองได้
 - [ ] จดเวลาที่ใช้ทั้งหมด (ตั้งไว้ 15 นาที)
@@ -178,13 +177,11 @@ Get-CimInstance -Namespace root\Microsoft\Windows\DeviceGuard -ClassName Win32_D
 
 ### ⚠️ แอปเกม
 ```powershell
-winget list --accept-source-agreements | Select-String 'Steam|Discord|Epic|EA|Ubisoft|Battle.net|OBS'
-Test-Path "$env:LOCALAPPDATA\Discord"
+winget list --accept-source-agreements | Select-String 'Steam|Epic|EA|Ubisoft|Battle.net|OBS'
 ```
 | แอป | รอบ A | รอบ B | รอบ C |
 |---|---|---|---|
 | Steam | มี | มี | ไม่มี |
-| Discord | มี | มี | ไม่มี |
 | Epic Games Launcher | ไม่มี | มี | ไม่มี |
 | EA app | ไม่มี | มี | ไม่มี |
 | Ubisoft Connect | ไม่มี | มี | ไม่มี |
@@ -192,11 +189,10 @@ Test-Path "$env:LOCALAPPDATA\Discord"
 | OBS Studio | ไม่มี | มี | ไม่มี |
 
 - [ ] แอปที่ติดตั้งแล้วเปิดได้ (ไม่ต้องล็อกอิน)
-- [ ] หน้า "Remove Microsoft Store" ติ๊กไว้เป็นค่าเริ่มต้น หลังติดตั้ง Microsoft Store ต้องไม่มีใน Start menu และ taskbar แต่ Steam/Discord ยังติดตั้งได้
+- [ ] หน้า "Remove Microsoft Store" ติ๊กไว้เป็นค่าเริ่มต้น หลังติดตั้ง Microsoft Store ต้องไม่มีใน Start menu และ taskbar แต่ Steam ยังติดตั้งได้
 - [ ] Akati OS Center > ปรับแต่ง > เปิดสวิตช์ Microsoft Store แล้ว Store กลับมา (อาจใช้เวลาประมาณ 1 นาที)
-- [ ] Discord ติดตั้งตอนล็อกอินครั้งแรกหลังรีบูต (รอ 2-5 นาทีหลังเข้า Desktop จะมีหน้าต่าง Discord ขึ้นเอง ถ้าไม่ขึ้นดู log ที่ `%LOCALAPPDATA%\AkatiOS\Logs\GAMEAPPS-Discord.log`)
-- [ ] หลังติดตั้งเสร็จ ไม่มีหน้าต่าง error ของ Discord ("Attempt to install host that is currently running") แปลว่าไม่มีการรัน installer ซ้ำ
-- [ ] Discord ติดตั้งให้ user ที่รัน playbook ไม่ได้ไปอยู่ในโปรไฟล์ admin อื่น
+- [ ] Discord ไม่ถูกติดตั้งอัตโนมัติ (known issue) ปุ่ม Discord ใน Akati OS Center และ `Install Gaming Apps\Download Discord` เปิดหน้า discord.com/download
+- [ ] (หาต้นเหตุ known issue) ติดตั้ง Discord จาก discord.com แล้วเปิด: ยังขึ้น "Attempt to install host that is currently running" ไหม
 
 ### VC++ และ DirectX (Atlas ติดตั้งให้ทุกรอบ)
 ```powershell
@@ -209,7 +205,7 @@ Test-Path "$env:windir\System32\d3dx9_43.dll"
 - [ ] รอบ C ก็ต้องมีทั้งสองอย่าง
 
 ### หน้าแอปเกม (Recommended / Choose apps myself)
-- [ ] รอบ A (Recommended): หน้าเลือกแอปและหน้า Microsoft Store **ไม่แสดง** ได้ Steam, Discord (หลังล็อกอิน 2-5 นาที) และไม่มี Microsoft Store
+- [ ] รอบ A (Recommended): หน้าเลือกแอปและหน้า Microsoft Store **ไม่แสดง** ได้ Steam และไม่มี Microsoft Store
 - [ ] รอบ B/C (Choose apps myself): หน้าเลือกแอป 3 หน้าและหน้า Microsoft Store แสดงขึ้นมา และได้เฉพาะแอปที่ติ๊ก
 - [ ] รอบ C: Microsoft Store ยังอยู่
 - [ ] ไม่มีหน้า GPU และหน้า Gaming tweaks แล้ว
@@ -252,10 +248,9 @@ Windows Sandbox ไม่มี WinGet จึงใช้ทดสอบทา�
 - [ ] รัน:
   ```powershell
   powershell -ExecutionPolicy Bypass -File .\GAMEAPPS.ps1 -App Steam
-  powershell -ExecutionPolicy Bypass -File .\GAMEAPPS.ps1 -App Discord
   powershell -ExecutionPolicy Bypass -File .\GAMEAPPS.ps1 -App Epic
   ```
-- [ ] Steam และ Discord ดาวน์โหลดจากลิงก์ทางการและติดตั้งได้
+- [ ] Steam ดาวน์โหลดจากลิงก์ทางการและติดตั้งได้
 - [ ] Epic ขึ้นข้อความ "skipped. Install it later from its official website." ไม่ error
 
 ### ไม่มีอินเทอร์เน็ตกลางทาง

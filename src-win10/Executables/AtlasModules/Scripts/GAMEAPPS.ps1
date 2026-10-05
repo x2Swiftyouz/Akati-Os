@@ -1,8 +1,12 @@
 param (
     [Parameter(Mandatory)][string]$App,
     # Do not install now: register a scheduled task that runs this script as the signed-in user
-    # 2 minutes after their next sign-in (used by setup for Discord). Needs admin rights.
-    [switch]$AtSignIn
+    # at their next sign-in (used by setup for Discord). Needs admin rights.
+    [switch]$AtSignIn,
+    # Set by that scheduled task
+    [switch]$FromTask,
+    # Install Discord anyway (testing only, see the known issue below)
+    [switch]$Force
 )
 
 # Akati OS: installs one gaming app (used during setup and by AtlasDesktop\Akati OS\Install Gaming Apps).
@@ -27,6 +31,16 @@ $apps = @{
     Ubisoft   = @{ Id = 'Ubisoft.Connect' }
     BattleNet = @{ Id = 'Blizzard.BattleNet'; Extra = @('--location', "$env:ProgramFiles\Battle.net") }
     OBS       = @{ Id = 'OBSProject.OBSStudio' }
+}
+
+# Known issue: on Akati OS, Discord installed this way shows "A fatal Javascript error occured: Attempt to
+# install host that is currently running" (it works on stock Windows; the AtlasOS tweak that causes it is not
+# found yet). Until then Discord is not installed automatically: open its download page instead.
+# The install code below is kept for testing with -Force.
+if ($App -eq 'Discord' -and !$Force) {
+    Start-Process 'https://discord.com/download'
+    Write-Output 'Opened the Discord download page.'
+    exit 0
 }
 
 if (!$apps.ContainsKey($App)) { Write-Error "Unknown app: $App"; exit 0 }
@@ -62,25 +76,73 @@ if ($AtSignIn) {
     if (!$user) { $user = "$env:USERDOMAIN\$env:USERNAME" }
     $task = "AkatiOS Install $App at sign-in"
     try {
-        $action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$PSCommandPath`" -App $App"
+        $action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$PSCommandPath`" -App $App -FromTask"
         $trigger = New-ScheduledTaskTrigger -AtLogOn -User $user
         $trigger.Delay = 'PT2M'
         $principal = New-ScheduledTaskPrincipal -UserId $user -LogonType Interactive -RunLevel Limited
         $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Minutes 30)
-        Register-ScheduledTask -TaskName $task -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force -ErrorAction Stop | Out-Null
-        Write-Output "$App will be installed for $user 2 minutes after the next sign-in (scheduled task '$task')."
+        # The task must not remove itself: removing a running task stops everything it started, including
+        # Discord's first update, and Discord then fails with "Attempt to install host that is currently
+        # running". So Windows deletes the task when it expires after 7 days.
+        try {
+            $trigger.EndBoundary = (Get-Date).AddDays(7).ToString('s')
+            $settings.DeleteExpiredTaskAfter = 'PT0S'
+            Register-ScheduledTask -TaskName $task -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force -ErrorAction Stop | Out-Null
+        } catch {
+            Write-Warning "Registering the task with an expiry date failed ($($_.Exception.Message)), registering it without."
+            $trigger = New-ScheduledTaskTrigger -AtLogOn -User $user
+            $trigger.Delay = 'PT2M'
+            $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Minutes 30)
+            Register-ScheduledTask -TaskName $task -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force -ErrorAction Stop | Out-Null
+        }
+        # The sign-in trigger alone did not always start the task, so RunOnce also starts it at the next
+        # sign-in. schtasks.exe only starts the task and exits; the install itself runs in the task.
+        Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\RunOnce' -Name "AkatiOS Install $App" -Value "schtasks.exe /run /tn `"$task`"" -Force
+        Write-Output "$App will be installed for $user after the next sign-in (scheduled task '$task')."
     } catch {
         Write-Warning "Could not register the scheduled task for ${App}: $($_.Exception.Message)"
+    }
+
+    # Download the installer now, during setup, so the install at sign-in takes seconds instead of minutes.
+    # Users may delete it (the sign-in install removes it when done).
+    if ($info.Url) {
+        $cacheDir = Join-Path $env:ProgramData 'AkatiOS\Installers'
+        New-Item -ItemType Directory -Path $cacheDir -Force | Out-Null
+        & icacls.exe $cacheDir /grant '*S-1-5-32-545:(OI)(CI)M' *> $null
+        & curl.exe -LSs $info.Url -o (Join-Path $cacheDir "$App-Setup.exe") --connect-timeout 10 --retry 3 --retry-all-errors
+        if ($?) { Write-Output "Downloaded the $App installer for the sign-in install." }
+        else { Write-Warning "Could not download the $App installer now, it is downloaded at sign-in instead." }
     }
     exit 0
 }
 
-# Started by the sign-in task: remove the task once the app is installed
+# Started by the sign-in task: remember that the app was installed, so the task does nothing at later
+# sign-ins and does not install it again if the user removes it. The task is not removed here (see -AtSignIn).
+$doneKey = 'HKCU:\Software\AkatiOS\InstalledAtSignIn'
 function Remove-SignInTask {
-    if (Test-Installed) { Unregister-ScheduledTask -TaskName "AkatiOS Install $App at sign-in" -Confirm:$false -ErrorAction SilentlyContinue }
+    if (!$FromTask -or !(Test-Installed)) { return }
+    New-Item -Path $doneKey -Force -ErrorAction SilentlyContinue | Out-Null
+    Set-ItemProperty -Path $doneKey -Name $App -Value 1 -Type DWord -ErrorAction SilentlyContinue
 }
+if ($FromTask -and (Get-ItemProperty -Path $doneKey -Name $App -ErrorAction SilentlyContinue)) { exit 0 }
+# Let the sign-in finish first (programs started right at sign-in were stopped before)
+if ($FromTask) { Start-Sleep -Seconds 5 }
 
 if (Test-Installed) { Write-Output "$App is already installed."; Remove-SignInTask; exit 0 }
+
+# Started by the sign-in task: tell the user what is happening (notification at the bottom right)
+if ($FromTask) {
+    try {
+        Add-Type -AssemblyName System.Windows.Forms, System.Drawing
+        $script:note = New-Object System.Windows.Forms.NotifyIcon
+        $script:note.Icon = [System.Drawing.SystemIcons]::Information
+        $script:note.Text = 'Akati OS'
+        $script:note.Visible = $true
+        $script:note.ShowBalloonTip(20000, 'Akati OS', "Installing $App. It opens by itself when it is ready.", 'Info')
+        # Remove the tray icon when this script exits
+        Register-EngineEvent -SourceIdentifier PowerShell.Exiting -Action { $script:note.Dispose() } | Out-Null
+    } catch {}
+}
 
 # Discord installs itself after its installer exits (Update.exe). This script must not exit before
 # that is done: started at sign-in (RunOnce) from a hidden window, Update.exe stops when this script
@@ -123,6 +185,23 @@ if ($App -eq 'Discord' -and (Test-Elevated)) {
 # A half-installed Discord (only Update.exe) cannot be repaired by its installer, so remove it first
 if ($App -eq 'Discord' -and (Test-Path "$env:LOCALAPPDATA\Discord") -and !(Get-Process -Name 'Discord' -ErrorAction SilentlyContinue)) {
     Remove-Item -Path "$env:LOCALAPPDATA\Discord" -Recurse -Force -ErrorAction SilentlyContinue
+}
+
+# Started by the sign-in task: use the installer downloaded during setup, if it is signed by Discord
+$cached = Join-Path $env:ProgramData "AkatiOS\Installers\$App-Setup.exe"
+if ($FromTask -and $info.Url -and (Test-Path $cached)) {
+    $sig = Get-AuthenticodeSignature -FilePath $cached
+    if ($sig.Status -eq 'Valid' -and $sig.SignerCertificate.Subject -like "*$App*") {
+        Write-Output "Installing $App with the installer downloaded during setup..."
+        $proc = Start-Process -FilePath $cached -ArgumentList $info.Args -WindowStyle Hidden -PassThru
+        $null = $proc.Handle
+        if ($proc.WaitForExit(300000)) { Write-Output "$App installer exit code: $($proc.ExitCode)" } else { Write-Warning "$App installer timed out." }
+        Wait-DiscordSetup
+    } else {
+        Write-Warning "The $App installer downloaded during setup is not signed by $App ($($sig.Status)), not using it."
+    }
+    Remove-Item -Path $cached -Force -ErrorAction SilentlyContinue
+    if (Test-Installed) { Write-Output "$App installed."; Remove-SignInTask; exit 0 }
 }
 
 # Try WinGet

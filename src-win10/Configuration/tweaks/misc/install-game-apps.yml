@@ -10,16 +10,6 @@ actions:
     weight: 40
     option: 'install-steam'
     runas: currentUserElevated
-    # Discord is not installed during setup: setup restarts the PC while Discord installs and updates itself,
-    # and programs started right at sign-in (RunOnce) were stopped half way. A scheduled task installs it
-    # as the user 2 minutes after sign-in (GAMEAPPS.ps1 -AtSignIn) and removes itself once Discord is installed.
-  - !writeStatus: {status: 'Discord will be installed after restart', option: 'install-discord'}
-  - !powerShell:
-    command: '.\AtlasModules\Scripts\GAMEAPPS.ps1 -App Discord -AtSignIn'
-    exeDir: true
-    wait: true
-    option: 'install-discord'
-    runas: currentUserElevated
   - !writeStatus: {status: 'Installing Epic Games Launcher', option: 'install-epic'}
   - !powerShell:
     command: '.\AtlasModules\Scripts\GAMEAPPS.ps1 -App Epic'
@@ -60,19 +50,12 @@ actions:
     weight: 40
     option: 'install-obs'
     runas: currentUserElevated
-    # "Recommended" on the gaming apps page: Steam and Discord (the app pages are not shown)
+    # "Recommended" on the gaming apps page: Steam (the app pages are not shown)
   - !writeStatus: {status: 'Installing Steam', option: 'akati-recommended'}
   - !powerShell:
     command: '.\AtlasModules\Scripts\GAMEAPPS.ps1 -App Steam'
     exeDir: true
     wait: true
     weight: 40
-    option: 'akati-recommended'
-    runas: currentUserElevated
-  - !writeStatus: {status: 'Discord will be installed after restart', option: 'akati-recommended'}
-  - !powerShell:
-    command: '.\AtlasModules\Scripts\GAMEAPPS.ps1 -App Discord -AtSignIn'
-    exeDir: true
-    wait: true
     option: 'akati-recommended'
     runas: currentUserElevated

@@ -55,6 +55,43 @@ if (!$Screenshot -and !$isAdmin) {
 }
 
 # ---------------------------------------------------------------------------------------------
+# Splash: a small window on its own thread, shown at once while the main window is built
+# ---------------------------------------------------------------------------------------------
+$splash = [hashtable]::Synchronized(@{})
+if (!$Screenshot -and !$ToggleBoost) {
+    $splashRs = [runspacefactory]::CreateRunspace(); $splashRs.ApartmentState = 'STA'; $splashRs.ThreadOptions = 'ReuseThread'; $splashRs.Open()
+    $splashPs = [PowerShell]::Create(); $splashPs.Runspace = $splashRs
+    [void]$splashPs.AddScript({
+        param($state, $logo)
+        Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase
+        $w = New-Object System.Windows.Window
+        $w.WindowStyle = 'None'; $w.AllowsTransparency = $true; $w.Background = 'Transparent'; $w.ResizeMode = 'NoResize'
+        $w.Width = 300; $w.Height = 190; $w.WindowStartupLocation = 'CenterScreen'; $w.ShowInTaskbar = $false; $w.Topmost = $true
+        $card = New-Object System.Windows.Controls.Border
+        $card.Background = '#1C1C1E'; $card.BorderBrush = '#38383A'; $card.BorderThickness = '1'; $card.CornerRadius = 16; $card.Padding = '24'
+        $stack = New-Object System.Windows.Controls.StackPanel; $stack.VerticalAlignment = 'Center'
+        try {
+            $img = New-Object System.Windows.Controls.Image; $img.Width = 56; $img.Height = 56; $img.Margin = '0,0,0,12'
+            $img.Source = New-Object System.Windows.Media.Imaging.BitmapImage (New-Object Uri $logo)
+            [void]$stack.Children.Add($img)
+        } catch { }
+        $title = New-Object System.Windows.Controls.TextBlock
+        $title.Text = 'Akati OS Center'; $title.Foreground = 'White'; $title.FontSize = 16; $title.FontWeight = 'SemiBold'; $title.HorizontalAlignment = 'Center'
+        $bar = New-Object System.Windows.Controls.ProgressBar
+        $bar.IsIndeterminate = $true; $bar.Height = 3; $bar.Margin = '30,16,30,0'; $bar.Foreground = '#A35CF0'; $bar.Background = '#38383A'; $bar.BorderThickness = '0'
+        [void]$stack.Children.Add($title); [void]$stack.Children.Add($bar)
+        $card.Child = $stack; $w.Content = $card
+        $state.Dispatcher = [System.Windows.Threading.Dispatcher]::CurrentDispatcher
+        $w.Show()
+        [System.Windows.Threading.Dispatcher]::Run()
+    }).AddArgument($splash).AddArgument((Join-Path $PSScriptRoot 'logo.png'))
+    $splashHandle = $splashPs.BeginInvoke()
+}
+function Close-Splash { if ($splash.Dispatcher) { try { $splash.Dispatcher.InvokeShutdown() } catch { }; $splash.Dispatcher = $null } }
+# An error while the window is built must not leave the splash on screen
+trap { Close-Splash; break }
+
+# ---------------------------------------------------------------------------------------------
 # Strings (English and Thai)
 # ---------------------------------------------------------------------------------------------
 $strings = @{
@@ -1737,14 +1774,14 @@ $tweaks = @(
     @{ Key = 'maxperf'; Glyph = [char]0xE945
        Script = @{ Folder = '3. General Configuration\Power-saving'; On = 'Disable Power-saving*.cmd'; Off = 'Default Power-saving*.cmd' }
        Get = { [string](powercfg /getactivescheme) -match '11111111-1111-1111-1111-111111111111' } }
-    @{ Key = 'store'; Glyph = [char]0xE719; Slow = $true
+    @{ Key = 'store'; Glyph = [char]0xE719; Slow = $true; Async = $true
        Get = { [bool](Get-AppxPackage -Name 'Microsoft.WindowsStore' -ErrorAction SilentlyContinue) } }
     @{ Key = 'hibernation'; Glyph = [char]0xE708
        Script = @{ Folder = '3. General Configuration\Hibernation'; On = 'Enable Hibernation*.cmd'; Off = 'Disable Hibernation*.cmd' }
        Get = { (Get-RegValue 'HKLM:\SYSTEM\CurrentControlSet\Control\Power' 'HibernateEnabled') -eq 1 } }
 
     # Input and latency
-    @{ Key = 'timer'; Group = 'latency'; Glyph = [char]0xE916; Restart = $true
+    @{ Key = 'timer'; Group = 'latency'; Glyph = [char]0xE916; Restart = $true; Async = $true
        Script = @{ Folder = '3. General Configuration\Timer Resolution'; On = 'Enable timer resolution*.cmd'; Off = 'Disable timer resolution*.cmd' }
        Get = { [bool](Get-ScheduledTask -TaskName 'Force Timer Resolution' -ErrorAction SilentlyContinue) } }
     @{ Key = 'access'; Group = 'latency'; Glyph = [char]0xE765; Restart = $true
@@ -1768,7 +1805,7 @@ $tweaks = @(
                        Set-ItemProperty -LiteralPath $i.PSPath -Name TCPNoDelay -Value 1 -Type DWord -Force
                    }
                } } }
-    @{ Key = 'nic'; Group = 'network'; Glyph = [char]0xE839
+    @{ Key = 'nic'; Group = 'network'; Glyph = [char]0xE839; Async = $true
        Get = { $names = @(Get-NetAdapter -Physical -ErrorAction Stop | ForEach-Object { $_.Name })
                $props = @(Get-NetAdapterAdvancedProperty -Name $names -AllProperties -ErrorAction Stop | Where-Object { $_.RegistryKeyword -in '*InterruptModeration', '*EEE' })
                if (!$props.Count) { throw 'not supported' }
@@ -1796,7 +1833,7 @@ $tweaks = @(
                } } }
 
     # Memory and system
-    @{ Key = 'memcomp'; Group = 'system'; Glyph = [char]0xE964; Restart = $true
+    @{ Key = 'memcomp'; Group = 'system'; Glyph = [char]0xE964; Restart = $true; Async = $true
        Get = { if ((Get-Service SysMain -ErrorAction Stop).StartType -eq 'Disabled') { throw 'SysMain is off' }
                [bool](Get-MMAgent -ErrorAction Stop).MemoryCompression }
        Work = { param($on)
@@ -1843,7 +1880,19 @@ foreach ($tw in $tweaks) {
     $row = New-Row ([string]$tw.Glyph) (T "tw.$($tw.Key)") "t:tw.$($tw.Key)" $toggle "t:tw.$($tw.Key).d"
     $row.Sub.Text = T "tw.$($tw.Key).d"
     $tw.Toggle = $toggle; $tw.Sub = $row.Sub
-    try { $toggle.IsChecked = [bool](& $tw.Get) } catch { $toggle.IsEnabled = $false }
+    if ($tw.Async -and !$Screenshot) {
+        # Slow to read (modules, Store, network): read in the background, the switch is filled in when done.
+        # These Get blocks use only cmdlets, no variables of this script.
+        $toggle.IsEnabled = $false
+        Start-Work $tw.Get @() {
+            param($r, $t)
+            $value = Get-LastOutput $r
+            if ($value -is [bool]) { $t.Toggle.IsChecked = $value; $t.Toggle.IsEnabled = $true }
+            Update-TweakHints
+        } $tw
+    } else {
+        try { $toggle.IsChecked = [bool](& $tw.Get) } catch { $toggle.IsEnabled = $false }
+    }
     $toggle.Tag = $tw
     $toggle.Add_Click({
         $t = $this.Tag
@@ -1919,12 +1968,10 @@ $dnsSegments = New-Object System.Windows.Controls.Border
 $dnsSegments.Background = '#232325'; $dnsSegments.BorderBrush = '#38383A'; $dnsSegments.BorderThickness = '1'; $dnsSegments.CornerRadius = 7; $dnsSegments.Padding = '2'
 $dnsPanel = New-Object System.Windows.Controls.StackPanel; $dnsPanel.Orientation = 'Horizontal'
 $dnsSegments.Child = $dnsPanel
-$dnsChoice = Get-DnsChoice
 foreach ($choice in 'auto', 'cloudflare', 'google') {
     $seg = New-Object System.Windows.Controls.RadioButton
     $seg.Style = $window.FindResource('Segment'); $seg.GroupName = 'Dns'; $seg.Content = T "dns.$choice"; $seg.Tag = "t:dns.$choice"
-    $seg.IsChecked = $choice -eq $dnsChoice
-    $seg.IsEnabled = [bool]$dnsChoice
+    $seg.IsEnabled = $false
     $seg.Add_Click({
         $choice = $this.Tag.Substring(6)
         Set-Status ((T 'status.tweak') -f (T 'tw.dns')) $true
@@ -1939,6 +1986,12 @@ foreach ($choice in 'auto', 'cloudflare', 'google') {
     })
     [void]$dnsPanel.Children.Add($seg)
 }
+# The adapters and their DNS servers are read in the background (the network modules load slowly)
+function Set-DnsSegments($choice) {
+    foreach ($seg in $dnsPanel.Children) { $seg.IsChecked = $seg.Tag -eq "t:dns.$choice"; $seg.IsEnabled = [bool]$choice }
+}
+if ($Screenshot) { Set-DnsSegments (Get-DnsChoice) }
+else { Start-Work ([scriptblock]::Create("function Get-DnsChoice {$((Get-Item function:Get-DnsChoice).Definition)}; Get-DnsChoice")) @() { param($r, $c) Set-DnsSegments (Get-LastOutput $r) } $null }
 $dnsRow = New-Row ([string][char]0xE774) (T 'tw.dns') 't:tw.dns' $dnsSegments 't:tw.dns.d'
 $dnsRow.Sub.Text = T 'tw.dns.d'
 $tweakLists['network'].Children.Insert(0, $dnsRow.Row)
@@ -3111,6 +3164,7 @@ if ($build -ge 22000) {
 $timer = New-Object System.Windows.Threading.DispatcherTimer
 $timer.Interval = [TimeSpan]::FromMilliseconds(500)
 $timer.Add_Tick({ Update-Stats; Receive-Work; Update-AppProgress; Update-Ping; if ($script:menuAt -and (Get-Date) -gt $script:menuAt) { Update-DesktopMenu } })
+$window.Add_ContentRendered({ Close-Splash; $window.Activate() })
 $window.Add_Loaded({
     # Akati OS checks GitHub once when the window opens (one request, nothing is downloaded)
     Start-UpdateCheck
@@ -3118,6 +3172,7 @@ $window.Add_Loaded({
     $timer.Start()
 })
 $window.Add_Closed({
+    Close-Splash
     $stats.Run = $false
     $timer.Stop()
 })

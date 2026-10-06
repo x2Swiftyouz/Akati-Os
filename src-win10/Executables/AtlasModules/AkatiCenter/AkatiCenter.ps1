@@ -56,9 +56,19 @@ $strings = @{
         'welcome' = 'Welcome back'; 'version' = 'AKATI OS VERSION'
         'cpu' = 'CPU USAGE'; 'ram' = 'RAM USAGE'; 'gpu' = 'GPU USAGE'
         'quick' = 'Quick actions'
+        'greet.morning' = 'Good morning'; 'greet.afternoon' = 'Good afternoon'; 'greet.evening' = 'Good evening'; 'greet.night' = 'Good night'
+        'update.checking' = 'Checking for updates...'
+        'chip.boost.on' = 'Game boost on'; 'chip.boost.off' = 'Game boost off'; 'chip.power' = 'Power: {0}'; 'chip.days' = '{0}d {1}h'; 'chip.hours' = '{0}h {1}m'
+        'chip.defender.on' = 'Defender on'; 'chip.defender.off' = 'Defender off'; 'chip.uptime' = 'Up {0}'
+        'disk.title' = 'Storage'; 'disk.free' = '{0} free of {1}'
+        'net.title' = 'Network'; 'net.down' = 'DOWNLOAD'; 'net.up' = 'UPLOAD'; 'net.ping' = 'PING (SG)'
+        'top.title' = 'Using the most CPU'; 'top.end' = 'Quit'; 'top.confirm' = 'Quit {0}? Unsaved work in it is lost.'
+        'status.ended' = '{0} was closed'
+        'quick.boost' = 'Game boost'; 'quick.boost.d' = 'Start or stop it here'
         'quick.clean' = 'Clean temp files'; 'quick.clean.d' = 'Free up disk space'
         'quick.update' = 'Check for updates'; 'quick.update.d' = 'Compare with GitHub'
-        'quick.system' = 'System settings'; 'quick.system.d' = 'All other settings'
+        'quick.system' = 'Tweaks'; 'quick.system.d' = 'Gaming and AtlasOS settings'
+        'tweaks.gaming' = 'Gaming'; 'tweaks.system' = 'System (AtlasOS)'
         'nav.system' = 'System settings'; 'system.title' = 'System settings'
         'system.sub' = 'All AtlasOS settings. A button applies that option; scripts open in a window that explains what they change. The default badge marks the Akati OS default.'
         'system.search' = 'Search settings'; 'system.links' = 'Links and tools'
@@ -71,7 +81,7 @@ $strings = @{
         'gaming.sub' = 'Akati OS does not install apps during setup. Install them here, from official sources (WinGet, or the official installer for Steam and Discord).'
         'gpu.title' = 'GPU drivers'; 'gpu.sub' = 'Opens the official driver download page.'
         'tweaks.title' = 'Tweaks'
-        'tweaks.sub' = 'Each switch shows the current state of your PC. Turn a tweak off again if games run worse.'
+        'tweaks.sub' = 'Gaming switches show the current state of your PC; turn one off again if games run worse. Below are all AtlasOS settings.'
         'cleaner.title' = 'Cleaner'; 'cleaner.sub' = 'Deletes temporary files. Files that are in use are skipped.'
         'cleaner.total' = 'SELECTED'; 'cleaner.scan' = 'Scan'; 'cleaner.clean' = 'Clean now'
         'appearance.title' = 'Appearance'; 'appearance.sub' = 'Pick an Akati OS theme. Windows applies it right away.'
@@ -92,7 +102,17 @@ $strings = @{
         'update.error' = 'Could not reach GitHub.'
         'update.open' = 'Open release page'
         'clean.temp' = 'Temporary files (your account)'; 'clean.wintemp' = 'Windows temporary files'
-        'clean.dumps' = 'Crash dumps'; 'clean.recycle' = 'Recycle Bin'
+        'clean.dumps' = 'Crash dumps and error reports'; 'clean.recycle' = 'Recycle Bin'
+        'clean.update' = 'Windows Update downloads'; 'clean.logs' = 'Windows setup logs'; 'clean.thumbs' = 'Thumbnail cache'
+        'clean.apps' = 'Discord, Steam and Epic caches'; 'clean.browser' = 'Browser caches'; 'clean.shaders' = 'GPU shader caches'
+        'clean.temp.d' = 'Files apps leave in your Temp folder'; 'clean.wintemp.d' = 'C:\Windows\Temp'
+        'clean.update.d' = 'Update files that are already installed (Windows downloads them again if needed)'
+        'clean.dumps.d' = 'Crash dumps and Windows Error Reporting files'; 'clean.logs.d' = 'CBS, DISM and setup logs'
+        'clean.thumbs.d' = 'Picture previews in File Explorer, made again when needed'
+        'clean.apps.d' = 'Web caches only; your logins and settings stay'
+        'clean.browser.d' = 'Brave, Edge, Chrome and Firefox. No cookies or passwords. Pages load slower once'
+        'clean.shaders.d' = 'NVIDIA, AMD, Intel and DirectX. Games stutter once while they build them again'
+        'clean.recycle.d' = 'Deleted files in the Recycle Bin'
         'tw.hags' = 'Hardware-accelerated GPU scheduling'; 'tw.hags.d' = 'Lets the GPU manage its own memory. Needs a supported GPU and driver.'
         'tw.windowed' = 'Optimizations for windowed games'; 'tw.windowed.d' = 'Lower latency for DirectX 10/11 games in windowed and borderless mode.'
         'tw.gamemode' = 'Game Mode'; 'tw.gamemode.d' = 'Windows gives games priority and pauses some background work while you play.'
@@ -158,7 +178,7 @@ $strings = @{
         'welcome.lang' = 'Language'; 'welcome.apps' = 'Install your gaming apps'; 'welcome.apps.d' = 'Steam, Discord, Epic and more'
         'welcome.look' = 'Pick a theme and accent color'; 'welcome.look.d' = 'Dark, light, slideshow and 7 colors'
         'welcome.open' = 'Open'; 'welcome.done' = 'Get started'
-        'welcome.keys' = 'Tip: Ctrl+1 to Ctrl+8 switch pages, Ctrl+F searches the settings.'
+        'welcome.keys' = 'Tip: Ctrl+1 to Ctrl+7 switch pages, Ctrl+F searches the settings.'
         'lang' = 'ภาษาไทย'
     }
     th = @{
@@ -168,9 +188,19 @@ $strings = @{
         'welcome' = 'ยินดีต้อนรับ'; 'version' = 'เวอร์ชัน AKATI OS'
         'cpu' = 'การใช้ CPU'; 'ram' = 'การใช้ RAM'; 'gpu' = 'การใช้ GPU'
         'quick' = 'ทางลัด'
+        'greet.morning' = 'สวัสดีตอนเช้า'; 'greet.afternoon' = 'สวัสดีตอนบ่าย'; 'greet.evening' = 'สวัสดีตอนเย็น'; 'greet.night' = 'สวัสดีตอนค่ำ'
+        'update.checking' = 'กำลังตรวจอัปเดต...'
+        'chip.boost.on' = 'บูสต์เกมเปิดอยู่'; 'chip.boost.off' = 'บูสต์เกมปิดอยู่'; 'chip.power' = 'แผนพลังงาน: {0}'; 'chip.days' = '{0} วัน {1} ชม.'; 'chip.hours' = '{0} ชม. {1} นาที'
+        'chip.defender.on' = 'Defender เปิดอยู่'; 'chip.defender.off' = 'Defender ปิดอยู่'; 'chip.uptime' = 'เปิดเครื่องมา {0}'
+        'disk.title' = 'พื้นที่เก็บข้อมูล'; 'disk.free' = 'ว่าง {0} จาก {1}'
+        'net.title' = 'เครือข่าย'; 'net.down' = 'ดาวน์โหลด'; 'net.up' = 'อัปโหลด'; 'net.ping' = 'ปิง (สิงคโปร์)'
+        'top.title' = 'แอปที่ใช้ CPU มากที่สุด'; 'top.end' = 'ปิด'; 'top.confirm' = 'ปิด {0} ใช่ไหม งานที่ยังไม่ได้บันทึกในแอปนี้จะหายไป'
+        'status.ended' = 'ปิด {0} แล้ว'
+        'quick.boost' = 'บูสต์เกม'; 'quick.boost.d' = 'เปิดหรือปิดได้ที่นี่'
         'quick.clean' = 'ล้างไฟล์ชั่วคราว'; 'quick.clean.d' = 'เพิ่มพื้นที่ดิสก์'
         'quick.update' = 'ตรวจอัปเดต'; 'quick.update.d' = 'เทียบกับ GitHub'
-        'quick.system' = 'ตั้งค่าระบบ'; 'quick.system.d' = 'การตั้งค่าอื่น ๆ ทั้งหมด'
+        'quick.system' = 'ปรับแต่ง'; 'quick.system.d' = 'เกมและการตั้งค่า AtlasOS'
+        'tweaks.gaming' = 'เกม'; 'tweaks.system' = 'ระบบ (AtlasOS)'
         'nav.system' = 'ตั้งค่าระบบ'; 'system.title' = 'ตั้งค่าระบบ'
         'system.sub' = 'การตั้งค่าทั้งหมดของ AtlasOS กดปุ่มเพื่อใช้ตัวเลือกนั้น สคริปต์จะเปิดในหน้าต่างที่อธิบายว่าเปลี่ยนอะไร ป้าย ค่าเริ่มต้น คือค่าที่ Akati OS ใช้ หน้าต่างของสคริปต์เป็นภาษาอังกฤษตาม AtlasOS'
         'system.search' = 'ค้นหาการตั้งค่า'; 'system.links' = 'ลิงก์และเครื่องมือ'
@@ -183,7 +213,7 @@ $strings = @{
         'gaming.sub' = 'Akati OS ไม่ได้ติดตั้งแอปให้ตอนลง กดติดตั้งได้ที่นี่ โหลดจากแหล่งทางการ (WinGet หรือตัวติดตั้งทางการของ Steam และ Discord)'
         'gpu.title' = 'ไดรเวอร์การ์ดจอ'; 'gpu.sub' = 'เปิดหน้าดาวน์โหลดไดรเวอร์ทางการ'
         'tweaks.title' = 'ปรับแต่ง'
-        'tweaks.sub' = 'สวิตช์แสดงสถานะจริงของเครื่อง ถ้าเปิดแล้วเกมแย่ลงให้ปิดกลับ'
+        'tweaks.sub' = 'สวิตช์เกมแสดงสถานะจริงของเครื่อง ถ้าเปิดแล้วเกมแย่ลงให้ปิดกลับ ด้านล่างคือการตั้งค่าทั้งหมดของ AtlasOS'
         'cleaner.title' = 'ล้างไฟล์ขยะ'; 'cleaner.sub' = 'ลบไฟล์ชั่วคราว ไฟล์ที่กำลังใช้งานอยู่จะถูกข้าม'
         'cleaner.total' = 'ที่เลือกไว้'; 'cleaner.scan' = 'สแกน'; 'cleaner.clean' = 'ล้างเลย'
         'appearance.title' = 'ธีม'; 'appearance.sub' = 'เลือกธีมของ Akati OS แล้ว Windows จะเปลี่ยนให้ทันที'
@@ -204,7 +234,17 @@ $strings = @{
         'update.error' = 'เชื่อมต่อ GitHub ไม่ได้'
         'update.open' = 'เปิดหน้า release'
         'clean.temp' = 'ไฟล์ชั่วคราว (บัญชีของคุณ)'; 'clean.wintemp' = 'ไฟล์ชั่วคราวของ Windows'
-        'clean.dumps' = 'ไฟล์ crash dump'; 'clean.recycle' = 'ถังขยะ'
+        'clean.dumps' = 'Crash dump และรายงานข้อผิดพลาด'; 'clean.recycle' = 'ถังขยะ'
+        'clean.update' = 'ไฟล์ดาวน์โหลดของ Windows Update'; 'clean.logs' = 'Log การติดตั้งของ Windows'; 'clean.thumbs' = 'แคชภาพย่อ'
+        'clean.apps' = 'แคชของ Discord, Steam และ Epic'; 'clean.browser' = 'แคชเบราว์เซอร์'; 'clean.shaders' = 'แคช shader ของการ์ดจอ'
+        'clean.temp.d' = 'ไฟล์ที่แอปทิ้งไว้ในโฟลเดอร์ Temp'; 'clean.wintemp.d' = 'C:\Windows\Temp'
+        'clean.update.d' = 'ไฟล์อัปเดตที่ติดตั้งไปแล้ว (Windows โหลดใหม่เองถ้าต้องใช้)'
+        'clean.dumps.d' = 'Crash dump และไฟล์ Windows Error Reporting'; 'clean.logs.d' = 'Log ของ CBS, DISM และการติดตั้ง'
+        'clean.thumbs.d' = 'ภาพตัวอย่างใน File Explorer สร้างใหม่เองเมื่อเปิดดู'
+        'clean.apps.d' = 'เฉพาะแคชเว็บ การล็อกอินและการตั้งค่ายังอยู่'
+        'clean.browser.d' = 'Brave, Edge, Chrome และ Firefox ไม่ลบคุกกี้หรือรหัสผ่าน หน้าเว็บโหลดช้าลงครั้งแรก'
+        'clean.shaders.d' = 'NVIDIA, AMD, Intel และ DirectX เกมจะกระตุกครั้งแรกระหว่างสร้างใหม่'
+        'clean.recycle.d' = 'ไฟล์ที่ลบไว้ในถังขยะ'
         'tw.hags' = 'Hardware-accelerated GPU scheduling'; 'tw.hags.d' = 'ให้การ์ดจอจัดการหน่วยความจำเอง ต้องใช้การ์ดจอและไดรเวอร์ที่รองรับ'
         'tw.windowed' = 'Optimizations for windowed games'; 'tw.windowed.d' = 'ลด latency ของเกม DirectX 10/11 ที่เล่นแบบหน้าต่างหรือ borderless'
         'tw.gamemode' = 'Game Mode'; 'tw.gamemode.d' = 'Windows ให้ความสำคัญกับเกมและพักงานเบื้องหลังบางอย่างระหว่างเล่น'
@@ -270,7 +310,7 @@ $strings = @{
         'welcome.lang' = 'ภาษา'; 'welcome.apps' = 'ติดตั้งแอปเกม'; 'welcome.apps.d' = 'Steam, Discord, Epic และอื่น ๆ'
         'welcome.look' = 'เลือกธีมและสีหลัก'; 'welcome.look.d' = 'ธีมมืด สว่าง สไลด์โชว์ และ 7 สี'
         'welcome.open' = 'เปิด'; 'welcome.done' = 'เริ่มใช้งาน'
-        'welcome.keys' = 'ทิป: Ctrl+1 ถึง Ctrl+8 สลับหน้า, Ctrl+F ค้นหาการตั้งค่า'
+        'welcome.keys' = 'ทิป: Ctrl+1 ถึง Ctrl+7 สลับหน้า, Ctrl+F ค้นหาการตั้งค่า'
         'lang' = 'English'
     }
 }
@@ -402,14 +442,35 @@ try {
     $gpus = Get-CimInstance Win32_VideoController | Where-Object { $_.Name -notmatch 'Basic Display|Remote' }
     $ui.GpuName.Text = if ($gpus) { ($gpus | Select-Object -First 1).Name } else { (Get-CimInstance Win32_VideoController | Select-Object -First 1).Name }
     $ui.RamName.Text = Format-Size ([double]$os.TotalVisibleMemorySize * 1KB)
-    $disk = Get-CimInstance Win32_LogicalDisk -Filter "DeviceID='C:'"
-    $ui.DiskName.Text = '{0} / {1}' -f (Format-Size $disk.FreeSpace), (Format-Size $disk.Size)
 } catch { }
 
+# Storage: every local drive with a bar
+function Show-Disks {
+    $ui.DisksPanel.Children.Clear()
+    foreach ($d in @(Get-CimInstance Win32_LogicalDisk -Filter 'DriveType=3' -ErrorAction SilentlyContinue | Sort-Object DeviceID)) {
+        if (!$d.Size) { continue }
+        $used = 100 * ($d.Size - $d.FreeSpace) / $d.Size
+        $row = New-Object System.Windows.Controls.StackPanel
+        $row.Margin = '0,0,0,10'
+        $top = New-Object System.Windows.Controls.Grid
+        $name = New-Text ("$($d.DeviceID)  " + $(if ($d.VolumeName) { $d.VolumeName } else { '' })) 13 'SemiBold'
+        $free = New-Text ((T 'disk.free') -f (Format-Size $d.FreeSpace), (Format-Size $d.Size)) 12
+        $free.Foreground = $window.FindResource('MutedBrush'); $free.HorizontalAlignment = 'Right'
+        [void]$top.Children.Add($name); [void]$top.Children.Add($free)
+        $bar = New-Object System.Windows.Controls.ProgressBar
+        $bar.Style = $window.FindResource('Meter'); $bar.Margin = '0,6,0,0'; $bar.Value = $used
+        if ($used -ge 90) { $bar.Foreground = '#FF453A' }
+        [void]$row.Children.Add($top); [void]$row.Children.Add($bar)
+        [void]$ui.DisksPanel.Children.Add($row)
+    }
+}
+
 # Usage is read in a background runspace so the window never stutters
-$stats = [hashtable]::Synchronized(@{ Cpu = 0; Ram = 0; RamUsed = 0; RamTotal = 0; Gpu = -1; Run = $true })
+$stats = [hashtable]::Synchronized(@{ Cpu = 0; Ram = 0; RamUsed = 0; RamTotal = 0; Gpu = -1; Run = $true; N = 0; Seq = 0
+    Down = -1; Up = -1; Ping = -1; Top = $null; TopSeq = 0; Defender = -1; Boot = $null; Self = $PID })
 $statsSample = {
     param($stats)
+        $n = $stats.N; $stats.N = $n + 1
         try {
             $stats.Cpu = [int](Get-CimInstance Win32_PerfFormattedData_PerfOS_Processor -Filter "Name='_Total'").PercentProcessorTime
             $os = Get-CimInstance Win32_OperatingSystem
@@ -423,16 +484,162 @@ $statsSample = {
             $sum = ($engines | Measure-Object -Property UtilizationPercentage -Sum).Sum
             $stats.Gpu = [int][Math]::Min(100, [double]$sum)
         } catch { $stats.Gpu = -1 }
+        # Network speed (all adapters)
+        try {
+            $nics = @(Get-CimInstance Win32_PerfFormattedData_Tcpip_NetworkInterface -ErrorAction Stop)
+            $stats.Down = [double]($nics | Measure-Object -Property BytesReceivedPersec -Sum).Sum
+            $stats.Up = [double]($nics | Measure-Object -Property BytesSentPersec -Sum).Sum
+        } catch { }
+        # The apps using the most CPU, every 3rd sample
+        if ($n % 3 -eq 0) {
+            try {
+                $cores = [Environment]::ProcessorCount
+                $list = Get-CimInstance Win32_PerfFormattedData_PerfProc_Process -ErrorAction Stop |
+                    Where-Object { $_.Name -notin '_Total', 'Idle', 'System', 'Memory Compression', 'Registry' -and $_.IDProcess -gt 4 } |
+                    Sort-Object PercentProcessorTime -Descending | Select-Object -First 5
+                $stats.Top = @($list | ForEach-Object {
+                    $path = try { (Get-Process -Id $_.IDProcess -ErrorAction Stop).Path } catch { $null }
+                    @{ Name = ($_.Name -replace '#\d+$', ''); Pid = [int]$_.IDProcess; Cpu = [Math]::Round($_.PercentProcessorTime / $cores, 1)
+                       Ram = [double]$_.WorkingSetPrivate; Path = $path }
+                })
+                $stats.TopSeq++
+            } catch { }
+        }
+        # Ping to Singapore every 6th sample (TCP connect, like Game boost)
+        if ($n % 6 -eq 0) {
+            $ms = -1
+            try {
+                $ip = [Net.Dns]::GetHostAddresses('dynamodb.ap-southeast-1.amazonaws.com') | Where-Object { $_.AddressFamily -eq 'InterNetwork' } | Select-Object -First 1
+                $c = New-Object Net.Sockets.TcpClient; $sw = [Diagnostics.Stopwatch]::StartNew()
+                if ($c.ConnectAsync($ip, 443).Wait(2000) -and $c.Connected) { $ms = [int]$sw.Elapsed.TotalMilliseconds }
+                $c.Close()
+            } catch { }
+            $stats.Ping = $ms
+        }
+        if ($n -eq 0) {
+            try { $stats.Boot = (Get-CimInstance Win32_OperatingSystem).LastBootUpTime } catch { }
+            try { $stats.Defender = if ((Get-MpComputerStatus -ErrorAction Stop).RealTimeProtectionEnabled) { 1 } else { 0 } } catch { $stats.Defender = 0 }
+        }
+        $stats.Seq++
 }
 $statsWork = "param(`$stats)`n`$sample = {$statsSample}`nwhile (`$stats.Run) { & `$sample `$stats; Start-Sleep -Milliseconds 1500 }"
 $statsPs = [PowerShell]::Create()
 [void]$statsPs.AddScript($statsWork).AddArgument($stats)
+
+# Last 60 seconds of usage (40 samples of 1.5 s), drawn as a line in each card
+$script:history = @{ Cpu = New-Object System.Collections.ArrayList; Ram = New-Object System.Collections.ArrayList; Gpu = New-Object System.Collections.ArrayList }
+$script:lastSeq = -1; $script:lastTopSeq = -1; $script:chipsAt = [datetime]::MinValue
+function Update-Spark([string]$key, [double]$value) {
+    $h = $script:history[$key]
+    [void]$h.Add([Math]::Max(0, [Math]::Min(100, $value)))
+    while ($h.Count -gt 40) { $h.RemoveAt(0) }
+    $canvas = $ui["${key}Spark"]
+    $w = if ($canvas.ActualWidth -gt 0) { $canvas.ActualWidth } else { 220 }
+    $pts = New-Object System.Windows.Media.PointCollection
+    for ($i = 0; $i -lt $h.Count; $i++) { $pts.Add((New-Object System.Windows.Point ($w - ($h.Count - 1 - $i) * $w / 39), (36 - 34 * $h[$i] / 100))) }
+    $ui["${key}Line"].Points = $pts
+}
+
+function Format-Speed([double]$bytesPerSec) {
+    if ($bytesPerSec -lt 0) { return '-' }
+    $bits = $bytesPerSec * 8
+    if ($bits -ge 1e6) { return '{0:N1} Mb/s' -f ($bits / 1e6) }
+    return '{0:N0} Kb/s' -f ($bits / 1e3)
+}
 
 function Update-Stats {
     $ui.CpuValue.Text = "$($stats.Cpu)%"; $ui.CpuBar.Value = $stats.Cpu
     $ui.RamValue.Text = "$($stats.Ram)%"; $ui.RamBar.Value = $stats.Ram
     if ($stats.RamTotal) { $ui.RamDetail.Text = '{0} / {1}' -f (Format-Size $stats.RamUsed), (Format-Size $stats.RamTotal) }
     if ($stats.Gpu -ge 0) { $ui.GpuValue.Text = "$($stats.Gpu)%"; $ui.GpuBar.Value = $stats.Gpu } else { $ui.GpuValue.Text = '-'; $ui.GpuBar.Value = 0 }
+    if ($stats.Seq -ne $script:lastSeq) {
+        $script:lastSeq = $stats.Seq
+        Update-Spark 'Cpu' $stats.Cpu; Update-Spark 'Ram' $stats.Ram; Update-Spark 'Gpu' ([Math]::Max(0, $stats.Gpu))
+        $ui.NetDown.Text = Format-Speed $stats.Down
+        $ui.NetUp.Text = Format-Speed $stats.Up
+        if ($stats.Ping -ge 0) {
+            $ui.NetPing.Text = "$($stats.Ping) ms"
+            $ui.NetPing.Foreground = if ($stats.Ping -lt 60) { $window.FindResource('Good') } elseif ($stats.Ping -lt 120) { '#F2C55C' } else { '#F2557A' }
+        } else { $ui.NetPing.Text = '-' }
+    }
+    if ($stats.TopSeq -ne $script:lastTopSeq -and $stats.Top) { $script:lastTopSeq = $stats.TopSeq; Show-TopApps }
+    Update-Clock
+    if ((Get-Date) -gt $script:chipsAt) { $script:chipsAt = (Get-Date).AddSeconds(10); Update-Chips }
+}
+
+# Greeting and clock like macOS
+function Update-Clock {
+    $now = Get-Date
+    $h = $now.Hour
+    $ui.Greeting.Text = T $(if ($h -ge 5 -and $h -lt 12) { 'greet.morning' } elseif ($h -lt 17 -and $h -ge 12) { 'greet.afternoon' } elseif ($h -ge 17 -and $h -lt 21) { 'greet.evening' } else { 'greet.night' })
+    $ui.ClockTime.Text = $now.ToString('HH:mm')
+    $culture = [Globalization.CultureInfo]::GetCultureInfo($(if ($lang -eq 'th') { 'th-TH' } else { 'en-US' }))
+    $ui.ClockDate.Text = $now.ToString('ddd d MMMM', $culture)
+}
+
+# Status chips: Game boost, power plan, Defender, time since start
+function New-Chip([string]$text, $dot) {
+    $b = New-Object System.Windows.Controls.Border
+    $b.CornerRadius = 12; $b.Background = '#2E2E30'; $b.Padding = '10,4'; $b.Margin = '0,0,8,6'
+    $sp = New-Object System.Windows.Controls.StackPanel; $sp.Orientation = 'Horizontal'
+    $e = New-Object System.Windows.Shapes.Ellipse; $e.Width = 7; $e.Height = 7; $e.Margin = '0,0,7,0'; $e.VerticalAlignment = 'Center'; $e.Fill = $dot
+    $t = New-Text $text 12
+    [void]$sp.Children.Add($e); [void]$sp.Children.Add($t)
+    $b.Child = $sp
+    return $b
+}
+function Update-Chips {
+    $ui.StatusChips.Children.Clear()
+    $good = $window.FindResource('Good'); $muted = $window.FindResource('MutedBrush')
+    $boost = Test-Boost
+    [void]$ui.StatusChips.Children.Add((New-Chip (T $(if ($boost) { 'chip.boost.on' } else { 'chip.boost.off' })) $(if ($boost) { $good } else { $muted })))
+    $plan = if ([string](powercfg /getactivescheme) -match '\((.+)\)\s*$') { $Matches[1] } else { '-' }
+    [void]$ui.StatusChips.Children.Add((New-Chip ((T 'chip.power') -f $plan) $window.FindResource('Accent2')))
+    if ($stats.Defender -ge 0) {
+        [void]$ui.StatusChips.Children.Add((New-Chip (T $(if ($stats.Defender -eq 1) { 'chip.defender.on' } else { 'chip.defender.off' })) $(if ($stats.Defender -eq 1) { $good } else { '#FF9F0A' })))
+    }
+    if ($stats.Boot) {
+        $up = (Get-Date) - $stats.Boot
+        $text = if ($up.TotalDays -ge 1) { (T 'chip.days') -f [int][Math]::Floor($up.TotalDays), $up.Hours } else { (T 'chip.hours') -f $up.Hours, $up.Minutes }
+        [void]$ui.StatusChips.Children.Add((New-Chip ((T 'chip.uptime') -f $text) $muted))
+    }
+}
+
+# The apps using the most CPU, with Quit (not for Windows itself or this window)
+$protected = 'csrss', 'wininit', 'winlogon', 'services', 'lsass', 'smss', 'svchost', 'dwm', 'explorer', 'MsMpEng', 'fontdrvhost', 'sihost', 'ctfmon', 'audiodg', 'spoolsv', 'SecurityHealthService', 'NisSrv', 'conhost', 'WmiPrvSE', 'RuntimeBroker', 'taskhostw', 'dllhost', 'StartMenuExperienceHost', 'SearchHost', 'TextInputHost', 'ShellExperienceHost', 'vmtoolsd', 'vm3dservice'
+$script:iconCache = @{}
+function Show-TopApps {
+    $ui.TopList.Children.Clear()
+    foreach ($p in @($stats.Top)) {
+        if (!$p) { continue }
+        $right = New-Object System.Windows.Controls.StackPanel; $right.Orientation = 'Horizontal'
+        $cpu = New-Text ('{0:N1}%' -f $p.Cpu) 13 'SemiBold'; $cpu.MinWidth = 60; $cpu.TextAlignment = 'Right'; $cpu.VerticalAlignment = 'Center'
+        $ram = New-Text (Format-Size $p.Ram) 12; $ram.Foreground = $window.FindResource('MutedBrush'); $ram.MinWidth = 70; $ram.TextAlignment = 'Right'; $ram.VerticalAlignment = 'Center'; $ram.Margin = '0,0,14,0'
+        [void]$right.Children.Add($ram); [void]$right.Children.Add($cpu)
+        if ($p.Pid -ne $stats.Self -and $p.Name -notin $protected) {
+            $btn = New-Object System.Windows.Controls.Button
+            $btn.Style = $window.FindResource('Secondary'); $btn.Margin = '14,0,0,0'; $btn.Content = T 'top.end'; $btn.Tag = $p
+            $btn.Add_Click({
+                $t = $this.Tag
+                $answer = [System.Windows.MessageBox]::Show(((T 'top.confirm') -f $t.Name), 'Akati OS Center', 'YesNo', 'Question')
+                if ($answer -eq 'Yes') {
+                    try { Stop-Process -Id $t.Pid -Force -ErrorAction Stop; Set-Status ((T 'status.ended') -f $t.Name) } catch { Set-Status $_.Exception.Message }
+                }
+            })
+            [void]$right.Children.Add($btn)
+        } else {
+            $spacer = New-Object System.Windows.Controls.Border; $spacer.Width = 76
+            [void]$right.Children.Add($spacer)
+        }
+        $row = New-Row ([string][char]0xE7C4) $p.Name $null $right $null
+        $row.Sub.Visibility = 'Collapsed'
+        if ($p.Path) {
+            if (!$script:iconCache.ContainsKey($p.Path)) { $script:iconCache[$p.Path] = Get-FileIcon @($p.Path) }
+            Set-RowIcon $row $script:iconCache[$p.Path]
+        }
+        [void]$ui.TopList.Children.Add($row.Row)
+    }
+    Update-Separators $ui.TopList
 }
 
 # ---------------------------------------------------------------------------------------------
@@ -484,12 +691,12 @@ function Get-FileIcon([string[]]$paths) {
 # $left (optional) goes before the icon, for example a check box.
 function New-Row([string]$glyph, [string]$title, [string]$titleTag, [System.Windows.UIElement]$right, [string]$subTag, [System.Windows.UIElement]$left = $null) {
     $border = New-Object System.Windows.Controls.Border
-    $border.Padding = '14,12'; $border.CornerRadius = 10; $border.Margin = '0,2'; $border.Background = [System.Windows.Media.Brushes]::Transparent
+    $border.Padding = '14,10'; $border.Background = [System.Windows.Media.Brushes]::Transparent
     $grid = New-Object System.Windows.Controls.Grid
     foreach ($w in 'Auto', 'Auto', '*', 'Auto') { $c = New-Object System.Windows.Controls.ColumnDefinition; $c.Width = $w; $grid.ColumnDefinitions.Add($c) }
     if ($left) { $left.Margin = '0,0,14,0'; $left.VerticalAlignment = 'Center'; [void]$grid.Children.Add($left) }
     $icon = New-Object System.Windows.Controls.Border
-    $icon.Width = 38; $icon.Height = 38; $icon.CornerRadius = 10; $icon.Background = '#241C30'; $icon.Margin = '0,0,14,0'
+    $icon.Width = 30; $icon.Height = 30; $icon.CornerRadius = 7; $icon.Background = '#3A3A3C'; $icon.Margin = '0,0,12,0'
     $g = New-Text $glyph 16; $g.Style = $window.FindResource('Glyph'); $g.HorizontalAlignment = 'Center'; $g.SetResourceReference([System.Windows.Controls.TextBlock]::ForegroundProperty, 'Accent2')
     $icon.Child = $g
     [System.Windows.Controls.Grid]::SetColumn($icon, 1)
@@ -505,9 +712,18 @@ function New-Row([string]$glyph, [string]$title, [string]$titleTag, [System.Wind
     $right.VerticalAlignment = 'Center'
     [void]$grid.Children.Add($icon); [void]$grid.Children.Add($text); [void]$grid.Children.Add($right)
     $border.Child = $grid
-    $border.Add_MouseEnter({ $this.Background = '#1C1626' })
-    $border.Add_MouseLeave({ $this.Background = [System.Windows.Media.Brushes]::Transparent })
     return @{ Row = $border; Sub = $s; Title = $t; Icon = $icon; Bar = $bar }
+}
+
+# Thin lines between the rows of a grouped list (macOS style): every visible row but the first
+function Update-Separators($panel) {
+    $first = $true
+    foreach ($child in $panel.Children) {
+        if ($child -isnot [System.Windows.Controls.Border] -or $child.Visibility -ne 'Visible') { continue }
+        $child.BorderBrush = '#38383A'
+        $child.BorderThickness = if ($first) { '0' } else { '0,1,0,0' }
+        $first = $false
+    }
 }
 
 function Set-RowIcon($row, $image) {
@@ -677,6 +893,7 @@ foreach ($app in $apps) {
     Update-AppRow $app
 }
 Update-AppsToolbar
+Update-Separators $ui.AppsList
 
 $ui.InstallSelectedButton.Add_Click({
     foreach ($a in $apps) { if ($a.Check.IsChecked -and $a.State -eq 'idle') { $a.Check.IsChecked = $false; Add-AppToQueue $a 'install' } }
@@ -768,7 +985,7 @@ function Update-BoostCard {
         $ui.BoostState.Foreground = $window.FindResource('MutedBrush')
         $ui.BoostButton.Content = T 'boost.start'
         $ui.BoostButton.Style = $window.FindResource('Primary')
-        $ui.BoostIcon.Background = '#241C30'
+        $ui.BoostIcon.Background = '#3A3A3C'
         foreach ($c in 'BoostPower', 'BoostApps', 'BoostNotify') { $ui[$c].IsEnabled = $true }
     }
 }
@@ -989,9 +1206,11 @@ function Show-StartupItems {
         Set-RowIcon $row (Get-FileIcon @($item.Exe))
         [void]$ui.StartupList.Children.Add($row.Row)
     }
+    Update-Separators $ui.StartupList
 }
 Show-StartupItems
 Update-BoostCard
+Update-Separators $ui.PingList
 
 # ---------------------------------------------------------------------------------------------
 # Tweaks (each one reads the real state of the PC)
@@ -1088,29 +1307,47 @@ foreach ($tw in $tweaks) {
     })
     [void]$ui.TweaksList.Children.Add($row.Row)
 }
+Update-Separators $ui.TweaksList
 
 # ---------------------------------------------------------------------------------------------
 # Cleaner
 # ---------------------------------------------------------------------------------------------
+# Folders: their contents are deleted (wildcards allowed). Files: these files are deleted.
+# Only caches, logs and temporary files: nothing that holds settings, saves, passwords or cookies.
+# Off = not ticked at first (cleaning them makes the next start of a game or browser slower).
 $cleanItems = @(
-    @{ Key = 'temp';    Glyph = [char]0xE8B7; Path = $env:TEMP }
-    @{ Key = 'wintemp'; Glyph = [char]0xE8B7; Path = (Join-Path $windir 'Temp') }
-    @{ Key = 'dumps';   Glyph = [char]0xE7BA; Path = (Join-Path $env:LOCALAPPDATA 'CrashDumps') }
-    @{ Key = 'recycle'; Glyph = [char]0xE74D; Path = $null }
+    @{ Key = 'temp';    Glyph = [char]0xE8B7; Folders = @($env:TEMP) }
+    @{ Key = 'wintemp'; Glyph = [char]0xE8B7; Folders = @((Join-Path $windir 'Temp')) }
+    @{ Key = 'update';  Glyph = [char]0xE895; Folders = @((Join-Path $windir 'SoftwareDistribution\Download'),
+                                                         (Join-Path $windir 'ServiceProfiles\NetworkService\AppData\Local\Microsoft\Windows\DeliveryOptimization\Cache')) }
+    @{ Key = 'dumps';   Glyph = [char]0xE7BA; Folders = @((Join-Path $env:LOCALAPPDATA 'CrashDumps'), (Join-Path $env:LOCALAPPDATA 'Microsoft\Windows\WER'),
+                                                         (Join-Path $env:ProgramData 'Microsoft\Windows\WER\ReportArchive'), (Join-Path $env:ProgramData 'Microsoft\Windows\WER\ReportQueue')) }
+    @{ Key = 'logs';    Glyph = [char]0xE9F9; Files = @((Join-Path $windir 'Logs\CBS\*.log'), (Join-Path $windir 'Logs\DISM\*.log'), (Join-Path $windir 'Panther\*.log')) }
+    @{ Key = 'thumbs';  Glyph = [char]0xE91B; Files = @((Join-Path $env:LOCALAPPDATA 'Microsoft\Windows\Explorer\thumbcache_*.db')) }
+    @{ Key = 'apps';    Glyph = [char]0xE8BD; Folders = @((Join-Path $env:APPDATA 'discord\Cache\Cache_Data'), (Join-Path $env:APPDATA 'discord\Code Cache'), (Join-Path $env:APPDATA 'discord\GPUCache'),
+                                                         (Join-Path $env:LOCALAPPDATA 'Steam\htmlcache'), (Join-Path $env:LOCALAPPDATA 'EpicGamesLauncher\Saved\webcache*')) }
+    @{ Key = 'browser'; Glyph = [char]0xE774; Off = $true
+       Folders = @((Join-Path $env:LOCALAPPDATA 'BraveSoftware\Brave-Browser\User Data\*\Cache\Cache_Data'), (Join-Path $env:LOCALAPPDATA 'Microsoft\Edge\User Data\*\Cache\Cache_Data'),
+                   (Join-Path $env:LOCALAPPDATA 'Google\Chrome\User Data\*\Cache\Cache_Data'), (Join-Path $env:LOCALAPPDATA 'Mozilla\Firefox\Profiles\*\cache2')) }
+    @{ Key = 'shaders'; Glyph = [char]0xE7F4; Off = $true
+       Folders = @((Join-Path $env:LOCALAPPDATA 'D3DSCache'), (Join-Path $env:LOCALAPPDATA 'NVIDIA\DXCache'), (Join-Path $env:LOCALAPPDATA 'NVIDIA\GLCache'),
+                   (Join-Path $env:LOCALAPPDATA 'AMD\DxCache'), (Join-Path $env:LOCALAPPDATA 'AMD\GLCache'), (Join-Path $env:LOCALAPPDATA 'Intel\ShaderCache')) }
+    @{ Key = 'recycle'; Glyph = [char]0xE74D; Recycle = $true }
 )
 foreach ($ci in $cleanItems) {
     $right = New-Object System.Windows.Controls.StackPanel
     $right.Orientation = 'Horizontal'
     $size = New-Text '-' 13 'SemiBold'; $size.Margin = '0,0,18,0'; $size.VerticalAlignment = 'Center'; $size.MinWidth = 70; $size.TextAlignment = 'Right'
     $check = New-Object System.Windows.Controls.CheckBox
-    $check.Style = $window.FindResource('Tick'); $check.IsChecked = $true; $check.VerticalAlignment = 'Center'
+    $check.Style = $window.FindResource('Tick'); $check.IsChecked = !$ci.Off; $check.VerticalAlignment = 'Center'
     $check.Add_Click({ Update-CleanTotal })
     [void]$right.Children.Add($size); [void]$right.Children.Add($check)
-    $row = New-Row ([string]$ci.Glyph) (T "clean.$($ci.Key)") "t:clean.$($ci.Key)" $right $null
-    $row.Sub.Text = if ($ci.Path) { $ci.Path } else { '' }
+    $row = New-Row ([string]$ci.Glyph) (T "clean.$($ci.Key)") "t:clean.$($ci.Key)" $right "t:clean.$($ci.Key).d"
+    $row.Sub.Text = T "clean.$($ci.Key).d"
     $ci.SizeText = $size; $ci.Check = $check; $ci.Bytes = 0
     [void]$ui.CleanList.Children.Add($row.Row)
 }
+Update-Separators $ui.CleanList
 
 function Update-CleanTotal {
     $total = 0
@@ -1122,11 +1359,17 @@ $measureWork = {
     param($items)
     $out = @{}
     foreach ($i in $items) {
-        if ($i.Path) {
-            $sum = (Get-ChildItem -LiteralPath $i.Path -Recurse -Force -File -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum
-        } else {
-            $sum = 0
+        $sum = 0
+        if ($i.Recycle) {
             try { (New-Object -ComObject Shell.Application).NameSpace(10).Items() | ForEach-Object { $sum += $_.Size } } catch { }
+        }
+        foreach ($f in @($i.Folders)) {
+            if (!$f) { continue }
+            $sum += [double](Get-ChildItem -Path $f -Recurse -Force -File -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum
+        }
+        foreach ($f in @($i.Files)) {
+            if (!$f) { continue }
+            $sum += [double](Get-ChildItem -Path $f -Force -File -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum
         }
         $out[$i.Key] = [double]$sum
     }
@@ -1136,7 +1379,7 @@ $measureWork = {
 function Start-Scan([scriptblock]$then) {
     Set-Status (T 'status.scanning') $true
     $ui.ScanButton.IsEnabled = $false; $ui.CleanButton.IsEnabled = $false
-    $items = @($cleanItems | ForEach-Object { @{ Key = $_.Key; Path = $_.Path } })
+    $items = @($cleanItems | ForEach-Object { @{ Key = $_.Key; Folders = $_.Folders; Files = $_.Files; Recycle = $_.Recycle } })
     Start-Work $measureWork @(, $items) {
         param($r, $ctx)
         $sizes = Get-LastOutput $r
@@ -1150,17 +1393,23 @@ function Start-Scan([scriptblock]$then) {
 
 function Start-Clean {
     $script:cleanBefore = 0
-    $selected = @($cleanItems | Where-Object { $_.Check.IsChecked } | ForEach-Object { $script:cleanBefore += $_.Bytes; @{ Key = $_.Key; Path = $_.Path } })
+    $selected = @($cleanItems | Where-Object { $_.Check.IsChecked } | ForEach-Object { $script:cleanBefore += $_.Bytes; @{ Key = $_.Key; Folders = $_.Folders; Files = $_.Files; Recycle = $_.Recycle } })
     if (!$selected.Count) { return }
     Set-Status (T 'status.cleaning') $true
     $ui.ScanButton.IsEnabled = $false; $ui.CleanButton.IsEnabled = $false
     Start-Work {
         param($items)
         foreach ($i in $items) {
-            if ($i.Path) {
-                Get-ChildItem -LiteralPath $i.Path -Force -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
-            } else {
-                try { Clear-RecycleBin -Force -ErrorAction SilentlyContinue } catch { }
+            if ($i.Recycle) { try { Clear-RecycleBin -Force -ErrorAction SilentlyContinue } catch { } }
+            # The contents of each folder (the folder itself stays); files in use are skipped
+            foreach ($f in @($i.Folders)) {
+                if (!$f) { continue }
+                foreach ($dir in @(Get-Item -Path $f -Force -ErrorAction SilentlyContinue | Where-Object { $_.PSIsContainer })) {
+                    Get-ChildItem -LiteralPath $dir.FullName -Force -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+                }
+            }
+            foreach ($f in @($i.Files)) {
+                if ($f) { Get-ChildItem -Path $f -Force -File -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue }
             }
         }
     } @(, $selected) {
@@ -1200,7 +1449,7 @@ foreach ($th in $themes) {
     $card.Style = $window.FindResource('Card'); $card.Margin = '8,0'; $card.Padding = '12'; $card.BorderThickness = 2
     $stack = New-Object System.Windows.Controls.StackPanel
     $preview = New-Object System.Windows.Controls.Border
-    $preview.CornerRadius = 8; $preview.Height = 130; $preview.ClipToBounds = $true; $preview.Background = '#241C30'
+    $preview.CornerRadius = 8; $preview.Height = 130; $preview.ClipToBounds = $true; $preview.Background = '#3A3A3C'
     $img = New-Object System.Windows.Controls.Image
     $img.Stretch = 'UniformToFill'; $img.Source = Get-Image (Join-Path $wallpapers $th.Image) 480
     $preview.Child = $img
@@ -1337,7 +1586,7 @@ foreach ($file in @(Get-ChildItem -Path (Join-Path $wallpapers '*') -Include *.p
 </ControlTemplate>
 '@)
     $frame = New-Object System.Windows.Controls.Border
-    $frame.Width = 168; $frame.Height = 95; $frame.CornerRadius = 8; $frame.Background = '#241C30'
+    $frame.Width = 168; $frame.Height = 95; $frame.CornerRadius = 8; $frame.Background = '#3A3A3C'
     $brush = New-Object System.Windows.Media.ImageBrush (Get-Image $file.FullName 340)
     $brush.Stretch = 'UniformToFill'
     $frame.Background = $brush
@@ -1435,7 +1684,7 @@ function Start-UpdateCheck {
         $ui.UpdateButton.IsEnabled = $true
         $release = Get-LastOutput $r
         if (!$release -or !$release.tag_name) {
-            $ui.UpdateStatus.Text = T 'update.error'; $ui.UpdateHint.Text = ''
+            $ui.UpdateStatus.Text = T 'update.error'; $ui.UpdateHint.Text = T 'update.error'; $ui.UpdateDot.Fill = $window.FindResource('MutedBrush')
             Set-Status (T 'update.error'); return
         }
         $script:releaseUrl = $release.html_url
@@ -1457,12 +1706,19 @@ function Start-UpdateCheck {
             $ui.UpdateStatus.Foreground = $window.FindResource('Good')
         }
         $ui.UpdateStatus.Text = $msg; $ui.UpdateHint.Text = $msg
+        $ui.UpdateDot.Fill = if ($newer) { $window.FindResource('Accent2') } else { $window.FindResource('Good') }
         Set-Status $msg
     }
 }
 $ui.UpdateButton.Add_Click({ if ($this.Tag -eq 'open') { Start-Process $script:releaseUrl } else { Start-UpdateCheck } })
 $ui.QuickUpdate.Add_Click({ $ui.NavAbout.IsChecked = $true; Start-UpdateCheck })
-$ui.QuickAtlas.Add_Click({ $ui.NavSystem.IsChecked = $true })
+$ui.QuickBoost.Add_Click({
+    try {
+        if (Test-Boost) { Stop-Boost; Set-Status (T 'status.boostoff') } else { Start-Boost; Set-Status (T 'status.booston') }
+    } catch { Set-Status $_.Exception.Message }
+    Update-BoostCard; Update-Chips
+})
+$ui.QuickAtlas.Add_Click({ $ui.NavTweaks.IsChecked = $true })
 $ui.LinkGithub.Add_Click({ Start-Process "https://github.com/$repo" })
 $ui.LinkOptions.Add_Click({ Start-Process "https://github.com/$repo/blob/main/docs/OPTIONS.md" })
 $ui.LinkAtlas.Add_Click({ Start-Process 'https://github.com/Atlas-OS/Atlas' })
@@ -1663,18 +1919,17 @@ function New-AtlasButton([IO.FileInfo]$file, [string]$leaf) {
 $script:systemCards = New-Object System.Collections.ArrayList
 function Add-SystemCard([string]$key, [System.IO.DirectoryInfo[]]$dirs, [string]$topPath) {
     $card = New-Object System.Windows.Controls.Border
-    $card.Style = $window.FindResource('Card'); $card.Margin = '0,0,0,16'
+    $card.Style = $window.FindResource('Card'); $card.Margin = '0,0,0,22'; $card.Padding = '0'
     $stack = New-Object System.Windows.Controls.StackPanel
-    $head = New-Text (T "system.cat.$key") 16 'SemiBold'
-    $head.Margin = '0,0,0,6'
-    [void]$stack.Children.Add($head)
+    $head = New-Text (T "system.cat.$key")
+    $head.Style = $window.FindResource('Section')
     $rows = New-Object System.Collections.ArrayList
     $li = if ($lang -eq 'th') { 1 } else { 0 }
     foreach ($d in $dirs) {
         $files = @(Get-ChildItem -LiteralPath $d.FullName -File -ErrorAction SilentlyContinue | Where-Object { $_.Extension -ne '.xml' } | Sort-Object Name)
         if ($files.Count -eq 0) { continue }
         $row = New-Object System.Windows.Controls.Border
-        $row.Padding = '10,8'; $row.CornerRadius = 8; $row.Margin = '-10,2'; $row.Background = [System.Windows.Media.Brushes]::Transparent
+        $row.Padding = '14,10'; $row.Background = [System.Windows.Media.Brushes]::Transparent
         $rowStack = New-Object System.Windows.Controls.StackPanel
         $info = $null; $desc = ''
         if ($d.FullName -eq $topPath) {
@@ -1701,8 +1956,6 @@ function Add-SystemCard([string]$key, [System.IO.DirectoryInfo[]]$dirs, [string]
         foreach ($f in $files) { [void]$wrap.Children.Add((New-AtlasButton $f $leaf)) }
         [void]$rowStack.Children.Add($wrap)
         $row.Child = $rowStack
-        $row.Add_MouseEnter({ $this.Background = '#1C1626' })
-        $row.Add_MouseLeave({ $this.Background = [System.Windows.Media.Brushes]::Transparent })
         # Search in both languages and in the original AtlasOS names
         $words = @($key, (T "system.cat.$key"), $d.Name, $title, $desc) + @($files | ForEach-Object { $_.BaseName })
         if ($info) { $words += $info }
@@ -1712,8 +1965,10 @@ function Add-SystemCard([string]$key, [System.IO.DirectoryInfo[]]$dirs, [string]
     }
     if ($rows.Count -eq 0) { return }
     $card.Child = $stack
+    Update-Separators $stack
+    [void]$ui.SystemList.Children.Add($head)
     [void]$ui.SystemList.Children.Add($card)
-    [void]$script:systemCards.Add(@{ Card = $card; Rows = $rows })
+    [void]$script:systemCards.Add(@{ Card = $card; Head = $head; Rows = $rows; Stack = $stack })
 }
 
 function Show-SystemList {
@@ -1725,7 +1980,7 @@ function Show-SystemList {
         $dirs = @($top) + @(Get-ChildItem -LiteralPath $top.FullName -Directory -Recurse | Sort-Object FullName)
         Add-SystemCard $key $dirs $top.FullName
     }
-    # Files directly in the folder: AtlasOS links (and the Atlas Toolbox installer on Windows 11)
+    # Files directly in the folder: AtlasOS links
     Add-SystemCard 'AtlasOS' @(Get-Item -LiteralPath $desktop) (Get-Item -LiteralPath $desktop).FullName
     Update-SystemFilter
 }
@@ -1741,6 +1996,8 @@ function Update-SystemFilter {
             if ($match) { $shown++ }
         }
         $c.Card.Visibility = if ($shown) { 'Visible' } else { 'Collapsed' }
+        $c.Head.Visibility = $c.Card.Visibility
+        Update-Separators $c.Stack
     }
 }
 $ui.SystemSearch.Add_TextChanged({ Update-SystemFilter })
@@ -1801,7 +2058,7 @@ $ui.ReportButton.Add_Click({
 # ---------------------------------------------------------------------------------------------
 # Navigation, title bar, language
 # ---------------------------------------------------------------------------------------------
-$pages = 'dashboard', 'gaming', 'boost', 'tweaks', 'cleaner', 'appearance', 'system', 'about'
+$pages = 'dashboard', 'gaming', 'boost', 'tweaks', 'cleaner', 'appearance', 'about'
 $script:page = 'dashboard'
 function Get-PageId([string]$p) { [Globalization.CultureInfo]::InvariantCulture.TextInfo.ToTitleCase($p) }
 function Show-Page([string]$name) {
@@ -1887,6 +2144,10 @@ function Set-AppLanguage([string]$l) {
 $ui.LangButton.Add_Click({ Set-AppLanguage $(if ($lang -eq 'th') { 'en' } else { 'th' }) })
 function Update-Language {
     Set-Language
+    Show-Disks
+    Update-Clock
+    Update-Chips
+    if ($stats.Top) { Show-TopApps }
     foreach ($a in $apps) { if ($a.State -ne 'install') { Update-AppRow $a } }
     Update-ThemeCards
     Update-GpuText
@@ -1910,7 +2171,7 @@ $ui.WelcomeDone.Add_Click({ Close-Welcome })
 $ui.Welcome.Add_MouseLeftButtonDown({ $window.DragMove() })
 if (!(Get-RegValue $settingsKey 'Welcomed') -and !$Screenshot) { $ui.Welcome.Visibility = 'Visible' }
 
-# Keyboard: Ctrl+1 to Ctrl+8 switch pages, Ctrl+F searches the system settings, Esc closes the welcome or clears the search
+# Keyboard: Ctrl+1 to Ctrl+7 switch pages, Ctrl+F searches the AtlasOS settings in Tweaks, Esc closes the welcome or clears the search
 $window.Add_PreviewKeyDown({
     param($sender, $e)
     $ctrl = ([System.Windows.Input.Keyboard]::Modifiers -band [System.Windows.Input.ModifierKeys]::Control) -ne 0
@@ -1922,16 +2183,19 @@ $window.Add_PreviewKeyDown({
     }
     if (!$ctrl -or $ui.Welcome.Visibility -eq 'Visible') { return }
     if ($key -eq 'F') {
-        $ui.NavSystem.IsChecked = $true
+        $ui.NavTweaks.IsChecked = $true
         [void]$ui.SystemSearch.Focus(); $ui.SystemSearch.SelectAll()
         $e.Handled = $true
-    } elseif ($key -match '^(D|NumPad)([1-8])$') {
+    } elseif ($key -match '^(D|NumPad)([1-7])$') {
         $ui["Nav$(Get-PageId $pages[[int]$Matches[2] - 1])"].IsChecked = $true
         $e.Handled = $true
     }
 })
 
 Set-Language
+Show-Disks
+Update-Clock
+Update-Chips
 Set-Status (T 'ready')
 
 # ---------------------------------------------------------------------------------------------
@@ -1968,10 +2232,10 @@ if ($Screenshot) {
                 $apps[3].State = 'queued'; Update-AppRow $apps[3]
                 $apps[4].Check.IsChecked = $true; Update-AppsToolbar
             }
-            if ($p -eq 'system') { $ui.SystemList.Measure((New-Object System.Windows.Size 800, 10000)) }
+            if ($p -eq 'tweaks') { $ui.SystemList.Measure((New-Object System.Windows.Size 800, 10000)) }
             Save-Shot "$p-$l.png"
             if ($p -eq 'gaming') { foreach ($i in 2, 3) { $apps[$i].State = 'idle'; Update-AppRow $apps[$i] }; $apps[4].Check.IsChecked = $false }
-            if ($p -eq 'appearance' -or $p -eq 'system' -or $p -eq 'boost') {
+            if ($p -eq 'appearance' -or $p -eq 'tweaks' -or $p -eq 'boost') {
                 # The lower part of long pages
                 $sv = $ui["Page$(Get-PageId $p)"]
                 $sv.UpdateLayout(); $sv.ScrollToVerticalOffset(100000); $sv.UpdateLayout()
@@ -2023,8 +2287,8 @@ if ($build -ge 22000) {
             $round = 2; [void][AkatiOS.Native]::DwmSetWindowAttribute($hwnd, 33, [ref]$round, 4)  # round corners
             $mica = 2
             if ([AkatiOS.Native]::DwmSetWindowAttribute($hwnd, 38, [ref]$mica, 4) -eq 0) {
-                $ui.RootBorder.Background = '#D00E0B14'
-                $ui.Sidebar.Background = '#90120E1A'
+                $ui.RootBorder.Background = '#D01C1C1E'
+                $ui.Sidebar.Background = '#90232325'
             }
         })
     } catch { }
@@ -2034,6 +2298,8 @@ $timer = New-Object System.Windows.Threading.DispatcherTimer
 $timer.Interval = [TimeSpan]::FromMilliseconds(500)
 $timer.Add_Tick({ Update-Stats; Receive-Work; Update-AppProgress; Update-Ping })
 $window.Add_Loaded({
+    # Akati OS checks GitHub once when the window opens (one request, nothing is downloaded)
+    Start-UpdateCheck
     $script:statsHandle = $statsPs.BeginInvoke()
     $timer.Start()
 })

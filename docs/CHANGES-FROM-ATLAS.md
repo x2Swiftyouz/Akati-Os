@@ -35,17 +35,19 @@ W11 = Windows 11 playbook, W10 = Windows 10 playbook.
 | `playbook.conf` | W11, W10 | Name (`AkatiOS` / `AkatiOS10`), title, version, own UniqueId, descriptions, own Git and install guide links, AtlasOS website/donate/Git links removed, "Learn more" links point to [OPTIONS.md](OPTIONS.md); `IsChecked` defaults; anti-cheat warnings; Remove Microsoft Store page (no gaming app pages: apps are installed from Akati OS Center). W11: `UpgradableFrom` removed, build 26300 added, OOBE text. W10: build 19045 only, Windows 10 end of support warning |
 | `playbook.png`, `Executables/user.png` | W11, W10 | Akati OS images |
 | `Configuration/custom.yml` | W11, W10 | Runs `tweaks\misc\akati-extras.yml` after `atlas\start.yml`, and `tweaks\misc\akati-services.yml` after all other tasks. W11: one status text |
-| `Configuration/atlas/start.yml` | W11 | One status text |
+| `Configuration/atlas/start.yml` | W11 | One status text; the optional Atlas Toolbox install is removed |
 | `Configuration/tweaks/misc/config-oem-information.yml` | W11, W10 | Shows "Akati OS" version, AtlasOS support links removed, writes the version to `HKLM\SOFTWARE\AkatiOS` (used by the update checker) |
 | `Configuration/tweaks/qol/appearance/atlas-theme.yml` | W11, W10 | Default theme is `akatios-dark.theme` |
 | `Executables/AtlasModules/Scripts/newUsers.ps1` | W11 | Default theme for new users is `akatios-dark.theme` |
 | `Executables/AtlasModules/Scripts/Modules/Themes/Themes.psm1` | W11, W10 | Akati OS themes in `Set-ThemeMRU` (AtlasOS themes removed), default lock screen image |
 | `Executables/AtlasModules/Scripts/Modules/Qol/Qol.psm1` | W11 | `Set-AtlasTheme` uses `akatios-dark.theme` |
-| `Executables/SHORTCUTS.ps1` | W11, W10 | No Atlas folder shortcut on the desktop or in the Start menu (the settings are in Akati OS Center > System settings). The folder `C:\Windows\AtlasDesktop` itself stays, AtlasOS scripts use it |
+| `Executables/SHORTCUTS.ps1` | W11, W10 | No Atlas folder shortcut on the desktop or in the Start menu (the settings are in Akati OS Center > Tweaks). The folder `C:\Windows\AtlasDesktop` itself stays, AtlasOS scripts use it |
 
 ## Removed files
 
 The AtlasOS wallpapers and themes are removed, so the Atlas logo is not used: `Executables/AtlasModules/Wallpapers/atlas-*.png`, `lockscreen*.png`, `Executables/Themes/atlas-*.theme` and the folder icon `Executables/AtlasModules/Other/atlas-folder.ico`.
+
+W11: the Atlas Toolbox is not offered: the setup page "Install Atlas Toolbox" (`install-toolbox`), its install step and `AtlasDesktop\Install AtlasOS Toolbox.cmd` with `AtlasModules\Scripts\installToolbox.ps1` are removed. `SOFTWARE.ps1` is unchanged.
 
 ## New files
 
@@ -100,18 +102,19 @@ It runs only when the user opens it and asks for administrator rights. Everythin
 - **Ping**: only while the test runs and the page is open, a TCP connection to port 443 of `dynamodb.<region>.amazonaws.com` (ap-southeast-7, ap-southeast-1, ap-east-1, ap-northeast-1) every 2 seconds. No data is sent
 - **Startup apps**: reads the `Run` keys (HKCU, HKLM, HKLM WOW6432Node) and the Startup folders; a switch writes the on/off value to `...\Explorer\StartupApproved\Run`, `Run32` or `StartupFolder`, like Task Manager. The startup entries themselves are not changed
 - **Tweaks**: the registry values in [Gaming tweaks](#gaming-tweaks-registry), plus Game Mode (`HKCU\Software\Microsoft\GameBar` `AutoGameModeEnabled`), and runs the unchanged AtlasOS scripts in `AtlasDesktop\3. General Configuration\Power-saving` and `\Hibernation` with `/silent`
-- **Cleaner**: deletes the contents of `%TEMP%`, `%windir%\Temp`, `%LOCALAPPDATA%\CrashDumps` and empties the Recycle Bin, only for the items the user ticks
+- **Cleaner**: only for the items the user ticks, deletes the contents of `%TEMP%`, `%windir%\Temp`, `%windir%\SoftwareDistribution\Download` and the Delivery Optimization cache, `%LOCALAPPDATA%\CrashDumps` and the WER report folders, the CBS/DISM/Panther `*.log` files, `thumbcache_*.db`, the web caches of Discord, Steam and Epic (`Cache_Data`, `Code Cache`, `GPUCache`, `htmlcache`, `webcache*`), the browser caches of Brave, Edge, Chrome (`Cache_Data`) and Firefox (`cache2`), the GPU shader caches (`D3DSCache`, NVIDIA/AMD `DXCache`/`GLCache`, Intel `ShaderCache`) and empties the Recycle Bin. Browser and shader caches are not ticked at first. No cookies, passwords, settings or saves are touched; files in use are skipped
 - **Microsoft Store switch**: off removes the `Microsoft.WindowsStore` package for all users; on runs `wsreset -i`, which installs it again
 - **Appearance**: opens an Akati OS `.theme` file, which Windows applies
-- **System settings**: lists every file in `C:\Windows\AtlasDesktop` (the unchanged AtlasOS settings), one row per folder, with English and Thai names. A `.reg` file is imported with `reg import`, a `.cmd` script opens in a console window (the AtlasOS script explains the change), links and other files are opened. Nothing runs until the user clicks a button. Before the first `.reg`, `.cmd` or `.ps1` in a window, `Checkpoint-Computer` creates a restore point (switch on the page, saved as `RestorePoint` in `HKCU\Software\AkatiOS\Center`); System Restore is not turned on if it is off
+- **Tweaks > System (AtlasOS)**: lists every file in `C:\Windows\AtlasDesktop` (the unchanged AtlasOS settings), one row per folder, with English and Thai names. A `.reg` file is imported with `reg import`, a `.cmd` script opens in a console window (the AtlasOS script explains the change), links and other files are opened. Nothing runs until the user clicks a button. Before the first `.reg`, `.cmd` or `.ps1` in a window, `Checkpoint-Computer` creates a restore point (switch on the page, saved as `RestorePoint` in `HKCU\Software\AkatiOS\Center`); System Restore is not turned on if it is off
 - **Accent color**: `HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Accent` (`AccentPalette`, `AccentColorMenu`, `StartColorMenu`), `HKCU\Software\Microsoft\Windows\DWM` (`AccentColor`, `ColorizationColor`, `ColorizationAfterglow`), `HKCU\Control Panel\Desktop` `AutoColorization` = 0, and the colors in `%ProgramData%\Microsoft\Windows Terminal\Fragments\AkatiOS\akatios.json`
 - **Wallpapers**: `SystemParametersInfo(SPI_SETDESKWALLPAPER)` with Fill
 - **Cursor**: `HKCU\Control Panel\Cursors` (Akati OS: `Arrow`, `Wait`, `AppStarting`; the other pointers are the Windows ones), then `SPI_SETCURSORS`
 - **Sounds**: `HKCU\AppEvents\Schemes\Apps\.Default\<event>\.Current` for `.Default`, `SystemAsterisk`, `SystemExclamation`, `SystemHand`, `SystemNotification`, `Notification.Default`, `DeviceConnect`, `DeviceDisconnect`: Akati OS sounds, the Windows sounds in `%windir%\Media`, or none
 - **Problem report**: writes `AkatiOS-report-<date>.zip` on the desktop with `system.txt` (Windows, CPU, GPU, RAM, disk, power plan, WinGet version, app states) and the logs in `%LOCALAPPDATA%\AkatiOS\Logs`, with the user name and PC name replaced. Nothing is uploaded
-- **Update check**: reads `https://api.github.com/repos/x2Swiftyouz/Akati-Os/releases/latest`, compares it with the installed version and can open the release page. It does not download or install anything and does not run on a schedule
+- **Update check**: reads `https://api.github.com/repos/x2Swiftyouz/Akati-Os/releases/latest`, compares it with the installed version and can open the release page. It runs once each time the window opens; it does not download or install anything and does not run on a schedule
+- **Dashboard**: reads usage, network speed (`Win32_PerfFormattedData_Tcpip_NetworkInterface`) and the busiest processes (`Win32_PerfFormattedData_PerfProc_Process`) with CIM, the drives with `Win32_LogicalDisk`, the power plan with `powercfg /getactivescheme` and real-time protection with `Get-MpComputerStatus`. While the window is open it measures ping with a TCP connection to port 443 of `dynamodb.ap-southeast-1.amazonaws.com` about every 9 seconds (no data is sent). **Quit** on an app asks first and then ends that process (`Stop-Process`); Windows processes and Akati OS Center itself have no Quit button
 - Saves the language, accent color and "welcome shown" to `HKCU\Software\AkatiOS\Center`
 - Windows 11: Mica backdrop with `DwmSetWindowAttribute` (on its own window only)
 - Reads usage with CIM (`Win32_PerfFormattedData_*`); nothing is sent anywhere
 
-No other downloads were added. All other downloads (7-Zip, Visual C++, DirectX, browsers, Atlas Toolbox) come from the unchanged AtlasOS `SOFTWARE.ps1`.
+No other downloads were added. All other downloads (7-Zip, Visual C++, DirectX, browsers) come from the unchanged AtlasOS `SOFTWARE.ps1`.

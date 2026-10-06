@@ -3,8 +3,8 @@
 What each option on the Akati OS setup pages does. The "Learn more" links in AME Wizard open this page.
 คู่มือตัวเลือกในหน้าติดตั้ง Akati OS ภาษาไทยอยู่ใต้ภาษาอังกฤษในแต่ละหัวข้อ
 
-Most options can be changed later in **Akati OS Center > System settings** (all AtlasOS settings, with search).
-ตัวเลือกส่วนใหญ่เปลี่ยนทีหลังได้ใน Akati OS Center > ตั้งค่าระบบ (รวมการตั้งค่าทั้งหมดของ AtlasOS ค้นหาได้)
+Most options can be changed later in **Akati OS Center > Tweaks** (all AtlasOS settings, with search).
+ตัวเลือกส่วนใหญ่เปลี่ยนทีหลังได้ใน Akati OS Center > ปรับแต่ง (รวมการตั้งค่าทั้งหมดของ AtlasOS ค้นหาได้)
 
 > If you play online games with anti-cheat (for example Valorant or FACEIT), keep the recommended defaults. Some anti-cheat systems need Windows security features such as Core Isolation (VBS), TPM 2.0 or Secure Boot.
 >
@@ -16,7 +16,7 @@ Most options can be changed later in **Akati OS Center > System settings** (all 
 - **Disable Defender**: removes Defender. Your PC has no antivirus unless you install one. For advanced users only.
 
 **ภาษาไทย**: เปิด Defender (แนะนำ) คือเก็บโปรแกรมป้องกันไวรัสของ Windows ไว้ ส่วนปิด Defender คือเอาออก เครื่องจะไม่มีโปรแกรมป้องกันไวรัสจนกว่าจะติดตั้งเอง เหมาะกับผู้ใช้ที่รู้ว่ากำลังทำอะไรเท่านั้น
-Change later: Akati OS Center > System settings > Security > Defender
+Change later: Akati OS Center > Tweaks > Security > Defender
 
 ## Mitigations
 
@@ -24,7 +24,7 @@ Change later: Akati OS Center > System settings > Security > Defender
 - **Disable All Mitigations**: can improve performance on older CPUs, but reduces security and can make modern CPUs slower.
 
 **ภาษาไทย**: ค่าแนะนำคือคงระบบป้องกันช่องโหว่ CPU ไว้ การปิดอาจทำให้ CPU รุ่นเก่าเร็วขึ้นเล็กน้อย แต่ปลอดภัยน้อยลง และ CPU รุ่นใหม่อาจช้าลง
-Change later: Akati OS Center > System settings > Security > Mitigations
+Change later: Akati OS Center > Tweaks > Security > Mitigations
 
 ## Automatic updates
 
@@ -32,7 +32,7 @@ Change later: Akati OS Center > System settings > Security > Mitigations
 - **Enable Automatic Windows Updates**: the normal Windows behaviour.
 
 **ภาษาไทย**: ค่าเริ่มต้นคือปิดการอัปเดตอัตโนมัติ Windows จะแค่แจ้งเตือน คุณต้องเข้า Settings ไปอัปเดตเองเป็นประจำ เพราะอัปเดตความปลอดภัยสำคัญมาก
-Change later: Akati OS Center > System settings > General Configuration > Automatic Updates
+Change later: Akati OS Center > Tweaks > General Configuration > Automatic Updates
 
 ## General options
 
@@ -45,7 +45,7 @@ Change later: Akati OS Center > System settings > General Configuration > Automa
 - Maximum Performance (ติ๊กไว้): ใช้ power plan ประสิทธิภาพสูงสุดและปิดการประหยัดพลังงาน เหมาะกับคอมตั้งโต๊ะ ถ้าเป็นโน้ตบุ๊กจะเปลืองแบตและร้อนขึ้น
 - ปิด Core Isolation (ไม่ติ๊ก): อาจเร็วขึ้นเล็กน้อย แต่ปลอดภัยน้อยลง และเกมที่มี anti-cheat บางเกมอาจเปิดไม่ได้
 
-Change later: Akati OS Center > System settings > General Configuration (Hibernation, Power-saving) and Akati OS Center > System settings > Security > Core Isolation (VBS)
+Change later: Akati OS Center > Tweaks > General Configuration (Hibernation, Power-saving) and Akati OS Center > Tweaks > Security > Core Isolation (VBS)
 
 ## Software options
 
@@ -84,14 +84,14 @@ Akati OS does not install GPU drivers. **Akati OS Center > Gaming apps** has but
 
 | Service | Turn off if | Turn it on again |
 |---|---|---|
-| Printing (Print Spooler) | you have no printer | Akati OS Center > System settings > Printing > Enable |
-| Search indexing (Windows Search) | you rarely search inside files; Start search still finds apps and settings, file search is slower | System settings > Search indexing > Minimal or Enable |
-| SuperFetch (SysMain) | Windows is on an SSD | System settings > SysMain (Superfetch) > Enable |
-| Network discovery (SSDP, NetBIOS helper, function discovery) | you do not browse other PCs or printers on your home network | System settings > Network discovery > Enable |
+| Printing (Print Spooler) | you have no printer | Akati OS Center > Tweaks > Printing > Enable |
+| Search indexing (Windows Search) | you rarely search inside files; Start search still finds apps and settings, file search is slower | Tweaks > Search indexing > Minimal or Enable |
+| SuperFetch (SysMain) | Windows is on an SSD | Tweaks > SysMain (Superfetch) > Enable |
+| Network discovery (SSDP, NetBIOS helper, function discovery) | you do not browse other PCs or printers on your home network | Tweaks > Network discovery > Enable |
 
 Untick it if you use a printer or share files between PCs at home. A restart (setup restarts at the end) applies the changes.
 
-**ภาษาไทย**: "Turn off unused services" ติ๊กไว้เป็นค่าเริ่มต้น จะรันสคริปต์เดิมของ AtlasOS เพื่อปิดบริการที่เครื่องเล่นเกมส่วนใหญ่ไม่ได้ใช้ ได้แก่ การพิมพ์ (Print Spooler), การทำดัชนีค้นหา (Windows Search; ช่องค้นหาใน Start ยังหาแอปและการตั้งค่าได้ แต่ค้นหาไฟล์ช้าลง), SuperFetch (SysMain) และการค้นหาเครื่องในเครือข่าย ถ้าใช้เครื่องพิมพ์หรือแชร์ไฟล์ในบ้านให้เอาติ๊กออก หรือเปิดกลับทีหลังได้ใน Akati OS Center > ตั้งค่าระบบ
+**ภาษาไทย**: "Turn off unused services" ติ๊กไว้เป็นค่าเริ่มต้น จะรันสคริปต์เดิมของ AtlasOS เพื่อปิดบริการที่เครื่องเล่นเกมส่วนใหญ่ไม่ได้ใช้ ได้แก่ การพิมพ์ (Print Spooler), การทำดัชนีค้นหา (Windows Search; ช่องค้นหาใน Start ยังหาแอปและการตั้งค่าได้ แต่ค้นหาไฟล์ช้าลง), SuperFetch (SysMain) และการค้นหาเครื่องในเครือข่าย ถ้าใช้เครื่องพิมพ์หรือแชร์ไฟล์ในบ้านให้เอาติ๊กออก หรือเปิดกลับทีหลังได้ใน Akati OS Center > ปรับแต่ง
 
 ## Notifications and Game Bar
 
@@ -114,8 +114,8 @@ These are not on the setup pages. Turn them on in **Akati OS Center > Tweaks** i
 
 ## Akati OS Center
 
-The **Akati OS Center** app (desktop and Start menu) is the one place for everything Akati OS adds: live CPU, RAM and GPU usage, gaming apps (with updates) and GPU driver links, **Game boost** (one-click Game Mode, ping test, startup apps), tweaks (the switches show the real state of your PC), temp file cleaner, themes (Dark, Light, Slideshow), accent colors, wallpapers, Akati OS cursor and sounds, **System settings** (every AtlasOS setting, with search and a restore point first), a problem report and the update check. There is no Atlas folder shortcut any more; the files stay in `C:\Windows\AtlasDesktop` because AtlasOS scripts use them. It asks for administrator rights. Switch between English and Thai at the bottom left.
+The **Akati OS Center** app (desktop and Start menu) is the one place for everything Akati OS adds: live CPU, RAM and GPU usage, gaming apps (with updates) and GPU driver links, **Game boost** (one-click Game Mode, ping test, startup apps), tweaks (the switches show the real state of your PC), temp file cleaner, themes (Dark, Light, Slideshow), accent colors, wallpapers, Akati OS cursor and sounds, **Tweaks** (gaming switches and every AtlasOS setting, with search and a restore point first), a problem report and the update check. There is no Atlas folder shortcut any more; the files stay in `C:\Windows\AtlasDesktop` because AtlasOS scripts use them. It asks for administrator rights. Switch between English and Thai at the bottom left.
 
 Windows Terminal also gets an **Akati OS** color scheme and a "Windows PowerShell (Akati OS)" profile.
 
-**ภาษาไทย**: แอป Akati OS Center (บน Desktop และ Start menu) รวมทุกอย่างของ Akati OS ไว้ที่เดียว: ดูการใช้ CPU, RAM, GPU แบบเรียลไทม์, ติดตั้งและอัปเดตแอปเกม ลิงก์ไดรเวอร์การ์ดจอ, **บูสต์เกม** (โหมดเกมปุ่มเดียว ทดสอบปิง จัดการแอปที่เปิดตอนบูต), ปรับแต่ง (สวิตช์แสดงสถานะจริงของเครื่อง), ล้างไฟล์ชั่วคราว, ธีม (มืด, สว่าง, สไลด์โชว์) สีหลัก วอลเปเปอร์ เคอร์เซอร์และเสียงของ Akati OS, **ตั้งค่าระบบ** (การตั้งค่าทั้งหมดของ AtlasOS ค้นหาได้ และสร้างจุดคืนค่าก่อน), สร้างรายงานปัญหา และตรวจอัปเดต ไม่มีทางลัดโฟลเดอร์ Atlas แล้ว ไฟล์ยังอยู่ที่ `C:\Windows\AtlasDesktop` เพราะสคริปต์ของ AtlasOS ใช้อยู่ ต้องใช้สิทธิ์ผู้ดูแลระบบ เปลี่ยนภาษาไทย/อังกฤษได้ที่มุมซ้ายล่าง Windows Terminal จะมีธีมสี Akati OS และโปรไฟล์ "Windows PowerShell (Akati OS)" ด้วย
+**ภาษาไทย**: แอป Akati OS Center (บน Desktop และ Start menu) รวมทุกอย่างของ Akati OS ไว้ที่เดียว: ดูการใช้ CPU, RAM, GPU แบบเรียลไทม์, ติดตั้งและอัปเดตแอปเกม ลิงก์ไดรเวอร์การ์ดจอ, **บูสต์เกม** (โหมดเกมปุ่มเดียว ทดสอบปิง จัดการแอปที่เปิดตอนบูต), ปรับแต่ง (สวิตช์แสดงสถานะจริงของเครื่อง), ล้างไฟล์ชั่วคราว, ธีม (มืด, สว่าง, สไลด์โชว์) สีหลัก วอลเปเปอร์ เคอร์เซอร์และเสียงของ Akati OS, **ปรับแต่ง** (สวิตช์เกมและการตั้งค่าทั้งหมดของ AtlasOS ค้นหาได้ และสร้างจุดคืนค่าก่อน), สร้างรายงานปัญหา และตรวจอัปเดต ไม่มีทางลัดโฟลเดอร์ Atlas แล้ว ไฟล์ยังอยู่ที่ `C:\Windows\AtlasDesktop` เพราะสคริปต์ของ AtlasOS ใช้อยู่ ต้องใช้สิทธิ์ผู้ดูแลระบบ เปลี่ยนภาษาไทย/อังกฤษได้ที่มุมซ้ายล่าง Windows Terminal จะมีธีมสี Akati OS และโปรไฟล์ "Windows PowerShell (Akati OS)" ด้วย

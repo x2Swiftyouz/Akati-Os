@@ -58,7 +58,7 @@ $strings = @{
         'quick' = 'Quick actions'
         'greet.morning' = 'Good morning'; 'greet.afternoon' = 'Good afternoon'; 'greet.evening' = 'Good evening'; 'greet.night' = 'Good night'
         'update.checking' = 'Checking for updates...'
-        'chip.boost.on' = 'Game boost on'; 'chip.boost.off' = 'Game boost off'; 'chip.power' = 'Power: {0}'
+        'chip.boost.on' = 'Game boost on'; 'chip.boost.off' = 'Game boost off'; 'chip.power' = 'Power: {0}'; 'chip.days' = '{0}d {1}h'; 'chip.hours' = '{0}h {1}m'
         'chip.defender.on' = 'Defender on'; 'chip.defender.off' = 'Defender off'; 'chip.uptime' = 'Up {0}'
         'disk.title' = 'Storage'; 'disk.free' = '{0} free of {1}'
         'net.title' = 'Network'; 'net.down' = 'DOWNLOAD'; 'net.up' = 'UPLOAD'; 'net.ping' = 'PING (SG)'
@@ -190,7 +190,7 @@ $strings = @{
         'quick' = 'ทางลัด'
         'greet.morning' = 'สวัสดีตอนเช้า'; 'greet.afternoon' = 'สวัสดีตอนบ่าย'; 'greet.evening' = 'สวัสดีตอนเย็น'; 'greet.night' = 'สวัสดีตอนค่ำ'
         'update.checking' = 'กำลังตรวจอัปเดต...'
-        'chip.boost.on' = 'บูสต์เกมเปิดอยู่'; 'chip.boost.off' = 'บูสต์เกมปิดอยู่'; 'chip.power' = 'Power plan: {0}'
+        'chip.boost.on' = 'บูสต์เกมเปิดอยู่'; 'chip.boost.off' = 'บูสต์เกมปิดอยู่'; 'chip.power' = 'แผนพลังงาน: {0}'; 'chip.days' = '{0} วัน {1} ชม.'; 'chip.hours' = '{0} ชม. {1} นาที'
         'chip.defender.on' = 'Defender เปิดอยู่'; 'chip.defender.off' = 'Defender ปิดอยู่'; 'chip.uptime' = 'เปิดเครื่องมา {0}'
         'disk.title' = 'พื้นที่เก็บข้อมูล'; 'disk.free' = 'ว่าง {0} จาก {1}'
         'net.title' = 'เครือข่าย'; 'net.down' = 'ดาวน์โหลด'; 'net.up' = 'อัปโหลด'; 'net.ping' = 'ปิง (สิงคโปร์)'
@@ -600,7 +600,7 @@ function Update-Chips {
     }
     if ($stats.Boot) {
         $up = (Get-Date) - $stats.Boot
-        $text = if ($up.TotalDays -ge 1) { '{0}d {1}h' -f [int][Math]::Floor($up.TotalDays), $up.Hours } else { '{0}h {1}m' -f $up.Hours, $up.Minutes }
+        $text = if ($up.TotalDays -ge 1) { (T 'chip.days') -f [int][Math]::Floor($up.TotalDays), $up.Hours } else { (T 'chip.hours') -f $up.Hours, $up.Minutes }
         [void]$ui.StatusChips.Children.Add((New-Chip ((T 'chip.uptime') -f $text) $muted))
     }
 }

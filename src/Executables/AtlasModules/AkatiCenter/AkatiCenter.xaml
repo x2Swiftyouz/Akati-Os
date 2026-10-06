@@ -667,13 +667,11 @@
                                                 <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE777;" FontSize="13" Margin="0,0,8,0"/><TextBlock x:Name="UpdateAllText" Text="Update all"/></StackPanel>
                                             </Button>
                                         </StackPanel>
-                                        <StackPanel Orientation="Horizontal">
-                                            <!-- Starter pack: the two apps most players install first -->
-                                            <Button x:Name="StarterButton" Style="{StaticResource PillAccent}" Margin="0,0,12,0">
-                                                <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE896;" FontSize="13" Margin="0,0,8,0"/><TextBlock Tag="t:apps.starter" Text="Get Steam and Discord"/></StackPanel>
-                                            </Button>
-                                            <TextBlock Tag="t:apps.hint" Text="Apps install one after another." Style="{StaticResource Muted}" VerticalAlignment="Center" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
-                                        </StackPanel>
+                                        <!-- Starter pack: the two apps most players install first -->
+                                        <Button x:Name="StarterButton" DockPanel.Dock="Left" Style="{StaticResource PillAccent}" Margin="0,0,12,0">
+                                            <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE896;" FontSize="13" Margin="0,0,8,0"/><TextBlock Tag="t:apps.starter" Text="Get Steam and Discord"/></StackPanel>
+                                        </Button>
+                                        <TextBlock Tag="t:apps.hint" Text="Apps install one after another." Style="{StaticResource Muted}" VerticalAlignment="Center" Margin="0,0,12,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
                                     </DockPanel>
                                 </StackPanel>
                             </Border>

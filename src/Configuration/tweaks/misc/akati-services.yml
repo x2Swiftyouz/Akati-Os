@@ -1,0 +1,35 @@
+---
+title: Akati OS Unused Services
+description: Turns off printing, search indexing, SuperFetch and network discovery when selected during setup (Akati OS)
+actions:
+    # Turn off services most gaming PCs do not use (option, ticked by default): printing, search
+    # indexing, SuperFetch and network discovery. These are the unchanged AtlasOS scripts, the same as
+    # the buttons in Akati OS Center > System settings, where they can be turned on again. Some of them
+    # end with "pause" even when silent, so their input comes from nul; setSvc.cmd is found through PATH.
+    # This task runs last: atlas\services.yml sets up minimal search indexing and would turn it back on.
+  - !writeStatus: {status: 'Turning off unused services', option: 'disable-unused-services'}
+  - !cmd:
+    command: 'set "PATH=%windir%\AtlasModules\Scripts;%PATH%" && "AtlasDesktop\6. Advanced Configuration\Services\Printing\Disable Printing.cmd" /silent < nul'
+    exeDir: true
+    wait: true
+    runas: currentUserElevated
+    option: 'disable-unused-services'
+  - !cmd:
+    command: 'set "PATH=%windir%\AtlasModules\Scripts;%PATH%" && "AtlasDesktop\6. Advanced Configuration\Services\Superfetch\Disable SuperFetch.cmd" /silent < nul'
+    exeDir: true
+    wait: true
+    runas: currentUserElevated
+    option: 'disable-unused-services'
+  - !cmd:
+    command: 'set "PATH=%windir%\AtlasModules\Scripts;%PATH%" && "AtlasDesktop\6. Advanced Configuration\Services\Network Discovery\Disable Network Discovery Services.cmd" /silent < nul'
+    exeDir: true
+    wait: true
+    runas: currentUserElevated
+    option: 'disable-unused-services'
+    # Search indexing needs TrustedInstaller (the script restarts itself through RunAsTI otherwise)
+  - !cmd:
+    command: 'set "PATH=%windir%\AtlasModules\Scripts;%PATH%" && "AtlasDesktop\3. General Configuration\Search Indexing\Disable Search Indexing.cmd" /silent < nul'
+    exeDir: true
+    wait: true
+    runas: trustedInstaller
+    option: 'disable-unused-services'

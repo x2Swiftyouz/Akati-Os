@@ -1,12 +1,26 @@
 ---
 title: Akati OS Extras
-description: Microsoft Store removal selected during setup, the Akati OS Windows Terminal color scheme and Akati OS Center shortcuts (Akati OS)
+description: Microsoft Store removal, notifications and Game Bar selected during setup, the Akati OS Windows Terminal color scheme and Akati OS Center shortcuts (Akati OS)
 actions:
   - !writeStatus: {status: 'Applying Akati OS extras'}
     # Remove the Microsoft Store (option, ticked by default). Get it back with Akati OS Center or "wsreset -i"
   - !writeStatus: {status: 'Removing Microsoft Store', option: 'remove-store'}
   - !taskKill: {name: 'WinStore.App', ignoreErrors: true, option: 'remove-store'}
   - !appx: {name: 'Microsoft.WindowsStore*', type: family, option: 'remove-store'}
+
+    # Notifications off (option, ticked by default): the "Get notifications from apps and other
+    # senders" switch in Settings > System > Notifications. Turn it on again there.
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\PushNotifications', value: 'ToastEnabled', data: '0', type: REG_DWORD, option: 'disable-notifications'}
+
+    # Xbox Game Bar off (option, ticked by default): the same user settings as the AtlasOS task
+    # tweaks\performance\disable-game-bar.yml, without its policies, so it can be turned on again in
+    # Settings > Gaming > Game Bar. Game Mode and fullscreen optimizations are not changed.
+  - !registryValue: {path: 'HKCU\System\GameConfigStore', value: 'GameDVR_Enabled', data: '0', type: REG_DWORD, option: 'disable-game-bar'}
+  - !registryValue: {path: 'HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\GameDVR', value: 'AppCaptureEnabled', data: '0', type: REG_DWORD, option: 'disable-game-bar'}
+  - !registryValue: {path: 'HKCU\SOFTWARE\Microsoft\GameBar', value: 'UseNexusForGameBarEnabled', data: '0', type: REG_DWORD, option: 'disable-game-bar'}
+  - !registryValue: {path: 'HKCU\SOFTWARE\Microsoft\GameBar', value: 'ShowStartupPanel', data: '0', type: REG_DWORD, option: 'disable-game-bar'}
+  - !registryValue: {path: 'HKCU\SOFTWARE\Microsoft\GameBar', value: 'GamePanelStartupTipIndex', data: '3', type: REG_DWORD, option: 'disable-game-bar'}
+
 
     # Windows Terminal color scheme and profile for all users (a Terminal "fragment")
   - !powerShell:

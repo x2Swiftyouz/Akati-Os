@@ -74,11 +74,32 @@ Akati OS does not install GPU drivers. **Akati OS Center > Gaming apps** has but
 
 **ภาษาไทย**: Akati OS ไม่ติดตั้งไดรเวอร์การ์ดจอให้ ในหน้าแอปเกมของ Akati OS Center มีปุ่มเปิดหน้าโหลดไดรเวอร์ NVIDIA, AMD และ Intel
 
-## Microsoft Store
+## Microsoft Store and unused services
 
 **Remove Microsoft Store** is ticked by default. Without the Store you cannot install Store apps, and the **Xbox app and Xbox Game Pass do not work**. Gaming apps from Akati OS still install, because they use WinGet. To get the Store back, open Akati OS Center > Tweaks and turn on **Microsoft Store**, or run `wsreset -i` as administrator.
 
 **ภาษาไทย**: "Remove Microsoft Store" ติ๊กไว้เป็นค่าเริ่มต้น ถ้าลบ Store จะติดตั้งแอปจาก Store ไม่ได้ และ**แอป Xbox กับ Game Pass จะใช้ไม่ได้** แอปเกมของ Akati OS ยังติดตั้งได้ตามปกติเพราะใช้ WinGet ถ้าต้องการ Store กลับมา เปิด Akati OS Center > ปรับแต่ง แล้วเปิดสวิตช์ Microsoft Store หรือรัน `wsreset -i` แบบผู้ดูแลระบบ
+
+**Turn off unused services** is ticked by default. It runs the unchanged AtlasOS scripts that turn off services most gaming PCs do not use, so fewer processes run in the background:
+
+| Service | Turn off if | Turn it on again |
+|---|---|---|
+| Printing (Print Spooler) | you have no printer | Akati OS Center > System settings > Printing > Enable |
+| Search indexing (Windows Search) | you rarely search inside files; Start search still finds apps and settings, file search is slower | System settings > Search indexing > Minimal or Enable |
+| SuperFetch (SysMain) | Windows is on an SSD | System settings > SysMain (Superfetch) > Enable |
+| Network discovery (SSDP, NetBIOS helper, function discovery) | you do not browse other PCs or printers on your home network | System settings > Network discovery > Enable |
+
+Untick it if you use a printer or share files between PCs at home. A restart (setup restarts at the end) applies the changes.
+
+**ภาษาไทย**: "Turn off unused services" ติ๊กไว้เป็นค่าเริ่มต้น จะรันสคริปต์เดิมของ AtlasOS เพื่อปิดบริการที่เครื่องเล่นเกมส่วนใหญ่ไม่ได้ใช้ ได้แก่ การพิมพ์ (Print Spooler), การทำดัชนีค้นหา (Windows Search; ช่องค้นหาใน Start ยังหาแอปและการตั้งค่าได้ แต่ค้นหาไฟล์ช้าลง), SuperFetch (SysMain) และการค้นหาเครื่องในเครือข่าย ถ้าใช้เครื่องพิมพ์หรือแชร์ไฟล์ในบ้านให้เอาติ๊กออก หรือเปิดกลับทีหลังได้ใน Akati OS Center > ตั้งค่าระบบ
+
+## Notifications and Game Bar
+
+**Turn off notifications** (ticked by default) turns off the "Get notifications from apps and other senders" switch, so no pop-ups appear while you play. Windows Security warnings and messages from Discord or Steam are not shown as pop-ups either. Turn it on again in Settings > System > Notifications.
+
+**Turn off Xbox Game Bar** (ticked by default) turns off Game Bar (Win+G) and its background clip recording, and the controller button that opens it. Game Mode and fullscreen optimizations stay as they are. Turn it on again in Settings > Gaming > Game Bar.
+
+**ภาษาไทย**: "Turn off notifications" (ติ๊กไว้) ปิดสวิตช์ "Get notifications from apps and other senders" จะไม่มีป๊อปอัปเด้งระหว่างเล่นเกม รวมถึงคำเตือนของ Windows Security และข้อความจาก Discord หรือ Steam ด้วย เปิดกลับได้ที่ Settings > System > Notifications ส่วน "Turn off Xbox Game Bar" (ติ๊กไว้) ปิด Game Bar (Win+G) การอัดคลิปเบื้องหลัง และปุ่มเปิดจากจอย ไม่แตะ Game Mode เปิดกลับได้ที่ Settings > Gaming > Game Bar
 
 ## Gaming tweaks
 

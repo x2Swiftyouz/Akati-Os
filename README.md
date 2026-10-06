@@ -31,7 +31,7 @@ Akati OS คือ playbook สำหรับ Windows 11 เน้นเล่�
 
 - All AtlasOS performance, privacy and debloat tweaks
 - Akati OS Dark, Light and Slideshow themes, wallpapers and lock screen (no AtlasOS logo)
-- No apps are installed during setup: install them when you want from Akati OS Center. Optional: remove the Microsoft Store
+- No apps are installed during setup: install them when you want from Akati OS Center. Optional (ticked by default): remove the Microsoft Store, turn off unused services (printing, search indexing, SuperFetch, network discovery), notifications and Xbox Game Bar
 - Visual C++ and DirectX runtimes are always installed (from AtlasOS)
 - **Akati OS Center** app, the one place for everything: install and update gaming apps (Steam, Epic Games Launcher, EA app, Ubisoft Connect, Battle.net, Discord, OBS Studio), GPU driver links, **Game boost** (one-click Game Mode, ping test, startup apps), gaming tweaks, cleaner, themes, accent colors, wallpapers, Akati OS cursor and sounds, live CPU/RAM/GPU usage, problem report, update check and **System settings** with every AtlasOS setting in English and Thai (no Atlas folder shortcut)
 - Akati OS Slideshow theme and a Windows Terminal color scheme
@@ -43,7 +43,7 @@ Akati OS คือ playbook สำหรับ Windows 11 เน้นเล่�
 2. Download the `.apbx` for your Windows version and `SHA256SUMS.txt` from [Releases](../../releases/latest).
 3. Check the hash in PowerShell. The value must match the line for your file in `SHA256SUMS.txt`:
    ```powershell
-   (Get-FileHash .\AkatiOS_v1.4.0.apbx -Algorithm SHA256).Hash.ToLower()
+   (Get-FileHash .\AkatiOS_v1.4.1.apbx -Algorithm SHA256).Hash.ToLower()
    Get-Content .\SHA256SUMS.txt
    ```
 4. Open AME Wizard and drag the `.apbx` file into it.
@@ -81,8 +81,8 @@ Every push also builds the playbook on GitHub Actions. The `.apbx` is under **Ar
 2. Run the checklist in [docs/TESTING.md](docs/TESTING.md).
 3. Merge to `main`, then tag and push:
    ```
-   git tag v1.4.0
-   git push origin v1.4.0
+   git tag v1.4.1
+   git push origin v1.4.1
    ```
    Or without git: Actions > Build playbook > Run workflow, branch `main`, tick **Publish release**.
 4. GitHub Actions checks the versions, builds both `.apbx` files and publishes the release with `SHA256SUMS.txt`. Release notes come from `src/CHANGELOG.md`.

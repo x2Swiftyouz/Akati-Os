@@ -95,7 +95,7 @@ Setup installs no gaming apps. `GAMEAPPS.ps1` runs only when the user clicks Ins
 | Rockstar Games Launcher | `RockstarGames.Launcher` | none |
 | MSI Afterburner | `Guru3D.Afterburner` | none |
 
-Discord is never installed silently (no WinGet, no `-s`): after a silent install its first start quits without moving the install to its new updater, and every later start fails with "Attempt to install host that is currently running". `GAMEAPPS.ps1` writes a log to `%LOCALAPPDATA%\AkatiOS\Logs\GAMEAPPS-<app>.log`. `GAMEAPPS.ps1` still has `-AtSignIn` (a scheduled task that installs an app as the user after the next sign-in), which setup no longer uses. When `GAMEAPPS.ps1` runs elevated (from Akati OS Center), it installs Discord through a one-time scheduled task `AkatiOS Install Discord` that runs the same script as the signed-in user with limited rights, waits for it and deletes the task.
+Discord is never installed silently (no WinGet, no `-s`): after a silent install its first start quits without moving the install to its new updater, and every later start fails with "Attempt to install host that is currently running". `GAMEAPPS.ps1` writes a log to `%LOCALAPPDATA%\AkatiOS\Logs\GAMEAPPS-<app>.log` (`GAMEAPPS-<app>-user.log` when it runs without admin rights, for example the user part of the Discord install). `GAMEAPPS.ps1` still has `-AtSignIn` (a scheduled task that installs an app as the user after the next sign-in), which setup no longer uses. When `GAMEAPPS.ps1` runs elevated (from Akati OS Center), it installs Discord through a one-time scheduled task `AkatiOS Install Discord` that runs the same script as the signed-in user with limited rights, waits for it and deletes the task.
 
 ## What Akati OS Center does
 

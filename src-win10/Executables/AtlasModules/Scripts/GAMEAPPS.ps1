@@ -15,7 +15,11 @@ param (
 try {
     $logDir = Join-Path $env:LOCALAPPDATA 'AkatiOS\Logs'
     New-Item -ItemType Directory -Path $logDir -Force | Out-Null
-    Start-Transcript -Path (Join-Path $logDir "GAMEAPPS-$App.log") -Append | Out-Null
+    # Not elevated (the user part of the Discord install, started by the elevated run): its own log, because
+    # the elevated run keeps GAMEAPPS-<App>.log open while it waits
+    $elevated = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+    $logName = if ($elevated) { "GAMEAPPS-$App.log" } else { "GAMEAPPS-$App-user.log" }
+    Start-Transcript -Path (Join-Path $logDir $logName) -Append | Out-Null
 } catch {}
 
 $apps = @{
@@ -192,8 +196,9 @@ function Wait-DiscordSetup {
     $deadline = (Get-Date).AddMinutes(5)
     do {
         Start-Sleep -Seconds 3
-        $busy = Get-Process -Name 'Update', 'DiscordSetup' -ErrorAction SilentlyContinue |
-            Where-Object { $_.Name -eq 'DiscordSetup' -or $_.Path -like "$env:LOCALAPPDATA\Discord\*" -or $_.Path -like "$env:LOCALAPPDATA\SquirrelTemp\*" }
+        # Discord-Setup: the installer as this script saves it; DiscordSetup: its name from discord.com
+        $busy = Get-Process -Name 'Update', 'DiscordSetup', 'Discord-Setup' -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -like 'Discord*Setup' -or $_.Path -like "$env:LOCALAPPDATA\Discord\*" -or $_.Path -like "$env:LOCALAPPDATA\SquirrelTemp\*" }
     } while ((!(Test-Installed) -or $busy) -and (Get-Date) -lt $deadline)
     # Give Discord a moment to create its shortcuts
     Start-Sleep -Seconds 10

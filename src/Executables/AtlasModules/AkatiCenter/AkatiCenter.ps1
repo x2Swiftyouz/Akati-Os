@@ -1022,7 +1022,7 @@ function Stop-AppJob($app) {
         # Discord installs through a scheduled task as the signed-in user
         Stop-ScheduledTask -TaskName 'AkatiOS Install Discord' -ErrorAction SilentlyContinue
         Unregister-ScheduledTask -TaskName 'AkatiOS Install Discord' -Confirm:$false -ErrorAction SilentlyContinue
-        Get-Process -Name 'DiscordSetup' -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+        Get-Process -Name 'DiscordSetup', 'Discord-Setup' -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
     }
 }
 

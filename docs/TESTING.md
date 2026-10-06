@@ -182,7 +182,7 @@ Get-CimInstance -Namespace root\Microsoft\Windows\DeviceGuard -ClassName Win32_D
 - [ ] การ์ดไดรเวอร์การ์ดจอ (เครื่องจริงเท่านั้น): บอกเวอร์ชันและวันที่ของไดรเวอร์ ถ้าเก่ากว่า 6 เดือนเป็นตัวสีส้ม
 - [ ] ข้อความล่างสุดของหน้าต่างกลับเป็น "พร้อมใช้งาน" เมื่อเปลี่ยนหน้า (ยกเว้นงานที่ยังทำอยู่ เช่น กำลังติดตั้ง)
 - [ ] กดติดตั้ง Discord: มีหน้าต่างเล็กของ Discord ขึ้น แล้ว Discord เปิดถึงหน้าล็อกอิน Quit แล้วเปิดใหม่จาก Desktop ต้อง**ไม่มี** error "Attempt to install host that is currently running"
-- [ ] Discord ติดตั้งให้ user ที่ใช้อยู่ (`%LOCALAPPDATA%\Discord`) ไม่ไปอยู่ในโปรไฟล์ admin อื่น ถ้าไม่ผ่านดู log ที่ `%LOCALAPPDATA%\AkatiOS\Logs\GAMEAPPS-Discord.log`
+- [ ] Discord ติดตั้งให้ user ที่ใช้อยู่ (`%LOCALAPPDATA%\Discord`) ไม่ไปอยู่ในโปรไฟล์ admin อื่น ถ้าไม่ผ่านดู log ที่ `%LOCALAPPDATA%\AkatiOS\Logs\GAMEAPPS-Discord.log` และ `GAMEAPPS-Discord-user.log` (ส่วนที่ติดตั้งในบัญชีผู้ใช้)
 - [ ] รอบ B: ติดตั้งครบทุกตัว (Epic, EA, Ubisoft, Battle.net ใน `C:\Program Files\Battle.net`, OBS) และเปิดได้
 - [ ] หน้า "Remove Microsoft Store" ติ๊กไว้เป็นค่าเริ่มต้น หลังติดตั้ง Microsoft Store ต้องไม่มีใน Start menu และ taskbar แต่แอปเกมยังติดตั้งจาก Center ได้
 - [ ] "Turn off unused services" (ติ๊กไว้): หลังรีสตาร์ต `Get-Service Spooler, WSearch, SysMain, SSDPSRV | Select Name, Status, StartType` ต้องเป็น Stopped / Disabled ทั้งหมด และช่องค้นหาใน Start ยังหาแอปเจอ

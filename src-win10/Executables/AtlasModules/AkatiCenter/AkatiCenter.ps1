@@ -18,6 +18,9 @@ param (
 )
 
 $ErrorActionPreference = 'Stop'
+# Startup timing: printed in screenshot mode (CI), to see which part makes the window slow to open
+$script:clock = [Diagnostics.Stopwatch]::StartNew(); $script:marks = New-Object System.Collections.ArrayList
+function Add-Mark([string]$name) { [void]$script:marks.Add(('{0,6} ms  {1}' -f $script:clock.ElapsedMilliseconds, $name)) }
 Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase
 
 # ---------------------------------------------------------------------------------------------
@@ -404,6 +407,7 @@ function T([string]$key) {
 # ---------------------------------------------------------------------------------------------
 # Window
 # ---------------------------------------------------------------------------------------------
+Add-Mark 'Window'
 [xml]$xaml = Get-Content -LiteralPath (Join-Path $appDir 'AkatiCenter.xaml') -Raw -Encoding UTF8
 $window = [Windows.Markup.XamlReader]::Load((New-Object System.Xml.XmlNodeReader $xaml))
 $ui = @{}
@@ -461,6 +465,7 @@ function Set-Status([string]$text, [bool]$busy = $false) {
 # ---------------------------------------------------------------------------------------------
 # Background work: runs a script block in another runspace, then calls back on the UI thread
 # ---------------------------------------------------------------------------------------------
+Add-Mark 'Background work'
 $script:jobs = New-Object System.Collections.ArrayList
 # $done is called as: & $done <output of $work> <$context>
 function Start-Work([scriptblock]$work, [object[]]$arguments, [scriptblock]$done, $context) {
@@ -493,6 +498,7 @@ function Receive-Work {
 # ---------------------------------------------------------------------------------------------
 # Dashboard: system info and live usage
 # ---------------------------------------------------------------------------------------------
+Add-Mark 'Dashboard'
 function Format-Size([double]$bytes) {
     if ($bytes -ge 1GB) { return '{0:N1} GB' -f ($bytes / 1GB) }
     if ($bytes -ge 1MB) { return '{0:N0} MB' -f ($bytes / 1MB) }
@@ -790,6 +796,7 @@ function Update-DesktopMenu {
 # ---------------------------------------------------------------------------------------------
 # Gaming apps
 # ---------------------------------------------------------------------------------------------
+Add-Mark 'Gaming apps'
 # Id: WinGet package (used for updates). SelfUpdate: the app updates itself. Exe: where its icon comes from.
 # Cat: section on the page (an installed app moves to "Installed" at the top). Source: where the installer
 # comes from (WinGet, or the official site for Discord and Riot). Mono and Color: the tile shown until the app is installed (then its own icon).
@@ -1413,6 +1420,7 @@ namespace AkatiOS {
 # Game boost: one click before playing, and back again afterwards. What was changed is saved in the
 # registry, so Stop still works after Akati OS Center or Windows was restarted.
 # ---------------------------------------------------------------------------------------------
+Add-Mark 'Game boost'
 $boostKey = 'HKCU:\Software\AkatiOS\Center\Boost'
 $toastKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\PushNotifications'
 # Background apps that are safe to close while playing (never game launchers or browsers)
@@ -1688,6 +1696,7 @@ Update-Separators $ui.PingList
 # ---------------------------------------------------------------------------------------------
 # Tweaks (each one reads the real state of the PC)
 # ---------------------------------------------------------------------------------------------
+Add-Mark 'Tweaks'
 function Invoke-AtlasScript([string]$relative, [string]$pattern) {
     $file = Get-ChildItem -Path (Join-Path $desktop $relative) -Filter $pattern -ErrorAction SilentlyContinue | Select-Object -First 1
     if ($file) { Start-Process cmd.exe -ArgumentList "/c `"`"$($file.FullName)`" /silent`"" -WindowStyle Hidden -Wait }
@@ -1975,6 +1984,7 @@ foreach ($list in $tweakLists.Values) { Update-Separators $list }
 #   Skip Defender: Defender exclusion for the game folder
 # The list itself is kept in HKCU\Software\AkatiOS\Center\Games. Removing a game undoes all three.
 # ---------------------------------------------------------------------------------------------
+Add-Mark 'Game boost > My games'
 $gamesKey = 'HKCU:\Software\AkatiOS\Center\Games'
 $ifeoKey = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options'
 function Get-GameOption([string]$path, [string]$kind, $exclusions) {
@@ -2061,6 +2071,7 @@ Show-Games
 # ---------------------------------------------------------------------------------------------
 # Cleaner
 # ---------------------------------------------------------------------------------------------
+Add-Mark 'Cleaner'
 # Folders: their contents are deleted (wildcards allowed). Files: these files are deleted.
 # Only caches, logs and temporary files: nothing that holds settings, saves, passwords or cookies.
 # Off = not ticked at first (cleaning them makes the next start of a game or browser slower).
@@ -2178,6 +2189,7 @@ $ui.QuickClean.Add_Click({ $ui.NavCleaner.IsChecked = $true; Start-Scan { Start-
 # ---------------------------------------------------------------------------------------------
 # Appearance
 # ---------------------------------------------------------------------------------------------
+Add-Mark 'Appearance'
 $themes = @(
     @{ Key = 'dark';      File = 'akatios-dark.theme';      Image = 'akatios-dark.png' }
     @{ Key = 'light';     File = 'akatios-light.theme';     Image = 'akatios-light.png' }
@@ -2418,6 +2430,7 @@ $ui.SoundPreview.Add_Click({
 # ---------------------------------------------------------------------------------------------
 # Updates and links
 # ---------------------------------------------------------------------------------------------
+Add-Mark 'Updates and links'
 $script:releaseUrl = "https://github.com/$repo/releases"
 function Start-UpdateCheck {
     Set-Status (T 'status.checking') $true
@@ -2489,6 +2502,7 @@ $ui.LinkAtlas.Add_Click({ Start-Process 'https://github.com/Atlas-OS/Atlas' })
 # nothing has to be copied and new AtlasOS settings show up by themselves. A folder with files is one
 # row, each file is one button.
 # ---------------------------------------------------------------------------------------------
+Add-Mark 'System settings'
 # Names and short explanations of the AtlasOS folders: English name, Thai name, English text, Thai text
 $atlasInfo = @{
     'Drivers from Windows Update' = @('Drivers from Windows Update', 'ไดรเวอร์จาก Windows Update', 'Let Windows Update install drivers.', 'ให้ Windows Update ติดตั้งไดรเวอร์เอง')
@@ -2767,6 +2781,7 @@ Show-SystemList
 # ---------------------------------------------------------------------------------------------
 # Problem report: one zip on the desktop with the Akati OS logs and PC details
 # ---------------------------------------------------------------------------------------------
+Add-Mark 'Problem report'
 $ui.IssuesButton.Add_Click({ Start-Process "https://github.com/$repo/issues" })
 $ui.ReportButton.Add_Click({
     $this.IsEnabled = $false
@@ -2819,6 +2834,7 @@ $ui.ReportButton.Add_Click({
 # ---------------------------------------------------------------------------------------------
 # Navigation, title bar, language
 # ---------------------------------------------------------------------------------------------
+Add-Mark 'Navigation, title bar, language'
 $pages = 'dashboard', 'gaming', 'boost', 'tweaks', 'cleaner', 'appearance', 'about'
 $script:page = 'dashboard'
 function Get-PageId([string]$p) { [Globalization.CultureInfo]::InvariantCulture.TextInfo.ToTitleCase($p) }
@@ -2978,7 +2994,10 @@ Request-MenuUpdate
 # ---------------------------------------------------------------------------------------------
 # Screenshot mode (CI): render every page in both languages to PNG and exit
 # ---------------------------------------------------------------------------------------------
+Add-Mark 'Screenshot mode'
 if ($Screenshot) {
+    Add-Mark 'Ready (before screenshots)'
+    Write-Host 'Startup timing:'; $script:marks | ForEach-Object { Write-Host "  $_" }
     New-Item -ItemType Directory -Path $Screenshot -Force | Out-Null
     $stats.Run = $false
     & $statsSample $stats
@@ -3058,6 +3077,7 @@ if ($Screenshot) {
 # ---------------------------------------------------------------------------------------------
 # Run
 # ---------------------------------------------------------------------------------------------
+Add-Mark 'Run'
 # Windows 11: Mica, the see-through backdrop of Windows 11 apps, with rounded corners drawn by Windows.
 # The window is then a normal (not layered) window and DWM draws the backdrop behind the glass frame.
 # If Windows refuses the backdrop, the window keeps its solid background.

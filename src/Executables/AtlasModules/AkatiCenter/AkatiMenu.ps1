@@ -86,25 +86,25 @@ function Build-Menu {
     $boostOn = [bool](Get-ItemProperty -Path "$userKey\Boost" -Name Active -ErrorAction SilentlyContinue).Active
     $centerCmd = New-PsCommand "-File `"$center`""
     $menuCmd = New-PsCommand "-File `"$PSCommandPath`""
-    # Name, text, command, icon, separator before
+    # Separator: a line before the item
     $items = @(
-        @('01freeram',  (T 'freeram'),  "$menuCmd -Action freeram",  $null, $false)
-        @('02center',   (T 'center'),   $centerCmd,                  $icon, $false)
-        @('03apps',     (T 'apps'),     $null,                       $null, $false)
-        @('04boost',    $(if ($boostOn) { T 'boostOn' } else { T 'boostOff' }), "$menuCmd -Action boost", $null, $true)
-        @('05clean',    (T 'clean'),    "$centerCmd -Page cleaner",  $null, $false)
-        @('06ping',     (T 'ping'),     "$centerCmd -Page boost -Ping", $null, $false)
-        @('07flushdns', (T 'flushdns'), "$menuCmd -Action flushdns", $null, $true)
-        @('08explorer', (T 'explorer'), "$menuCmd -Action explorer", $null, $false)
-        @('09bios',     (T 'bios'),     "$menuCmd -Action bios",     $null, $true)
+        @{ Name = '01freeram'; Text = (T 'freeram'); Command = "$menuCmd -Action freeram"; Icon = $null; Separator = $false }
+        @{ Name = '02center'; Text = (T 'center'); Command = $centerCmd; Icon = $icon; Separator = $false }
+        @{ Name = '03apps'; Text = (T 'apps'); Command = $null; Icon = $null; Separator = $false }
+        @{ Name = '04boost'; Text = $(if ($boostOn) { T 'boostOn' } else { T 'boostOff' }); Command = "$menuCmd -Action boost"; Icon = $null; Separator = $true }
+        @{ Name = '05clean'; Text = (T 'clean'); Command = "$centerCmd -Page cleaner"; Icon = $null; Separator = $false }
+        @{ Name = '06ping'; Text = (T 'ping'); Command = "$centerCmd -Page boost -Ping"; Icon = $null; Separator = $false }
+        @{ Name = '07flushdns'; Text = (T 'flushdns'); Command = "$menuCmd -Action flushdns"; Icon = $null; Separator = $true }
+        @{ Name = '08explorer'; Text = (T 'explorer'); Command = "$menuCmd -Action explorer"; Icon = $null; Separator = $false }
+        @{ Name = '09bios'; Text = (T 'bios'); Command = "$menuCmd -Action bios"; Icon = $null; Separator = $true }
     )
     foreach ($i in $items) {
-        $key = "$menuKey\shell\$($i[0])"
+        $key = "$menuKey\shell\$($i.Name)"
         New-Item -Path $key -Force | Out-Null
-        Set-ItemProperty -Path $key -Name MUIVerb -Value $i[1]
-        if ($i[3]) { Set-ItemProperty -Path $key -Name Icon -Value $i[3] }
-        if ($i[4]) { Set-ItemProperty -Path $key -Name CommandFlags -Value 0x20 -Type DWord }   # separator before
-        if ($i[2]) { New-Item -Path "$key\command" -Force | Out-Null; Set-ItemProperty -Path "$key\command" -Name '(default)' -Value $i[2] }
+        Set-ItemProperty -Path $key -Name MUIVerb -Value $i.Text
+        if ($i.Icon) { Set-ItemProperty -Path $key -Name Icon -Value $i.Icon }
+        if ($i.Separator) { Set-ItemProperty -Path $key -Name CommandFlags -Value 0x20 -Type DWord }   # separator before
+        if ($i.Command) { New-Item -Path "$key\command" -Force | Out-Null; Set-ItemProperty -Path "$key\command" -Name '(default)' -Value $i.Command }
     }
     # My apps: installed gaming apps (saved by Akati OS Center as "name|command|icon") and My games
     $apps = "$menuKey\shell\03apps"
@@ -164,7 +164,11 @@ function Get-StandbyBytes {
     } catch { 0 }
 }
 
-if ($Install) { Build-Menu; Register-MenuTask; exit 0 }
+if ($Install) {
+    $ErrorActionPreference = 'Stop'
+    try { Build-Menu; Register-MenuTask } catch { Write-Host "Akati OS menu: $($_.Exception.Message)"; exit 1 }
+    exit 0
+}
 if ($Remove) {
     Remove-Item -Path $menuKey -Recurse -Force -ErrorAction SilentlyContinue
     Unregister-ScheduledTask -TaskPath $taskPath -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue

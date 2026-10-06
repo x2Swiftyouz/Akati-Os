@@ -34,7 +34,7 @@ W11 = Windows 11 playbook, W10 = Windows 10 playbook.
 |---|---|---|
 | `playbook.conf` | W11, W10 | Name (`AkatiOS` / `AkatiOS10`), title, version, own UniqueId, descriptions, own Git and install guide links, AtlasOS website/donate/Git links removed, "Learn more" links point to [OPTIONS.md](OPTIONS.md); `IsChecked` defaults; anti-cheat warnings; Remove Microsoft Store page (no gaming app pages: apps are installed from Akati OS Center). W11: `UpgradableFrom` removed, build 26300 added, OOBE text. W10: build 19045 only, Windows 10 end of support warning |
 | `playbook.png`, `Executables/user.png` | W11, W10 | Akati OS images |
-| `Configuration/custom.yml` | W11, W10 | Runs `tweaks\misc\akati-extras.yml` after `atlas\start.yml`. W11: one status text |
+| `Configuration/custom.yml` | W11, W10 | Runs `tweaks\misc\akati-extras.yml` after `atlas\start.yml`, and `tweaks\misc\akati-services.yml` after all other tasks. W11: one status text |
 | `Configuration/atlas/start.yml` | W11 | One status text |
 | `Configuration/tweaks/misc/config-oem-information.yml` | W11, W10 | Shows "Akati OS" version, AtlasOS support links removed, writes the version to `HKLM\SOFTWARE\AkatiOS` (used by the update checker) |
 | `Configuration/tweaks/qol/appearance/atlas-theme.yml` | W11, W10 | Default theme is `akatios-dark.theme` |
@@ -51,7 +51,8 @@ The AtlasOS wallpapers and themes are removed, so the Atlas logo is not used: `E
 
 | File | Purpose |
 |---|---|
-| `Configuration/tweaks/misc/akati-extras.yml` | Microsoft Store removal (option `remove-store`, `!appx` family `Microsoft.WindowsStore*`), unused services (option `disable-unused-services`: runs the unchanged AtlasOS scripts Disable Printing, Disable SuperFetch, Disable Network Discovery Services with `/silent` and Disable Search Indexing as TrustedInstaller, input from `nul` because some end with `pause`), the Windows Terminal color scheme and the Akati OS Center shortcuts |
+| `Configuration/tweaks/misc/akati-services.yml` | Unused services (option `disable-unused-services`), run as the last task of `custom.yml` because `atlas\services.yml` turns minimal search indexing back on: the unchanged AtlasOS scripts Disable Printing, Disable SuperFetch, Disable Network Discovery Services (`/silent`) and Disable Search Indexing (as TrustedInstaller), input from `nul` because some end with `pause` |
+| `Configuration/tweaks/misc/akati-extras.yml` | Microsoft Store removal (option `remove-store`, `!appx` family `Microsoft.WindowsStore*`), the Windows Terminal color scheme and the Akati OS Center shortcuts |
 | `Executables/AtlasModules/Scripts/GAMEAPPS.ps1` | Installs one gaming app when the user clicks Install in Akati OS Center (see below) |
 | `Executables/AtlasModules/Other/AkatiOS/terminal-fragment.json` | Windows Terminal color scheme and profile, copied to `%ProgramData%\Microsoft\Windows Terminal\Fragments\AkatiOS` |
 | `Executables/AtlasModules/AkatiCenter/` | Akati OS Center app: `AkatiCenter.ps1` (PowerShell + WPF), `AkatiCenter.xaml` (window layout), `logo.png`. Shortcuts are created by `akati-extras.yml` |

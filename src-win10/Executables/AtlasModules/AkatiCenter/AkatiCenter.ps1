@@ -1166,7 +1166,7 @@ namespace AkatiOS {
     }
 }
 '@
-
+
 # ---------------------------------------------------------------------------------------------
 # Game boost: one click before playing, and back again afterwards. What was changed is saved in the
 # registry, so Stop still works after Akati OS Center or Windows was restarted.

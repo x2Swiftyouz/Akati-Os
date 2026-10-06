@@ -62,7 +62,7 @@ $strings = @{
         'chip.defender.on' = 'Defender on'; 'chip.defender.off' = 'Defender off'; 'chip.uptime' = 'Up {0}'
         'disk.title' = 'Storage'; 'disk.free' = '{0} free of {1}'; 'disk.local' = 'Local Disk'
         'net.title' = 'Network'; 'net.down' = 'DOWNLOAD'; 'net.up' = 'UPLOAD'; 'net.ping' = 'PING (SG)'
-        'top.title' = 'Using the most CPU'; 'top.end' = 'Quit'; 'top.confirm' = 'Quit {0}? Unsaved work in it is lost.'
+        'top.title' = 'Busiest apps'; 'top.ram' = 'Memory'; 'top.self' = 'Akati OS Center'; 'disk.clean' = 'Free up space'; 'top.end' = 'Quit'; 'top.confirm' = 'Quit {0}? Unsaved work in it is lost.'
         'status.ended' = '{0} was closed'
         'quick.boost' = 'Game boost'; 'quick.boost.d' = 'Start or stop it here'
         'quick.clean' = 'Clean temp files'; 'quick.clean.d' = 'Free up disk space'
@@ -97,7 +97,7 @@ $strings = @{
         'status.theme' = 'Theme applied: {0}'
         'status.checking' = 'Checking for updates...'
         'update.latest' = 'You have the latest version ({0}).'
-        'update.ahead' = 'Your version is newer than the latest release ({0}): test build.'
+        'update.ahead' = 'Test build · latest release {0}'
         'update.new' = 'New version available: {0}. A new version needs a fresh Windows install.'
         'update.error' = 'Could not reach GitHub.'
         'update.open' = 'Open release page'
@@ -207,7 +207,7 @@ $strings = @{
         'chip.defender.on' = 'Defender เปิดอยู่'; 'chip.defender.off' = 'Defender ปิดอยู่'; 'chip.uptime' = 'เปิดเครื่องมา {0}'
         'disk.title' = 'พื้นที่เก็บข้อมูล'; 'disk.free' = 'ว่าง {0} จาก {1}'; 'disk.local' = 'ดิสก์ในเครื่อง'
         'net.title' = 'เครือข่าย'; 'net.down' = 'ดาวน์โหลด'; 'net.up' = 'อัปโหลด'; 'net.ping' = 'ปิง (สิงคโปร์)'
-        'top.title' = 'แอปที่ใช้ CPU มากที่สุด'; 'top.end' = 'ปิด'; 'top.confirm' = 'ปิด {0} ใช่ไหม งานที่ยังไม่ได้บันทึกในแอปนี้จะหายไป'
+        'top.title' = 'แอปที่ใช้ทรัพยากรมากที่สุด'; 'top.ram' = 'หน่วยความจำ'; 'top.self' = 'Akati OS Center'; 'disk.clean' = 'ล้างพื้นที่'; 'top.end' = 'ปิด'; 'top.confirm' = 'ปิด {0} ใช่ไหม งานที่ยังไม่ได้บันทึกในแอปนี้จะหายไป'
         'status.ended' = 'ปิด {0} แล้ว'
         'quick.boost' = 'บูสต์เกม'; 'quick.boost.d' = 'เปิดหรือปิดได้ที่นี่'
         'quick.clean' = 'ล้างไฟล์ชั่วคราว'; 'quick.clean.d' = 'เพิ่มพื้นที่ดิสก์'
@@ -242,7 +242,7 @@ $strings = @{
         'status.theme' = 'เปลี่ยนธีมเป็น {0} แล้ว'
         'status.checking' = 'กำลังตรวจอัปเดต...'
         'update.latest' = 'ใช้เวอร์ชันล่าสุดอยู่แล้ว ({0})'
-        'update.ahead' = 'เวอร์ชันในเครื่องใหม่กว่า release ล่าสุด ({0}) เป็นตัวทดสอบ'
+        'update.ahead' = 'ตัวทดสอบ · release ล่าสุด {0}'
         'update.new' = 'มีเวอร์ชันใหม่: {0} ต้องลง Windows ใหม่พร้อมไฟล์ .apbx ตัวใหม่'
         'update.error' = 'เชื่อมต่อ GitHub ไม่ได้'
         'update.open' = 'เปิดหน้า release'
@@ -489,6 +489,13 @@ function Show-Disks {
         $bar.Style = $window.FindResource('Meter'); $bar.Margin = '0,6,0,0'; $bar.Value = $used
         if ($used -ge 90) { $bar.Foreground = '#FF453A' }
         [void]$row.Children.Add($top); [void]$row.Children.Add($bar)
+        # Less than 15% free: a shortcut to the Cleaner
+        if ($d.FreeSpace / $d.Size -lt 0.15) {
+            $clean = New-Object System.Windows.Controls.Button
+            $clean.Style = $window.FindResource('Pill'); $clean.Content = T 'disk.clean'; $clean.HorizontalAlignment = 'Left'; $clean.Margin = '0,8,0,0'
+            $clean.Add_Click({ $ui.NavCleaner.IsChecked = $true })
+            [void]$row.Children.Add($clean)
+        }
         [void]$ui.DisksPanel.Children.Add($row)
     }
 }
@@ -530,11 +537,15 @@ $statsSample = {
                            Cpu = [double]($_.Group | Measure-Object -Property PercentProcessorTime -Sum).Sum
                            Ram = [double]($_.Group | Measure-Object -Property WorkingSetPrivate -Sum).Sum }
                     }
-                $stats.Top = @($groups | Sort-Object { $_.Cpu }, { $_.Ram } -Descending | Select-Object -First 5 | ForEach-Object {
-                    $_.Cpu = [Math]::Round($_.Cpu / $cores, 1)
-                    $_.Path = try { (Get-Process -Id $_.Pids[0] -ErrorAction Stop).Path } catch { $null }
-                    $_
-                })
+                foreach ($g in $groups) { $g.Cpu = [Math]::Round($g.Cpu / $cores, 1) }
+                # Two lists: by CPU and by memory (the page shows one of them)
+                $byCpu = @($groups | Sort-Object { $_.Cpu }, { $_.Ram } -Descending | Select-Object -First 5)
+                $byRam = @($groups | Sort-Object { $_.Ram } -Descending | Select-Object -First 5)
+                foreach ($g in @($byCpu + $byRam)) {
+                    if (!$g.ContainsKey('Path')) { $g.Path = try { (Get-Process -Id $g.Pids[0] -ErrorAction Stop).Path } catch { $null } }
+                }
+                $stats.TopRam = $byRam
+                $stats.Top = $byCpu
                 $stats.TopSeq++
             } catch { }
         }
@@ -585,6 +596,13 @@ function Update-Stats {
     $ui.RamValue.Text = "$($stats.Ram)%"; $ui.RamBar.Value = $stats.Ram
     if ($stats.RamTotal) { $ui.RamDetail.Text = '{0} / {1}' -f (Format-Size $stats.RamUsed), (Format-Size $stats.RamTotal) }
     if ($stats.Gpu -ge 0) { $ui.GpuValue.Text = "$($stats.Gpu)%"; $ui.GpuBar.Value = $stats.Gpu } else { $ui.GpuValue.Text = '-'; $ui.GpuBar.Value = 0 }
+    Set-Level $ui.CpuValue $ui.CpuBar $stats.Cpu
+    Set-Level $ui.RamValue $ui.RamBar $stats.Ram
+    Set-Level $ui.GpuValue $ui.GpuBar ([Math]::Max(0, $stats.Gpu))
+    # No graphics card that Windows reports usage for (virtual machines): CPU and RAM share the row
+    $gpuShown = $stats.Gpu -ge 0 -and @($gpuNames).Count -gt 0
+    $ui.GpuCard.Visibility = if ($gpuShown) { 'Visible' } else { 'Collapsed' }
+    $ui.UsageGrid.Columns = if ($gpuShown) { 3 } else { 2 }
     if ($stats.Seq -ne $script:lastSeq) {
         $script:lastSeq = $stats.Seq
         Update-Spark 'Cpu' $stats.Cpu; Update-Spark 'Ram' $stats.Ram; Update-Spark 'Gpu' ([Math]::Max(0, $stats.Gpu))
@@ -598,6 +616,13 @@ function Update-Stats {
     if ($stats.TopSeq -ne $script:lastTopSeq -and $stats.Top) { $script:lastTopSeq = $stats.TopSeq; Show-TopApps }
     Update-Clock
     if ((Get-Date) -gt $script:chipsAt) { $script:chipsAt = (Get-Date).AddSeconds(10); Update-Chips }
+}
+
+# Orange from 85%, red from 95% (the number and the bar)
+function Set-Level($text, $bar, [double]$value) {
+    $color = if ($value -ge 95) { '#FF453A' } elseif ($value -ge 85) { '#FF9F0A' } else { $null }
+    if ($color) { $text.Foreground = $color; $bar.Foreground = $color }
+    else { $text.ClearValue([System.Windows.Controls.TextBlock]::ForegroundProperty); $bar.ClearValue([System.Windows.Controls.Control]::ForegroundProperty) }
 }
 
 # Greeting and clock like macOS
@@ -643,7 +668,8 @@ $protected = 'csrss', 'wininit', 'winlogon', 'services', 'lsass', 'smss', 'svcho
 $script:iconCache = @{}
 function Show-TopApps {
     $ui.TopList.Children.Clear()
-    foreach ($p in @($stats.Top)) {
+    $list = if ($ui.TopByRam.IsChecked) { $stats.TopRam } else { $stats.Top }
+    foreach ($p in @($list)) {
         if (!$p) { continue }
         $right = New-Object System.Windows.Controls.StackPanel; $right.Orientation = 'Horizontal'
         $cpu = New-Text ('{0:N1}%' -f $p.Cpu) 13 'SemiBold'; $cpu.MinWidth = 60; $cpu.TextAlignment = 'Right'; $cpu.VerticalAlignment = 'Center'
@@ -664,10 +690,15 @@ function Show-TopApps {
             $spacer = New-Object System.Windows.Controls.Border; $spacer.Width = 76
             [void]$right.Children.Add($spacer)
         }
-        $label = if ($p.Pids.Count -gt 1) { '{0} ({1})' -f $p.Name, $p.Pids.Count } else { $p.Name }
+        # This window runs in powershell.exe: show it by its own name and logo
+        $self = $p.Pids -contains $stats.Self
+        $label = if ($self) { T 'top.self' } elseif ($p.Pids.Count -gt 1) { '{0} ({1})' -f $p.Name, $p.Pids.Count } else { $p.Name }
         $row = New-Row ([string][char]0xE7C4) $label $null $right $null
         $row.Sub.Visibility = 'Collapsed'
-        if ($p.Path) {
+        if ($self) {
+            if (!$script:selfIcon) { $script:selfIcon = Get-Image $logoPath 64 }
+            Set-RowIcon $row $script:selfIcon
+        } elseif ($p.Path) {
             if (!$script:iconCache.ContainsKey($p.Path)) { $script:iconCache[$p.Path] = Get-FileIcon @($p.Path) }
             Set-RowIcon $row $script:iconCache[$p.Path]
         }
@@ -675,6 +706,9 @@ function Show-TopApps {
     }
     Update-Separators $ui.TopList
 }
+
+$ui.TopByCpu.Add_Checked({ Show-TopApps })
+$ui.TopByRam.Add_Checked({ Show-TopApps })
 
 # ---------------------------------------------------------------------------------------------
 # Gaming apps
@@ -840,6 +874,8 @@ function Update-AppRow($app) {
     $installed = Test-App $app
     $btn = $app.Button
     $busy = $app.State -ne 'idle'
+    # Version and size are read again after an install or uninstall
+    if ($installed -ne $app.WasInstalled) { $app.Details = $null; $app.WasInstalled = $installed }
     # An app being installed stays in its section until it is done
     $app.IsInstalled = $installed -and $app.State -notin 'install', 'queued'
     Update-AppGroups
@@ -864,7 +900,11 @@ function Update-AppRow($app) {
         $app.Sub.Text = T 'updateavailable'; $app.Sub.Foreground = $window.FindResource('Accent2')
         $btn.Style = $window.FindResource('PillAccent'); $btn.Content = T 'update'
     } elseif ($installed) {
-        $app.Sub.Text = if ($app.SelfUpdate) { (T 'installed') + ' · ' + (T 'selfupdate') } else { T 'installed' }
+        $parts = @(T 'installed')
+        $details = Get-AppDetails $app
+        if ($details) { $parts += $details }
+        if ($app.SelfUpdate) { $parts += T 'selfupdate' }
+        $app.Sub.Text = $parts -join ' · '
         $app.Sub.Foreground = $window.FindResource('Good')
         $btn.Style = $window.FindResource('Pill'); $btn.Content = T 'open'
     } else {
@@ -899,15 +939,32 @@ function Open-AppFolder($app) {
     $folder = if ($exe) { Split-Path $exe -Parent } elseif (Test-Path -LiteralPath $app.Path -PathType Container) { $app.Path } else { $null }
     if ($folder) { Start-Process explorer.exe -ArgumentList "`"$folder`"" }
 }
-# Uninstall runs the app's own uninstaller from its entry in Apps & features (it shows its own window)
-function Find-Uninstaller($app) {
+# The app's entry in Apps & features: its uninstaller, version and size
+function Get-ArpEntry($app) {
     foreach ($root in 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall', 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall', 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall') {
         foreach ($key in @(Get-ChildItem -Path $root -ErrorAction SilentlyContinue)) {
             $entry = Get-ItemProperty -LiteralPath $key.PSPath -ErrorAction SilentlyContinue
-            if ($entry.DisplayName -like $app.Arp -and $entry.UninstallString) { return [string]$entry.UninstallString }
+            if ($entry.DisplayName -like $app.Arp -and $entry.UninstallString) { return $entry }
         }
     }
     return $null
+}
+# Uninstall runs the app's own uninstaller (it shows its own window)
+function Find-Uninstaller($app) {
+    $entry = Get-ArpEntry $app
+    if ($entry) { return [string]$entry.UninstallString }
+    return $null
+}
+# "1.0.9218 · 450 MB" for an installed app, read once (again after an install, update or uninstall)
+function Get-AppDetails($app) {
+    if ($null -eq $app.Details) {
+        $entry = Get-ArpEntry $app
+        $parts = @()
+        if ($entry.DisplayVersion) { $parts += [string]$entry.DisplayVersion }
+        if ($entry.EstimatedSize -gt 0) { $parts += Format-Size ([double]$entry.EstimatedSize * 1KB) }
+        $app.Details = $parts -join ' · '
+    }
+    return $app.Details
 }
 function Start-Uninstall($app) {
     $answer = [System.Windows.MessageBox]::Show(((T 'uninstall.confirm') -f $app.Name), 'Akati OS Center', 'YesNo', 'Question')
@@ -982,7 +1039,7 @@ function Start-NextApp {
             param($r, $app)
             $app.State = 'idle'
             if ($app.Cancelled) { $app.Cancelled = $false; Set-Status ((T 'status.cancelled') -f $app.Name) }
-            elseif ((Get-LastOutput $r) -eq 0) { $app.HasUpdate = $false; Set-Status ((T 'status.updated') -f $app.Name) }
+            elseif ((Get-LastOutput $r) -eq 0) { $app.HasUpdate = $false; $app.Details = $null; Set-Status ((T 'status.updated') -f $app.Name) }
             else { Set-Status ((T 'status.updatefailed') -f $app.Name) }
             Update-AppRow $app; Update-AppsToolbar; Start-NextApp
         } $next
@@ -1028,6 +1085,11 @@ function Stop-AppJob($app) {
 
 # Progress written by GAMEAPPS.ps1: "<stage>|<percent>", percent is -1 when unknown
 function Update-AppProgress {
+    # While an app installs or updates, the status bar says so (another message may have replaced it)
+    $running = $apps | Where-Object { $_.State -in 'install', 'update' -and !$_.Cancelled } | Select-Object -First 1
+    if ($running -and !$script:statusBusy) {
+        Set-Status ((T $(if ($running.State -eq 'update') { 'status.updating' } else { 'status.installing' })) -f $running.Name) $true
+    }
     foreach ($app in $apps) {
         if ($app.State -ne 'install' -or $app.Cancelled) { continue }
         $line = $null

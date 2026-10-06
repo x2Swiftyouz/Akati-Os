@@ -247,6 +247,28 @@
             <Setter Property="Foreground" Value="#FF453A"/>
         </Style>
 
+        <!-- One part of a segmented control -->
+        <Style x:Key="Segment" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="#D1D1D6"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Bd" Background="Transparent" CornerRadius="5" Padding="12,3">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#4A4A4D"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style x:Key="Action" TargetType="Button">
             <Setter Property="Foreground" Value="#EBEBF0"/>
             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
@@ -348,6 +370,8 @@
 
         <Style x:Key="Meter" TargetType="ProgressBar">
             <Setter Property="Height" Value="6"/>
+            <!-- The bar is painted with Foreground, so code can turn it orange or red -->
+            <Setter Property="Foreground" Value="{DynamicResource AccentGradient}"/>
             <Setter Property="Minimum" Value="0"/>
             <Setter Property="Maximum" Value="100"/>
             <Setter Property="Template">
@@ -355,7 +379,7 @@
                     <ControlTemplate TargetType="ProgressBar">
                         <Grid>
                             <Border x:Name="PART_Track" Background="#38383A" CornerRadius="3"/>
-                            <Border x:Name="PART_Indicator" Background="{DynamicResource AccentGradient}" CornerRadius="3" HorizontalAlignment="Left"/>
+                            <Border x:Name="PART_Indicator" Background="{TemplateBinding Foreground}" CornerRadius="3" HorizontalAlignment="Left"/>
                         </Grid>
                     </ControlTemplate>
                 </Setter.Value>
@@ -594,7 +618,7 @@
                                 </WrapPanel>
                             </Border>
 
-                            <UniformGrid Columns="3" Margin="-8,0,-8,16">
+                            <UniformGrid x:Name="UsageGrid" Columns="3" Margin="-8,0,-8,16">
                                 <Border Style="{StaticResource Card}" Margin="8,0">
                                     <StackPanel>
                                         <Grid>
@@ -620,7 +644,7 @@
                                         <TextBlock x:Name="RamDetail" Text="" Style="{StaticResource Muted}" FontSize="11" Margin="0,8,0,0"/>
                                     </StackPanel>
                                 </Border>
-                                <Border Style="{StaticResource Card}" Margin="8,0">
+                                <Border x:Name="GpuCard" Style="{StaticResource Card}" Margin="8,0">
                                     <StackPanel>
                                         <Grid>
                                             <TextBlock Tag="t:gpu" Text="GPU USAGE" Style="{StaticResource Label}" VerticalAlignment="Center"/>
@@ -653,7 +677,16 @@
                                 </Border>
                             </UniformGrid>
 
-                            <TextBlock Tag="t:top.title" Text="Using the most CPU" Style="{StaticResource Section}"/>
+                            <!-- Busiest apps, by CPU or by memory (segmented control like macOS) -->
+                            <DockPanel Margin="0,0,0,8">
+                                <Border DockPanel.Dock="Right" Background="#2A2A2C" BorderBrush="#38383A" BorderThickness="1" CornerRadius="7" Padding="2">
+                                    <StackPanel Orientation="Horizontal">
+                                        <RadioButton x:Name="TopByCpu" Style="{StaticResource Segment}" GroupName="TopBy" IsChecked="True" Content="CPU"/>
+                                        <RadioButton x:Name="TopByRam" Style="{StaticResource Segment}" GroupName="TopBy" Tag="t:top.ram" Content="Memory"/>
+                                    </StackPanel>
+                                </Border>
+                                <TextBlock Tag="t:top.title" Text="Busiest apps" Style="{StaticResource Section}" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                            </DockPanel>
                             <Border Style="{StaticResource Card}" Padding="0" Margin="0,0,0,16">
                                 <StackPanel x:Name="TopList"/>
                             </Border>

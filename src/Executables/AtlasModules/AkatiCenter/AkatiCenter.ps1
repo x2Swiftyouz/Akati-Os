@@ -2053,7 +2053,7 @@ function ConvertTo-Color([string]$hex) { [System.Windows.Media.ColorConverter]::
 # Look picker (Appearance): Auto, Dark or Light, saved as CenterLook
 $lookChoice = Get-RegValue $settingsKey 'CenterLook'
 if ($lookChoice -notin 'dark', 'light') { $lookChoice = 'auto' }
-$ui["Look$(Get-PageId $lookChoice)"].IsChecked = $true
+$ui["Look$([Globalization.CultureInfo]::InvariantCulture.TextInfo.ToTitleCase($lookChoice))"].IsChecked = $true
 foreach ($n in 'Auto', 'Dark', 'Light') {
     $ui["Look$n"].Add_Checked({ Save-Setting CenterLook $this.Name.Substring(4).ToLowerInvariant(); Set-CenterLook (Get-LookName) })
 }

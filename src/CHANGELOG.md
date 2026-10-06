@@ -3,10 +3,12 @@
 ## v1.4.1
 
 ### Added
+- Gaming apps: **Riot Client** (VALORANT; League of Legends and TFT from Riot Client, official installer checked for Riot's signature), **GOG GALAXY**, **Rockstar Games Launcher** and **MSI Afterburner**
 - Setup option **Turn off unused services** (ticked by default, on the Microsoft Store page): runs the unchanged AtlasOS scripts that turn off printing, search indexing, SuperFetch (SysMain) and network discovery, and disables the Distributed Transaction Coordinator (MSDTC), so fewer processes run in the background. Untick it if you use a printer or share files at home; each one can be turned on again in Akati OS Center > Tweaks
 - Setup page **Notifications and Game Bar** (both ticked by default): turns off Windows notifications and Xbox Game Bar (Win+G, background clip recording, controller button). Both can be turned on again in Windows Settings; Game Mode is not changed
 
 ### Changed
+- Gaming apps in Akati OS Center look like the App Store: **Get** / **Open** / **Update** buttons and a progress ring, a colored letter tile for apps that are not installed, sections (game launchers, chat and streaming, tools) with a short description of each app, **...** with Open folder and Uninstall, and the version and age of the GPU driver
 - Dashboard in Akati OS Center: live graphs for CPU, RAM and GPU, the apps that use the most CPU (with a Quit button), status chips (Game boost, power plan, Defender, uptime), download/upload speed and ping, every drive with free space, a greeting with the clock, and an automatic update check in the version card. Game boost can be started from the quick actions
 - Cleaner in Akati OS Center cleans more: Windows Update downloads, error reports, setup logs, thumbnail cache and the web caches of Discord, Steam and Epic; browser and GPU shader caches can be ticked too. Each row says what it removes; no cookies, passwords or settings
 - Windows 11: Atlas Toolbox is no longer offered (setup page, install step and the installer script in the Atlas folder are removed)

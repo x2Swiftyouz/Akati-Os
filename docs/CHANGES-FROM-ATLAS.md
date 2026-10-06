@@ -79,7 +79,7 @@ Not set during setup. Only set when the user turns them on in Akati OS Center.
 Setup installs no gaming apps. `GAMEAPPS.ps1` runs only when the user clicks Install for an app in Akati OS Center > Gaming apps.
 
 1. **WinGet first** (`winget install --id <Id> --exact --source winget --silent`). WinGet checks the installer hash from the WinGet manifest.
-2. **Fallback, only for Steam and Discord**, if WinGet is missing or fails: the installer is downloaded with `curl.exe` from the vendor's own URL and run silently:
+2. **Fallback, only for Steam, Discord and Riot**, if WinGet is missing or fails: the installer is downloaded with `curl.exe` from the vendor's own URL and run silently (Steam):
 
 | App | WinGet Id | Fallback URL |
 |---|---|---|
@@ -90,6 +90,10 @@ Setup installs no gaming apps. `GAMEAPPS.ps1` runs only when the user clicks Ins
 | Ubisoft Connect | `Ubisoft.Connect` | none |
 | Battle.net | `Blizzard.BattleNet` | none |
 | OBS Studio | `OBSProject.OBSStudio` | none |
+| Riot Client (VALORANT) | not used (WinGet has only full game packages) | `https://valorant.secure.dyn.riotcdn.net/channels/public/x/installer/current/live.live.ap.exe` (always; runs only if its Authenticode signature is valid and signed by Riot Games; no switches, the user clicks Install in its window) |
+| GOG GALAXY | `GOG.Galaxy` | none |
+| Rockstar Games Launcher | `RockstarGames.Launcher` | none |
+| MSI Afterburner | `Guru3D.Afterburner` | none |
 
 Discord is never installed silently (no WinGet, no `-s`): after a silent install its first start quits without moving the install to its new updater, and every later start fails with "Attempt to install host that is currently running". `GAMEAPPS.ps1` writes a log to `%LOCALAPPDATA%\AkatiOS\Logs\GAMEAPPS-<app>.log`. `GAMEAPPS.ps1` still has `-AtSignIn` (a scheduled task that installs an app as the user after the next sign-in), which setup no longer uses. When `GAMEAPPS.ps1` runs elevated (from Akati OS Center), it installs Discord through a one-time scheduled task `AkatiOS Install Discord` that runs the same script as the signed-in user with limited rights, waits for it and deletes the task.
 
@@ -97,7 +101,7 @@ Discord is never installed silently (no WinGet, no `-s`): after a silent install
 
 It runs only when the user opens it and asks for administrator rights. Everything it changes is listed here:
 
-- **Gaming apps**: runs `GAMEAPPS.ps1 -App <name>` (see above), one app at a time; Cancel stops that script and what it started (`taskkill /T`, and the `AkatiOS Install Discord` task). `GAMEAPPS.ps1` writes its progress to `%LOCALAPPDATA%\AkatiOS\Logs\GAMEAPPS-<app>.progress`. **Check for updates** runs `winget list --id <id> --upgrade-available` for each installed app and **Update** runs `winget upgrade --id <id> --silent` (not for Steam and Discord, which update themselves). The GPU names come from `Win32_VideoController`
+- **Gaming apps**: runs `GAMEAPPS.ps1 -App <name>` (see above), one app at a time; Cancel stops that script and what it started (`taskkill /T`, and the `AkatiOS Install Discord` task). `GAMEAPPS.ps1` writes its progress to `%LOCALAPPDATA%\AkatiOS\Logs\GAMEAPPS-<app>.progress`. **Check for updates** runs `winget list --id <id> --upgrade-available` for each installed app and **Update** runs `winget upgrade --id <id> --silent` (not for Steam and Discord, which update themselves). **Open** starts an installed app through `explorer.exe` (as the signed-in user, not elevated); **Open folder** opens its folder; **Uninstall** asks first, then runs the `UninstallString` of the app's entry in `...\CurrentVersion\Uninstall` (HKLM, HKLM WOW6432Node, HKCU) with `cmd.exe /c`, so the app's own uninstaller opens (if none is found, Settings > Apps opens). The GPU names, driver versions and driver dates come from `Win32_VideoController`
 - **Game boost**: Start saves what it changes in `HKCU\Software\AkatiOS\Center\Boost` and then, for the ticked items: activates the first power plan found of Atlas Power Scheme, Ultimate Performance or High performance (`powercfg /setactive`); closes OneDrive (`/shutdown`), Teams, Spotify, Phone Link, Dropbox, Google Drive and Skype; sets `HKCU\Software\Microsoft\Windows\CurrentVersion\PushNotifications` `ToastEnabled` to 0. Stop sets the old power plan and `ToastEnabled` again, starts the closed apps again (through `explorer.exe`, not elevated) and deletes the key
 - **Ping**: only while the test runs and the page is open, a TCP connection to port 443 of `dynamodb.<region>.amazonaws.com` (ap-southeast-7, ap-southeast-1, ap-east-1, ap-northeast-1) every 2 seconds. No data is sent
 - **Startup apps**: reads the `Run` keys (HKCU, HKLM, HKLM WOW6432Node) and the Startup folders; a switch writes the on/off value to `...\Explorer\StartupApproved\Run`, `Run32` or `StartupFolder`, like Task Manager. The startup entries themselves are not changed

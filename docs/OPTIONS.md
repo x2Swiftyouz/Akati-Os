@@ -63,16 +63,16 @@ Brave, LibreWolf and Firefox are privacy friendly. Chrome is not recommended for
 
 ## Gaming apps
 
-Akati OS does not install gaming apps during setup. Install them when you want in **Akati OS Center > Gaming apps**: Steam, Epic Games Launcher, EA app, Ubisoft Connect, Battle.net, Discord and OBS Studio. They are installed with WinGet, which checks each installer. If WinGet is not available, Steam is downloaded from its official website. Discord is always downloaded from discord.com and installed with its normal installer (a silent install breaks Discord), as the signed-in user; it opens when it is done.
+Akati OS does not install gaming apps during setup. Install them when you want in **Akati OS Center > Gaming apps**: game launchers (Steam, Epic Games Launcher, EA app, Ubisoft Connect, Battle.net, Riot Client with VALORANT, GOG GALAXY, Rockstar Games Launcher), chat and streaming (Discord, OBS Studio) and tools (MSI Afterburner). They are installed with WinGet, which checks each installer. If WinGet is not available, Steam is downloaded from its official website. Discord is always downloaded from discord.com and installed with its normal installer (a silent install breaks Discord), as the signed-in user; it opens when it is done. Riot Client is installed with Riot's official VALORANT (Asia Pacific) installer, only when it is signed by Riot Games; its window opens and you click Install (League of Legends and TFT are added from Riot Client). Installed apps have **Open**, and the **...** button has **Open folder** and **Uninstall** (runs the app's own uninstaller).
 Visual C++ and DirectX runtimes are always installed during setup.
 
-**ภาษาไทย**: Akati OS ไม่ติดตั้งแอปเกมให้ตอนลง กดติดตั้งเองได้ใน Akati OS Center > แอปเกม (Steam, Epic, EA, Ubisoft, Battle.net, Discord, OBS) ติดตั้งผ่าน WinGet ซึ่งตรวจไฟล์ติดตั้งทุกครั้ง ถ้าไม่มี WinGet จะโหลด Steam จากเว็บไซต์ทางการ ส่วน Discord โหลดจาก discord.com และติดตั้งแบบปกติเสมอ แล้วเปิดขึ้นมาเองเมื่อเสร็จ
+**ภาษาไทย**: Akati OS ไม่ติดตั้งแอปเกมให้ตอนลง กดติดตั้งเองได้ใน Akati OS Center > แอปเกม (Steam, Epic, EA, Ubisoft, Battle.net, Riot Client/VALORANT, GOG GALAXY, Rockstar, Discord, OBS, MSI Afterburner) ติดตั้งผ่าน WinGet ซึ่งตรวจไฟล์ติดตั้งทุกครั้ง ถ้าไม่มี WinGet จะโหลด Steam จากเว็บไซต์ทางการ ส่วน Discord โหลดจาก discord.com และติดตั้งแบบปกติเสมอ แล้วเปิดขึ้นมาเองเมื่อเสร็จ Riot Client ใช้ตัวติดตั้ง VALORANT (เอเชียแปซิฟิก) ทางการของ Riot ซึ่งตรวจลายเซ็น Riot Games ก่อนรัน แล้วกด Install ในหน้าต่างของมัน แอปที่ติดตั้งแล้วมีปุ่ม "เปิด" และปุ่ม ... สำหรับเปิดโฟลเดอร์หรือถอนการติดตั้ง
 
 ## GPU drivers
 
-Akati OS does not install GPU drivers. **Akati OS Center > Gaming apps** has buttons that open the NVIDIA, AMD and Intel driver download pages.
+Akati OS does not install GPU drivers. **Akati OS Center > Gaming apps** has buttons that open the NVIDIA, AMD and Intel driver download pages. It shows the version and date of the installed driver and says when it is more than 6 months old.
 
-**ภาษาไทย**: Akati OS ไม่ติดตั้งไดรเวอร์การ์ดจอให้ ในหน้าแอปเกมของ Akati OS Center มีปุ่มเปิดหน้าโหลดไดรเวอร์ NVIDIA, AMD และ Intel
+**ภาษาไทย**: Akati OS ไม่ติดตั้งไดรเวอร์การ์ดจอให้ ในหน้าแอปเกมของ Akati OS Center มีปุ่มเปิดหน้าโหลดไดรเวอร์ NVIDIA, AMD และ Intel และบอกเวอร์ชันกับวันที่ของไดรเวอร์ที่ใช้อยู่ ถ้าเก่ากว่า 6 เดือนจะเตือน
 
 ## Microsoft Store and unused services
 

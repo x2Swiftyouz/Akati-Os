@@ -93,7 +93,17 @@ $strings = @{
         'update.error' = 'Could not reach GitHub.'
         'update.open' = 'Open release page'
         'clean.temp' = 'Temporary files (your account)'; 'clean.wintemp' = 'Windows temporary files'
-        'clean.dumps' = 'Crash dumps'; 'clean.recycle' = 'Recycle Bin'
+        'clean.dumps' = 'Crash dumps and error reports'; 'clean.recycle' = 'Recycle Bin'
+        'clean.update' = 'Windows Update downloads'; 'clean.logs' = 'Windows setup logs'; 'clean.thumbs' = 'Thumbnail cache'
+        'clean.apps' = 'Discord, Steam and Epic caches'; 'clean.browser' = 'Browser caches'; 'clean.shaders' = 'GPU shader caches'
+        'clean.temp.d' = 'Files apps leave in your Temp folder'; 'clean.wintemp.d' = 'C:\Windows\Temp'
+        'clean.update.d' = 'Update files that are already installed (Windows downloads them again if needed)'
+        'clean.dumps.d' = 'Crash dumps and Windows Error Reporting files'; 'clean.logs.d' = 'CBS, DISM and setup logs'
+        'clean.thumbs.d' = 'Picture previews in File Explorer, made again when needed'
+        'clean.apps.d' = 'Web caches only; your logins and settings stay'
+        'clean.browser.d' = 'Brave, Edge, Chrome and Firefox. No cookies or passwords. Pages load slower once'
+        'clean.shaders.d' = 'NVIDIA, AMD, Intel and DirectX. Games stutter once while they build them again'
+        'clean.recycle.d' = 'Deleted files in the Recycle Bin'
         'tw.hags' = 'Hardware-accelerated GPU scheduling'; 'tw.hags.d' = 'Lets the GPU manage its own memory. Needs a supported GPU and driver.'
         'tw.windowed' = 'Optimizations for windowed games'; 'tw.windowed.d' = 'Lower latency for DirectX 10/11 games in windowed and borderless mode.'
         'tw.gamemode' = 'Game Mode'; 'tw.gamemode.d' = 'Windows gives games priority and pauses some background work while you play.'
@@ -206,7 +216,17 @@ $strings = @{
         'update.error' = 'เชื่อมต่อ GitHub ไม่ได้'
         'update.open' = 'เปิดหน้า release'
         'clean.temp' = 'ไฟล์ชั่วคราว (บัญชีของคุณ)'; 'clean.wintemp' = 'ไฟล์ชั่วคราวของ Windows'
-        'clean.dumps' = 'ไฟล์ crash dump'; 'clean.recycle' = 'ถังขยะ'
+        'clean.dumps' = 'Crash dump และรายงานข้อผิดพลาด'; 'clean.recycle' = 'ถังขยะ'
+        'clean.update' = 'ไฟล์ดาวน์โหลดของ Windows Update'; 'clean.logs' = 'Log การติดตั้งของ Windows'; 'clean.thumbs' = 'แคชภาพย่อ'
+        'clean.apps' = 'แคชของ Discord, Steam และ Epic'; 'clean.browser' = 'แคชเบราว์เซอร์'; 'clean.shaders' = 'แคช shader ของการ์ดจอ'
+        'clean.temp.d' = 'ไฟล์ที่แอปทิ้งไว้ในโฟลเดอร์ Temp'; 'clean.wintemp.d' = 'C:\Windows\Temp'
+        'clean.update.d' = 'ไฟล์อัปเดตที่ติดตั้งไปแล้ว (Windows โหลดใหม่เองถ้าต้องใช้)'
+        'clean.dumps.d' = 'Crash dump และไฟล์ Windows Error Reporting'; 'clean.logs.d' = 'Log ของ CBS, DISM และการติดตั้ง'
+        'clean.thumbs.d' = 'ภาพตัวอย่างใน File Explorer สร้างใหม่เองเมื่อเปิดดู'
+        'clean.apps.d' = 'เฉพาะแคชเว็บ การล็อกอินและการตั้งค่ายังอยู่'
+        'clean.browser.d' = 'Brave, Edge, Chrome และ Firefox ไม่ลบคุกกี้หรือรหัสผ่าน หน้าเว็บโหลดช้าลงครั้งแรก'
+        'clean.shaders.d' = 'NVIDIA, AMD, Intel และ DirectX เกมจะกระตุกครั้งแรกระหว่างสร้างใหม่'
+        'clean.recycle.d' = 'ไฟล์ที่ลบไว้ในถังขยะ'
         'tw.hags' = 'Hardware-accelerated GPU scheduling'; 'tw.hags.d' = 'ให้การ์ดจอจัดการหน่วยความจำเอง ต้องใช้การ์ดจอและไดรเวอร์ที่รองรับ'
         'tw.windowed' = 'Optimizations for windowed games'; 'tw.windowed.d' = 'ลด latency ของเกม DirectX 10/11 ที่เล่นแบบหน้าต่างหรือ borderless'
         'tw.gamemode' = 'Game Mode'; 'tw.gamemode.d' = 'Windows ให้ความสำคัญกับเกมและพักงานเบื้องหลังบางอย่างระหว่างเล่น'
@@ -1107,22 +1127,38 @@ Update-Separators $ui.TweaksList
 # ---------------------------------------------------------------------------------------------
 # Cleaner
 # ---------------------------------------------------------------------------------------------
+# Folders: their contents are deleted (wildcards allowed). Files: these files are deleted.
+# Only caches, logs and temporary files: nothing that holds settings, saves, passwords or cookies.
+# Off = not ticked at first (cleaning them makes the next start of a game or browser slower).
 $cleanItems = @(
-    @{ Key = 'temp';    Glyph = [char]0xE8B7; Path = $env:TEMP }
-    @{ Key = 'wintemp'; Glyph = [char]0xE8B7; Path = (Join-Path $windir 'Temp') }
-    @{ Key = 'dumps';   Glyph = [char]0xE7BA; Path = (Join-Path $env:LOCALAPPDATA 'CrashDumps') }
-    @{ Key = 'recycle'; Glyph = [char]0xE74D; Path = $null }
+    @{ Key = 'temp';    Glyph = [char]0xE8B7; Folders = @($env:TEMP) }
+    @{ Key = 'wintemp'; Glyph = [char]0xE8B7; Folders = @((Join-Path $windir 'Temp')) }
+    @{ Key = 'update';  Glyph = [char]0xE895; Folders = @((Join-Path $windir 'SoftwareDistribution\Download'),
+                                                         (Join-Path $windir 'ServiceProfiles\NetworkService\AppData\Local\Microsoft\Windows\DeliveryOptimization\Cache')) }
+    @{ Key = 'dumps';   Glyph = [char]0xE7BA; Folders = @((Join-Path $env:LOCALAPPDATA 'CrashDumps'), (Join-Path $env:LOCALAPPDATA 'Microsoft\Windows\WER'),
+                                                         (Join-Path $env:ProgramData 'Microsoft\Windows\WER\ReportArchive'), (Join-Path $env:ProgramData 'Microsoft\Windows\WER\ReportQueue')) }
+    @{ Key = 'logs';    Glyph = [char]0xE9F9; Files = @((Join-Path $windir 'Logs\CBS\*.log'), (Join-Path $windir 'Logs\DISM\*.log'), (Join-Path $windir 'Panther\*.log')) }
+    @{ Key = 'thumbs';  Glyph = [char]0xE91B; Files = @((Join-Path $env:LOCALAPPDATA 'Microsoft\Windows\Explorer\thumbcache_*.db')) }
+    @{ Key = 'apps';    Glyph = [char]0xE8BD; Folders = @((Join-Path $env:APPDATA 'discord\Cache\Cache_Data'), (Join-Path $env:APPDATA 'discord\Code Cache'), (Join-Path $env:APPDATA 'discord\GPUCache'),
+                                                         (Join-Path $env:LOCALAPPDATA 'Steam\htmlcache'), (Join-Path $env:LOCALAPPDATA 'EpicGamesLauncher\Saved\webcache*')) }
+    @{ Key = 'browser'; Glyph = [char]0xE774; Off = $true
+       Folders = @((Join-Path $env:LOCALAPPDATA 'BraveSoftware\Brave-Browser\User Data\*\Cache\Cache_Data'), (Join-Path $env:LOCALAPPDATA 'Microsoft\Edge\User Data\*\Cache\Cache_Data'),
+                   (Join-Path $env:LOCALAPPDATA 'Google\Chrome\User Data\*\Cache\Cache_Data'), (Join-Path $env:LOCALAPPDATA 'Mozilla\Firefox\Profiles\*\cache2')) }
+    @{ Key = 'shaders'; Glyph = [char]0xE7F4; Off = $true
+       Folders = @((Join-Path $env:LOCALAPPDATA 'D3DSCache'), (Join-Path $env:LOCALAPPDATA 'NVIDIA\DXCache'), (Join-Path $env:LOCALAPPDATA 'NVIDIA\GLCache'),
+                   (Join-Path $env:LOCALAPPDATA 'AMD\DxCache'), (Join-Path $env:LOCALAPPDATA 'AMD\GLCache'), (Join-Path $env:LOCALAPPDATA 'Intel\ShaderCache')) }
+    @{ Key = 'recycle'; Glyph = [char]0xE74D; Recycle = $true }
 )
 foreach ($ci in $cleanItems) {
     $right = New-Object System.Windows.Controls.StackPanel
     $right.Orientation = 'Horizontal'
     $size = New-Text '-' 13 'SemiBold'; $size.Margin = '0,0,18,0'; $size.VerticalAlignment = 'Center'; $size.MinWidth = 70; $size.TextAlignment = 'Right'
     $check = New-Object System.Windows.Controls.CheckBox
-    $check.Style = $window.FindResource('Tick'); $check.IsChecked = $true; $check.VerticalAlignment = 'Center'
+    $check.Style = $window.FindResource('Tick'); $check.IsChecked = !$ci.Off; $check.VerticalAlignment = 'Center'
     $check.Add_Click({ Update-CleanTotal })
     [void]$right.Children.Add($size); [void]$right.Children.Add($check)
-    $row = New-Row ([string]$ci.Glyph) (T "clean.$($ci.Key)") "t:clean.$($ci.Key)" $right $null
-    $row.Sub.Text = if ($ci.Path) { $ci.Path } else { '' }
+    $row = New-Row ([string]$ci.Glyph) (T "clean.$($ci.Key)") "t:clean.$($ci.Key)" $right "t:clean.$($ci.Key).d"
+    $row.Sub.Text = T "clean.$($ci.Key).d"
     $ci.SizeText = $size; $ci.Check = $check; $ci.Bytes = 0
     [void]$ui.CleanList.Children.Add($row.Row)
 }
@@ -1138,11 +1174,17 @@ $measureWork = {
     param($items)
     $out = @{}
     foreach ($i in $items) {
-        if ($i.Path) {
-            $sum = (Get-ChildItem -LiteralPath $i.Path -Recurse -Force -File -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum
-        } else {
-            $sum = 0
+        $sum = 0
+        if ($i.Recycle) {
             try { (New-Object -ComObject Shell.Application).NameSpace(10).Items() | ForEach-Object { $sum += $_.Size } } catch { }
+        }
+        foreach ($f in @($i.Folders)) {
+            if (!$f) { continue }
+            $sum += [double](Get-ChildItem -Path $f -Recurse -Force -File -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum
+        }
+        foreach ($f in @($i.Files)) {
+            if (!$f) { continue }
+            $sum += [double](Get-ChildItem -Path $f -Force -File -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum
         }
         $out[$i.Key] = [double]$sum
     }
@@ -1152,7 +1194,7 @@ $measureWork = {
 function Start-Scan([scriptblock]$then) {
     Set-Status (T 'status.scanning') $true
     $ui.ScanButton.IsEnabled = $false; $ui.CleanButton.IsEnabled = $false
-    $items = @($cleanItems | ForEach-Object { @{ Key = $_.Key; Path = $_.Path } })
+    $items = @($cleanItems | ForEach-Object { @{ Key = $_.Key; Folders = $_.Folders; Files = $_.Files; Recycle = $_.Recycle } })
     Start-Work $measureWork @(, $items) {
         param($r, $ctx)
         $sizes = Get-LastOutput $r
@@ -1166,17 +1208,23 @@ function Start-Scan([scriptblock]$then) {
 
 function Start-Clean {
     $script:cleanBefore = 0
-    $selected = @($cleanItems | Where-Object { $_.Check.IsChecked } | ForEach-Object { $script:cleanBefore += $_.Bytes; @{ Key = $_.Key; Path = $_.Path } })
+    $selected = @($cleanItems | Where-Object { $_.Check.IsChecked } | ForEach-Object { $script:cleanBefore += $_.Bytes; @{ Key = $_.Key; Folders = $_.Folders; Files = $_.Files; Recycle = $_.Recycle } })
     if (!$selected.Count) { return }
     Set-Status (T 'status.cleaning') $true
     $ui.ScanButton.IsEnabled = $false; $ui.CleanButton.IsEnabled = $false
     Start-Work {
         param($items)
         foreach ($i in $items) {
-            if ($i.Path) {
-                Get-ChildItem -LiteralPath $i.Path -Force -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
-            } else {
-                try { Clear-RecycleBin -Force -ErrorAction SilentlyContinue } catch { }
+            if ($i.Recycle) { try { Clear-RecycleBin -Force -ErrorAction SilentlyContinue } catch { } }
+            # The contents of each folder (the folder itself stays); files in use are skipped
+            foreach ($f in @($i.Folders)) {
+                if (!$f) { continue }
+                foreach ($dir in @(Get-Item -Path $f -Force -ErrorAction SilentlyContinue | Where-Object { $_.PSIsContainer })) {
+                    Get-ChildItem -LiteralPath $dir.FullName -Force -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+                }
+            }
+            foreach ($f in @($i.Files)) {
+                if ($f) { Get-ChildItem -Path $f -Force -File -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue }
             }
         }
     } @(, $selected) {

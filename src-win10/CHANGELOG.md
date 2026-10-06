@@ -12,6 +12,9 @@
 - Akati OS Center looks like macOS System Settings: colored icons in the sidebar, grouped lists with thin separators and gray section headings, macOS-style switches and buttons, neutral dark colors (the accent color stays)
 - The System settings page is now part of **Tweaks**: gaming switches on top, then every AtlasOS setting with search and the restore point. Ctrl+1 to Ctrl+7 switch pages, Ctrl+F opens the search in Tweaks
 
+### Fixed
+- **Check for updates** in Akati OS Center always said "Could not reach GitHub" (the answer from GitHub was read wrong). It also works now when the GitHub API limit is reached
+
 ## v1.4.0
 
 ### Known issues

@@ -60,7 +60,7 @@ $strings = @{
         'update.checking' = 'Checking for updates...'
         'chip.boost.on' = 'Game boost on'; 'chip.boost.off' = 'Game boost off'; 'chip.power' = 'Power: {0}'; 'chip.days' = '{0}d {1}h'; 'chip.hours' = '{0}h {1}m'
         'chip.defender.on' = 'Defender on'; 'chip.defender.off' = 'Defender off'; 'chip.uptime' = 'Up {0}'
-        'disk.title' = 'Storage'; 'disk.free' = '{0} free of {1}'
+        'disk.title' = 'Storage'; 'disk.free' = '{0} free of {1}'; 'disk.local' = 'Local Disk'
         'net.title' = 'Network'; 'net.down' = 'DOWNLOAD'; 'net.up' = 'UPLOAD'; 'net.ping' = 'PING (SG)'
         'top.title' = 'Using the most CPU'; 'top.end' = 'Quit'; 'top.confirm' = 'Quit {0}? Unsaved work in it is lost.'
         'status.ended' = '{0} was closed'
@@ -192,7 +192,7 @@ $strings = @{
         'update.checking' = 'กำลังตรวจอัปเดต...'
         'chip.boost.on' = 'บูสต์เกมเปิดอยู่'; 'chip.boost.off' = 'บูสต์เกมปิดอยู่'; 'chip.power' = 'แผนพลังงาน: {0}'; 'chip.days' = '{0} วัน {1} ชม.'; 'chip.hours' = '{0} ชม. {1} นาที'
         'chip.defender.on' = 'Defender เปิดอยู่'; 'chip.defender.off' = 'Defender ปิดอยู่'; 'chip.uptime' = 'เปิดเครื่องมา {0}'
-        'disk.title' = 'พื้นที่เก็บข้อมูล'; 'disk.free' = 'ว่าง {0} จาก {1}'
+        'disk.title' = 'พื้นที่เก็บข้อมูล'; 'disk.free' = 'ว่าง {0} จาก {1}'; 'disk.local' = 'ดิสก์ในเครื่อง'
         'net.title' = 'เครือข่าย'; 'net.down' = 'ดาวน์โหลด'; 'net.up' = 'อัปโหลด'; 'net.ping' = 'ปิง (สิงคโปร์)'
         'top.title' = 'แอปที่ใช้ CPU มากที่สุด'; 'top.end' = 'ปิด'; 'top.confirm' = 'ปิด {0} ใช่ไหม งานที่ยังไม่ได้บันทึกในแอปนี้จะหายไป'
         'status.ended' = 'ปิด {0} แล้ว'
@@ -395,7 +395,8 @@ function Start-Work([scriptblock]$work, [object[]]$arguments, [scriptblock]$done
 function Get-LastOutput($result) {
     if (!$result -or $result.Count -eq 0) { return $null }
     $last = $result[$result.Count - 1]
-    if ($last -is [psobject]) { $last = $last.psobject.BaseObject }
+    # Unwrap strings and hashtables; a PSCustomObject keeps its properties only on the wrapper (JSON from Invoke-RestMethod)
+    if ($last -is [psobject] -and $last.psobject.BaseObject -isnot [System.Management.Automation.PSCustomObject]) { $last = $last.psobject.BaseObject }
     return $last
 }
 function Receive-Work {
@@ -453,7 +454,7 @@ function Show-Disks {
         $row = New-Object System.Windows.Controls.StackPanel
         $row.Margin = '0,0,0,10'
         $top = New-Object System.Windows.Controls.Grid
-        $name = New-Text ("$($d.DeviceID)  " + $(if ($d.VolumeName) { $d.VolumeName } else { '' })) 13 'SemiBold'
+        $name = New-Text ("$($d.DeviceID)  " + $(if ($d.VolumeName) { $d.VolumeName } else { T 'disk.local' })) 13 'SemiBold'
         $free = New-Text ((T 'disk.free') -f (Format-Size $d.FreeSpace), (Format-Size $d.Size)) 12
         $free.Foreground = $window.FindResource('MutedBrush'); $free.HorizontalAlignment = 'Right'
         [void]$top.Children.Add($name); [void]$top.Children.Add($free)
@@ -494,13 +495,18 @@ $statsSample = {
         if ($n % 3 -eq 0) {
             try {
                 $cores = [Environment]::ProcessorCount
-                $list = Get-CimInstance Win32_PerfFormattedData_PerfProc_Process -ErrorAction Stop |
+                # Processes with the same name are added together, like the groups in Task Manager
+                $groups = Get-CimInstance Win32_PerfFormattedData_PerfProc_Process -ErrorAction Stop |
                     Where-Object { $_.Name -notin '_Total', 'Idle', 'System', 'Memory Compression', 'Registry' -and $_.IDProcess -gt 4 } |
-                    Sort-Object PercentProcessorTime -Descending | Select-Object -First 5
-                $stats.Top = @($list | ForEach-Object {
-                    $path = try { (Get-Process -Id $_.IDProcess -ErrorAction Stop).Path } catch { $null }
-                    @{ Name = ($_.Name -replace '#\d+$', ''); Pid = [int]$_.IDProcess; Cpu = [Math]::Round($_.PercentProcessorTime / $cores, 1)
-                       Ram = [double]$_.WorkingSetPrivate; Path = $path }
+                    Group-Object { $_.Name -replace '#\d+$', '' } | ForEach-Object {
+                        @{ Name = $_.Name; Pids = @($_.Group | ForEach-Object { [int]$_.IDProcess })
+                           Cpu = [double]($_.Group | Measure-Object -Property PercentProcessorTime -Sum).Sum
+                           Ram = [double]($_.Group | Measure-Object -Property WorkingSetPrivate -Sum).Sum }
+                    }
+                $stats.Top = @($groups | Sort-Object { $_.Cpu }, { $_.Ram } -Descending | Select-Object -First 5 | ForEach-Object {
+                    $_.Cpu = [Math]::Round($_.Cpu / $cores, 1)
+                    $_.Path = try { (Get-Process -Id $_.Pids[0] -ErrorAction Stop).Path } catch { $null }
+                    $_
                 })
                 $stats.TopSeq++
             } catch { }
@@ -616,14 +622,14 @@ function Show-TopApps {
         $cpu = New-Text ('{0:N1}%' -f $p.Cpu) 13 'SemiBold'; $cpu.MinWidth = 60; $cpu.TextAlignment = 'Right'; $cpu.VerticalAlignment = 'Center'
         $ram = New-Text (Format-Size $p.Ram) 12; $ram.Foreground = $window.FindResource('MutedBrush'); $ram.MinWidth = 70; $ram.TextAlignment = 'Right'; $ram.VerticalAlignment = 'Center'; $ram.Margin = '0,0,14,0'
         [void]$right.Children.Add($ram); [void]$right.Children.Add($cpu)
-        if ($p.Pid -ne $stats.Self -and $p.Name -notin $protected) {
+        if ($p.Pids -notcontains $stats.Self -and $p.Name -notin $protected) {
             $btn = New-Object System.Windows.Controls.Button
             $btn.Style = $window.FindResource('Secondary'); $btn.Margin = '14,0,0,0'; $btn.Content = T 'top.end'; $btn.Tag = $p
             $btn.Add_Click({
                 $t = $this.Tag
                 $answer = [System.Windows.MessageBox]::Show(((T 'top.confirm') -f $t.Name), 'Akati OS Center', 'YesNo', 'Question')
                 if ($answer -eq 'Yes') {
-                    try { Stop-Process -Id $t.Pid -Force -ErrorAction Stop; Set-Status ((T 'status.ended') -f $t.Name) } catch { Set-Status $_.Exception.Message }
+                    try { Stop-Process -Id $t.Pids -Force -ErrorAction Stop; Set-Status ((T 'status.ended') -f $t.Name) } catch { Set-Status $_.Exception.Message }
                 }
             })
             [void]$right.Children.Add($btn)
@@ -631,7 +637,8 @@ function Show-TopApps {
             $spacer = New-Object System.Windows.Controls.Border; $spacer.Width = 76
             [void]$right.Children.Add($spacer)
         }
-        $row = New-Row ([string][char]0xE7C4) $p.Name $null $right $null
+        $label = if ($p.Pids.Count -gt 1) { '{0} ({1})' -f $p.Name, $p.Pids.Count } else { $p.Name }
+        $row = New-Row ([string][char]0xE7C4) $label $null $right $null
         $row.Sub.Visibility = 'Collapsed'
         if ($p.Path) {
             if (!$script:iconCache.ContainsKey($p.Path)) { $script:iconCache[$p.Path] = Get-FileIcon @($p.Path) }
@@ -1675,17 +1682,29 @@ function Start-UpdateCheck {
     $ui.UpdateButton.IsEnabled = $false
     Start-Work {
         param($repo)
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        $errors = @()
         try {
-            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-            Invoke-RestMethod -Uri "https://api.github.com/repos/$repo/releases/latest" -Headers @{ 'User-Agent' = 'AkatiOS-Center' } -TimeoutSec 20
-        } catch { $null }
+            return Invoke-RestMethod -Uri "https://api.github.com/repos/$repo/releases/latest" -Headers @{ 'User-Agent' = 'AkatiOS-Center' } -UseBasicParsing -TimeoutSec 20
+        } catch { $errors += "api.github.com: $($_.Exception.Message)" }
+        # The GitHub API allows 60 requests an hour per address; the release page redirects to the latest tag without that limit
+        try {
+            $req = [Net.HttpWebRequest]::Create("https://github.com/$repo/releases/latest")
+            $req.Method = 'HEAD'; $req.AllowAutoRedirect = $false; $req.UserAgent = 'AkatiOS-Center'; $req.Timeout = 20000
+            $res = $req.GetResponse()
+            $location = $res.Headers['Location']; $res.Close()
+            if ($location -match '/releases/tag/([^/?#]+)') { return [pscustomobject]@{ tag_name = [Uri]::UnescapeDataString($Matches[1]); html_url = $location } }
+            $errors += "github.com: no release"
+        } catch { $errors += "github.com: $($_.Exception.Message)" }
+        [pscustomobject]@{ error = $errors -join ' | ' }
     } @($repo) {
         param($r, $ctx)
         $ui.UpdateButton.IsEnabled = $true
         $release = Get-LastOutput $r
         if (!$release -or !$release.tag_name) {
             $ui.UpdateStatus.Text = T 'update.error'; $ui.UpdateHint.Text = T 'update.error'; $ui.UpdateDot.Fill = $window.FindResource('MutedBrush')
-            Set-Status (T 'update.error'); return
+            # The reason goes to the status bar, so a problem report screenshot shows it
+            Set-Status ("$(T 'update.error') $($release.error)".Trim()); return
         }
         $script:releaseUrl = $release.html_url
         $newer = $false; $ahead = $false

@@ -1740,7 +1740,7 @@ function Show-SystemList {
         $dirs = @($top) + @(Get-ChildItem -LiteralPath $top.FullName -Directory -Recurse | Sort-Object FullName)
         Add-SystemCard $key $dirs $top.FullName
     }
-    # Files directly in the folder: AtlasOS links (and the Atlas Toolbox installer on Windows 11)
+    # Files directly in the folder: AtlasOS links
     Add-SystemCard 'AtlasOS' @(Get-Item -LiteralPath $desktop) (Get-Item -LiteralPath $desktop).FullName
     Update-SystemFilter
 }

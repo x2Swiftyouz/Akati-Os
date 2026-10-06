@@ -35,7 +35,7 @@ W11 = Windows 11 playbook, W10 = Windows 10 playbook.
 | `playbook.conf` | W11, W10 | Name (`AkatiOS` / `AkatiOS10`), title, version, own UniqueId, descriptions, own Git and install guide links, AtlasOS website/donate/Git links removed, "Learn more" links point to [OPTIONS.md](OPTIONS.md); `IsChecked` defaults; anti-cheat warnings; Remove Microsoft Store page (no gaming app pages: apps are installed from Akati OS Center). W11: `UpgradableFrom` removed, build 26300 added, OOBE text. W10: build 19045 only, Windows 10 end of support warning |
 | `playbook.png`, `Executables/user.png` | W11, W10 | Akati OS images |
 | `Configuration/custom.yml` | W11, W10 | Runs `tweaks\misc\akati-extras.yml` after `atlas\start.yml`, and `tweaks\misc\akati-services.yml` after all other tasks. W11: one status text |
-| `Configuration/atlas/start.yml` | W11 | One status text |
+| `Configuration/atlas/start.yml` | W11 | One status text; the optional Atlas Toolbox install is removed |
 | `Configuration/tweaks/misc/config-oem-information.yml` | W11, W10 | Shows "Akati OS" version, AtlasOS support links removed, writes the version to `HKLM\SOFTWARE\AkatiOS` (used by the update checker) |
 | `Configuration/tweaks/qol/appearance/atlas-theme.yml` | W11, W10 | Default theme is `akatios-dark.theme` |
 | `Executables/AtlasModules/Scripts/newUsers.ps1` | W11 | Default theme for new users is `akatios-dark.theme` |
@@ -46,6 +46,8 @@ W11 = Windows 11 playbook, W10 = Windows 10 playbook.
 ## Removed files
 
 The AtlasOS wallpapers and themes are removed, so the Atlas logo is not used: `Executables/AtlasModules/Wallpapers/atlas-*.png`, `lockscreen*.png`, `Executables/Themes/atlas-*.theme` and the folder icon `Executables/AtlasModules/Other/atlas-folder.ico`.
+
+W11: the Atlas Toolbox is not offered: the setup page "Install Atlas Toolbox" (`install-toolbox`), its install step and `AtlasDesktop\Install AtlasOS Toolbox.cmd` with `AtlasModules\Scripts\installToolbox.ps1` are removed. `SOFTWARE.ps1` is unchanged.
 
 ## New files
 
@@ -114,4 +116,4 @@ It runs only when the user opens it and asks for administrator rights. Everythin
 - Windows 11: Mica backdrop with `DwmSetWindowAttribute` (on its own window only)
 - Reads usage with CIM (`Win32_PerfFormattedData_*`); nothing is sent anywhere
 
-No other downloads were added. All other downloads (7-Zip, Visual C++, DirectX, browsers, Atlas Toolbox) come from the unchanged AtlasOS `SOFTWARE.ps1`.
+No other downloads were added. All other downloads (7-Zip, Visual C++, DirectX, browsers) come from the unchanged AtlasOS `SOFTWARE.ps1`.

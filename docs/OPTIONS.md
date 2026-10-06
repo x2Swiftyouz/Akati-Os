@@ -93,6 +93,14 @@ Untick it if you use a printer or share files between PCs at home. A restart (se
 
 **ภาษาไทย**: "Turn off unused services" ติ๊กไว้เป็นค่าเริ่มต้น จะรันสคริปต์เดิมของ AtlasOS เพื่อปิดบริการที่เครื่องเล่นเกมส่วนใหญ่ไม่ได้ใช้ ได้แก่ การพิมพ์ (Print Spooler), การทำดัชนีค้นหา (Windows Search; ช่องค้นหาใน Start ยังหาแอปและการตั้งค่าได้ แต่ค้นหาไฟล์ช้าลง), SuperFetch (SysMain) และการค้นหาเครื่องในเครือข่าย ถ้าใช้เครื่องพิมพ์หรือแชร์ไฟล์ในบ้านให้เอาติ๊กออก หรือเปิดกลับทีหลังได้ใน Akati OS Center > ตั้งค่าระบบ
 
+## Notifications and Game Bar
+
+**Turn off notifications** (ticked by default) turns off the "Get notifications from apps and other senders" switch, so no pop-ups appear while you play. Windows Security warnings and messages from Discord or Steam are not shown as pop-ups either. Turn it on again in Settings > System > Notifications.
+
+**Turn off Xbox Game Bar** (ticked by default) turns off Game Bar (Win+G) and its background clip recording, and the controller button that opens it. Game Mode and fullscreen optimizations stay as they are. Turn it on again in Settings > Gaming > Game Bar.
+
+**ภาษาไทย**: "Turn off notifications" (ติ๊กไว้) ปิดสวิตช์ "Get notifications from apps and other senders" จะไม่มีป๊อปอัปเด้งระหว่างเล่นเกม รวมถึงคำเตือนของ Windows Security และข้อความจาก Discord หรือ Steam ด้วย เปิดกลับได้ที่ Settings > System > Notifications ส่วน "Turn off Xbox Game Bar" (ติ๊กไว้) ปิด Game Bar (Win+G) การอัดคลิปเบื้องหลัง และปุ่มเปิดจากจอย ไม่แตะ Game Mode เปิดกลับได้ที่ Settings > Gaming > Game Bar
+
 ## Gaming tweaks
 
 These are not on the setup pages. Turn them on in **Akati OS Center > Tweaks** if you want them. They do not help every PC. Try them and turn them off if games run worse.

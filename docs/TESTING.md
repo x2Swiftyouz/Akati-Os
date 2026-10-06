@@ -97,6 +97,8 @@
 | ตัวเลือกทั่วไป | Disable Core Isolation (may break anti-cheat games) | ☐ | |
 | Microsoft Store | Remove Microsoft Store | ☑ | |
 | Microsoft Store | Turn off unused services | ☑ | |
+| Notifications and Game Bar | Turn off notifications | ☑ | |
+| Notifications and Game Bar | Turn off Xbox Game Bar | ☑ | |
 
 ตัวเลือกจาก Atlas ที่ไม่มี `IsChecked` ให้จดไว้ด้วยว่าเริ่มต้นเป็นแบบไหน ใช้ดูว่า AME Wizard ตั้งค่า default เป็นอะไร:
 
@@ -177,6 +179,7 @@ Get-CimInstance -Namespace root\Microsoft\Windows\DeviceGuard -ClassName Win32_D
 - [ ] รอบ B: ติดตั้งครบทุกตัว (Epic, EA, Ubisoft, Battle.net ใน `C:\Program Files\Battle.net`, OBS) และเปิดได้
 - [ ] หน้า "Remove Microsoft Store" ติ๊กไว้เป็นค่าเริ่มต้น หลังติดตั้ง Microsoft Store ต้องไม่มีใน Start menu และ taskbar แต่แอปเกมยังติดตั้งจาก Center ได้
 - [ ] "Turn off unused services" (ติ๊กไว้): หลังรีสตาร์ต `Get-Service Spooler, WSearch, SysMain, SSDPSRV | Select Name, Status, StartType` ต้องเป็น Stopped / Disabled ทั้งหมด และช่องค้นหาใน Start ยังหาแอปเจอ
+- [ ] Settings > System > Notifications: "Get notifications from apps" ปิดอยู่ และ Settings > Gaming > Game Bar ปิดอยู่ (เปิดกลับได้ ไม่เป็นสีเทา)
 - [ ] Akati OS Center > ปรับแต่ง > เปิดสวิตช์ Microsoft Store แล้ว Store กลับมา (อาจใช้เวลาประมาณ 1 นาที)
 
 ### VC++ และ DirectX (Atlas ติดตั้งให้ทุกรอบ)

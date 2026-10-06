@@ -1049,6 +1049,21 @@ function Update-AppProgress {
     }
 }
 
+# The "..." menu of an installed app
+function New-AppMenu($app) {
+    $menu = New-Object System.Windows.Controls.ContextMenu
+    $menu.Style = $window.FindResource('MacMenu')
+    foreach ($item in @(@{ Text = T 'openfolder'; Action = 'folder' }, @{ Text = T 'uninstall'; Action = 'uninstall' })) {
+        $mi = New-Object System.Windows.Controls.MenuItem
+        # Uninstall in red, like a destructive action in macOS
+        $mi.Style = $window.FindResource($(if ($item.Action -eq 'uninstall') { 'MacMenuDanger' } else { 'MacMenuItem' }))
+        $mi.Header = $item.Text; $mi.Tag = @{ App = $app; Action = $item.Action }
+        $mi.Add_Click({ if ($this.Tag.Action -eq 'folder') { Open-AppFolder $this.Tag.App } else { Start-Uninstall $this.Tag.App } })
+        [void]$menu.Items.Add($mi)
+    }
+    return $menu
+}
+
 # One gray heading and one grouped list per category
 $appGroups = @{}
 foreach ($cat in $appCats) {
@@ -1095,15 +1110,7 @@ foreach ($app in $apps) {
         if (Test-App $a) { if ($a.HasUpdate) { Add-AppToQueue $a 'update' } else { Open-App $a } } else { Add-AppToQueue $a 'install' }
     })
     $more.Add_Click({
-        $a = $this.Tag
-        $menu = New-Object System.Windows.Controls.ContextMenu
-        $menu.Background = '#2C2C2E'; $menu.Foreground = '#EBEBF0'; $menu.BorderBrush = '#48484A'
-        foreach ($item in @(@{ Text = T 'openfolder'; Action = 'folder' }, @{ Text = T 'uninstall'; Action = 'uninstall' })) {
-            $mi = New-Object System.Windows.Controls.MenuItem
-            $mi.Header = $item.Text; $mi.Tag = @{ App = $a; Action = $item.Action }; $mi.Foreground = '#EBEBF0'
-            $mi.Add_Click({ if ($this.Tag.Action -eq 'folder') { Open-AppFolder $this.Tag.App } else { Start-Uninstall $this.Tag.App } })
-            [void]$menu.Items.Add($mi)
-        }
+        $menu = New-AppMenu $this.Tag
         $menu.PlacementTarget = $this; $menu.Placement = 'Bottom'; $menu.IsOpen = $true
     })
     Update-AppRow $app
@@ -2486,6 +2493,19 @@ if ($Screenshot) {
             if ($p -eq 'tweaks') { $ui.SystemList.Measure((New-Object System.Windows.Size 800, 10000)) }
             Save-Shot "$p-$l.png"
             if ($p -eq 'gaming') { foreach ($i in 2, 3) { $apps[$i].State = 'idle'; Update-AppRow $apps[$i] } }
+            if ($p -eq 'gaming') {
+                # The "..." menu on its own (a menu opens in a popup, outside the window)
+                try {
+                    $menu = New-AppMenu $apps[0]
+                    $menu.Measure((New-Object System.Windows.Size ([double]::PositiveInfinity), ([double]::PositiveInfinity)))
+                    $menu.Arrange((New-Object System.Windows.Rect $menu.DesiredSize)); $menu.UpdateLayout()
+                    $mb = New-Object System.Windows.Media.Imaging.RenderTargetBitmap ([int][Math]::Ceiling($menu.ActualWidth)), ([int][Math]::Ceiling($menu.ActualHeight)), 96, 96, ([System.Windows.Media.PixelFormats]::Pbgra32)
+                    $mb.Render($menu)
+                    $me = New-Object System.Windows.Media.Imaging.PngBitmapEncoder
+                    $me.Frames.Add([System.Windows.Media.Imaging.BitmapFrame]::Create($mb))
+                    $mf = [IO.File]::Create((Join-Path $Screenshot "menu-$l.png")); $me.Save($mf); $mf.Close()
+                } catch { Write-Host "Menu screenshot failed: $($_.Exception.Message)" }
+            }
             if ($p -eq 'appearance' -or $p -eq 'tweaks' -or $p -eq 'boost' -or $p -eq 'gaming') {
                 # The lower part of long pages
                 $sv = $ui["Page$(Get-PageId $p)"]

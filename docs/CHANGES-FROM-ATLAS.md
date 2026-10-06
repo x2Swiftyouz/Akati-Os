@@ -41,7 +41,7 @@ W11 = Windows 11 playbook, W10 = Windows 10 playbook.
 | `Executables/AtlasModules/Scripts/newUsers.ps1` | W11 | Default theme for new users is `akatios-dark.theme` |
 | `Executables/AtlasModules/Scripts/Modules/Themes/Themes.psm1` | W11, W10 | Akati OS themes in `Set-ThemeMRU` (AtlasOS themes removed), default lock screen image |
 | `Executables/AtlasModules/Scripts/Modules/Qol/Qol.psm1` | W11 | `Set-AtlasTheme` uses `akatios-dark.theme` |
-| `Executables/SHORTCUTS.ps1` | W11, W10 | No Atlas folder shortcut on the desktop or in the Start menu (the settings are in Akati OS Center > System settings). The folder `C:\Windows\AtlasDesktop` itself stays, AtlasOS scripts use it |
+| `Executables/SHORTCUTS.ps1` | W11, W10 | No Atlas folder shortcut on the desktop or in the Start menu (the settings are in Akati OS Center > Tweaks). The folder `C:\Windows\AtlasDesktop` itself stays, AtlasOS scripts use it |
 
 ## Removed files
 
@@ -103,7 +103,7 @@ It runs only when the user opens it and asks for administrator rights. Everythin
 - **Cleaner**: deletes the contents of `%TEMP%`, `%windir%\Temp`, `%LOCALAPPDATA%\CrashDumps` and empties the Recycle Bin, only for the items the user ticks
 - **Microsoft Store switch**: off removes the `Microsoft.WindowsStore` package for all users; on runs `wsreset -i`, which installs it again
 - **Appearance**: opens an Akati OS `.theme` file, which Windows applies
-- **System settings**: lists every file in `C:\Windows\AtlasDesktop` (the unchanged AtlasOS settings), one row per folder, with English and Thai names. A `.reg` file is imported with `reg import`, a `.cmd` script opens in a console window (the AtlasOS script explains the change), links and other files are opened. Nothing runs until the user clicks a button. Before the first `.reg`, `.cmd` or `.ps1` in a window, `Checkpoint-Computer` creates a restore point (switch on the page, saved as `RestorePoint` in `HKCU\Software\AkatiOS\Center`); System Restore is not turned on if it is off
+- **Tweaks > System (AtlasOS)**: lists every file in `C:\Windows\AtlasDesktop` (the unchanged AtlasOS settings), one row per folder, with English and Thai names. A `.reg` file is imported with `reg import`, a `.cmd` script opens in a console window (the AtlasOS script explains the change), links and other files are opened. Nothing runs until the user clicks a button. Before the first `.reg`, `.cmd` or `.ps1` in a window, `Checkpoint-Computer` creates a restore point (switch on the page, saved as `RestorePoint` in `HKCU\Software\AkatiOS\Center`); System Restore is not turned on if it is off
 - **Accent color**: `HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Accent` (`AccentPalette`, `AccentColorMenu`, `StartColorMenu`), `HKCU\Software\Microsoft\Windows\DWM` (`AccentColor`, `ColorizationColor`, `ColorizationAfterglow`), `HKCU\Control Panel\Desktop` `AutoColorization` = 0, and the colors in `%ProgramData%\Microsoft\Windows Terminal\Fragments\AkatiOS\akatios.json`
 - **Wallpapers**: `SystemParametersInfo(SPI_SETDESKWALLPAPER)` with Fill
 - **Cursor**: `HKCU\Control Panel\Cursors` (Akati OS: `Arrow`, `Wait`, `AppStarting`; the other pointers are the Windows ones), then `SPI_SETCURSORS`

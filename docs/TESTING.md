@@ -199,8 +199,8 @@ Test-Path "$env:windir\System32\d3dx9_43.dll"
 - [ ] `Get-ItemProperty 'HKLM:\SOFTWARE\AkatiOS'` มี `Version` และ `Edition` ถูกต้อง
 - [ ] Akati OS Center > ธีม: Akati OS Light สลับเป็นธีมสว่าง และ Akati OS Slideshow ทำให้ wallpaper เปลี่ยนเอง (ตั้งเวลาไว้ 30 นาที)
 - [ ] Akati OS Center > เกี่ยวกับ > ตรวจอัปเดต แสดงเวอร์ชันในเครื่องและเวอร์ชันล่าสุดบน GitHub ไม่มี error
-- [ ] Akati OS Center > ตั้งค่าระบบ: มีทุกหมวดของ Atlas (Software ถึง Troubleshooting และ AtlasOS) ช่องค้นหากรองได้ (ลองพิมพ์ "hibernation")
-- [ ] ตั้งค่าระบบ: กดปุ่ม `.reg` (เช่น Lock Screen > Hide Lock Screen) แถบสถานะขึ้น "ใช้แล้ว" กดปุ่ม `.cmd` (เช่น Hibernation > Enable Hibernation) เปิดหน้าต่างสคริปต์ของ Atlas
+- [ ] Akati OS Center > ปรับแต่ง (ส่วนระบบ): มีทุกหมวดของ Atlas (Software ถึง Troubleshooting และ AtlasOS) ช่องค้นหากรองได้ (ลองพิมพ์ "hibernation")
+- [ ] ปรับแต่ง (ส่วนระบบ): กดปุ่ม `.reg` (เช่น Lock Screen > Hide Lock Screen) แถบสถานะขึ้น "ใช้แล้ว" กดปุ่ม `.cmd` (เช่น Hibernation > Enable Hibernation) เปิดหน้าต่างสคริปต์ของ Atlas
 - [ ] Windows Terminal (ถ้ามี): Settings > Color schemes มี "Akati OS" และมีโปรไฟล์ "Windows PowerShell (Akati OS)"
 - [ ] ปุ่ม "Learn more" ในหน้าติดตั้งเปิด `docs/OPTIONS.md` ไปยังหัวข้อที่ถูกต้อง
 
@@ -227,18 +227,18 @@ Test-Path "$env:windir\System32\d3dx9_43.dll"
 - [ ] บูสต์เกม: กด "เริ่ม" แล้ว `powercfg /getactivescheme` เป็น plan ประสิทธิภาพสูง กด "หยุด" แล้วกลับเป็น plan เดิม
 - [ ] บูสต์เกม: กด "เริ่มทดสอบ" แล้วปิงขึ้นเป็น ms ทั้ง 4 ที่ และกราฟขยับ
 - [ ] บูสต์เกม: ปิดสวิตช์ของแอปที่เปิดตอนบูต 1 ตัว แล้ว Task Manager > Startup ขึ้นเป็น Disabled ตรงกัน
-- [ ] ตั้งค่าระบบ: ชื่อหัวข้อเป็นภาษาไทย ปุ่มสั้นเป็น "เปิด" / "ปิด" ตัวที่เป็นค่าเริ่มต้นมีป้าย "ค่าเริ่มต้น"
-- [ ] ตั้งค่าระบบ: กดปุ่มแรกแล้วขึ้น "กำลังสร้างจุดคืนค่า..." ก่อน และ System Restore (`rstrui`) มีจุดคืนค่า "Akati OS Center" (ถ้า System Restore เปิดอยู่)
+- [ ] ปรับแต่ง (ส่วนระบบ): ชื่อหัวข้อเป็นภาษาไทย ปุ่มสั้นเป็น "เปิด" / "ปิด" ตัวที่เป็นค่าเริ่มต้นมีป้าย "ค่าเริ่มต้น"
+- [ ] ปรับแต่ง (ส่วนระบบ): กดปุ่มแรกแล้วขึ้น "กำลังสร้างจุดคืนค่า..." ก่อน และ System Restore (`rstrui`) มีจุดคืนค่า "Akati OS Center" (ถ้า System Restore เปิดอยู่)
 - [ ] ธีม: เลือกสีหลักสีฟ้า ปุ่มใน Center เปลี่ยนสีทันที และสีเน้นของ Windows (Settings > Personalization > Colors) เป็นสีนั้น
 - [ ] ธีม: กดวอลเปเปอร์ Aurora แล้วพื้นหลังเปลี่ยน
 - [ ] ธีม: เคอร์เซอร์ "Akati OS" แล้วลูกศรมีขอบม่วง กด "Windows" แล้วกลับเป็นแบบเดิม
 - [ ] ธีม: เสียง "Akati OS" แล้ว "ลองฟัง" มีเสียง เสียบ USB แล้วมีเสียง connect กด "ไม่มีเสียง" แล้วเงียบ
 - [ ] เกี่ยวกับ: "สร้างรายงานปัญหา" ได้ไฟล์ .zip บนเดสก์ท็อป ข้างในไม่มีชื่อผู้ใช้และชื่อเครื่อง
-- [ ] คีย์ลัด: Ctrl+2 ไปหน้าแอปเกม, Ctrl+F ไปช่องค้นหาตั้งค่าระบบ, Esc ล้างคำค้น
+- [ ] คีย์ลัด: Ctrl+2 ไปหน้าแอปเกม, Ctrl+F ไปช่องค้นหาในหน้าปรับแต่ง, Esc ล้างคำค้น
 
 ### โฟลเดอร์ Atlas
 - [ ] ไม่มีทางลัดบนเดสก์ท็อป แต่โฟลเดอร์ `C:\Windows\AtlasDesktop` ยังอยู่ (สคริปต์ของ Atlas ใช้)
-- [ ] ลองสลับตัวเลือก 1 อย่างจาก Akati OS Center > ตั้งค่าระบบ (เช่น Power-saving) แล้วทำงานได้
+- [ ] ลองสลับตัวเลือก 1 อย่างจาก Akati OS Center > ปรับแต่ง (ส่วนระบบ) (เช่น Power-saving) แล้วทำงานได้
 
 ---
 

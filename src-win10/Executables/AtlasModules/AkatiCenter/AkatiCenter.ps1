@@ -58,7 +58,8 @@ $strings = @{
         'quick' = 'Quick actions'
         'quick.clean' = 'Clean temp files'; 'quick.clean.d' = 'Free up disk space'
         'quick.update' = 'Check for updates'; 'quick.update.d' = 'Compare with GitHub'
-        'quick.system' = 'System settings'; 'quick.system.d' = 'All other settings'
+        'quick.system' = 'Tweaks'; 'quick.system.d' = 'Gaming and AtlasOS settings'
+        'tweaks.gaming' = 'Gaming'; 'tweaks.system' = 'System (AtlasOS)'
         'nav.system' = 'System settings'; 'system.title' = 'System settings'
         'system.sub' = 'All AtlasOS settings. A button applies that option; scripts open in a window that explains what they change. The default badge marks the Akati OS default.'
         'system.search' = 'Search settings'; 'system.links' = 'Links and tools'
@@ -71,7 +72,7 @@ $strings = @{
         'gaming.sub' = 'Akati OS does not install apps during setup. Install them here, from official sources (WinGet, or the official installer for Steam and Discord).'
         'gpu.title' = 'GPU drivers'; 'gpu.sub' = 'Opens the official driver download page.'
         'tweaks.title' = 'Tweaks'
-        'tweaks.sub' = 'Each switch shows the current state of your PC. Turn a tweak off again if games run worse.'
+        'tweaks.sub' = 'Gaming switches show the current state of your PC; turn one off again if games run worse. Below are all AtlasOS settings.'
         'cleaner.title' = 'Cleaner'; 'cleaner.sub' = 'Deletes temporary files. Files that are in use are skipped.'
         'cleaner.total' = 'SELECTED'; 'cleaner.scan' = 'Scan'; 'cleaner.clean' = 'Clean now'
         'appearance.title' = 'Appearance'; 'appearance.sub' = 'Pick an Akati OS theme. Windows applies it right away.'
@@ -158,7 +159,7 @@ $strings = @{
         'welcome.lang' = 'Language'; 'welcome.apps' = 'Install your gaming apps'; 'welcome.apps.d' = 'Steam, Discord, Epic and more'
         'welcome.look' = 'Pick a theme and accent color'; 'welcome.look.d' = 'Dark, light, slideshow and 7 colors'
         'welcome.open' = 'Open'; 'welcome.done' = 'Get started'
-        'welcome.keys' = 'Tip: Ctrl+1 to Ctrl+8 switch pages, Ctrl+F searches the settings.'
+        'welcome.keys' = 'Tip: Ctrl+1 to Ctrl+7 switch pages, Ctrl+F searches the settings.'
         'lang' = 'ภาษาไทย'
     }
     th = @{
@@ -170,7 +171,8 @@ $strings = @{
         'quick' = 'ทางลัด'
         'quick.clean' = 'ล้างไฟล์ชั่วคราว'; 'quick.clean.d' = 'เพิ่มพื้นที่ดิสก์'
         'quick.update' = 'ตรวจอัปเดต'; 'quick.update.d' = 'เทียบกับ GitHub'
-        'quick.system' = 'ตั้งค่าระบบ'; 'quick.system.d' = 'การตั้งค่าอื่น ๆ ทั้งหมด'
+        'quick.system' = 'ปรับแต่ง'; 'quick.system.d' = 'เกมและการตั้งค่า AtlasOS'
+        'tweaks.gaming' = 'เกม'; 'tweaks.system' = 'ระบบ (AtlasOS)'
         'nav.system' = 'ตั้งค่าระบบ'; 'system.title' = 'ตั้งค่าระบบ'
         'system.sub' = 'การตั้งค่าทั้งหมดของ AtlasOS กดปุ่มเพื่อใช้ตัวเลือกนั้น สคริปต์จะเปิดในหน้าต่างที่อธิบายว่าเปลี่ยนอะไร ป้าย ค่าเริ่มต้น คือค่าที่ Akati OS ใช้ หน้าต่างของสคริปต์เป็นภาษาอังกฤษตาม AtlasOS'
         'system.search' = 'ค้นหาการตั้งค่า'; 'system.links' = 'ลิงก์และเครื่องมือ'
@@ -183,7 +185,7 @@ $strings = @{
         'gaming.sub' = 'Akati OS ไม่ได้ติดตั้งแอปให้ตอนลง กดติดตั้งได้ที่นี่ โหลดจากแหล่งทางการ (WinGet หรือตัวติดตั้งทางการของ Steam และ Discord)'
         'gpu.title' = 'ไดรเวอร์การ์ดจอ'; 'gpu.sub' = 'เปิดหน้าดาวน์โหลดไดรเวอร์ทางการ'
         'tweaks.title' = 'ปรับแต่ง'
-        'tweaks.sub' = 'สวิตช์แสดงสถานะจริงของเครื่อง ถ้าเปิดแล้วเกมแย่ลงให้ปิดกลับ'
+        'tweaks.sub' = 'สวิตช์เกมแสดงสถานะจริงของเครื่อง ถ้าเปิดแล้วเกมแย่ลงให้ปิดกลับ ด้านล่างคือการตั้งค่าทั้งหมดของ AtlasOS'
         'cleaner.title' = 'ล้างไฟล์ขยะ'; 'cleaner.sub' = 'ลบไฟล์ชั่วคราว ไฟล์ที่กำลังใช้งานอยู่จะถูกข้าม'
         'cleaner.total' = 'ที่เลือกไว้'; 'cleaner.scan' = 'สแกน'; 'cleaner.clean' = 'ล้างเลย'
         'appearance.title' = 'ธีม'; 'appearance.sub' = 'เลือกธีมของ Akati OS แล้ว Windows จะเปลี่ยนให้ทันที'
@@ -270,7 +272,7 @@ $strings = @{
         'welcome.lang' = 'ภาษา'; 'welcome.apps' = 'ติดตั้งแอปเกม'; 'welcome.apps.d' = 'Steam, Discord, Epic และอื่น ๆ'
         'welcome.look' = 'เลือกธีมและสีหลัก'; 'welcome.look.d' = 'ธีมมืด สว่าง สไลด์โชว์ และ 7 สี'
         'welcome.open' = 'เปิด'; 'welcome.done' = 'เริ่มใช้งาน'
-        'welcome.keys' = 'ทิป: Ctrl+1 ถึง Ctrl+8 สลับหน้า, Ctrl+F ค้นหาการตั้งค่า'
+        'welcome.keys' = 'ทิป: Ctrl+1 ถึง Ctrl+7 สลับหน้า, Ctrl+F ค้นหาการตั้งค่า'
         'lang' = 'English'
     }
 }
@@ -484,12 +486,12 @@ function Get-FileIcon([string[]]$paths) {
 # $left (optional) goes before the icon, for example a check box.
 function New-Row([string]$glyph, [string]$title, [string]$titleTag, [System.Windows.UIElement]$right, [string]$subTag, [System.Windows.UIElement]$left = $null) {
     $border = New-Object System.Windows.Controls.Border
-    $border.Padding = '14,12'; $border.CornerRadius = 10; $border.Margin = '0,2'; $border.Background = [System.Windows.Media.Brushes]::Transparent
+    $border.Padding = '14,10'; $border.Background = [System.Windows.Media.Brushes]::Transparent
     $grid = New-Object System.Windows.Controls.Grid
     foreach ($w in 'Auto', 'Auto', '*', 'Auto') { $c = New-Object System.Windows.Controls.ColumnDefinition; $c.Width = $w; $grid.ColumnDefinitions.Add($c) }
     if ($left) { $left.Margin = '0,0,14,0'; $left.VerticalAlignment = 'Center'; [void]$grid.Children.Add($left) }
     $icon = New-Object System.Windows.Controls.Border
-    $icon.Width = 38; $icon.Height = 38; $icon.CornerRadius = 10; $icon.Background = '#241C30'; $icon.Margin = '0,0,14,0'
+    $icon.Width = 30; $icon.Height = 30; $icon.CornerRadius = 7; $icon.Background = '#3A3A3C'; $icon.Margin = '0,0,12,0'
     $g = New-Text $glyph 16; $g.Style = $window.FindResource('Glyph'); $g.HorizontalAlignment = 'Center'; $g.SetResourceReference([System.Windows.Controls.TextBlock]::ForegroundProperty, 'Accent2')
     $icon.Child = $g
     [System.Windows.Controls.Grid]::SetColumn($icon, 1)
@@ -505,9 +507,18 @@ function New-Row([string]$glyph, [string]$title, [string]$titleTag, [System.Wind
     $right.VerticalAlignment = 'Center'
     [void]$grid.Children.Add($icon); [void]$grid.Children.Add($text); [void]$grid.Children.Add($right)
     $border.Child = $grid
-    $border.Add_MouseEnter({ $this.Background = '#1C1626' })
-    $border.Add_MouseLeave({ $this.Background = [System.Windows.Media.Brushes]::Transparent })
     return @{ Row = $border; Sub = $s; Title = $t; Icon = $icon; Bar = $bar }
+}
+
+# Thin lines between the rows of a grouped list (macOS style): every visible row but the first
+function Update-Separators($panel) {
+    $first = $true
+    foreach ($child in $panel.Children) {
+        if ($child -isnot [System.Windows.Controls.Border] -or $child.Visibility -ne 'Visible') { continue }
+        $child.BorderBrush = '#38383A'
+        $child.BorderThickness = if ($first) { '0' } else { '0,1,0,0' }
+        $first = $false
+    }
 }
 
 function Set-RowIcon($row, $image) {
@@ -677,6 +688,7 @@ foreach ($app in $apps) {
     Update-AppRow $app
 }
 Update-AppsToolbar
+Update-Separators $ui.AppsList
 
 $ui.InstallSelectedButton.Add_Click({
     foreach ($a in $apps) { if ($a.Check.IsChecked -and $a.State -eq 'idle') { $a.Check.IsChecked = $false; Add-AppToQueue $a 'install' } }
@@ -768,7 +780,7 @@ function Update-BoostCard {
         $ui.BoostState.Foreground = $window.FindResource('MutedBrush')
         $ui.BoostButton.Content = T 'boost.start'
         $ui.BoostButton.Style = $window.FindResource('Primary')
-        $ui.BoostIcon.Background = '#241C30'
+        $ui.BoostIcon.Background = '#3A3A3C'
         foreach ($c in 'BoostPower', 'BoostApps', 'BoostNotify') { $ui[$c].IsEnabled = $true }
     }
 }
@@ -989,9 +1001,11 @@ function Show-StartupItems {
         Set-RowIcon $row (Get-FileIcon @($item.Exe))
         [void]$ui.StartupList.Children.Add($row.Row)
     }
+    Update-Separators $ui.StartupList
 }
 Show-StartupItems
 Update-BoostCard
+Update-Separators $ui.PingList
 
 # ---------------------------------------------------------------------------------------------
 # Tweaks (each one reads the real state of the PC)
@@ -1088,6 +1102,7 @@ foreach ($tw in $tweaks) {
     })
     [void]$ui.TweaksList.Children.Add($row.Row)
 }
+Update-Separators $ui.TweaksList
 
 # ---------------------------------------------------------------------------------------------
 # Cleaner
@@ -1111,6 +1126,7 @@ foreach ($ci in $cleanItems) {
     $ci.SizeText = $size; $ci.Check = $check; $ci.Bytes = 0
     [void]$ui.CleanList.Children.Add($row.Row)
 }
+Update-Separators $ui.CleanList
 
 function Update-CleanTotal {
     $total = 0
@@ -1200,7 +1216,7 @@ foreach ($th in $themes) {
     $card.Style = $window.FindResource('Card'); $card.Margin = '8,0'; $card.Padding = '12'; $card.BorderThickness = 2
     $stack = New-Object System.Windows.Controls.StackPanel
     $preview = New-Object System.Windows.Controls.Border
-    $preview.CornerRadius = 8; $preview.Height = 130; $preview.ClipToBounds = $true; $preview.Background = '#241C30'
+    $preview.CornerRadius = 8; $preview.Height = 130; $preview.ClipToBounds = $true; $preview.Background = '#3A3A3C'
     $img = New-Object System.Windows.Controls.Image
     $img.Stretch = 'UniformToFill'; $img.Source = Get-Image (Join-Path $wallpapers $th.Image) 480
     $preview.Child = $img
@@ -1337,7 +1353,7 @@ foreach ($file in @(Get-ChildItem -Path (Join-Path $wallpapers '*') -Include *.p
 </ControlTemplate>
 '@)
     $frame = New-Object System.Windows.Controls.Border
-    $frame.Width = 168; $frame.Height = 95; $frame.CornerRadius = 8; $frame.Background = '#241C30'
+    $frame.Width = 168; $frame.Height = 95; $frame.CornerRadius = 8; $frame.Background = '#3A3A3C'
     $brush = New-Object System.Windows.Media.ImageBrush (Get-Image $file.FullName 340)
     $brush.Stretch = 'UniformToFill'
     $frame.Background = $brush
@@ -1462,7 +1478,7 @@ function Start-UpdateCheck {
 }
 $ui.UpdateButton.Add_Click({ if ($this.Tag -eq 'open') { Start-Process $script:releaseUrl } else { Start-UpdateCheck } })
 $ui.QuickUpdate.Add_Click({ $ui.NavAbout.IsChecked = $true; Start-UpdateCheck })
-$ui.QuickAtlas.Add_Click({ $ui.NavSystem.IsChecked = $true })
+$ui.QuickAtlas.Add_Click({ $ui.NavTweaks.IsChecked = $true })
 $ui.LinkGithub.Add_Click({ Start-Process "https://github.com/$repo" })
 $ui.LinkOptions.Add_Click({ Start-Process "https://github.com/$repo/blob/main/docs/OPTIONS.md" })
 $ui.LinkAtlas.Add_Click({ Start-Process 'https://github.com/Atlas-OS/Atlas' })
@@ -1663,18 +1679,17 @@ function New-AtlasButton([IO.FileInfo]$file, [string]$leaf) {
 $script:systemCards = New-Object System.Collections.ArrayList
 function Add-SystemCard([string]$key, [System.IO.DirectoryInfo[]]$dirs, [string]$topPath) {
     $card = New-Object System.Windows.Controls.Border
-    $card.Style = $window.FindResource('Card'); $card.Margin = '0,0,0,16'
+    $card.Style = $window.FindResource('Card'); $card.Margin = '0,0,0,22'; $card.Padding = '0'
     $stack = New-Object System.Windows.Controls.StackPanel
-    $head = New-Text (T "system.cat.$key") 16 'SemiBold'
-    $head.Margin = '0,0,0,6'
-    [void]$stack.Children.Add($head)
+    $head = New-Text (T "system.cat.$key")
+    $head.Style = $window.FindResource('Section')
     $rows = New-Object System.Collections.ArrayList
     $li = if ($lang -eq 'th') { 1 } else { 0 }
     foreach ($d in $dirs) {
         $files = @(Get-ChildItem -LiteralPath $d.FullName -File -ErrorAction SilentlyContinue | Where-Object { $_.Extension -ne '.xml' } | Sort-Object Name)
         if ($files.Count -eq 0) { continue }
         $row = New-Object System.Windows.Controls.Border
-        $row.Padding = '10,8'; $row.CornerRadius = 8; $row.Margin = '-10,2'; $row.Background = [System.Windows.Media.Brushes]::Transparent
+        $row.Padding = '14,10'; $row.Background = [System.Windows.Media.Brushes]::Transparent
         $rowStack = New-Object System.Windows.Controls.StackPanel
         $info = $null; $desc = ''
         if ($d.FullName -eq $topPath) {
@@ -1701,8 +1716,6 @@ function Add-SystemCard([string]$key, [System.IO.DirectoryInfo[]]$dirs, [string]
         foreach ($f in $files) { [void]$wrap.Children.Add((New-AtlasButton $f $leaf)) }
         [void]$rowStack.Children.Add($wrap)
         $row.Child = $rowStack
-        $row.Add_MouseEnter({ $this.Background = '#1C1626' })
-        $row.Add_MouseLeave({ $this.Background = [System.Windows.Media.Brushes]::Transparent })
         # Search in both languages and in the original AtlasOS names
         $words = @($key, (T "system.cat.$key"), $d.Name, $title, $desc) + @($files | ForEach-Object { $_.BaseName })
         if ($info) { $words += $info }
@@ -1712,8 +1725,10 @@ function Add-SystemCard([string]$key, [System.IO.DirectoryInfo[]]$dirs, [string]
     }
     if ($rows.Count -eq 0) { return }
     $card.Child = $stack
+    Update-Separators $stack
+    [void]$ui.SystemList.Children.Add($head)
     [void]$ui.SystemList.Children.Add($card)
-    [void]$script:systemCards.Add(@{ Card = $card; Rows = $rows })
+    [void]$script:systemCards.Add(@{ Card = $card; Head = $head; Rows = $rows; Stack = $stack })
 }
 
 function Show-SystemList {
@@ -1741,6 +1756,8 @@ function Update-SystemFilter {
             if ($match) { $shown++ }
         }
         $c.Card.Visibility = if ($shown) { 'Visible' } else { 'Collapsed' }
+        $c.Head.Visibility = $c.Card.Visibility
+        Update-Separators $c.Stack
     }
 }
 $ui.SystemSearch.Add_TextChanged({ Update-SystemFilter })
@@ -1801,7 +1818,7 @@ $ui.ReportButton.Add_Click({
 # ---------------------------------------------------------------------------------------------
 # Navigation, title bar, language
 # ---------------------------------------------------------------------------------------------
-$pages = 'dashboard', 'gaming', 'boost', 'tweaks', 'cleaner', 'appearance', 'system', 'about'
+$pages = 'dashboard', 'gaming', 'boost', 'tweaks', 'cleaner', 'appearance', 'about'
 $script:page = 'dashboard'
 function Get-PageId([string]$p) { [Globalization.CultureInfo]::InvariantCulture.TextInfo.ToTitleCase($p) }
 function Show-Page([string]$name) {
@@ -1910,7 +1927,7 @@ $ui.WelcomeDone.Add_Click({ Close-Welcome })
 $ui.Welcome.Add_MouseLeftButtonDown({ $window.DragMove() })
 if (!(Get-RegValue $settingsKey 'Welcomed') -and !$Screenshot) { $ui.Welcome.Visibility = 'Visible' }
 
-# Keyboard: Ctrl+1 to Ctrl+8 switch pages, Ctrl+F searches the system settings, Esc closes the welcome or clears the search
+# Keyboard: Ctrl+1 to Ctrl+7 switch pages, Ctrl+F searches the AtlasOS settings in Tweaks, Esc closes the welcome or clears the search
 $window.Add_PreviewKeyDown({
     param($sender, $e)
     $ctrl = ([System.Windows.Input.Keyboard]::Modifiers -band [System.Windows.Input.ModifierKeys]::Control) -ne 0
@@ -1922,10 +1939,10 @@ $window.Add_PreviewKeyDown({
     }
     if (!$ctrl -or $ui.Welcome.Visibility -eq 'Visible') { return }
     if ($key -eq 'F') {
-        $ui.NavSystem.IsChecked = $true
+        $ui.NavTweaks.IsChecked = $true
         [void]$ui.SystemSearch.Focus(); $ui.SystemSearch.SelectAll()
         $e.Handled = $true
-    } elseif ($key -match '^(D|NumPad)([1-8])$') {
+    } elseif ($key -match '^(D|NumPad)([1-7])$') {
         $ui["Nav$(Get-PageId $pages[[int]$Matches[2] - 1])"].IsChecked = $true
         $e.Handled = $true
     }
@@ -1968,10 +1985,10 @@ if ($Screenshot) {
                 $apps[3].State = 'queued'; Update-AppRow $apps[3]
                 $apps[4].Check.IsChecked = $true; Update-AppsToolbar
             }
-            if ($p -eq 'system') { $ui.SystemList.Measure((New-Object System.Windows.Size 800, 10000)) }
+            if ($p -eq 'tweaks') { $ui.SystemList.Measure((New-Object System.Windows.Size 800, 10000)) }
             Save-Shot "$p-$l.png"
             if ($p -eq 'gaming') { foreach ($i in 2, 3) { $apps[$i].State = 'idle'; Update-AppRow $apps[$i] }; $apps[4].Check.IsChecked = $false }
-            if ($p -eq 'appearance' -or $p -eq 'system' -or $p -eq 'boost') {
+            if ($p -eq 'appearance' -or $p -eq 'tweaks' -or $p -eq 'boost') {
                 # The lower part of long pages
                 $sv = $ui["Page$(Get-PageId $p)"]
                 $sv.UpdateLayout(); $sv.ScrollToVerticalOffset(100000); $sv.UpdateLayout()
@@ -2023,8 +2040,8 @@ if ($build -ge 22000) {
             $round = 2; [void][AkatiOS.Native]::DwmSetWindowAttribute($hwnd, 33, [ref]$round, 4)  # round corners
             $mica = 2
             if ([AkatiOS.Native]::DwmSetWindowAttribute($hwnd, 38, [ref]$mica, 4) -eq 0) {
-                $ui.RootBorder.Background = '#D00E0B14'
-                $ui.Sidebar.Background = '#90120E1A'
+                $ui.RootBorder.Background = '#D01C1C1E'
+                $ui.Sidebar.Background = '#90232325'
             }
         })
     } catch { }

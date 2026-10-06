@@ -4,13 +4,13 @@
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         ResizeMode="CanMinimize" WindowStartupLocation="CenterScreen"
         FontFamily="Segoe UI Variable Text, Segoe UI, Leelawadee UI, Tahoma" FontSize="13"
-        Foreground="#F1ECF8" TextOptions.TextFormattingMode="Display">
+        Foreground="#F5F5F7" TextOptions.TextFormattingMode="Display">
     <Window.Resources>
         <SolidColorBrush x:Key="Accent" Color="#8A3FD6"/>
         <SolidColorBrush x:Key="Accent2" Color="#B07CF0"/>
-        <SolidColorBrush x:Key="CardBg" Color="#17121F"/>
-        <SolidColorBrush x:Key="CardBorder" Color="#2A2238"/>
-        <SolidColorBrush x:Key="MutedBrush" Color="#9C93AD"/>
+        <SolidColorBrush x:Key="CardBg" Color="#2A2A2C"/>
+        <SolidColorBrush x:Key="CardBorder" Color="#38383A"/>
+        <SolidColorBrush x:Key="MutedBrush" Color="#98989D"/>
         <SolidColorBrush x:Key="Good" Color="#5FD38D"/>
         <LinearGradientBrush x:Key="AccentGradient" StartPoint="0,0" EndPoint="1,1">
             <GradientStop Color="#A35CF0" Offset="0"/>
@@ -21,8 +21,8 @@
             <Setter Property="Background" Value="{StaticResource CardBg}"/>
             <Setter Property="BorderBrush" Value="{StaticResource CardBorder}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="12"/>
-            <Setter Property="Padding" Value="18"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="16"/>
         </Style>
 
         <Style x:Key="Glyph" TargetType="TextBlock">
@@ -41,6 +41,14 @@
             <Setter Property="FontWeight" Value="SemiBold"/>
         </Style>
 
+        <!-- Gray heading above a grouped list, like macOS System Settings -->
+        <Style x:Key="Section" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
+            <Setter Property="Margin" Value="4,0,0,8"/>
+        </Style>
+
         <Style x:Key="Label" TargetType="TextBlock">
             <Setter Property="FontSize" Value="11"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
@@ -48,23 +56,22 @@
         </Style>
 
         <Style x:Key="Nav" TargetType="RadioButton">
-            <Setter Property="Foreground" Value="#C9C1D8"/>
-            <Setter Property="Margin" Value="0,2"/>
+            <Setter Property="Foreground" Value="#D1D1D6"/>
+            <Setter Property="Margin" Value="0,1"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="GroupName" Value="Nav"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="RadioButton">
-                        <Border x:Name="Bd" Background="Transparent" CornerRadius="8" Padding="14,10" BorderThickness="2,0,0,0" BorderBrush="Transparent">
+                        <Border x:Name="Bd" Background="Transparent" CornerRadius="6" Padding="8,5">
                             <ContentPresenter VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#1E1729"/>
+                                <Setter TargetName="Bd" Property="Background" Value="#2E2E30"/>
                             </Trigger>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#2A1F3D"/>
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource Accent2}"/>
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource Accent}"/>
                                 <Setter Property="Foreground" Value="White"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -73,15 +80,29 @@
             </Setter>
         </Style>
 
+        <Style x:Key="NavIcon" TargetType="Border">
+            <Setter Property="Width" Value="22"/>
+            <Setter Property="Height" Value="22"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Margin" Value="0,0,10,0"/>
+        </Style>
+        <Style x:Key="NavGlyph" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Segoe Fluent Icons, Segoe MDL2 Assets"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
         <Style x:Key="Primary" TargetType="Button">
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Padding" Value="16,9"/>
+            <Setter Property="Padding" Value="14,7"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="{DynamicResource AccentGradient}" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                        <Border x:Name="Bd" Background="{DynamicResource Accent}" CornerRadius="6" Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -98,19 +119,18 @@
         </Style>
 
         <Style x:Key="Secondary" TargetType="Button">
-            <Setter Property="Foreground" Value="#E4DDF2"/>
-            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="Foreground" Value="#EBEBF0"/>
+            <Setter Property="Padding" Value="12,6"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="#221A2E" BorderBrush="#33294A" BorderThickness="1" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                        <Border x:Name="Bd" Background="#3A3A3C" BorderBrush="#48484A" BorderThickness="0,1,0,0" CornerRadius="6" Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#2C2240"/>
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource Accent}"/>
+                                <Setter TargetName="Bd" Property="Background" Value="#48484A"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="Bd" Property="Opacity" Value="0.4"/>
@@ -122,20 +142,20 @@
         </Style>
 
         <Style x:Key="Action" TargetType="Button">
-            <Setter Property="Foreground" Value="#E4DDF2"/>
+            <Setter Property="Foreground" Value="#EBEBF0"/>
             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Margin" Value="0,0,0,10"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="#1C1626" BorderBrush="#2A2238" BorderThickness="1" CornerRadius="10" Padding="14,12">
+                        <Border x:Name="Bd" Background="#2E2E30" BorderBrush="#38383A" BorderThickness="1" CornerRadius="10" Padding="14,12">
                             <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource Accent}"/>
-                                <Setter TargetName="Bd" Property="Background" Value="#221A2E"/>
+                                <Setter TargetName="Bd" Property="Background" Value="#3A3A3C"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="Bd" Property="Opacity" Value="0.5"/>
@@ -177,15 +197,15 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="CheckBox">
-                        <Border x:Name="Track" Width="46" Height="24" CornerRadius="12" Background="#2E2640" BorderBrush="#41365A" BorderThickness="1">
-                            <Ellipse x:Name="Thumb" Width="16" Height="16" Fill="#C9C1D8" HorizontalAlignment="Left" Margin="4,0"/>
+                        <Border x:Name="Track" Width="40" Height="24" CornerRadius="12" Background="#48484A">
+                            <Ellipse x:Name="Thumb" Width="20" Height="20" Fill="White" HorizontalAlignment="Left" Margin="2,0">
+                                <Ellipse.Effect><DropShadowEffect BlurRadius="3" ShadowDepth="1" Opacity="0.35"/></Ellipse.Effect>
+                            </Ellipse>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="Track" Property="Background" Value="{DynamicResource AccentGradient}"/>
-                                <Setter TargetName="Track" Property="BorderBrush" Value="{DynamicResource Accent2}"/>
+                                <Setter TargetName="Track" Property="Background" Value="{DynamicResource Accent}"/>
                                 <Setter TargetName="Thumb" Property="HorizontalAlignment" Value="Right"/>
-                                <Setter TargetName="Thumb" Property="Fill" Value="White"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="Track" Property="Opacity" Value="0.45"/>
@@ -197,13 +217,13 @@
         </Style>
 
         <Style x:Key="Tick" TargetType="CheckBox">
-            <Setter Property="Foreground" Value="#E4DDF2"/>
+            <Setter Property="Foreground" Value="#EBEBF0"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="CheckBox">
                         <StackPanel Orientation="Horizontal">
-                            <Border x:Name="Box" Width="18" Height="18" CornerRadius="5" Background="#221A2E" BorderBrush="#4A3E66" BorderThickness="1" VerticalAlignment="Center">
+                            <Border x:Name="Box" Width="18" Height="18" CornerRadius="5" Background="#3A3A3C" BorderBrush="#5A5A5E" BorderThickness="1" VerticalAlignment="Center">
                                 <TextBlock x:Name="Mark" Text="&#xE73E;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="11" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed"/>
                             </Border>
                             <ContentPresenter Margin="10,0,0,0" VerticalAlignment="Center"/>
@@ -228,7 +248,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="ProgressBar">
                         <Grid>
-                            <Border x:Name="PART_Track" Background="#2A2238" CornerRadius="3"/>
+                            <Border x:Name="PART_Track" Background="#38383A" CornerRadius="3"/>
                             <Border x:Name="PART_Indicator" Background="{DynamicResource AccentGradient}" CornerRadius="3" HorizontalAlignment="Left"/>
                         </Grid>
                     </ControlTemplate>
@@ -244,7 +264,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="ProgressBar">
                         <Grid ClipToBounds="True">
-                            <Border x:Name="PART_Track" Background="#2A2238" CornerRadius="2"/>
+                            <Border x:Name="PART_Track" Background="#38383A" CornerRadius="2"/>
                             <Border x:Name="PART_Indicator" Background="{DynamicResource AccentGradient}" CornerRadius="2" HorizontalAlignment="Left"/>
                             <Border x:Name="Pulse" Width="90" Background="{DynamicResource AccentGradient}" CornerRadius="2" HorizontalAlignment="Left" Visibility="Collapsed">
                                 <Border.RenderTransform><TranslateTransform X="-90"/></Border.RenderTransform>
@@ -272,7 +292,7 @@
         </Style>
 
         <Style x:Key="Badge" TargetType="Border">
-            <Setter Property="Background" Value="#2A1F3D"/>
+            <Setter Property="Background" Value="#3A3A3C"/>
             <Setter Property="CornerRadius" Value="6"/>
             <Setter Property="Padding" Value="6,1"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
@@ -291,7 +311,7 @@
                         </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Ring" Property="Stroke" Value="#5A4E72"/>
+                                <Setter TargetName="Ring" Property="Stroke" Value="#6A6A6E"/>
                             </Trigger>
                             <Trigger Property="IsChecked" Value="True">
                                 <Setter TargetName="Ring" Property="Stroke" Value="White"/>
@@ -312,7 +332,7 @@
                                 <Thumb>
                                     <Thumb.Template>
                                         <ControlTemplate TargetType="Thumb">
-                                            <Border Background="#3A3050" CornerRadius="3"/>
+                                            <Border Background="#5A5A5E" CornerRadius="3"/>
                                         </ControlTemplate>
                                     </Thumb.Template>
                                 </Thumb>
@@ -324,7 +344,7 @@
         </Style>
     </Window.Resources>
 
-    <Border x:Name="RootBorder" CornerRadius="14" Background="#0E0B14" BorderBrush="#2A2238" BorderThickness="1">
+    <Border x:Name="RootBorder" CornerRadius="14" Background="#1C1C1E" BorderBrush="#38383A" BorderThickness="1">
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="248"/>
@@ -332,7 +352,7 @@
             </Grid.ColumnDefinitions>
 
             <!-- Sidebar -->
-            <Border x:Name="Sidebar" Grid.Column="0" Background="#120E1A" CornerRadius="14,0,0,14" BorderBrush="#221B2E" BorderThickness="0,0,1,0">
+            <Border x:Name="Sidebar" Grid.Column="0" Background="#232325" CornerRadius="14,0,0,14" BorderBrush="#2C2C2E" BorderThickness="0,0,1,0">
                 <DockPanel Margin="14">
                     <StackPanel x:Name="Lights" DockPanel.Dock="Top" Orientation="Horizontal" Margin="4,0,0,14" HorizontalAlignment="Left" Background="Transparent">
                         <Button x:Name="CloseButton" Style="{StaticResource Light}" Background="#FF5F57" Content="&#xE8BB;" ToolTip="Close"/>
@@ -366,7 +386,7 @@
                                 <TextBlock x:Name="LangLabel" Text="ภาษาไทย"/>
                             </StackPanel>
                         </Button>
-                        <Border Background="#1C1626" CornerRadius="8" Padding="12,9" BorderBrush="#2A2238" BorderThickness="1">
+                        <Border Background="#2E2E30" CornerRadius="8" Padding="12,9" BorderBrush="#38383A" BorderThickness="1">
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                 <TextBlock Style="{StaticResource Glyph}" Text="&#xE83D;" FontSize="13" Foreground="{DynamicResource Accent2}" Margin="0,0,8,0"/>
                                 <TextBlock x:Name="AdminLabel" Tag="t:admin" Text="Administrator mode" FontSize="12" FontWeight="SemiBold"/>
@@ -375,30 +395,26 @@
                     </StackPanel>
 
                     <StackPanel>
-                        <TextBlock Tag="t:menu" Text="MENU" Style="{StaticResource Label}" Margin="14,0,0,8"/>
                         <RadioButton x:Name="NavDashboard" Style="{StaticResource Nav}" IsChecked="True">
-                            <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE80F;" Margin="0,0,14,0"/><TextBlock Tag="t:nav.dashboard" Text="Dashboard"/></StackPanel>
+                            <StackPanel Orientation="Horizontal"><Border Style="{StaticResource NavIcon}" Background="#0A84FF"><TextBlock Style="{StaticResource NavGlyph}" Text="&#xE80F;"/></Border><TextBlock Tag="t:nav.dashboard" Text="Dashboard"/></StackPanel>
                         </RadioButton>
                         <RadioButton x:Name="NavGaming" Style="{StaticResource Nav}">
-                            <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE7FC;" Margin="0,0,14,0"/><TextBlock Tag="t:nav.gaming" Text="Gaming apps"/></StackPanel>
+                            <StackPanel Orientation="Horizontal"><Border Style="{StaticResource NavIcon}" Background="#30D158"><TextBlock Style="{StaticResource NavGlyph}" Text="&#xE7FC;"/></Border><TextBlock Tag="t:nav.gaming" Text="Gaming apps"/></StackPanel>
                         </RadioButton>
                         <RadioButton x:Name="NavBoost" Style="{StaticResource Nav}">
-                            <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE945;" Margin="0,0,14,0"/><TextBlock Tag="t:nav.boost" Text="Game boost"/></StackPanel>
+                            <StackPanel Orientation="Horizontal"><Border Style="{StaticResource NavIcon}" Background="#FF9F0A"><TextBlock Style="{StaticResource NavGlyph}" Text="&#xE945;"/></Border><TextBlock Tag="t:nav.boost" Text="Game boost"/></StackPanel>
                         </RadioButton>
                         <RadioButton x:Name="NavTweaks" Style="{StaticResource Nav}">
-                            <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE9E9;" Margin="0,0,14,0"/><TextBlock Tag="t:nav.tweaks" Text="Tweaks"/></StackPanel>
+                            <StackPanel Orientation="Horizontal"><Border Style="{StaticResource NavIcon}" Background="#8E8E93"><TextBlock Style="{StaticResource NavGlyph}" Text="&#xE713;"/></Border><TextBlock Tag="t:nav.tweaks" Text="Tweaks"/></StackPanel>
                         </RadioButton>
                         <RadioButton x:Name="NavCleaner" Style="{StaticResource Nav}">
-                            <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE74D;" Margin="0,0,14,0"/><TextBlock Tag="t:nav.cleaner" Text="Cleaner"/></StackPanel>
+                            <StackPanel Orientation="Horizontal"><Border Style="{StaticResource NavIcon}" Background="#FF453A"><TextBlock Style="{StaticResource NavGlyph}" Text="&#xE74D;"/></Border><TextBlock Tag="t:nav.cleaner" Text="Cleaner"/></StackPanel>
                         </RadioButton>
                         <RadioButton x:Name="NavAppearance" Style="{StaticResource Nav}">
-                            <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE771;" Margin="0,0,14,0"/><TextBlock Tag="t:nav.appearance" Text="Appearance"/></StackPanel>
-                        </RadioButton>
-                        <RadioButton x:Name="NavSystem" Style="{StaticResource Nav}">
-                            <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE713;" Margin="0,0,14,0"/><TextBlock Tag="t:nav.system" Text="System settings"/></StackPanel>
+                            <StackPanel Orientation="Horizontal"><Border Style="{StaticResource NavIcon}" Background="#BF5AF2"><TextBlock Style="{StaticResource NavGlyph}" Text="&#xE771;"/></Border><TextBlock Tag="t:nav.appearance" Text="Appearance"/></StackPanel>
                         </RadioButton>
                         <RadioButton x:Name="NavAbout" Style="{StaticResource Nav}">
-                            <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE946;" Margin="0,0,14,0"/><TextBlock Tag="t:nav.about" Text="About"/></StackPanel>
+                            <StackPanel Orientation="Horizontal"><Border Style="{StaticResource NavIcon}" Background="#64D2FF"><TextBlock Style="{StaticResource NavGlyph}" Text="&#xE946;"/></Border><TextBlock Tag="t:nav.about" Text="About"/></StackPanel>
                         </RadioButton>
                     </StackPanel>
                 </DockPanel>
@@ -414,7 +430,7 @@
 
                 <Grid x:Name="TitleBar" Grid.Row="0" Background="Transparent">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="28,0,0,0">
-                        <TextBlock x:Name="PageTitle" Text="Dashboard" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource MutedBrush}"/>
+                        <TextBlock x:Name="PageTitle" Text="Dashboard" FontSize="15" FontWeight="Bold"/>
                     </StackPanel>
                 </Grid>
 
@@ -526,7 +542,7 @@
                     <!-- Gaming apps -->
                     <ScrollViewer x:Name="PageGaming" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
                         <StackPanel>
-                            <TextBlock Tag="t:gaming.title" Text="Gaming apps" FontSize="24" FontWeight="Bold"/>
+                            <TextBlock Tag="t:gaming.title" Text="Gaming apps" FontSize="24" FontWeight="Bold" Visibility="Collapsed"/>
                             <TextBlock Tag="t:gaming.sub" Text="Akati OS does not install apps during setup. Install them here, from official sources." Style="{StaticResource Muted}" Margin="0,4,0,18"/>
                             <Border Style="{StaticResource Card}" Padding="8" Margin="0,0,0,16">
                                 <StackPanel>
@@ -565,7 +581,7 @@
                     <!-- Game boost -->
                     <ScrollViewer x:Name="PageBoost" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
                         <StackPanel>
-                            <TextBlock Tag="t:boost.title" Text="Game boost" FontSize="24" FontWeight="Bold"/>
+                            <TextBlock Tag="t:boost.title" Text="Game boost" FontSize="24" FontWeight="Bold" Visibility="Collapsed"/>
                             <TextBlock Tag="t:boost.sub" Text="One click before you play. Everything goes back the way it was when you stop it." Style="{StaticResource Muted}" Margin="0,4,0,18"/>
                             <Border x:Name="BoostCard" Style="{StaticResource Card}" Margin="0,0,0,16">
                                 <StackPanel>
@@ -575,7 +591,7 @@
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <Border x:Name="BoostIcon" Width="52" Height="52" CornerRadius="14" Background="#241C30" Margin="0,0,16,0">
+                                        <Border x:Name="BoostIcon" Width="52" Height="52" CornerRadius="14" Background="#3A3A3C" Margin="0,0,16,0">
                                             <TextBlock Style="{StaticResource Glyph}" Text="&#xE945;" FontSize="22" HorizontalAlignment="Center" Foreground="{DynamicResource Accent2}"/>
                                         </Border>
                                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
@@ -584,7 +600,7 @@
                                         </StackPanel>
                                         <Button x:Name="BoostButton" Grid.Column="2" Style="{StaticResource Primary}" MinWidth="150" VerticalAlignment="Center" Content="Start"/>
                                     </Grid>
-                                    <Border Height="1" Background="#2A2238" Margin="0,16,0,12"/>
+                                    <Border Height="1" Background="#38383A" Margin="0,16,0,12"/>
                                     <CheckBox x:Name="BoostPower" Style="{StaticResource Tick}" IsChecked="True" Margin="0,4"><TextBlock Tag="t:boost.power" Text="Switch to the highest performance power plan"/></CheckBox>
                                     <CheckBox x:Name="BoostApps" Style="{StaticResource Tick}" IsChecked="True" Margin="0,4"><TextBlock x:Name="BoostAppsText" Tag="t:boost.apps" Text="Close background apps" TextWrapping="Wrap"/></CheckBox>
                                     <CheckBox x:Name="BoostNotify" Style="{StaticResource Tick}" IsChecked="True" Margin="0,4"><TextBlock Tag="t:boost.notify" Text="Turn off notifications"/></CheckBox>
@@ -620,23 +636,49 @@
                     <!-- Tweaks -->
                     <ScrollViewer x:Name="PageTweaks" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
                         <StackPanel>
-                            <TextBlock Tag="t:tweaks.title" Text="Tweaks" FontSize="24" FontWeight="Bold"/>
+                            <TextBlock Tag="t:tweaks.title" Text="Tweaks" FontSize="24" FontWeight="Bold" Visibility="Collapsed"/>
                             <TextBlock Tag="t:tweaks.sub" Text="Each switch shows the current state of your PC. Turn a tweak off again if games run worse." Style="{StaticResource Muted}" Margin="0,4,0,18"/>
-                            <Border Style="{StaticResource Card}" Padding="8" Margin="0,0,0,16">
+                            <TextBlock Tag="t:tweaks.gaming" Text="Gaming" Style="{StaticResource Section}"/>
+                            <Border Style="{StaticResource Card}" Padding="0" Margin="0,0,0,22">
                                 <StackPanel x:Name="TweaksList"/>
                             </Border>
+                            <TextBlock Tag="t:tweaks.system" Text="System (AtlasOS)" Style="{StaticResource Section}"/>
+                            <TextBlock Tag="t:system.sub" Text="All AtlasOS settings. A button applies that option; scripts open in a window that explains what they change." Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,4,0,14"/>
+                            <Border Style="{StaticResource Card}" Padding="14,10" Margin="0,0,0,16">
+                                <DockPanel>
+                                    <TextBlock Style="{StaticResource Glyph}" Text="&#xE721;" Foreground="{StaticResource MutedBrush}" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                    <Grid>
+                                        <TextBlock x:Name="SystemSearchHint" Tag="t:system.search" Text="Search settings" Foreground="{StaticResource MutedBrush}" FontSize="14" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                                        <TextBox x:Name="SystemSearch" Background="Transparent" BorderThickness="0" Foreground="White" CaretBrush="White" FontSize="14" VerticalContentAlignment="Center"/>
+                                    </Grid>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource Card}" Padding="14,12" Margin="0,0,0,16">
+                                <DockPanel>
+                                    <CheckBox x:Name="RestoreToggle" DockPanel.Dock="Right" Style="{StaticResource Switch}" IsChecked="True" Margin="12,0,0,0"/>
+                                    <Button x:Name="RestoreOpen" DockPanel.Dock="Right" Style="{StaticResource Secondary}" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE777;" FontSize="13" Margin="0,0,8,0"/><TextBlock Tag="t:restore.open" Text="System Restore"/></StackPanel>
+                                    </Button>
+                                    <TextBlock Style="{StaticResource Glyph}" Text="&#xE81C;" Foreground="{DynamicResource Accent2}" Margin="0,0,14,0"/>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Tag="t:restore.title" Text="Create a restore point first" FontWeight="SemiBold"/>
+                                        <TextBlock x:Name="RestoreSub" Tag="t:restore.sub" Text="Before the first change in this window. Needs System Restore turned on." Style="{StaticResource Muted}" FontSize="12" Margin="0,2,12,0"/>
+                                    </StackPanel>
+                                </DockPanel>
+                            </Border>
+                            <StackPanel x:Name="SystemList"/>
                         </StackPanel>
                     </ScrollViewer>
 
                     <!-- Cleaner -->
                     <ScrollViewer x:Name="PageCleaner" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
                         <StackPanel>
-                            <TextBlock Tag="t:cleaner.title" Text="Cleaner" FontSize="24" FontWeight="Bold"/>
+                            <TextBlock Tag="t:cleaner.title" Text="Cleaner" FontSize="24" FontWeight="Bold" Visibility="Collapsed"/>
                             <TextBlock Tag="t:cleaner.sub" Text="Deletes temporary files. Files that are in use are skipped." Style="{StaticResource Muted}" Margin="0,4,0,18"/>
                             <Border Style="{StaticResource Card}" Margin="0,0,0,16">
                                 <StackPanel>
                                     <StackPanel x:Name="CleanList"/>
-                                    <Border Height="1" Background="#2A2238" Margin="0,8,0,16"/>
+                                    <Border Height="1" Background="#38383A" Margin="0,8,0,16"/>
                                     <Grid>
                                         <StackPanel VerticalAlignment="Center">
                                             <TextBlock Tag="t:cleaner.total" Text="Selected" Style="{StaticResource Label}"/>
@@ -659,7 +701,7 @@
                     <!-- Appearance -->
                     <ScrollViewer x:Name="PageAppearance" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
                         <StackPanel>
-                            <TextBlock Tag="t:appearance.title" Text="Appearance" FontSize="24" FontWeight="Bold"/>
+                            <TextBlock Tag="t:appearance.title" Text="Appearance" FontSize="24" FontWeight="Bold" Visibility="Collapsed"/>
                             <TextBlock Tag="t:appearance.sub" Text="Pick an Akati OS theme. Windows applies it right away." Style="{StaticResource Muted}" Margin="0,4,0,18"/>
                             <UniformGrid x:Name="ThemesGrid" Columns="3" Margin="-8,0,-8,16"/>
                             <Border Style="{StaticResource Card}" Margin="0,0,0,16">
@@ -702,37 +744,6 @@
                                     </Grid>
                                 </StackPanel>
                             </Border>
-                        </StackPanel>
-                    </ScrollViewer>
-
-                    <!-- System settings: every setting of the AtlasOS folder (AtlasDesktop) -->
-                    <ScrollViewer x:Name="PageSystem" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
-                        <StackPanel>
-                            <TextBlock Tag="t:system.title" Text="System settings" FontSize="24" FontWeight="Bold"/>
-                            <TextBlock Tag="t:system.sub" Text="All AtlasOS settings. A button applies that option; scripts open in a window that explains what they change." Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,4,0,14"/>
-                            <Border Style="{StaticResource Card}" Padding="14,10" Margin="0,0,0,16">
-                                <DockPanel>
-                                    <TextBlock Style="{StaticResource Glyph}" Text="&#xE721;" Foreground="{StaticResource MutedBrush}" Margin="0,0,12,0" VerticalAlignment="Center"/>
-                                    <Grid>
-                                        <TextBlock x:Name="SystemSearchHint" Tag="t:system.search" Text="Search settings" Foreground="{StaticResource MutedBrush}" FontSize="14" VerticalAlignment="Center" IsHitTestVisible="False"/>
-                                        <TextBox x:Name="SystemSearch" Background="Transparent" BorderThickness="0" Foreground="White" CaretBrush="White" FontSize="14" VerticalContentAlignment="Center"/>
-                                    </Grid>
-                                </DockPanel>
-                            </Border>
-                            <Border Style="{StaticResource Card}" Padding="14,12" Margin="0,0,0,16">
-                                <DockPanel>
-                                    <CheckBox x:Name="RestoreToggle" DockPanel.Dock="Right" Style="{StaticResource Switch}" IsChecked="True" Margin="12,0,0,0"/>
-                                    <Button x:Name="RestoreOpen" DockPanel.Dock="Right" Style="{StaticResource Secondary}" VerticalAlignment="Center">
-                                        <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE777;" FontSize="13" Margin="0,0,8,0"/><TextBlock Tag="t:restore.open" Text="System Restore"/></StackPanel>
-                                    </Button>
-                                    <TextBlock Style="{StaticResource Glyph}" Text="&#xE81C;" Foreground="{DynamicResource Accent2}" Margin="0,0,14,0"/>
-                                    <StackPanel VerticalAlignment="Center">
-                                        <TextBlock Tag="t:restore.title" Text="Create a restore point first" FontWeight="SemiBold"/>
-                                        <TextBlock x:Name="RestoreSub" Tag="t:restore.sub" Text="Before the first change in this window. Needs System Restore turned on." Style="{StaticResource Muted}" FontSize="12" Margin="0,2,12,0"/>
-                                    </StackPanel>
-                                </DockPanel>
-                            </Border>
-                            <StackPanel x:Name="SystemList"/>
                         </StackPanel>
                     </ScrollViewer>
 
@@ -793,20 +804,20 @@
                     </ScrollViewer>
                 </Grid>
 
-                <Border Grid.Row="2" BorderBrush="#221B2E" BorderThickness="0,1,0,0">
+                <Border Grid.Row="2" BorderBrush="#2C2C2E" BorderThickness="0,1,0,0">
                     <Grid Margin="28,0">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <Ellipse x:Name="StatusDot" Width="7" Height="7" Fill="{StaticResource Good}" Margin="0,0,8,0"/>
                             <TextBlock x:Name="StatusText" Tag="t:ready" Text="Ready" FontSize="12" Foreground="{StaticResource MutedBrush}"/>
                         </StackPanel>
-                        <TextBlock x:Name="FooterVersion" Text="Akati OS" FontSize="12" Foreground="#6E6680" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="FooterVersion" Text="Akati OS" FontSize="12" Foreground="#7C7C80" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                     </Grid>
                 </Border>
             </Grid>
 
             <!-- Welcome (first start) -->
             <Grid x:Name="Welcome" Grid.ColumnSpan="2" Visibility="Collapsed">
-                <Border Background="#D80A0810" CornerRadius="14"/>
+                <Border Background="#D8000000" CornerRadius="14"/>
                 <Border Style="{StaticResource Card}" Width="560" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="32,28">
                     <StackPanel>
                         <Image x:Name="WelcomeLogo" Width="56" Height="56" HorizontalAlignment="Left"/>
@@ -841,7 +852,7 @@
                         </Grid>
                         <DockPanel>
                             <Button x:Name="WelcomeDone" DockPanel.Dock="Right" Style="{StaticResource Primary}" Tag="t:welcome.done" Content="Get started" MinWidth="140"/>
-                            <TextBlock Tag="t:welcome.keys" Text="Tip: Ctrl+1 to Ctrl+8 switch pages, Ctrl+F searches the settings." Style="{StaticResource Muted}" FontSize="12" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                            <TextBlock Tag="t:welcome.keys" Text="Tip: Ctrl+1 to Ctrl+7 switch pages, Ctrl+F searches the settings." Style="{StaticResource Muted}" FontSize="12" VerticalAlignment="Center" Margin="0,0,12,0"/>
                         </DockPanel>
                     </StackPanel>
                 </Border>

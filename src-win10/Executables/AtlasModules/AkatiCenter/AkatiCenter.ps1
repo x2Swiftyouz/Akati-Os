@@ -1832,9 +1832,46 @@ foreach ($p in $pages) {
     $ui["Nav$(Get-PageId $p)"].Add_Checked({ Show-Page $this.Name.Substring(3).ToLowerInvariant() })
 }
 
-$ui.TitleBar.Add_MouseLeftButtonDown({ $window.DragMove() })
+# Window buttons like macOS (top left): close, minimize, full screen. Full screen fills the work area
+# (the screen without the taskbar, wherever the taskbar is). Double-click the top bar to switch too.
+$script:full = $false
+$script:corner = $ui.RootBorder.CornerRadius
+function Switch-FullScreen {
+    if ($script:full) {
+        $b = $script:normalBounds
+        $window.Left = $b.X; $window.Top = $b.Y; $window.Width = $b.Width; $window.Height = $b.Height
+        $script:full = $false
+    } else {
+        $script:normalBounds = New-Object System.Windows.Rect $window.Left, $window.Top, $window.Width, $window.Height
+        $a = [System.Windows.SystemParameters]::WorkArea
+        $window.Left = $a.Left; $window.Top = $a.Top; $window.Width = $a.Width; $window.Height = $a.Height
+        $script:full = $true
+    }
+    $full = $script:full
+    $ui.MaxButton.Content = if ($full) { [string][char]0xE73F } else { [string][char]0xE740 }
+    $ui.MaxButton.ToolTip = if ($full) { 'Exit full screen' } else { 'Full screen' }
+    # Square corners and no border while the window fills the screen
+    $square = $full -or $script:corner.TopLeft -eq 0
+    $ui.RootBorder.CornerRadius = if ($full) { New-Object System.Windows.CornerRadius 0 } else { $script:corner }
+    $ui.RootBorder.BorderThickness = New-Object System.Windows.Thickness $(if ($square) { 0 } else { 1 })
+    $ui.Sidebar.CornerRadius = if ($square) { New-Object System.Windows.CornerRadius 0 } else { New-Object System.Windows.CornerRadius 14, 0, 0, 14 }
+}
+$moveWindow = {
+    param($sender, $e)
+    if ($e.ClickCount -eq 2) { Switch-FullScreen; return }
+    if (!$script:full) { $window.DragMove() }
+}
+$ui.TitleBar.Add_MouseLeftButtonDown($moveWindow)
+$ui.Lights.Add_MouseLeftButtonDown($moveWindow)
+$ui.Brand.Add_MouseLeftButtonDown($moveWindow)
 $ui.MinButton.Add_Click({ $window.WindowState = 'Minimized' })
+$ui.MaxButton.Add_Click({ Switch-FullScreen })
 $ui.CloseButton.Add_Click({ $window.Close() })
+
+# Small screens (for example a 1024 x 768 virtual machine): the window must fit on the screen
+$area = [System.Windows.SystemParameters]::WorkArea
+if ($window.Width -gt $area.Width - 16) { $window.Width = [Math]::Max(640, $area.Width - 16); $window.MinWidth = [Math]::Min($window.MinWidth, $window.Width) }
+if ($window.Height -gt $area.Height - 16) { $window.Height = [Math]::Max(480, $area.Height - 16); $window.MinHeight = [Math]::Min($window.MinHeight, $window.Height) }
 
 function Save-Setting([string]$name, $value) {
     try {
@@ -1976,8 +2013,9 @@ if ($build -ge 22000) {
         $chrome.CornerRadius = New-Object System.Windows.CornerRadius 0
         $chrome.UseAeroCaptionButtons = $false
         [System.Windows.Shell.WindowChrome]::SetWindowChrome($window, $chrome)
-        $ui.RootBorder.CornerRadius = 0; $ui.RootBorder.BorderThickness = 0
-        $ui.Sidebar.CornerRadius = 0
+        $ui.RootBorder.CornerRadius = New-Object System.Windows.CornerRadius 0; $ui.RootBorder.BorderThickness = New-Object System.Windows.Thickness 0
+        $ui.Sidebar.CornerRadius = New-Object System.Windows.CornerRadius 0
+        $script:corner = $ui.RootBorder.CornerRadius
         $window.Add_SourceInitialized({
             $hwnd = (New-Object System.Windows.Interop.WindowInteropHelper $window).Handle
             [System.Windows.Interop.HwndSource]::FromHwnd($hwnd).CompositionTarget.BackgroundColor = [System.Windows.Media.Colors]::Transparent

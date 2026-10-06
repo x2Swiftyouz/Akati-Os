@@ -25,6 +25,8 @@
 - Welcome screen the first time Akati OS Center opens (language, gaming apps, theme)
 - Keyboard shortcuts: Ctrl+1 to Ctrl+8 switch pages, Ctrl+F searches the system settings, Esc
 - Pages fade in
+- Window buttons like macOS at the top left: close, minimize and full screen (fills the screen, the taskbar stays visible). Double-click the top bar for full screen too
+- The window fits on small screens (it was cut off on a 1024 x 768 screen)
 - `tools/make-assets.py` draws the new wallpapers, cursors and sounds from code (no third-party art)
 - Windows 11: Mica backdrop (the see-through background of Windows 11 apps) in Akati OS Center
 

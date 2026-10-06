@@ -56,6 +56,15 @@ $strings = @{
         'welcome' = 'Welcome back'; 'version' = 'AKATI OS VERSION'
         'cpu' = 'CPU USAGE'; 'ram' = 'RAM USAGE'; 'gpu' = 'GPU USAGE'
         'quick' = 'Quick actions'
+        'greet.morning' = 'Good morning'; 'greet.afternoon' = 'Good afternoon'; 'greet.evening' = 'Good evening'; 'greet.night' = 'Good night'
+        'update.checking' = 'Checking for updates...'
+        'chip.boost.on' = 'Game boost on'; 'chip.boost.off' = 'Game boost off'; 'chip.power' = 'Power: {0}'
+        'chip.defender.on' = 'Defender on'; 'chip.defender.off' = 'Defender off'; 'chip.uptime' = 'Up {0}'
+        'disk.title' = 'Storage'; 'disk.free' = '{0} free of {1}'
+        'net.title' = 'Network'; 'net.down' = 'DOWNLOAD'; 'net.up' = 'UPLOAD'; 'net.ping' = 'PING (SG)'
+        'top.title' = 'Using the most CPU'; 'top.end' = 'Quit'; 'top.confirm' = 'Quit {0}? Unsaved work in it is lost.'
+        'status.ended' = '{0} was closed'
+        'quick.boost' = 'Game boost'; 'quick.boost.d' = 'Start or stop it here'
         'quick.clean' = 'Clean temp files'; 'quick.clean.d' = 'Free up disk space'
         'quick.update' = 'Check for updates'; 'quick.update.d' = 'Compare with GitHub'
         'quick.system' = 'Tweaks'; 'quick.system.d' = 'Gaming and AtlasOS settings'
@@ -179,6 +188,15 @@ $strings = @{
         'welcome' = 'ยินดีต้อนรับ'; 'version' = 'เวอร์ชัน AKATI OS'
         'cpu' = 'การใช้ CPU'; 'ram' = 'การใช้ RAM'; 'gpu' = 'การใช้ GPU'
         'quick' = 'ทางลัด'
+        'greet.morning' = 'สวัสดีตอนเช้า'; 'greet.afternoon' = 'สวัสดีตอนบ่าย'; 'greet.evening' = 'สวัสดีตอนเย็น'; 'greet.night' = 'สวัสดีตอนค่ำ'
+        'update.checking' = 'กำลังตรวจอัปเดต...'
+        'chip.boost.on' = 'บูสต์เกมเปิดอยู่'; 'chip.boost.off' = 'บูสต์เกมปิดอยู่'; 'chip.power' = 'Power plan: {0}'
+        'chip.defender.on' = 'Defender เปิดอยู่'; 'chip.defender.off' = 'Defender ปิดอยู่'; 'chip.uptime' = 'เปิดเครื่องมา {0}'
+        'disk.title' = 'พื้นที่เก็บข้อมูล'; 'disk.free' = 'ว่าง {0} จาก {1}'
+        'net.title' = 'เครือข่าย'; 'net.down' = 'ดาวน์โหลด'; 'net.up' = 'อัปโหลด'; 'net.ping' = 'ปิง (สิงคโปร์)'
+        'top.title' = 'แอปที่ใช้ CPU มากที่สุด'; 'top.end' = 'ปิด'; 'top.confirm' = 'ปิด {0} ใช่ไหม งานที่ยังไม่ได้บันทึกในแอปนี้จะหายไป'
+        'status.ended' = 'ปิด {0} แล้ว'
+        'quick.boost' = 'บูสต์เกม'; 'quick.boost.d' = 'เปิดหรือปิดได้ที่นี่'
         'quick.clean' = 'ล้างไฟล์ชั่วคราว'; 'quick.clean.d' = 'เพิ่มพื้นที่ดิสก์'
         'quick.update' = 'ตรวจอัปเดต'; 'quick.update.d' = 'เทียบกับ GitHub'
         'quick.system' = 'ปรับแต่ง'; 'quick.system.d' = 'เกมและการตั้งค่า AtlasOS'
@@ -424,14 +442,35 @@ try {
     $gpus = Get-CimInstance Win32_VideoController | Where-Object { $_.Name -notmatch 'Basic Display|Remote' }
     $ui.GpuName.Text = if ($gpus) { ($gpus | Select-Object -First 1).Name } else { (Get-CimInstance Win32_VideoController | Select-Object -First 1).Name }
     $ui.RamName.Text = Format-Size ([double]$os.TotalVisibleMemorySize * 1KB)
-    $disk = Get-CimInstance Win32_LogicalDisk -Filter "DeviceID='C:'"
-    $ui.DiskName.Text = '{0} / {1}' -f (Format-Size $disk.FreeSpace), (Format-Size $disk.Size)
 } catch { }
 
+# Storage: every local drive with a bar
+function Show-Disks {
+    $ui.DisksPanel.Children.Clear()
+    foreach ($d in @(Get-CimInstance Win32_LogicalDisk -Filter 'DriveType=3' -ErrorAction SilentlyContinue | Sort-Object DeviceID)) {
+        if (!$d.Size) { continue }
+        $used = 100 * ($d.Size - $d.FreeSpace) / $d.Size
+        $row = New-Object System.Windows.Controls.StackPanel
+        $row.Margin = '0,0,0,10'
+        $top = New-Object System.Windows.Controls.Grid
+        $name = New-Text ("$($d.DeviceID)  " + $(if ($d.VolumeName) { $d.VolumeName } else { '' })) 13 'SemiBold'
+        $free = New-Text ((T 'disk.free') -f (Format-Size $d.FreeSpace), (Format-Size $d.Size)) 12
+        $free.Foreground = $window.FindResource('MutedBrush'); $free.HorizontalAlignment = 'Right'
+        [void]$top.Children.Add($name); [void]$top.Children.Add($free)
+        $bar = New-Object System.Windows.Controls.ProgressBar
+        $bar.Style = $window.FindResource('Meter'); $bar.Margin = '0,6,0,0'; $bar.Value = $used
+        if ($used -ge 90) { $bar.Foreground = '#FF453A' }
+        [void]$row.Children.Add($top); [void]$row.Children.Add($bar)
+        [void]$ui.DisksPanel.Children.Add($row)
+    }
+}
+
 # Usage is read in a background runspace so the window never stutters
-$stats = [hashtable]::Synchronized(@{ Cpu = 0; Ram = 0; RamUsed = 0; RamTotal = 0; Gpu = -1; Run = $true })
+$stats = [hashtable]::Synchronized(@{ Cpu = 0; Ram = 0; RamUsed = 0; RamTotal = 0; Gpu = -1; Run = $true; N = 0; Seq = 0
+    Down = -1; Up = -1; Ping = -1; Top = $null; TopSeq = 0; Defender = -1; Boot = $null; Self = $PID })
 $statsSample = {
     param($stats)
+        $n = $stats.N; $stats.N = $n + 1
         try {
             $stats.Cpu = [int](Get-CimInstance Win32_PerfFormattedData_PerfOS_Processor -Filter "Name='_Total'").PercentProcessorTime
             $os = Get-CimInstance Win32_OperatingSystem
@@ -445,16 +484,162 @@ $statsSample = {
             $sum = ($engines | Measure-Object -Property UtilizationPercentage -Sum).Sum
             $stats.Gpu = [int][Math]::Min(100, [double]$sum)
         } catch { $stats.Gpu = -1 }
+        # Network speed (all adapters)
+        try {
+            $nics = @(Get-CimInstance Win32_PerfFormattedData_Tcpip_NetworkInterface -ErrorAction Stop)
+            $stats.Down = [double]($nics | Measure-Object -Property BytesReceivedPersec -Sum).Sum
+            $stats.Up = [double]($nics | Measure-Object -Property BytesSentPersec -Sum).Sum
+        } catch { }
+        # The apps using the most CPU, every 3rd sample
+        if ($n % 3 -eq 0) {
+            try {
+                $cores = [Environment]::ProcessorCount
+                $list = Get-CimInstance Win32_PerfFormattedData_PerfProc_Process -ErrorAction Stop |
+                    Where-Object { $_.Name -notin '_Total', 'Idle', 'System', 'Memory Compression', 'Registry' -and $_.IDProcess -gt 4 } |
+                    Sort-Object PercentProcessorTime -Descending | Select-Object -First 5
+                $stats.Top = @($list | ForEach-Object {
+                    $path = try { (Get-Process -Id $_.IDProcess -ErrorAction Stop).Path } catch { $null }
+                    @{ Name = ($_.Name -replace '#\d+$', ''); Pid = [int]$_.IDProcess; Cpu = [Math]::Round($_.PercentProcessorTime / $cores, 1)
+                       Ram = [double]$_.WorkingSetPrivate; Path = $path }
+                })
+                $stats.TopSeq++
+            } catch { }
+        }
+        # Ping to Singapore every 6th sample (TCP connect, like Game boost)
+        if ($n % 6 -eq 0) {
+            $ms = -1
+            try {
+                $ip = [Net.Dns]::GetHostAddresses('dynamodb.ap-southeast-1.amazonaws.com') | Where-Object { $_.AddressFamily -eq 'InterNetwork' } | Select-Object -First 1
+                $c = New-Object Net.Sockets.TcpClient; $sw = [Diagnostics.Stopwatch]::StartNew()
+                if ($c.ConnectAsync($ip, 443).Wait(2000) -and $c.Connected) { $ms = [int]$sw.Elapsed.TotalMilliseconds }
+                $c.Close()
+            } catch { }
+            $stats.Ping = $ms
+        }
+        if ($n -eq 0) {
+            try { $stats.Boot = (Get-CimInstance Win32_OperatingSystem).LastBootUpTime } catch { }
+            try { $stats.Defender = if ((Get-MpComputerStatus -ErrorAction Stop).RealTimeProtectionEnabled) { 1 } else { 0 } } catch { $stats.Defender = 0 }
+        }
+        $stats.Seq++
 }
 $statsWork = "param(`$stats)`n`$sample = {$statsSample}`nwhile (`$stats.Run) { & `$sample `$stats; Start-Sleep -Milliseconds 1500 }"
 $statsPs = [PowerShell]::Create()
 [void]$statsPs.AddScript($statsWork).AddArgument($stats)
+
+# Last 60 seconds of usage (40 samples of 1.5 s), drawn as a line in each card
+$script:history = @{ Cpu = New-Object System.Collections.ArrayList; Ram = New-Object System.Collections.ArrayList; Gpu = New-Object System.Collections.ArrayList }
+$script:lastSeq = -1; $script:lastTopSeq = -1; $script:chipsAt = [datetime]::MinValue
+function Update-Spark([string]$key, [double]$value) {
+    $h = $script:history[$key]
+    [void]$h.Add([Math]::Max(0, [Math]::Min(100, $value)))
+    while ($h.Count -gt 40) { $h.RemoveAt(0) }
+    $canvas = $ui["${key}Spark"]
+    $w = if ($canvas.ActualWidth -gt 0) { $canvas.ActualWidth } else { 220 }
+    $pts = New-Object System.Windows.Media.PointCollection
+    for ($i = 0; $i -lt $h.Count; $i++) { $pts.Add((New-Object System.Windows.Point ($w - ($h.Count - 1 - $i) * $w / 39), (36 - 34 * $h[$i] / 100))) }
+    $ui["${key}Line"].Points = $pts
+}
+
+function Format-Speed([double]$bytesPerSec) {
+    if ($bytesPerSec -lt 0) { return '-' }
+    $bits = $bytesPerSec * 8
+    if ($bits -ge 1e6) { return '{0:N1} Mb/s' -f ($bits / 1e6) }
+    return '{0:N0} Kb/s' -f ($bits / 1e3)
+}
 
 function Update-Stats {
     $ui.CpuValue.Text = "$($stats.Cpu)%"; $ui.CpuBar.Value = $stats.Cpu
     $ui.RamValue.Text = "$($stats.Ram)%"; $ui.RamBar.Value = $stats.Ram
     if ($stats.RamTotal) { $ui.RamDetail.Text = '{0} / {1}' -f (Format-Size $stats.RamUsed), (Format-Size $stats.RamTotal) }
     if ($stats.Gpu -ge 0) { $ui.GpuValue.Text = "$($stats.Gpu)%"; $ui.GpuBar.Value = $stats.Gpu } else { $ui.GpuValue.Text = '-'; $ui.GpuBar.Value = 0 }
+    if ($stats.Seq -ne $script:lastSeq) {
+        $script:lastSeq = $stats.Seq
+        Update-Spark 'Cpu' $stats.Cpu; Update-Spark 'Ram' $stats.Ram; Update-Spark 'Gpu' ([Math]::Max(0, $stats.Gpu))
+        $ui.NetDown.Text = Format-Speed $stats.Down
+        $ui.NetUp.Text = Format-Speed $stats.Up
+        if ($stats.Ping -ge 0) {
+            $ui.NetPing.Text = "$($stats.Ping) ms"
+            $ui.NetPing.Foreground = if ($stats.Ping -lt 60) { $window.FindResource('Good') } elseif ($stats.Ping -lt 120) { '#F2C55C' } else { '#F2557A' }
+        } else { $ui.NetPing.Text = '-' }
+    }
+    if ($stats.TopSeq -ne $script:lastTopSeq -and $stats.Top) { $script:lastTopSeq = $stats.TopSeq; Show-TopApps }
+    Update-Clock
+    if ((Get-Date) -gt $script:chipsAt) { $script:chipsAt = (Get-Date).AddSeconds(10); Update-Chips }
+}
+
+# Greeting and clock like macOS
+function Update-Clock {
+    $now = Get-Date
+    $h = $now.Hour
+    $ui.Greeting.Text = T $(if ($h -ge 5 -and $h -lt 12) { 'greet.morning' } elseif ($h -lt 17 -and $h -ge 12) { 'greet.afternoon' } elseif ($h -ge 17 -and $h -lt 21) { 'greet.evening' } else { 'greet.night' })
+    $ui.ClockTime.Text = $now.ToString('HH:mm')
+    $culture = [Globalization.CultureInfo]::GetCultureInfo($(if ($lang -eq 'th') { 'th-TH' } else { 'en-US' }))
+    $ui.ClockDate.Text = $now.ToString('ddd d MMMM', $culture)
+}
+
+# Status chips: Game boost, power plan, Defender, time since start
+function New-Chip([string]$text, $dot) {
+    $b = New-Object System.Windows.Controls.Border
+    $b.CornerRadius = 12; $b.Background = '#2E2E30'; $b.Padding = '10,4'; $b.Margin = '0,0,8,6'
+    $sp = New-Object System.Windows.Controls.StackPanel; $sp.Orientation = 'Horizontal'
+    $e = New-Object System.Windows.Shapes.Ellipse; $e.Width = 7; $e.Height = 7; $e.Margin = '0,0,7,0'; $e.VerticalAlignment = 'Center'; $e.Fill = $dot
+    $t = New-Text $text 12
+    [void]$sp.Children.Add($e); [void]$sp.Children.Add($t)
+    $b.Child = $sp
+    return $b
+}
+function Update-Chips {
+    $ui.StatusChips.Children.Clear()
+    $good = $window.FindResource('Good'); $muted = $window.FindResource('MutedBrush')
+    $boost = Test-Boost
+    [void]$ui.StatusChips.Children.Add((New-Chip (T $(if ($boost) { 'chip.boost.on' } else { 'chip.boost.off' })) $(if ($boost) { $good } else { $muted })))
+    $plan = if ([string](powercfg /getactivescheme) -match '\((.+)\)\s*$') { $Matches[1] } else { '-' }
+    [void]$ui.StatusChips.Children.Add((New-Chip ((T 'chip.power') -f $plan) $window.FindResource('Accent2')))
+    if ($stats.Defender -ge 0) {
+        [void]$ui.StatusChips.Children.Add((New-Chip (T $(if ($stats.Defender -eq 1) { 'chip.defender.on' } else { 'chip.defender.off' })) $(if ($stats.Defender -eq 1) { $good } else { '#FF9F0A' })))
+    }
+    if ($stats.Boot) {
+        $up = (Get-Date) - $stats.Boot
+        $text = if ($up.TotalDays -ge 1) { '{0}d {1}h' -f [int][Math]::Floor($up.TotalDays), $up.Hours } else { '{0}h {1}m' -f $up.Hours, $up.Minutes }
+        [void]$ui.StatusChips.Children.Add((New-Chip ((T 'chip.uptime') -f $text) $muted))
+    }
+}
+
+# The apps using the most CPU, with Quit (not for Windows itself or this window)
+$protected = 'csrss', 'wininit', 'winlogon', 'services', 'lsass', 'smss', 'svchost', 'dwm', 'explorer', 'MsMpEng', 'fontdrvhost', 'sihost', 'ctfmon', 'audiodg', 'spoolsv', 'SecurityHealthService', 'NisSrv', 'conhost', 'WmiPrvSE', 'RuntimeBroker', 'taskhostw', 'dllhost', 'StartMenuExperienceHost', 'SearchHost', 'TextInputHost', 'ShellExperienceHost', 'vmtoolsd', 'vm3dservice'
+$script:iconCache = @{}
+function Show-TopApps {
+    $ui.TopList.Children.Clear()
+    foreach ($p in @($stats.Top)) {
+        if (!$p) { continue }
+        $right = New-Object System.Windows.Controls.StackPanel; $right.Orientation = 'Horizontal'
+        $cpu = New-Text ('{0:N1}%' -f $p.Cpu) 13 'SemiBold'; $cpu.MinWidth = 60; $cpu.TextAlignment = 'Right'; $cpu.VerticalAlignment = 'Center'
+        $ram = New-Text (Format-Size $p.Ram) 12; $ram.Foreground = $window.FindResource('MutedBrush'); $ram.MinWidth = 70; $ram.TextAlignment = 'Right'; $ram.VerticalAlignment = 'Center'; $ram.Margin = '0,0,14,0'
+        [void]$right.Children.Add($ram); [void]$right.Children.Add($cpu)
+        if ($p.Pid -ne $stats.Self -and $p.Name -notin $protected) {
+            $btn = New-Object System.Windows.Controls.Button
+            $btn.Style = $window.FindResource('Secondary'); $btn.Margin = '14,0,0,0'; $btn.Content = T 'top.end'; $btn.Tag = $p
+            $btn.Add_Click({
+                $t = $this.Tag
+                $answer = [System.Windows.MessageBox]::Show(((T 'top.confirm') -f $t.Name), 'Akati OS Center', 'YesNo', 'Question')
+                if ($answer -eq 'Yes') {
+                    try { Stop-Process -Id $t.Pid -Force -ErrorAction Stop; Set-Status ((T 'status.ended') -f $t.Name) } catch { Set-Status $_.Exception.Message }
+                }
+            })
+            [void]$right.Children.Add($btn)
+        } else {
+            $spacer = New-Object System.Windows.Controls.Border; $spacer.Width = 76
+            [void]$right.Children.Add($spacer)
+        }
+        $row = New-Row ([string][char]0xE7C4) $p.Name $null $right $null
+        $row.Sub.Visibility = 'Collapsed'
+        if ($p.Path) {
+            if (!$script:iconCache.ContainsKey($p.Path)) { $script:iconCache[$p.Path] = Get-FileIcon @($p.Path) }
+            Set-RowIcon $row $script:iconCache[$p.Path]
+        }
+        [void]$ui.TopList.Children.Add($row.Row)
+    }
+    Update-Separators $ui.TopList
 }
 
 # ---------------------------------------------------------------------------------------------
@@ -1499,7 +1684,7 @@ function Start-UpdateCheck {
         $ui.UpdateButton.IsEnabled = $true
         $release = Get-LastOutput $r
         if (!$release -or !$release.tag_name) {
-            $ui.UpdateStatus.Text = T 'update.error'; $ui.UpdateHint.Text = ''
+            $ui.UpdateStatus.Text = T 'update.error'; $ui.UpdateHint.Text = T 'update.error'; $ui.UpdateDot.Fill = $window.FindResource('MutedBrush')
             Set-Status (T 'update.error'); return
         }
         $script:releaseUrl = $release.html_url
@@ -1521,11 +1706,18 @@ function Start-UpdateCheck {
             $ui.UpdateStatus.Foreground = $window.FindResource('Good')
         }
         $ui.UpdateStatus.Text = $msg; $ui.UpdateHint.Text = $msg
+        $ui.UpdateDot.Fill = if ($newer) { $window.FindResource('Accent2') } else { $window.FindResource('Good') }
         Set-Status $msg
     }
 }
 $ui.UpdateButton.Add_Click({ if ($this.Tag -eq 'open') { Start-Process $script:releaseUrl } else { Start-UpdateCheck } })
 $ui.QuickUpdate.Add_Click({ $ui.NavAbout.IsChecked = $true; Start-UpdateCheck })
+$ui.QuickBoost.Add_Click({
+    try {
+        if (Test-Boost) { Stop-Boost; Set-Status (T 'status.boostoff') } else { Start-Boost; Set-Status (T 'status.booston') }
+    } catch { Set-Status $_.Exception.Message }
+    Update-BoostCard; Update-Chips
+})
 $ui.QuickAtlas.Add_Click({ $ui.NavTweaks.IsChecked = $true })
 $ui.LinkGithub.Add_Click({ Start-Process "https://github.com/$repo" })
 $ui.LinkOptions.Add_Click({ Start-Process "https://github.com/$repo/blob/main/docs/OPTIONS.md" })
@@ -1952,6 +2144,10 @@ function Set-AppLanguage([string]$l) {
 $ui.LangButton.Add_Click({ Set-AppLanguage $(if ($lang -eq 'th') { 'en' } else { 'th' }) })
 function Update-Language {
     Set-Language
+    Show-Disks
+    Update-Clock
+    Update-Chips
+    if ($stats.Top) { Show-TopApps }
     foreach ($a in $apps) { if ($a.State -ne 'install') { Update-AppRow $a } }
     Update-ThemeCards
     Update-GpuText
@@ -1997,6 +2193,9 @@ $window.Add_PreviewKeyDown({
 })
 
 Set-Language
+Show-Disks
+Update-Clock
+Update-Chips
 Set-Status (T 'ready')
 
 # ---------------------------------------------------------------------------------------------
@@ -2099,6 +2298,8 @@ $timer = New-Object System.Windows.Threading.DispatcherTimer
 $timer.Interval = [TimeSpan]::FromMilliseconds(500)
 $timer.Add_Tick({ Update-Stats; Receive-Work; Update-AppProgress; Update-Ping })
 $window.Add_Loaded({
+    # Akati OS checks GitHub once when the window opens (one request, nothing is downloaded)
+    Start-UpdateCheck
     $script:statsHandle = $statsPs.BeginInvoke()
     $timer.Start()
 })

@@ -439,7 +439,7 @@
                     <!-- Dashboard -->
                     <ScrollViewer x:Name="PageDashboard" VerticalScrollBarVisibility="Auto">
                         <StackPanel>
-                            <Grid Margin="0,0,0,16" Height="150">
+                            <Grid Margin="0,0,0,12" Height="150">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="16"/>
@@ -448,8 +448,12 @@
                                 <Border Style="{StaticResource Card}" Padding="0" ClipToBounds="True">
                                     <Grid>
                                         <Image x:Name="HeroImage" Stretch="UniformToFill" Opacity="0.55"/>
+                                        <StackPanel HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,18,22,0">
+                                            <TextBlock x:Name="ClockTime" Text="00:00" FontSize="26" FontWeight="Bold" HorizontalAlignment="Right"/>
+                                            <TextBlock x:Name="ClockDate" Text="" Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Right"/>
+                                        </StackPanel>
                                         <StackPanel Margin="24,22">
-                                            <TextBlock Tag="t:welcome" Text="Welcome back" Foreground="{DynamicResource Accent2}" FontWeight="SemiBold"/>
+                                            <TextBlock x:Name="Greeting" Text="Welcome back" Foreground="{DynamicResource Accent2}" FontWeight="SemiBold"/>
                                             <TextBlock x:Name="PcName" Text="PC" FontSize="30" FontWeight="Bold" Margin="0,4,0,6"/>
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Style="{StaticResource Glyph}" Text="&#xE7F8;" FontSize="12" Foreground="{StaticResource MutedBrush}" Margin="0,0,8,0"/>
@@ -466,17 +470,21 @@
                                         </StackPanel>
                                         <TextBlock x:Name="VersionBig" Text="v1.4.1" FontSize="30" FontWeight="Bold" Margin="0,8,0,0"/>
                                         <TextBlock x:Name="EditionText" Text="Windows 11" Style="{StaticResource Muted}"/>
-                                        <TextBlock x:Name="UpdateHint" Text="" Foreground="{StaticResource Good}" FontSize="12" Margin="0,6,0,0" TextWrapping="Wrap"/>
+                                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                                            <Ellipse x:Name="UpdateDot" Width="7" Height="7" Fill="{StaticResource MutedBrush}" Margin="0,0,7,0" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="UpdateHint" Tag="t:update.checking" Text="Checking for updates..." Style="{StaticResource Muted}" FontSize="12" TextWrapping="Wrap" MaxWidth="200"/>
+                                        </StackPanel>
                                     </StackPanel>
                                 </Border>
                             </Grid>
+
+                            <WrapPanel x:Name="StatusChips" Margin="0,0,0,12"/>
 
                             <Border Style="{StaticResource Card}" Padding="18,12" Margin="0,0,0,16">
                                 <WrapPanel x:Name="SpecsPanel">
                                     <StackPanel Orientation="Horizontal" Margin="0,0,28,0"><TextBlock Text="CPU" Style="{StaticResource Label}" Margin="0,0,8,0" VerticalAlignment="Center"/><TextBlock x:Name="CpuName" Text="-" FontWeight="SemiBold"/></StackPanel>
                                     <StackPanel Orientation="Horizontal" Margin="0,0,28,0"><TextBlock Text="GPU" Style="{StaticResource Label}" Margin="0,0,8,0" VerticalAlignment="Center"/><TextBlock x:Name="GpuName" Text="-" FontWeight="SemiBold"/></StackPanel>
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,28,0"><TextBlock Text="RAM" Style="{StaticResource Label}" Margin="0,0,8,0" VerticalAlignment="Center"/><TextBlock x:Name="RamName" Text="-" FontWeight="SemiBold"/></StackPanel>
-                                    <StackPanel Orientation="Horizontal"><TextBlock Text="C:" Style="{StaticResource Label}" Margin="0,0,8,0" VerticalAlignment="Center"/><TextBlock x:Name="DiskName" Text="-" FontWeight="SemiBold"/></StackPanel>
+                                    <StackPanel Orientation="Horizontal"><TextBlock Text="RAM" Style="{StaticResource Label}" Margin="0,0,8,0" VerticalAlignment="Center"/><TextBlock x:Name="RamName" Text="-" FontWeight="SemiBold"/></StackPanel>
                                 </WrapPanel>
                             </Border>
 
@@ -487,7 +495,10 @@
                                             <TextBlock Tag="t:cpu" Text="CPU USAGE" Style="{StaticResource Label}" VerticalAlignment="Center"/>
                                             <TextBlock x:Name="CpuValue" Text="0%" FontSize="28" FontWeight="Bold" HorizontalAlignment="Right"/>
                                         </Grid>
-                                        <ProgressBar x:Name="CpuBar" Style="{StaticResource Meter}" Margin="0,12,0,0"/>
+                                        <Canvas x:Name="CpuSpark" Height="38" Margin="0,8,0,0" ClipToBounds="True">
+                                            <Polyline x:Name="CpuLine" Stroke="{DynamicResource Accent2}" StrokeThickness="1.6" StrokeLineJoin="Round"/>
+                                        </Canvas>
+                                        <ProgressBar x:Name="CpuBar" Style="{StaticResource Meter}" Margin="0,6,0,0"/>
                                     </StackPanel>
                                 </Border>
                                 <Border Style="{StaticResource Card}" Margin="8,0">
@@ -496,7 +507,10 @@
                                             <TextBlock Tag="t:ram" Text="RAM USAGE" Style="{StaticResource Label}" VerticalAlignment="Center"/>
                                             <TextBlock x:Name="RamValue" Text="0%" FontSize="28" FontWeight="Bold" HorizontalAlignment="Right"/>
                                         </Grid>
-                                        <ProgressBar x:Name="RamBar" Style="{StaticResource Meter}" Margin="0,12,0,0"/>
+                                        <Canvas x:Name="RamSpark" Height="38" Margin="0,8,0,0" ClipToBounds="True">
+                                            <Polyline x:Name="RamLine" Stroke="{DynamicResource Accent2}" StrokeThickness="1.6" StrokeLineJoin="Round"/>
+                                        </Canvas>
+                                        <ProgressBar x:Name="RamBar" Style="{StaticResource Meter}" Margin="0,6,0,0"/>
                                         <TextBlock x:Name="RamDetail" Text="" Style="{StaticResource Muted}" FontSize="11" Margin="0,8,0,0"/>
                                     </StackPanel>
                                 </Border>
@@ -506,15 +520,48 @@
                                             <TextBlock Tag="t:gpu" Text="GPU USAGE" Style="{StaticResource Label}" VerticalAlignment="Center"/>
                                             <TextBlock x:Name="GpuValue" Text="0%" FontSize="28" FontWeight="Bold" HorizontalAlignment="Right"/>
                                         </Grid>
-                                        <ProgressBar x:Name="GpuBar" Style="{StaticResource Meter}" Margin="0,12,0,0"/>
+                                        <Canvas x:Name="GpuSpark" Height="38" Margin="0,8,0,0" ClipToBounds="True">
+                                            <Polyline x:Name="GpuLine" Stroke="{DynamicResource Accent2}" StrokeThickness="1.6" StrokeLineJoin="Round"/>
+                                        </Canvas>
+                                        <ProgressBar x:Name="GpuBar" Style="{StaticResource Meter}" Margin="0,6,0,0"/>
                                     </StackPanel>
                                 </Border>
                             </UniformGrid>
 
+                            <UniformGrid Columns="2" Margin="-8,0,-8,16">
+                                <Border Style="{StaticResource Card}" Margin="8,0">
+                                    <StackPanel>
+                                        <TextBlock Tag="t:disk.title" Text="Storage" Style="{StaticResource CardTitle}" Margin="0,0,0,10"/>
+                                        <StackPanel x:Name="DisksPanel"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Style="{StaticResource Card}" Margin="8,0">
+                                    <StackPanel>
+                                        <TextBlock Tag="t:net.title" Text="Network" Style="{StaticResource CardTitle}" Margin="0,0,0,10"/>
+                                        <UniformGrid Columns="3">
+                                            <StackPanel><TextBlock Tag="t:net.down" Text="DOWNLOAD" Style="{StaticResource Label}"/><TextBlock x:Name="NetDown" Text="-" FontSize="18" FontWeight="Bold" Margin="0,4,0,0"/></StackPanel>
+                                            <StackPanel><TextBlock Tag="t:net.up" Text="UPLOAD" Style="{StaticResource Label}"/><TextBlock x:Name="NetUp" Text="-" FontSize="18" FontWeight="Bold" Margin="0,4,0,0"/></StackPanel>
+                                            <StackPanel><TextBlock Tag="t:net.ping" Text="PING (SG)" Style="{StaticResource Label}"/><TextBlock x:Name="NetPing" Text="-" FontSize="18" FontWeight="Bold" Margin="0,4,0,0"/></StackPanel>
+                                        </UniformGrid>
+                                    </StackPanel>
+                                </Border>
+                            </UniformGrid>
+
+                            <TextBlock Tag="t:top.title" Text="Using the most CPU" Style="{StaticResource Section}"/>
+                            <Border Style="{StaticResource Card}" Padding="0" Margin="0,0,0,16">
+                                <StackPanel x:Name="TopList"/>
+                            </Border>
+
                             <Border Style="{StaticResource Card}" Margin="0,0,0,16">
                                 <StackPanel>
                                     <TextBlock Tag="t:quick" Text="Quick actions" Style="{StaticResource CardTitle}" Margin="0,0,0,14"/>
-                                    <UniformGrid Columns="3" Margin="-5,0">
+                                    <UniformGrid Columns="4" Margin="-5,0">
+                                        <Button x:Name="QuickBoost" Style="{StaticResource Action}" Margin="5,0">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Style="{StaticResource Glyph}" Text="&#xE945;" Foreground="{DynamicResource Accent2}" Margin="0,0,12,0"/>
+                                                <StackPanel><TextBlock Tag="t:quick.boost" Text="Game boost" FontWeight="SemiBold"/><TextBlock Tag="t:quick.boost.d" Text="Start before you play" Style="{StaticResource Muted}" FontSize="11"/></StackPanel>
+                                            </StackPanel>
+                                        </Button>
                                         <Button x:Name="QuickClean" Style="{StaticResource Action}" Margin="5,0">
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Style="{StaticResource Glyph}" Text="&#xE74D;" Foreground="{DynamicResource Accent2}" Margin="0,0,12,0"/>
@@ -530,7 +577,7 @@
                                         <Button x:Name="QuickAtlas" Style="{StaticResource Action}" Margin="5,0">
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Style="{StaticResource Glyph}" Text="&#xE713;" Foreground="{DynamicResource Accent2}" Margin="0,0,12,0"/>
-                                                <StackPanel><TextBlock Tag="t:quick.system" Text="System settings" FontWeight="SemiBold"/><TextBlock Tag="t:quick.system.d" Text="All other settings" Style="{StaticResource Muted}" FontSize="11"/></StackPanel>
+                                                <StackPanel><TextBlock Tag="t:quick.system" Text="Tweaks" FontWeight="SemiBold"/><TextBlock Tag="t:quick.system.d" Text="Gaming and AtlasOS settings" Style="{StaticResource Muted}" FontSize="11"/></StackPanel>
                                             </StackPanel>
                                         </Button>
                                     </UniformGrid>

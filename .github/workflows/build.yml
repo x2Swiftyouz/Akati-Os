@@ -114,6 +114,25 @@ jobs:
           Write-Host "Size: $((Get-Item $file).Length) bytes; signature: $($sig.Status); signer: $($sig.SignerCertificate.Subject)"
           if ($sig.Status -ne 'Valid' -or $sig.SignerCertificate.Subject -notlike '*Riot Games*') { Write-Host "::warning::The Riot installer is not signed by Riot Games"; exit 1 }
 
+      - name: Check the desktop menu
+        shell: powershell
+        run: |
+          $script = "src\Executables\AtlasModules\AkatiCenter\AkatiMenu.ps1"
+          New-Item -Path 'HKCU:\Software\AkatiOS\Center' -Force | Out-Null
+          Set-ItemProperty -Path 'HKCU:\Software\AkatiOS\Center' -Name MenuApps -Value ([string[]]@('Steam|"C:\Steam\steam.exe"|C:\Steam\steam.exe')) -Type MultiString
+          & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $script -Install
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          $root = 'HKLM:\SOFTWARE\Classes\DesktopBackground\Shell\AkatiOS'
+          Get-ChildItem -Path $root -Recurse | ForEach-Object {
+            $p = Get-ItemProperty -LiteralPath $_.PSPath
+            Write-Host ("{0} | {1} | {2}" -f $_.Name.Replace('HKEY_LOCAL_MACHINE\SOFTWARE\Classes\DesktopBackground\Shell\', ''), $p.MUIVerb, $p.'(default)')
+          }
+          $task = Get-ScheduledTask -TaskPath '\AkatiOS\' -TaskName 'Akati OS menu' -ErrorAction Stop
+          Write-Host "Task: $($task.Principal.UserId) $($task.Principal.RunLevel) $($task.Actions.Arguments)"
+          if (@(Get-ChildItem "$root\shell").Count -ne 9) { Write-Host "::error::The menu does not have 9 items"; exit 1 }
+          & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $script -Remove
+          if (Test-Path $root) { Write-Host "::error::-Remove left the menu"; exit 1 }
+
       - name: Render Akati OS Center screenshots
         shell: powershell
         run: |

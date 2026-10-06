@@ -108,9 +108,21 @@ Untick it if you use a printer or share files between PCs at home. A restart (se
 
 **Turn off Sticky Keys and Filter Keys shortcuts** (ticked by default): pressing Shift 5 times or holding Shift in a game no longer opens a window. The accessibility features themselves still work from Settings > Accessibility > Keyboard.
 
-Both can be changed later in **Akati OS Center > Tweaks > Input and latency**.
+**Add Akati OS to the desktop right-click menu** (ticked by default): right-click an empty spot on the desktop > **Akati OS** for:
 
-**ภาษาไทย**: "Force 0.5 ms timer resolution" (ติ๊กไว้) รันสคริปต์ "Enable timer resolution" ของ AtlasOS ทำให้เฟรมเกมนิ่งขึ้นและ input delay ลดลง ใช้ไฟเพิ่มเล็กน้อย ส่วน "Turn off Sticky Keys and Filter Keys shortcuts" (ติ๊กไว้) กด Shift 5 ครั้งหรือกดค้างในเกมจะไม่มีหน้าต่างเด้ง ฟีเจอร์ช่วยการเข้าถึงยังใช้ได้จาก Settings เปลี่ยนทีหลังได้ใน Akati OS Center > ปรับแต่ง > อินพุตและ latency
+- **Free up RAM**: empties the standby list (file cache Windows keeps in RAM) and shows how much was freed
+- **Open Akati OS Center**
+- **My apps**: the gaming apps installed from Akati OS Center and the games in My games
+- **Start / Stop Game boost**
+- **Clean junk files** and **Ping test**: open those pages of Akati OS Center
+- **Flush DNS cache**, **Restart Explorer**
+- **Restart into BIOS (UEFI)**: asks first
+
+Free up RAM, Game boost and Restart into BIOS need administrator rights. They run through the task `\AkatiOS\Akati OS menu` (the signed-in user, highest rights), so there is no UAC prompt each time; the task only runs these three fixed actions. Windows 11 shows the menu at once because AtlasOS uses the classic context menu.
+
+All three can be changed later in **Akati OS Center > Tweaks** (Input and latency, and Memory and system for the menu).
+
+**ภาษาไทย**: "Force 0.5 ms timer resolution" (ติ๊กไว้) รันสคริปต์ "Enable timer resolution" ของ AtlasOS ทำให้เฟรมเกมนิ่งขึ้นและ input delay ลดลง ใช้ไฟเพิ่มเล็กน้อย ส่วน "Turn off Sticky Keys and Filter Keys shortcuts" (ติ๊กไว้) กด Shift 5 ครั้งหรือกดค้างในเกมจะไม่มีหน้าต่างเด้ง ฟีเจอร์ช่วยการเข้าถึงยังใช้ได้จาก Settings และ "Add Akati OS to the desktop right-click menu" (ติ๊กไว้) คลิกขวาที่ Desktop > Akati OS มี ล้าง RAM, เปิด Center, แอปของฉัน, เริ่ม/หยุดบูสต์เกม, ล้างไฟล์ขยะ, ทดสอบปิง, ล้าง DNS cache, รีสตาร์ต Explorer และรีสตาร์ตเข้า BIOS (ถามก่อน) ข้อที่ต้องใช้สิทธิ์ผู้ดูแลระบบทำงานผ่าน task ของผู้ใช้เอง จึงไม่มีหน้าต่าง UAC ทุกครั้ง เปลี่ยนทีหลังได้ใน Akati OS Center > ปรับแต่ง > อินพุตและ latency
 
 ## Gaming tweaks
 

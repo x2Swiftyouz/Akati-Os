@@ -52,3 +52,11 @@ actions:
           $lnk.Save()
       }
     wait: true
+
+    # Desktop right-click menu > Akati OS (option, ticked by default): AkatiMenu.ps1 builds it and registers the
+    # task that runs Free up RAM, Game boost and Restart into BIOS for this user without a UAC prompt
+  - !powerShell:
+    command: '& (Join-Path ([Environment]::GetFolderPath(''Windows'')) ''AtlasModules\AkatiCenter\AkatiMenu.ps1'') -Install'
+    runas: currentUserElevated
+    wait: true
+    option: 'desktop-menu'

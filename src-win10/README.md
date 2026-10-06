@@ -17,7 +17,7 @@ Microsoft ended support for Windows 10 on October 14, 2025. Extended Security Up
 
 - All AtlasOS v0.4.1 performance, privacy and debloat tweaks
 - Akati OS Dark, Light and Slideshow themes, wallpapers and lock screen
-- No apps are installed during setup: install them when you want from Akati OS Center. Optional (ticked by default): remove the Microsoft Store, turn off unused services (printing, search indexing, SuperFetch, network discovery, MSDTC), notifications and Xbox Game Bar, timer resolution 0.5 ms and the Sticky Keys shortcuts
+- No apps are installed during setup: install them when you want from Akati OS Center. Optional (ticked by default): remove the Microsoft Store, turn off unused services (printing, search indexing, SuperFetch, network discovery, MSDTC), notifications and Xbox Game Bar, timer resolution 0.5 ms, the Sticky Keys shortcuts, and an Akati OS desktop right-click menu (free up RAM, your apps, Game boost and more)
 - **Akati OS Center** app, the one place for everything: install and update gaming apps (Steam, Epic Games Launcher, EA app, Ubisoft Connect, Battle.net, Riot Client, GOG GALAXY, Rockstar Games Launcher, Discord, OBS Studio, MSI Afterburner), GPU driver links, **Game boost** (one-click Game Mode, ping test, startup apps), gaming tweaks, cleaner, themes, accent colors, wallpapers, Akati OS cursor and sounds, live CPU/RAM/GPU usage, problem report, update check and **Tweaks** with every AtlasOS setting in English and Thai (no Atlas folder shortcut)
 - Gaming tweaks in Akati OS Center: Hardware-accelerated GPU scheduling
 - Akati OS Slideshow theme and a Windows Terminal color scheme

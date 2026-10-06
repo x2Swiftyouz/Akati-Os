@@ -6,10 +6,15 @@
     (Windows 10 and 11) and needs administrator rights for installs and tweaks.
     -Screenshot <folder> renders every page to PNG and exits (used by CI). -Root points to a source
     "Executables" folder instead of the installed %windir% layout.
+    -Page <name> opens that page (desktop menu), -Ping also starts the ping test on the Game boost page.
+    -ToggleBoost starts or stops Game boost without a window (desktop menu, through its elevated task).
 #>
 param (
     [string]$Screenshot,
-    [string]$Root
+    [string]$Root,
+    [string]$Page,
+    [switch]$Ping,
+    [switch]$ToggleBoost
 )
 
 $ErrorActionPreference = 'Stop'
@@ -40,7 +45,8 @@ $repo       = 'x2Swiftyouz/Akati-Os'
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 if (!$Screenshot -and !$isAdmin) {
     try {
-        Start-Process powershell.exe -Verb RunAs -WindowStyle Hidden -ArgumentList "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$PSCommandPath`""
+        $forward = if ($Page -match '^\w+$') { " -Page $Page" + $(if ($Ping) { ' -Ping' } else { '' }) } else { '' }
+        Start-Process powershell.exe -Verb RunAs -WindowStyle Hidden -ArgumentList "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$PSCommandPath`"$forward"
     } catch { }
     exit
 }
@@ -133,6 +139,7 @@ $strings = @{
         'tw.memcomp' = 'Memory compression'; 'tw.memcomp.d' = 'Windows compresses memory instead of writing it to disk. Saves RAM, costs a little CPU.'
         'tw.memcomp.off' = 'Recommended for this PC ({0} GB RAM): off.'; 'tw.memcomp.on' = 'Recommended for this PC ({0} GB RAM): on.'; 'tw.memcomp.nosysmain' = 'Needs SysMain (SuperFetch): turn it on in System (AtlasOS) below first.'
         'tw.vbs' = 'Core isolation (VBS and Memory integrity)'; 'tw.vbs.d' = 'Off can make games up to about 10% faster, but some protection against malware is gone. Some anti-cheat (Valorant, FACEIT) may need it on (same values as the AtlasOS VBS scripts).'
+        'tw.desktopmenu' = 'Akati OS on the desktop right-click menu'; 'tw.desktopmenu.d' = 'Right-click the desktop > Akati OS: free up RAM, your apps, Game boost, cleaner, ping test, flush DNS, restart Explorer, restart into BIOS.'
         'tw.startdelay' = 'Delay for startup apps'; 'tw.startdelay.d' = 'Off: apps that start at sign-in open right away instead of a few seconds later.'
         'chip.hz' = 'Screen {0} Hz'; 'chip.hzlow' = 'Screen {0} Hz · can do {1} Hz'
         'games.title' = 'My games'; 'games.add' = 'Add game'; 'games.empty' = 'No games added yet. Add the .exe file of a game.'
@@ -299,6 +306,7 @@ $strings = @{
         'tw.memcomp' = 'Memory compression'; 'tw.memcomp.d' = 'Windows บีบอัดหน่วยความจำแทนการเขียนลงดิสก์ ประหยัด RAM แต่ใช้ CPU เล็กน้อย'
         'tw.memcomp.off' = 'แนะนำสำหรับเครื่องนี้ (RAM {0} GB): ปิด'; 'tw.memcomp.on' = 'แนะนำสำหรับเครื่องนี้ (RAM {0} GB): เปิด'; 'tw.memcomp.nosysmain' = 'ต้องเปิด SysMain (SuperFetch) ก่อน ในหมวดระบบ (AtlasOS) ด้านล่าง'
         'tw.vbs' = 'Core isolation (VBS และ Memory integrity)'; 'tw.vbs.d' = 'ปิดแล้วเกมเร็วขึ้นได้ถึงประมาณ 10% แต่การป้องกันมัลแวร์บางส่วนหายไป anti-cheat บางตัว (Valorant, FACEIT) อาจต้องเปิดไว้ (ค่าเดียวกับสคริปต์ VBS ของ AtlasOS)'
+        'tw.desktopmenu' = 'เมนู Akati OS ตอนคลิกขวาที่ Desktop'; 'tw.desktopmenu.d' = 'คลิกขวาที่ Desktop > Akati OS: ล้าง RAM, แอปของฉัน, บูสต์เกม, ล้างไฟล์ขยะ, ทดสอบปิง, ล้าง DNS, รีสตาร์ต Explorer, รีสตาร์ตเข้า BIOS'
         'tw.startdelay' = 'หน่วงเวลาแอปที่เปิดตอนล็อกอิน'; 'tw.startdelay.d' = 'ปิด: แอปที่เปิดตอนล็อกอินจะเปิดทันที ไม่ต้องรอหลายวินาที'
         'chip.hz' = 'จอ {0} Hz'; 'chip.hzlow' = 'จอ {0} Hz · ทำได้ {1} Hz'
         'games.title' = 'เกมของฉัน'; 'games.add' = 'เพิ่มเกม'; 'games.empty' = 'ยังไม่ได้เพิ่มเกม เลือกไฟล์ .exe ของเกม'
@@ -757,6 +765,28 @@ function Show-TopApps {
 $ui.TopByCpu.Add_Checked({ Show-TopApps })
 $ui.TopByRam.Add_Checked({ Show-TopApps })
 
+# Desktop right-click menu (AkatiMenu.ps1): rebuilt shortly after something it shows changed
+$menuScript = Join-Path $appDir 'AkatiMenu.ps1'
+$menuKey = 'HKLM:\SOFTWARE\Classes\DesktopBackground\Shell\AkatiOS'
+function Request-MenuUpdate { $script:menuAt = (Get-Date).AddSeconds(1) }
+function Update-DesktopMenu {
+    $script:menuAt = $null
+    if ($Screenshot -or !(Test-Path $menuKey) -or !(Test-Path $menuScript)) { return }
+    # "My apps": installed gaming apps as "name|command|icon"
+    $list = @(foreach ($a in $apps) {
+        if (!(Test-App $a)) { continue }
+        $exe = Get-AppExe $a
+        if (!$exe) { continue }
+        # Discord moves to a new app-<version> folder with each update; its own launcher always works
+        $command = if ($a.Key -eq 'Discord') { "`"$env:LOCALAPPDATA\Discord\Update.exe`" --processStart Discord.exe" } else { "`"$exe`"" }
+        '{0}|{1}|{2}' -f $a.Name, $command, $exe
+    })
+    $centerKey = 'HKCU:\Software\AkatiOS\Center'
+    if (!(Test-Path $centerKey)) { New-Item -Path $centerKey -Force | Out-Null }
+    Set-ItemProperty -Path $centerKey -Name MenuApps -Value ([string[]]$list) -Type MultiString
+    Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$menuScript`" -Install" -WindowStyle Hidden
+}
+
 # ---------------------------------------------------------------------------------------------
 # Gaming apps
 # ---------------------------------------------------------------------------------------------
@@ -1047,6 +1077,7 @@ function Update-AppGroups {
     $key = ($apps | ForEach-Object { [int][bool]$_.IsInstalled }) -join ''
     if ($key -eq $script:appGroupsKey) { return }
     $script:appGroupsKey = $key
+    Request-MenuUpdate
     foreach ($g in $appGroups.Values) { $g.List.Children.Clear() }
     foreach ($a in $apps) {
         $target = if ($a.IsInstalled) { 'installed' } else { $a.Cat }
@@ -1303,6 +1334,81 @@ $ui.GpuNvidia.Add_Click({ Start-Process 'https://www.nvidia.com/en-us/drivers/' 
 $ui.GpuAmd.Add_Click({ Start-Process 'https://www.amd.com/en/support/download/drivers.html' })
 $ui.GpuIntel.Add_Click({ Start-Process 'https://www.intel.com/content/www/us/en/download-center/home.html' })
 
+# Screen refresh rate and the standby memory list (Windows API)
+Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+namespace AkatiOS {
+    // Display refresh rate (primary screen) and the standby memory list
+    public static class Perf {
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        public struct DEVMODE {
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public string dmDeviceName;
+            public short dmSpecVersion, dmDriverVersion, dmSize, dmDriverExtra;
+            public int dmFields, dmPositionX, dmPositionY, dmDisplayOrientation, dmDisplayFixedOutput;
+            public short dmColor, dmDuplex, dmYResolution, dmTTOption, dmCollate;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public string dmFormName;
+            public short dmLogPixels;
+            public int dmBitsPerPel, dmPelsWidth, dmPelsHeight, dmDisplayFlags, dmDisplayFrequency;
+            public int dmICMMethod, dmICMIntent, dmMediaType, dmDitherType, dmReserved1, dmReserved2, dmPanningWidth, dmPanningHeight;
+        }
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern bool EnumDisplaySettings(string device, int mode, ref DEVMODE dm);
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int ChangeDisplaySettingsEx(string device, ref DEVMODE dm, IntPtr hwnd, int flags, IntPtr param);
+
+        static DEVMODE NewMode() { DEVMODE dm = new DEVMODE(); dm.dmSize = (short)Marshal.SizeOf(typeof(DEVMODE)); return dm; }
+        // Width, height and refresh rate now (0 when unknown)
+        public static int[] Current() {
+            DEVMODE dm = NewMode();
+            if (!EnumDisplaySettings(null, -1, ref dm)) return new int[] { 0, 0, 0 };
+            return new int[] { dm.dmPelsWidth, dm.dmPelsHeight, dm.dmDisplayFrequency };
+        }
+        // Highest refresh rate at the current resolution and color depth
+        public static int MaxHz() {
+            DEVMODE cur = NewMode();
+            if (!EnumDisplaySettings(null, -1, ref cur)) return 0;
+            int max = 0;
+            DEVMODE dm = NewMode();
+            for (int i = 0; EnumDisplaySettings(null, i, ref dm); i++) {
+                if (dm.dmPelsWidth == cur.dmPelsWidth && dm.dmPelsHeight == cur.dmPelsHeight && dm.dmBitsPerPel == cur.dmBitsPerPel && dm.dmDisplayFrequency > max) max = dm.dmDisplayFrequency;
+                dm = NewMode();
+            }
+            return max;
+        }
+        // 0 = done (DISP_CHANGE_SUCCESSFUL); saved for the next start too
+        public static int SetHz(int hz) {
+            DEVMODE dm = NewMode();
+            if (!EnumDisplaySettings(null, -1, ref dm)) return -1;
+            dm.dmDisplayFrequency = hz;
+            dm.dmFields = 0x400000; // DM_DISPLAYFREQUENCY
+            return ChangeDisplaySettingsEx(null, ref dm, IntPtr.Zero, 1, IntPtr.Zero); // CDS_UPDATEREGISTRY
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 4)]
+        struct TOKEN_PRIVILEGES { public int Count; public long Luid; public int Attributes; }
+        [DllImport("advapi32.dll", SetLastError = true)] static extern bool OpenProcessToken(IntPtr process, int access, out IntPtr token);
+        [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Unicode)] static extern bool LookupPrivilegeValue(string system, string name, out long luid);
+        [DllImport("advapi32.dll", SetLastError = true)] static extern bool AdjustTokenPrivileges(IntPtr token, bool disableAll, ref TOKEN_PRIVILEGES state, int length, IntPtr previous, IntPtr returnLength);
+        [DllImport("kernel32.dll")] static extern IntPtr GetCurrentProcess();
+        [DllImport("kernel32.dll")] static extern bool CloseHandle(IntPtr handle);
+        [DllImport("ntdll.dll")] static extern int NtSetSystemInformation(int infoClass, ref int info, int length);
+        // Empties the standby list (file cache Windows keeps in RAM), like RAMMap "Empty Standby List".
+        // Needs administrator rights. Returns the NTSTATUS, 0 = done.
+        public static int PurgeStandbyList() {
+            IntPtr token;
+            if (!OpenProcessToken(GetCurrentProcess(), 0x28, out token)) return -1; // TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY
+            try {
+                TOKEN_PRIVILEGES tp = new TOKEN_PRIVILEGES();
+                tp.Count = 1; tp.Attributes = 2; // SE_PRIVILEGE_ENABLED
+                if (!LookupPrivilegeValue(null, "SeProfileSingleProcessPrivilege", out tp.Luid)) return -2;
+                if (!AdjustTokenPrivileges(token, false, ref tp, 0, IntPtr.Zero, IntPtr.Zero)) return -3;
+            } finally { CloseHandle(token); }
+            int command = 4; // MemoryPurgeStandbyList
+            return NtSetSystemInformation(80, ref command, 4); // SystemMemoryListInformation
+        }
+    }
+}
+'@
+
 # ---------------------------------------------------------------------------------------------
 # Game boost: one click before playing, and back again afterwards. What was changed is saved in the
 # registry, so Stop still works after Akati OS Center or Windows was restarted.
@@ -1426,7 +1532,19 @@ $ui.BoostButton.Add_Click({
         if (Test-Boost) { Stop-Boost; Set-Status (T 'status.boostoff') } else { Start-Boost; Set-Status (T 'status.booston') }
     } catch { Set-Status $_.Exception.Message }
     Update-BoostCard
+    Request-MenuUpdate
 })
+
+# Desktop menu > Game boost: start or stop it without the window; the menu shows the message
+if ($ToggleBoost) {
+    $message = try {
+        if (Test-Boost) { Stop-Boost; T 'status.boostoff' } else { Start-Boost; T 'status.booston' }
+    } catch { $_.Exception.Message }
+    $centerKey = 'HKCU:\Software\AkatiOS\Center'
+    if (!(Test-Path $centerKey)) { New-Item -Path $centerKey -Force | Out-Null }
+    Set-ItemProperty -Path $centerKey -Name MenuResult -Value $message
+    exit
+}
 
 # Ping: TCP connect time (more reliable than ICMP, which many servers block) to cloud regions near
 # Thailand. Many online games run their Asian servers in these data centers.
@@ -1575,81 +1693,6 @@ function Invoke-AtlasScript([string]$relative, [string]$pattern) {
     if ($file) { Start-Process cmd.exe -ArgumentList "/c `"`"$($file.FullName)`" /silent`"" -WindowStyle Hidden -Wait }
 }
 
-# Screen refresh rate and the standby memory list (Windows API)
-Add-Type -TypeDefinition @'
-using System;
-using System.Runtime.InteropServices;
-namespace AkatiOS {
-    // Display refresh rate (primary screen) and the standby memory list
-    public static class Perf {
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-        public struct DEVMODE {
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public string dmDeviceName;
-            public short dmSpecVersion, dmDriverVersion, dmSize, dmDriverExtra;
-            public int dmFields, dmPositionX, dmPositionY, dmDisplayOrientation, dmDisplayFixedOutput;
-            public short dmColor, dmDuplex, dmYResolution, dmTTOption, dmCollate;
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public string dmFormName;
-            public short dmLogPixels;
-            public int dmBitsPerPel, dmPelsWidth, dmPelsHeight, dmDisplayFlags, dmDisplayFrequency;
-            public int dmICMMethod, dmICMIntent, dmMediaType, dmDitherType, dmReserved1, dmReserved2, dmPanningWidth, dmPanningHeight;
-        }
-        [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern bool EnumDisplaySettings(string device, int mode, ref DEVMODE dm);
-        [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int ChangeDisplaySettingsEx(string device, ref DEVMODE dm, IntPtr hwnd, int flags, IntPtr param);
-
-        static DEVMODE NewMode() { DEVMODE dm = new DEVMODE(); dm.dmSize = (short)Marshal.SizeOf(typeof(DEVMODE)); return dm; }
-        // Width, height and refresh rate now (0 when unknown)
-        public static int[] Current() {
-            DEVMODE dm = NewMode();
-            if (!EnumDisplaySettings(null, -1, ref dm)) return new int[] { 0, 0, 0 };
-            return new int[] { dm.dmPelsWidth, dm.dmPelsHeight, dm.dmDisplayFrequency };
-        }
-        // Highest refresh rate at the current resolution and color depth
-        public static int MaxHz() {
-            DEVMODE cur = NewMode();
-            if (!EnumDisplaySettings(null, -1, ref cur)) return 0;
-            int max = 0;
-            DEVMODE dm = NewMode();
-            for (int i = 0; EnumDisplaySettings(null, i, ref dm); i++) {
-                if (dm.dmPelsWidth == cur.dmPelsWidth && dm.dmPelsHeight == cur.dmPelsHeight && dm.dmBitsPerPel == cur.dmBitsPerPel && dm.dmDisplayFrequency > max) max = dm.dmDisplayFrequency;
-                dm = NewMode();
-            }
-            return max;
-        }
-        // 0 = done (DISP_CHANGE_SUCCESSFUL); saved for the next start too
-        public static int SetHz(int hz) {
-            DEVMODE dm = NewMode();
-            if (!EnumDisplaySettings(null, -1, ref dm)) return -1;
-            dm.dmDisplayFrequency = hz;
-            dm.dmFields = 0x400000; // DM_DISPLAYFREQUENCY
-            return ChangeDisplaySettingsEx(null, ref dm, IntPtr.Zero, 1, IntPtr.Zero); // CDS_UPDATEREGISTRY
-        }
-
-        [StructLayout(LayoutKind.Sequential, Pack = 4)]
-        struct TOKEN_PRIVILEGES { public int Count; public long Luid; public int Attributes; }
-        [DllImport("advapi32.dll", SetLastError = true)] static extern bool OpenProcessToken(IntPtr process, int access, out IntPtr token);
-        [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Unicode)] static extern bool LookupPrivilegeValue(string system, string name, out long luid);
-        [DllImport("advapi32.dll", SetLastError = true)] static extern bool AdjustTokenPrivileges(IntPtr token, bool disableAll, ref TOKEN_PRIVILEGES state, int length, IntPtr previous, IntPtr returnLength);
-        [DllImport("kernel32.dll")] static extern IntPtr GetCurrentProcess();
-        [DllImport("kernel32.dll")] static extern bool CloseHandle(IntPtr handle);
-        [DllImport("ntdll.dll")] static extern int NtSetSystemInformation(int infoClass, ref int info, int length);
-        // Empties the standby list (file cache Windows keeps in RAM), like RAMMap "Empty Standby List".
-        // Needs administrator rights. Returns the NTSTATUS, 0 = done.
-        public static int PurgeStandbyList() {
-            IntPtr token;
-            if (!OpenProcessToken(GetCurrentProcess(), 0x28, out token)) return -1; // TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY
-            try {
-                TOKEN_PRIVILEGES tp = new TOKEN_PRIVILEGES();
-                tp.Count = 1; tp.Attributes = 2; // SE_PRIVILEGE_ENABLED
-                if (!LookupPrivilegeValue(null, "SeProfileSingleProcessPrivilege", out tp.Luid)) return -2;
-                if (!AdjustTokenPrivileges(token, false, ref tp, 0, IntPtr.Zero, IntPtr.Zero)) return -3;
-            } finally { CloseHandle(token); }
-            int command = 4; // MemoryPurgeStandbyList
-            return NtSetSystemInformation(80, ref command, 4); // SystemMemoryListInformation
-        }
-    }
-}
-'@
-
 $gpuKey = 'HKLM:\SYSTEM\CurrentControlSet\Control\GraphicsDrivers'
 $dxKey = 'HKCU:\Software\Microsoft\DirectX\UserGpuPreferences'
 $tcpipKey = 'HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces'
@@ -1757,6 +1800,9 @@ $tweaks = @(
                foreach ($k in $hvciKey, $deviceGuardKey) { if (!(Test-Path $k)) { New-Item -Path $k -Force | Out-Null } }
                Set-ItemProperty -Path $hvciKey -Name Enabled -Value $(if ($on) { 1 } else { 0 }) -Type DWord -Force
                Set-ItemProperty -Path $deviceGuardKey -Name EnableVirtualizationBasedSecurity -Value $(if ($on) { 1 } else { 0 }) -Type DWord -Force } }
+    @{ Key = 'desktopmenu'; Group = 'system'; Glyph = [char]0xE700
+       Get = { Test-Path $menuKey }
+       Work = { param($on, $script) & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $script $(if ($on) { '-Install' } else { '-Remove' }) } }
     @{ Key = 'startdelay'; Group = 'system'; Glyph = [char]0xE823
        Get = { (Get-RegValue $serializeKey 'StartupDelayInMSec') -ne 0 }
        Set = { param($on)
@@ -1820,7 +1866,8 @@ foreach ($tw in $tweaks) {
             return
         }
         if ($t.Work) {
-            Start-Work $t.Work @($on) $finish $context
+            Start-Work $t.Work @($on, $menuScript) $finish $context
+            if ($t.Key -eq 'desktopmenu' -and $on) { Request-MenuUpdate }
             return
         }
         if ($t.Key -eq 'store') {
@@ -1982,6 +2029,7 @@ function Show-Games {
             Remove-ItemProperty -Path $gamesKey -Name $path -ErrorAction SilentlyContinue
             Set-Status ((T 'status.gameremoved') -f [IO.Path]::GetFileNameWithoutExtension($path))
             Show-Games
+            Request-MenuUpdate
         })
         [void]$right.Children.Add($remove)
         $name = try { (Get-Item -LiteralPath $path -ErrorAction Stop).VersionInfo.FileDescription } catch { $null }
@@ -2006,6 +2054,7 @@ $ui.GameAddButton.Add_Click({
     foreach ($kind in 'cpu', 'gpu') { try { Set-GameOption $path $kind $true } catch { } }
     Set-Status ((T 'status.gameadded') -f [IO.Path]::GetFileNameWithoutExtension($path))
     Show-Games
+    Request-MenuUpdate
 })
 Show-Games
 
@@ -2869,6 +2918,7 @@ function Update-Language {
     Update-RefreshRow
     Update-TweakHints
     Show-Games
+    Request-MenuUpdate
     Update-ThemeCards
     Update-GpuText
     Update-BoostCard
@@ -2917,6 +2967,13 @@ Show-Disks
 Update-Clock
 Update-Chips
 Set-Status (T 'ready')
+# Started from the desktop menu: open that page (and start the ping test)
+if ($Page -and $pages -contains $Page.ToLowerInvariant()) {
+    $ui["Nav$(Get-PageId $Page.ToLowerInvariant())"].IsChecked = $true
+    if ($Ping -and $Page -eq 'boost') { $script:pingOn = $true; $script:pingNext = [datetime]::MinValue; Set-PingButton }
+}
+# The desktop menu is rebuilt each time the window opens (apps, language, task for this user)
+Request-MenuUpdate
 
 # ---------------------------------------------------------------------------------------------
 # Screenshot mode (CI): render every page in both languages to PNG and exit
@@ -3033,7 +3090,7 @@ if ($build -ge 22000) {
 
 $timer = New-Object System.Windows.Threading.DispatcherTimer
 $timer.Interval = [TimeSpan]::FromMilliseconds(500)
-$timer.Add_Tick({ Update-Stats; Receive-Work; Update-AppProgress; Update-Ping })
+$timer.Add_Tick({ Update-Stats; Receive-Work; Update-AppProgress; Update-Ping; if ($script:menuAt -and (Get-Date) -gt $script:menuAt) { Update-DesktopMenu } })
 $window.Add_Loaded({
     # Akati OS checks GitHub once when the window opens (one request, nothing is downloaded)
     Start-UpdateCheck

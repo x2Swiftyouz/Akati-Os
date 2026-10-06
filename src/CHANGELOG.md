@@ -3,7 +3,7 @@
 ## v1.4.1
 
 ### Added
-- Setup page **Input and latency** (both ticked): timer resolution 0.5 ms (AtlasOS script) and Sticky Keys / Filter Keys shortcuts off
+- Setup page **Input and latency** (all ticked): timer resolution 0.5 ms (AtlasOS script), Sticky Keys / Filter Keys shortcuts off, and **Akati OS on the desktop right-click menu**: free up RAM, open Akati OS Center, my apps, start or stop Game boost, clean junk files, ping test, flush DNS cache, restart Explorer, restart into BIOS. Free up RAM, Game boost and BIOS run through a task of the signed-in user, without a UAC prompt each time
 - Akati OS Center > Tweaks: new sections **Input and latency**, **Network** (DNS: Automatic / Cloudflare / Google, Nagle's algorithm, network adapter power saving and interrupt moderation), **Display and graphics** (highest screen refresh rate, multiplane overlay, GPU MSI mode) and **Memory and system** (memory compression with advice by RAM, core isolation, startup app delay). The Dashboard shows the screen refresh rate
 - Game boost: frees up standby memory, and **My games**: high CPU priority, the dedicated graphics card and an optional Defender folder exclusion for each game you add
 - Gaming apps: **Riot Client** (VALORANT; League of Legends and TFT from Riot Client, official installer checked for Riot's signature), **GOG GALAXY**, **Rockstar Games Launcher** and **MSI Afterburner**

@@ -124,8 +124,9 @@ $strings = @{
         'nav.boost' = 'Game boost'
         'cancel' = 'Cancel'; 'cancelling' = 'Cancelling...'; 'queued' = 'Waiting in the queue'; 'preparing' = 'Starting...'
         'update' = 'Update'; 'updating' = 'Updating...'; 'updateavailable' = 'Update available'; 'selfupdate' = 'updates itself'
-        'apps.check' = 'Check for updates'; 'apps.updateall' = 'Update all'; 'apps.installselected' = 'Install selected'
-        'apps.hint' = 'Tick apps to install several at once. They install one after another.'
+        'apps.check' = 'Check for updates'; 'apps.updateall' = 'Update all'; 'apps.updatecount' = 'Update all ({0})'
+        'apps.hint' = 'Get several apps: they install one after another.'; 'apps.starter' = 'Get Steam and Discord'
+        'apps.cat.installed' = 'Installed'; 'src.winget' = 'WinGet'; 'src.official' = 'Official site'
         'apps.cat.launchers' = 'Game launchers'; 'apps.cat.social' = 'Chat and streaming'; 'apps.cat.tools' = 'Tools'
         'get' = 'Get'; 'open' = 'Open'; 'more' = 'More'; 'openfolder' = 'Open folder'; 'uninstall' = 'Uninstall'
         'uninstall.confirm' = 'Uninstall {0}? Its own uninstaller opens.'; 'uninstalling' = 'Uninstalling, finish in its window...'
@@ -268,8 +269,9 @@ $strings = @{
         'nav.boost' = 'บูสต์เกม'
         'cancel' = 'ยกเลิก'; 'cancelling' = 'กำลังยกเลิก...'; 'queued' = 'รอคิว'; 'preparing' = 'กำลังเริ่ม...'
         'update' = 'อัปเดต'; 'updating' = 'กำลังอัปเดต...'; 'updateavailable' = 'มีอัปเดต'; 'selfupdate' = 'อัปเดตตัวเอง'
-        'apps.check' = 'ตรวจอัปเดต'; 'apps.updateall' = 'อัปเดตทั้งหมด'; 'apps.installselected' = 'ติดตั้งที่เลือก'
-        'apps.hint' = 'ติ๊กหลายแอปเพื่อติดตั้งทีเดียว ระบบจะติดตั้งให้ทีละตัว'
+        'apps.check' = 'ตรวจอัปเดต'; 'apps.updateall' = 'อัปเดตทั้งหมด'; 'apps.updatecount' = 'อัปเดตทั้งหมด ({0})'
+        'apps.hint' = 'กดติดตั้งหลายแอปได้ ระบบจะติดตั้งให้ทีละตัว'; 'apps.starter' = 'ติดตั้ง Steam และ Discord'
+        'apps.cat.installed' = 'ติดตั้งแล้ว'; 'src.winget' = 'WinGet'; 'src.official' = 'เว็บทางการ'
         'apps.cat.launchers' = 'ตัวเปิดเกม'; 'apps.cat.social' = 'แชทและสตรีม'; 'apps.cat.tools' = 'เครื่องมือ'
         'get' = 'ติดตั้ง'; 'open' = 'เปิด'; 'more' = 'เพิ่มเติม'; 'openfolder' = 'เปิดโฟลเดอร์'; 'uninstall' = 'ถอนการติดตั้ง'
         'uninstall.confirm' = 'ถอนการติดตั้ง {0} ใช่ไหม ตัวถอนการติดตั้งของแอปจะเปิดขึ้นมา'; 'uninstalling' = 'กำลังถอนการติดตั้ง ทำต่อในหน้าต่างของแอป...'
@@ -678,7 +680,8 @@ function Show-TopApps {
 # Gaming apps
 # ---------------------------------------------------------------------------------------------
 # Id: WinGet package (used for updates). SelfUpdate: the app updates itself. Exe: where its icon comes from.
-# Cat: section on the page. Mono and Color: the tile shown until the app is installed (then its own icon).
+# Cat: section on the page (an installed app moves to "Installed" at the top). Source: where the installer
+# comes from (WinGet, or the official site for Discord and Riot). Mono and Color: the tile shown until the app is installed (then its own icon).
 # Arp: the DisplayName of its entry in Apps & features, for Uninstall.
 $apps = @(
     @{ Key = 'Steam';      Cat = 'launchers'; Name = 'Steam';                   Mono = 'S';  Color = '#2A475E'; Arp = 'Steam'; SelfUpdate = $true
@@ -694,20 +697,20 @@ $apps = @(
     @{ Key = 'BattleNet';  Cat = 'launchers'; Name = 'Battle.net';              Mono = 'B';  Color = '#148EFF'; Arp = 'Battle.net'; Id = 'Blizzard.BattleNet'
        Path = "$env:ProgramFiles\Battle.net"; Path2 = "${env:ProgramFiles(x86)}\Battle.net"
        Exe = @("$env:ProgramFiles\Battle.net\Battle.net Launcher.exe", "${env:ProgramFiles(x86)}\Battle.net\Battle.net Launcher.exe", "$env:ProgramFiles\Battle.net\Battle.net.exe") }
-    @{ Key = 'Riot';       Cat = 'launchers'; Name = 'Riot Client (VALORANT)';  Mono = 'R';  Color = '#D13639'; Arp = 'VALORANT'; SelfUpdate = $true
+    @{ Key = 'Riot';       Cat = 'launchers'; Name = 'Riot Client (VALORANT)';  Mono = 'R';  Color = '#D13639'; Arp = 'VALORANT'; SelfUpdate = $true; Source = 'official'
        Path = "$env:SystemDrive\Riot Games\Riot Client\RiotClientServices.exe"; Exe = @("$env:SystemDrive\Riot Games\Riot Client\RiotClientServices.exe") }
     @{ Key = 'GOG';        Cat = 'launchers'; Name = 'GOG GALAXY';              Mono = 'G';  Color = '#86328A'; Arp = 'GOG GALAXY*'; Id = 'GOG.Galaxy'
        Path = "${env:ProgramFiles(x86)}\GOG Galaxy\GalaxyClient.exe"; Exe = @("${env:ProgramFiles(x86)}\GOG Galaxy\GalaxyClient.exe") }
-    @{ Key = 'Rockstar';   Cat = 'launchers'; Name = 'Rockstar Games Launcher'; Mono = 'R'; Color = '#C98A0B'; Arp = 'Rockstar Games Launcher'; Id = 'RockstarGames.Launcher'
+    @{ Key = 'Rockstar';   Cat = 'launchers'; Name = 'Rockstar Games Launcher'; Mono = 'RS'; Color = '#C98A0B'; Arp = 'Rockstar Games Launcher'; Id = 'RockstarGames.Launcher'
        Path = "$env:ProgramFiles\Rockstar Games\Launcher\Launcher.exe"; Exe = @("$env:ProgramFiles\Rockstar Games\Launcher\Launcher.exe") }
-    @{ Key = 'Discord';    Cat = 'social';    Name = 'Discord';                 Mono = 'D';  Color = '#5865F2'; Arp = 'Discord'; SelfUpdate = $true
+    @{ Key = 'Discord';    Cat = 'social';    Name = 'Discord';                 Mono = 'D';  Color = '#5865F2'; Arp = 'Discord'; SelfUpdate = $true; Source = 'official'
        Path = "$env:LOCALAPPDATA\Discord\packages\RELEASES"; Exe = @("$env:LOCALAPPDATA\Discord\app-*\Discord.exe") }
     @{ Key = 'OBS';        Cat = 'social';    Name = 'OBS Studio';              Mono = 'O';  Color = '#5C5C66'; Arp = 'OBS Studio*'; Id = 'OBSProject.OBSStudio'
        Path = "$env:ProgramFiles\obs-studio"; Exe = @("$env:ProgramFiles\obs-studio\bin\64bit\obs64.exe") }
     @{ Key = 'Afterburner'; Cat = 'tools';    Name = 'MSI Afterburner';         Mono = 'A';  Color = '#B3202A'; Arp = 'MSI Afterburner*'; Id = 'Guru3D.Afterburner'
        Path = "${env:ProgramFiles(x86)}\MSI Afterburner\MSIAfterburner.exe"; Exe = @("${env:ProgramFiles(x86)}\MSI Afterburner\MSIAfterburner.exe") }
 )
-$appCats = 'launchers', 'social', 'tools'
+$appCats = 'installed', 'launchers', 'social', 'tools'
 
 function New-Text([string]$text, [double]$size = 13, [string]$weight = 'Normal', [string]$tag = $null) {
     $tb = New-Object System.Windows.Controls.TextBlock
@@ -836,10 +839,10 @@ $progressDir = Join-Path $env:LOCALAPPDATA 'AkatiOS\Logs'
 function Update-AppRow($app) {
     $installed = Test-App $app
     $btn = $app.Button
-    # No tick box for apps that are installed, installing or waiting in the queue
     $busy = $app.State -ne 'idle'
-    $app.Check.Visibility = if ($installed -or $busy) { 'Hidden' } else { 'Visible' }
-    if ($installed -or $busy) { $app.Check.IsChecked = $false }
+    # An app being installed stays in its section until it is done
+    $app.IsInstalled = $installed -and $app.State -notin 'install', 'queued'
+    Update-AppGroups
     $app.More.Visibility = if ($installed -and !$busy -and !$app.Uninstalling) { 'Visible' } else { 'Collapsed' }
     $app.Bar.Visibility = 'Collapsed'
     if ($busy) {
@@ -928,9 +931,28 @@ function Start-Uninstall($app) {
 }
 
 function Update-AppsToolbar {
-    $selected = @($apps | Where-Object { $_.Check.IsChecked -and $_.State -eq 'idle' })
-    $ui.InstallSelectedButton.IsEnabled = $selected.Count -gt 0
-    $ui.UpdateAllButton.IsEnabled = [bool]@($apps | Where-Object { $_.HasUpdate -and $_.State -eq 'idle' }).Count
+    $count = @($apps | Where-Object { $_.HasUpdate -and $_.State -eq 'idle' }).Count
+    $ui.UpdateAllButton.IsEnabled = $count -gt 0
+    $ui.UpdateAllText.Text = if ($count) { (T 'apps.updatecount') -f $count } else { T 'apps.updateall' }
+    $ui.StarterButton.IsEnabled = [bool]@($apps | Where-Object { $_.Key -in 'Steam', 'Discord' -and $_.State -eq 'idle' -and !(Test-App $_) }).Count
+}
+
+# Moves the rows: installed apps to "Installed" at the top, the others to their section, in the order of $apps
+function Update-AppGroups {
+    if (!$script:appsReady) { return }
+    $key = ($apps | ForEach-Object { [int][bool]$_.IsInstalled }) -join ''
+    if ($key -eq $script:appGroupsKey) { return }
+    $script:appGroupsKey = $key
+    foreach ($g in $appGroups.Values) { $g.List.Children.Clear() }
+    foreach ($a in $apps) {
+        $target = if ($a.IsInstalled) { 'installed' } else { $a.Cat }
+        [void]$appGroups[$target].List.Children.Add($a.RowParts.Row)
+    }
+    foreach ($g in $appGroups.Values) {
+        $shown = if ($g.List.Children.Count) { 'Visible' } else { 'Collapsed' }
+        $g.Head.Visibility = $shown; $g.Card.Visibility = $shown
+        Update-Separators $g.List
+    }
 }
 
 function Start-NextApp {
@@ -1028,7 +1050,7 @@ function Update-AppProgress {
 }
 
 # One gray heading and one grouped list per category
-$appLists = @{}
+$appGroups = @{}
 foreach ($cat in $appCats) {
     $head = New-Text (T "apps.cat.$cat") 13 'SemiBold' "t:apps.cat.$cat"
     $head.Style = $window.FindResource('Section')
@@ -1037,7 +1059,7 @@ foreach ($cat in $appCats) {
     $list = New-Object System.Windows.Controls.StackPanel
     $card.Child = $list
     [void]$ui.AppsGroups.Children.Add($head); [void]$ui.AppsGroups.Children.Add($card)
-    $appLists[$cat] = $list
+    $appGroups[$cat] = @{ Head = $head; Card = $card; List = $list }
 }
 foreach ($app in $apps) {
     $btn = New-Object System.Windows.Controls.Button
@@ -1047,16 +1069,24 @@ foreach ($app in $apps) {
     $dots = New-Text ([string][char]0xE712) 14; $dots.Style = $window.FindResource('Glyph'); $more.Content = $dots
     $right = New-Object System.Windows.Controls.StackPanel; $right.Orientation = 'Horizontal'
     [void]$right.Children.Add($more); [void]$right.Children.Add($btn)
-    $check = New-Object System.Windows.Controls.CheckBox
-    $check.Style = $window.FindResource('Tick')
-    $check.Add_Click({ Update-AppsToolbar })
-    $row = New-Row ([string][char]0xE7FC) $app.Name $null $right $null $check
+    $row = New-Row ([string][char]0xE7FC) $app.Name $null $right $null
+    # Small badge after the name: where the installer comes from
+    $source = if ($app.Source) { $app.Source } else { 'winget' }
+    $badge = New-Object System.Windows.Controls.Border
+    $badge.CornerRadius = 4; $badge.Background = '#3A3A3C'; $badge.Padding = '5,1'; $badge.Margin = '8,0,0,0'; $badge.VerticalAlignment = 'Center'
+    $badgeText = New-Text (T "src.$source") 10 'SemiBold' "t:src.$source"; $badgeText.Foreground = $window.FindResource('MutedBrush')
+    $badge.Child = $badgeText
+    $titleLine = New-Object System.Windows.Controls.StackPanel; $titleLine.Orientation = 'Horizontal'
+    $textPanel = $row.Title.Parent
+    $textPanel.Children.Remove($row.Title)
+    [void]$titleLine.Children.Add($row.Title); [void]$titleLine.Children.Add($badge)
+    $textPanel.Children.Insert(0, $titleLine)
     # Letter tile until the app is installed (no logos)
     $tile = New-Text $app.Mono $(if ($app.Mono.Length -gt 1) { 11 } else { 14 }) 'Bold'
     $tile.Foreground = 'White'; $tile.HorizontalAlignment = 'Center'; $tile.VerticalAlignment = 'Center'
     $row.Icon.Background = $app.Color; $row.Icon.Child = $tile
     $app.Tile = $tile; $app.Ring = New-Ring
-    $app.Sub = $row.Sub; $app.Button = $btn; $app.More = $more; $app.Check = $check; $app.Bar = $row.Bar; $app.RowParts = $row
+    $app.Sub = $row.Sub; $app.Button = $btn; $app.More = $more; $app.Bar = $row.Bar; $app.RowParts = $row
     $app.State = 'idle'; $app.HasUpdate = $false; $app.Uninstalling = $false
     $btn.Tag = $app; $more.Tag = $app
     $btn.Add_Click({
@@ -1076,16 +1106,16 @@ foreach ($app in $apps) {
         }
         $menu.PlacementTarget = $this; $menu.Placement = 'Bottom'; $menu.IsOpen = $true
     })
-    [void]$appLists[$app.Cat].Children.Add($row.Row)
     Update-AppRow $app
 }
+$script:appsReady = $true
+Update-AppGroups
 Update-AppsToolbar
-foreach ($list in $appLists.Values) { Update-Separators $list }
 # Installed or uninstalled outside this window: look again when the window comes back to the front
 $window.Add_Activated({ foreach ($a in $apps) { if ($a.State -eq 'idle' -and !$a.Uninstalling) { Update-AppRow $a } }; Update-AppsToolbar })
 
-$ui.InstallSelectedButton.Add_Click({
-    foreach ($a in $apps) { if ($a.Check.IsChecked -and $a.State -eq 'idle') { $a.Check.IsChecked = $false; Add-AppToQueue $a 'install' } }
+$ui.StarterButton.Add_Click({
+    foreach ($a in $apps) { if ($a.Key -in 'Steam', 'Discord' -and $a.State -eq 'idle' -and !(Test-App $a)) { Add-AppToQueue $a 'install' } }
     Update-AppsToolbar
 })
 $ui.UpdateAllButton.Add_Click({
@@ -1094,13 +1124,15 @@ $ui.UpdateAllButton.Add_Click({
 })
 
 # Which installed apps have a newer version in WinGet (Steam and Discord update themselves)
-$ui.CheckUpdatesButton.Add_Click({
-    if (!(Get-Command winget -ErrorAction SilentlyContinue)) { Set-Status (T 'status.nowinget'); return }
-    $this.IsEnabled = $false
+# $quiet: the automatic check when the page opens; it says nothing when there is nothing to update
+function Start-AppUpdateCheck([bool]$quiet = $false) {
+    if (!(Get-Command winget -ErrorAction SilentlyContinue)) { if (!$quiet) { Set-Status (T 'status.nowinget') }; return }
+    $ids = @($apps | Where-Object { $_.Id -and (Test-App $_) } | ForEach-Object { $_.Id })
+    if ($quiet -and !$ids.Count) { return }
+    $ui.CheckUpdatesButton.IsEnabled = $false
     Set-Status (T 'status.checkingapps') $true
     # One WinGet query per app: "list --upgrade-available" finds the app only when a newer version exists
     # (the table of "winget upgrade" cuts long names, so it is not parsed)
-    $ids = @($apps | Where-Object { $_.Id -and (Test-App $_) } | ForEach-Object { $_.Id })
     Start-Work {
         param($ids)
         $found = @{}
@@ -1120,9 +1152,10 @@ $ui.CheckUpdatesButton.Add_Click({
             if ($a.State -eq 'idle') { Update-AppRow $a }
         }
         Update-AppsToolbar
-        if ($count) { Set-Status ((T 'status.updatesfound') -f $count) } else { Set-Status (T 'status.noupdates') }
-    }
-})
+        if ($count) { Set-Status ((T 'status.updatesfound') -f $count) } elseif ($ctx) { Set-Status (T 'ready') } else { Set-Status (T 'status.noupdates') }
+    } $quiet
+}
+$ui.CheckUpdatesButton.Add_Click({ Start-AppUpdateCheck })
 
 # GPU drivers: highlight the vendor of the graphics card in this PC
 $gpus = @(try { Get-CimInstance Win32_VideoController | Where-Object { $_.Name -notmatch 'Basic Display|Remote|Virtual|VMware|Hyper-V|Parsec' } } catch { })
@@ -1131,7 +1164,7 @@ $gpuVendors = @{ GpuNvidia = 'NVIDIA|GeForce|Quadro|RTX|GTX'; GpuAmd = 'AMD|Rade
 $script:gpuFound = @()
 foreach ($k in $gpuVendors.Keys) {
     if (@($gpuNames | Where-Object { $_ -match $gpuVendors[$k] }).Count) {
-        $ui[$k].Style = $window.FindResource('Primary'); $script:gpuFound += $k
+        $ui[$k].Style = $window.FindResource('PillAccent'); $script:gpuFound += $k
     }
 }
 function Update-GpuText {
@@ -2300,6 +2333,8 @@ function Show-Page([string]$name) {
     if (!$script:statusBusy) { Set-Status (T 'ready') }
     if ($name -eq 'cleaner' -and $ui.CleanTotal.Text -eq '-') { Start-Scan }
     if ($name -eq 'boost') { Update-BoostCard }
+    # Gaming apps: look for app updates once, the first time the page opens
+    if ($name -eq 'gaming' -and !$script:appsChecked -and !$Screenshot) { $script:appsChecked = $true; Start-AppUpdateCheck $true }
 }
 foreach ($p in $pages) {
     $ui["Nav$(Get-PageId $p)"].Add_Checked({ Show-Page $this.Name.Substring(3).ToLowerInvariant() })
@@ -2365,6 +2400,7 @@ function Update-Language {
     Update-Chips
     if ($stats.Top) { Show-TopApps }
     foreach ($a in $apps) { if ($a.State -ne 'install') { Update-AppRow $a } }
+    Update-AppsToolbar
     Update-ThemeCards
     Update-GpuText
     Update-BoostCard
@@ -2446,11 +2482,10 @@ if ($Screenshot) {
                 # Show the progress bar and queue states once
                 $apps[2].State = 'install'; Update-AppRow $apps[2]; Set-Ring $apps[2].Ring 45; $apps[2].Sub.Text = (T 'stage.download') + ' 45%'; $apps[2].Sub.Foreground = $window.FindResource('Accent2')
                 $apps[3].State = 'queued'; Update-AppRow $apps[3]
-                $apps[4].Check.IsChecked = $true; Update-AppsToolbar
             }
             if ($p -eq 'tweaks') { $ui.SystemList.Measure((New-Object System.Windows.Size 800, 10000)) }
             Save-Shot "$p-$l.png"
-            if ($p -eq 'gaming') { foreach ($i in 2, 3) { $apps[$i].State = 'idle'; Update-AppRow $apps[$i] }; $apps[4].Check.IsChecked = $false }
+            if ($p -eq 'gaming') { foreach ($i in 2, 3) { $apps[$i].State = 'idle'; Update-AppRow $apps[$i] } }
             if ($p -eq 'appearance' -or $p -eq 'tweaks' -or $p -eq 'boost' -or $p -eq 'gaming') {
                 # The lower part of long pages
                 $sv = $ui["Page$(Get-PageId $p)"]

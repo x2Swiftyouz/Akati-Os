@@ -658,19 +658,22 @@
                             <TextBlock Tag="t:gaming.sub" Text="Akati OS does not install apps during setup. Install them here, from official sources." Style="{StaticResource Muted}" Margin="0,4,0,18"/>
                             <Border Style="{StaticResource Card}" Padding="8" Margin="0,0,0,20">
                                 <StackPanel>
-                                    <DockPanel Margin="14,6,14,6">
+                                    <DockPanel Margin="10,4,10,4">
                                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                            <Button x:Name="CheckUpdatesButton" Style="{StaticResource Secondary}" Margin="0,0,8,0">
+                                            <Button x:Name="CheckUpdatesButton" Style="{StaticResource Pill}" Margin="0,0,8,0">
                                                 <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE895;" FontSize="13" Margin="0,0,8,0"/><TextBlock Tag="t:apps.check" Text="Check for updates"/></StackPanel>
                                             </Button>
-                                            <Button x:Name="UpdateAllButton" Style="{StaticResource Secondary}" Margin="0,0,8,0" IsEnabled="False">
-                                                <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE777;" FontSize="13" Margin="0,0,8,0"/><TextBlock Tag="t:apps.updateall" Text="Update all"/></StackPanel>
-                                            </Button>
-                                            <Button x:Name="InstallSelectedButton" Style="{StaticResource Primary}" IsEnabled="False">
-                                                <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE896;" FontSize="13" Margin="0,0,8,0"/><TextBlock Tag="t:apps.installselected" Text="Install selected"/></StackPanel>
+                                            <Button x:Name="UpdateAllButton" Style="{StaticResource Pill}" IsEnabled="False">
+                                                <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE777;" FontSize="13" Margin="0,0,8,0"/><TextBlock x:Name="UpdateAllText" Text="Update all"/></StackPanel>
                                             </Button>
                                         </StackPanel>
-                                        <TextBlock x:Name="AppsHint" Tag="t:apps.hint" Text="Tick apps to install several at once." Style="{StaticResource Muted}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <!-- Starter pack: the two apps most players install first -->
+                                            <Button x:Name="StarterButton" Style="{StaticResource PillAccent}" Margin="0,0,12,0">
+                                                <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE896;" FontSize="13" Margin="0,0,8,0"/><TextBlock Tag="t:apps.starter" Text="Get Steam and Discord"/></StackPanel>
+                                            </Button>
+                                            <TextBlock Tag="t:apps.hint" Text="Apps install one after another." Style="{StaticResource Muted}" VerticalAlignment="Center" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
                                     </DockPanel>
                                 </StackPanel>
                             </Border>
@@ -683,9 +686,9 @@
                                     <TextBlock x:Name="GpuDetected" Text="" Foreground="{DynamicResource Accent2}" FontSize="12" Margin="0,0,0,4" TextWrapping="Wrap"/>
                                     <TextBlock x:Name="GpuDriver" Text="" Style="{StaticResource Muted}" FontSize="12" Margin="0,0,0,14"/>
                                     <StackPanel Orientation="Horizontal">
-                                        <Button x:Name="GpuNvidia" Style="{StaticResource Secondary}" Content="NVIDIA" Margin="0,0,10,0" MinWidth="110"/>
-                                        <Button x:Name="GpuAmd" Style="{StaticResource Secondary}" Content="AMD" Margin="0,0,10,0" MinWidth="110"/>
-                                        <Button x:Name="GpuIntel" Style="{StaticResource Secondary}" Content="Intel" MinWidth="110"/>
+                                        <Button x:Name="GpuNvidia" Style="{StaticResource Pill}" Content="NVIDIA" Margin="0,0,10,0" MinWidth="110"/>
+                                        <Button x:Name="GpuAmd" Style="{StaticResource Pill}" Content="AMD" Margin="0,0,10,0" MinWidth="110"/>
+                                        <Button x:Name="GpuIntel" Style="{StaticResource Pill}" Content="Intel" MinWidth="110"/>
                                     </StackPanel>
                                 </StackPanel>
                             </Border>

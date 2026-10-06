@@ -54,11 +54,12 @@ actions:
   - !run: { exe: "explorer.exe", runas: "currentUser", wait: false }
   # Akati OS: open Task Manager, so the user can see what the playbook is doing while it runs.
   # Task Manager needs admin rights (highestAvailable): started with the user's normal rights it does
-  # not open at all, so it is started elevated, as the signed-in user.
+  # not open at all, so it is started elevated, as the signed-in user. Start-Process returns at once
+  # (exit code 0), so wait is true: with wait false, AME counted the action as failed and retried it.
   - !powerShell:
-    command: 'Start-Process -FilePath "$env:windir\System32\Taskmgr.exe"'
+    command: 'Start-Process -FilePath "$env:windir\System32\Taskmgr.exe"; exit 0'
     runas: currentUserElevated
-    wait: false
+    wait: true
 
   # Configure PowerShell first so that other PowerShell scripts work
   # NGEN - .NET assemblies PowerShell optimization

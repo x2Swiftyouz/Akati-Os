@@ -395,7 +395,8 @@ function Start-Work([scriptblock]$work, [object[]]$arguments, [scriptblock]$done
 function Get-LastOutput($result) {
     if (!$result -or $result.Count -eq 0) { return $null }
     $last = $result[$result.Count - 1]
-    if ($last -is [psobject]) { $last = $last.psobject.BaseObject }
+    # Unwrap strings and hashtables; a PSCustomObject keeps its properties only on the wrapper (JSON from Invoke-RestMethod)
+    if ($last -is [psobject] -and $last.psobject.BaseObject -isnot [System.Management.Automation.PSCustomObject]) { $last = $last.psobject.BaseObject }
     return $last
 }
 function Receive-Work {

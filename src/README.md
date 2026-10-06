@@ -19,7 +19,7 @@ Akati OS คือ playbook สำหรับ Windows 11 เน้นเล่�
 
 - All AtlasOS v0.5.0 performance, privacy and debloat tweaks
 - Akati OS Dark and Akati OS Light themes, wallpapers and lock screen
-- No apps are installed during setup: install them when you want from Akati OS Center. Optional: remove the Microsoft Store
+- No apps are installed during setup: install them when you want from Akati OS Center. Optional (ticked by default): remove the Microsoft Store and turn off unused services (printing, search indexing, SuperFetch, network discovery)
 - Visual C++ and DirectX runtimes are always installed (from AtlasOS)
 - **Akati OS Center** app, the one place for everything: install and update gaming apps (Steam, Epic Games Launcher, EA app, Ubisoft Connect, Battle.net, Discord, OBS Studio), GPU driver links, **Game boost** (one-click Game Mode, ping test, startup apps), gaming tweaks, cleaner, themes, accent colors, wallpapers, Akati OS cursor and sounds, live CPU/RAM/GPU usage, problem report, update check and **System settings** with every AtlasOS setting in English and Thai (no Atlas folder shortcut)
 - Gaming tweaks in Akati OS Center: Hardware-accelerated GPU scheduling and Optimizations for windowed games
@@ -30,7 +30,7 @@ Akati OS คือ playbook สำหรับ Windows 11 เน้นเล่�
 
 1. Back up your files. This playbook cannot be fully undone. To go back, reinstall Windows.
 2. Test in a virtual machine first.
-3. Download `AkatiOS_v1.4.0.apbx` from Releases and check its SHA256 hash against `SHA256SUMS.txt`.
+3. Download `AkatiOS_v1.4.1.apbx` from Releases and check its SHA256 hash against `SHA256SUMS.txt`.
 4. Open AME Wizard and drag the `.apbx` file into it.
 5. Follow the setup pages.
 

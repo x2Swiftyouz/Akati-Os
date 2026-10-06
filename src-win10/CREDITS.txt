@@ -1,4 +1,4 @@
-Akati OS Playbook for Windows 10 v1.4.0
+Akati OS Playbook for Windows 10 v1.4.1
 
 Based on AtlasOS v0.4.1 by the Atlas team: https://github.com/Atlas-OS/Atlas
 Licensed under GPL-3.0. Source of this modified version must stay available.

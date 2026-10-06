@@ -51,7 +51,7 @@ The AtlasOS wallpapers and themes are removed, so the Atlas logo is not used: `E
 
 | File | Purpose |
 |---|---|
-| `Configuration/tweaks/misc/akati-extras.yml` | Microsoft Store removal (option `remove-store`, `!appx` family `Microsoft.WindowsStore*`), the Windows Terminal color scheme and the Akati OS Center shortcuts |
+| `Configuration/tweaks/misc/akati-extras.yml` | Microsoft Store removal (option `remove-store`, `!appx` family `Microsoft.WindowsStore*`), unused services (option `disable-unused-services`: runs the unchanged AtlasOS scripts Disable Printing, Disable SuperFetch, Disable Network Discovery Services with `/silent` and Disable Search Indexing as TrustedInstaller, input from `nul` because some end with `pause`), the Windows Terminal color scheme and the Akati OS Center shortcuts |
 | `Executables/AtlasModules/Scripts/GAMEAPPS.ps1` | Installs one gaming app when the user clicks Install in Akati OS Center (see below) |
 | `Executables/AtlasModules/Other/AkatiOS/terminal-fragment.json` | Windows Terminal color scheme and profile, copied to `%ProgramData%\Microsoft\Windows Terminal\Fragments\AkatiOS` |
 | `Executables/AtlasModules/AkatiCenter/` | Akati OS Center app: `AkatiCenter.ps1` (PowerShell + WPF), `AkatiCenter.xaml` (window layout), `logo.png`. Shortcuts are created by `akati-extras.yml` |

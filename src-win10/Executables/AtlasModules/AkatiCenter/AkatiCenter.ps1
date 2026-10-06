@@ -385,7 +385,7 @@ function Format-Size([double]$bytes) {
 function Get-RegValue($path, $name) { (Get-ItemProperty -Path $path -Name $name -ErrorAction SilentlyContinue).$name }
 
 $akati = Get-ItemProperty -Path 'HKLM:\SOFTWARE\AkatiOS' -ErrorAction SilentlyContinue
-$version = if ($akati.Version) { $akati.Version } else { 'v1.4.0' }
+$version = if ($akati.Version) { $akati.Version } else { 'v1.4.1' }
 $build = [Environment]::OSVersion.Version.Build
 $edition = if ($akati.Edition) { $akati.Edition } elseif ($build -ge 22000) { 'Windows 11' } else { 'Windows 10' }
 $ui.VersionBig.Text = $version

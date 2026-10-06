@@ -1843,7 +1843,7 @@ foreach ($tw in $tweaks) {
             & $finish $null $context
         }
     })
-    $group = if ($t.Group) { $t.Group } else { 'gaming' }
+    $group = if ($tw.Group) { $tw.Group } else { 'gaming' }
     $tw.Row = $row.Row
     [void]$tweakLists[$group].Children.Add($row.Row)
 }

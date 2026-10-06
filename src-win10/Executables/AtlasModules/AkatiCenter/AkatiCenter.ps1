@@ -2970,6 +2970,11 @@ if ($Screenshot) {
             if ($p -eq 'appearance' -or $p -eq 'tweaks' -or $p -eq 'boost' -or $p -eq 'gaming') {
                 # The lower part of long pages
                 $sv = $ui["Page$(Get-PageId $p)"]
+                if ($p -eq 'tweaks') {
+                    # The middle of the page: the Network, Display and Memory sections
+                    $sv.UpdateLayout(); $sv.ScrollToVerticalOffset(560); $sv.UpdateLayout()
+                    Save-Shot "$p-$l-mid.png"
+                }
                 $sv.UpdateLayout(); $sv.ScrollToVerticalOffset(100000); $sv.UpdateLayout()
                 Save-Shot "$p-$l-2.png"
                 $sv.ScrollToVerticalOffset(0)

@@ -88,10 +88,11 @@ Akati OS does not install GPU drivers. **Akati OS Center > Gaming apps** has but
 | Search indexing (Windows Search) | you rarely search inside files; Start search still finds apps and settings, file search is slower | Tweaks > Search indexing > Minimal or Enable |
 | SuperFetch (SysMain) | Windows is on an SSD | Tweaks > SysMain (Superfetch) > Enable |
 | Network discovery (SSDP, NetBIOS helper, function discovery) | you do not browse other PCs or printers on your home network | Tweaks > Network discovery > Enable |
+| Distributed Transaction Coordinator (MSDTC), not an AtlasOS script: `Start` = 4 | you do not run database or server software that needs it (games and normal apps do not) | `sc config msdtc start= demand` as administrator |
 
 Untick it if you use a printer or share files between PCs at home. A restart (setup restarts at the end) applies the changes.
 
-**ภาษาไทย**: "Turn off unused services" ติ๊กไว้เป็นค่าเริ่มต้น จะรันสคริปต์เดิมของ AtlasOS เพื่อปิดบริการที่เครื่องเล่นเกมส่วนใหญ่ไม่ได้ใช้ ได้แก่ การพิมพ์ (Print Spooler), การทำดัชนีค้นหา (Windows Search; ช่องค้นหาใน Start ยังหาแอปและการตั้งค่าได้ แต่ค้นหาไฟล์ช้าลง), SuperFetch (SysMain) และการค้นหาเครื่องในเครือข่าย ถ้าใช้เครื่องพิมพ์หรือแชร์ไฟล์ในบ้านให้เอาติ๊กออก หรือเปิดกลับทีหลังได้ใน Akati OS Center > ปรับแต่ง
+**ภาษาไทย**: "Turn off unused services" ติ๊กไว้เป็นค่าเริ่มต้น จะรันสคริปต์เดิมของ AtlasOS เพื่อปิดบริการที่เครื่องเล่นเกมส่วนใหญ่ไม่ได้ใช้ ได้แก่ การพิมพ์ (Print Spooler), การทำดัชนีค้นหา (Windows Search; ช่องค้นหาใน Start ยังหาแอปและการตั้งค่าได้ แต่ค้นหาไฟล์ช้าลง), SuperFetch (SysMain), การค้นหาเครื่องในเครือข่าย และ MSDTC (บริการที่ใช้กับโปรแกรมฐานข้อมูล/เซิร์ฟเวอร์ เกมไม่ได้ใช้) ถ้าใช้เครื่องพิมพ์หรือแชร์ไฟล์ในบ้านให้เอาติ๊กออก หรือเปิดกลับทีหลังได้ใน Akati OS Center > ปรับแต่ง
 
 ## Notifications and Game Bar
 

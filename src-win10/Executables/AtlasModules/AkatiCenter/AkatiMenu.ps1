@@ -6,9 +6,9 @@
                registers the task "\AkatiOS\Akati OS menu" for the signed-in user (highest rights), so the
                items that need administrator rights run without a UAC prompt. Setup and Akati OS Center run it.
     -Remove    (administrator) removes the menu and the task.
-    -Action    one menu item, run as the user: freeram, boost, bios, flushdns, explorer.
+    -Action    one menu item, run as the user: freeram, boost, booston, boostoff, bios, flushdns, explorer.
     -Elevated  started by the task: runs the item saved in HKCU\Software\AkatiOS\Center\MenuAction. Only the
-               fixed items freeram, boost and bios are accepted.
+               fixed items freeram, boost, booston, boostoff and bios are accepted.
     Menu texts follow the language of Akati OS Center. "My apps" lists what Akati OS Center saved in
     HKCU\Software\AkatiOS\Center\MenuApps (installed gaming apps) and the games in "My games".
 #>
@@ -211,10 +211,12 @@ public static class AkatiMenuMemory {
             $status = [AkatiMenuMemory]::Purge()
             $result = if ($status -eq 0) { (T 'freed') -f (Format-Size ([Math]::Max(0, $before - (Get-StandbyBytes)))) } else { (T 'failed') -f $status }
         }
-        'boost' {
+        { $_ -in 'boost', 'booston', 'boostoff' } {
             # Akati OS Center starts or stops Game boost without opening its window, and writes MenuResult
-            & $ps -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File $center -ToggleBoost
-            Build-Menu
+            $mode = @{ boost = 'toggle'; booston = 'on'; boostoff = 'off' }[$item]
+            & $ps -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File $center -Boost $mode
+            # The menu shows Start or Stop: rebuild it, only if the user has it
+            if (Test-Path $menuKey) { Build-Menu }
         }
         'bios' {
             & shutdown.exe /r /fw /t 0 *> $null
@@ -228,6 +230,8 @@ public static class AkatiMenuMemory {
 switch ($Action) {
     'freeram'  { Invoke-Elevated 'freeram' }
     'boost'    { Invoke-Elevated 'boost' }
+    'booston'  { Invoke-Elevated 'booston' }
+    'boostoff' { Invoke-Elevated 'boostoff' }
     'bios' {
         Add-Type -AssemblyName PresentationFramework
         if ([System.Windows.MessageBox]::Show((T 'biosask'), 'Akati OS', 'YesNo', 'Warning') -eq 'Yes') { Invoke-Elevated 'bios' }

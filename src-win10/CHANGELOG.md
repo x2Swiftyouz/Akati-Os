@@ -3,6 +3,11 @@
 ## v1.4.1
 
 ### Added
+- **Akati OS icon next to the clock** (setup option on the Notifications page, ticked; switch in Tweaks): CPU and RAM when you point at it, a menu with your apps and tools, and the **automatic Game boost**: it starts when a game from My games opens and stops when the game closes (Game boost page)
+- **Search everything with Ctrl+K** (or the search field in the sidebar): pages, settings, gaming apps, your games and actions such as free up RAM, flush DNS or start Game boost, in English and Thai
+- **Light look** for Akati OS Center: Appearance > Akati OS Center look (Auto follows Windows, Dark, Light), also with Mica on Windows 11
+- **What's new** window once after an update, **Reset to Windows defaults** for the tweaks, and the network card shows Wi-Fi or Ethernet, the link speed and the IP address
+- Akati OS Center opens faster: a small window shows right away while it loads, and slow checks (Microsoft Store, network adapter, DNS, memory compression) run in the background
 - Setup page **Input and latency** (all ticked): timer resolution 0.5 ms (AtlasOS script), Sticky Keys / Filter Keys shortcuts off, and **Akati OS on the desktop right-click menu**: free up RAM, open Akati OS Center, my apps, start or stop Game boost, clean junk files, ping test, flush DNS cache, restart Explorer, restart into BIOS. Free up RAM, Game boost and BIOS run through a task of the signed-in user, without a UAC prompt each time
 - Akati OS Center > Tweaks: new sections **Input and latency**, **Network** (DNS: Automatic / Cloudflare / Google, Nagle's algorithm, network adapter power saving and interrupt moderation), **Display and graphics** (highest screen refresh rate, multiplane overlay, GPU MSI mode) and **Memory and system** (memory compression with advice by RAM, core isolation, startup app delay). The Dashboard shows the screen refresh rate
 - Game boost: frees up standby memory, and **My games**: high CPU priority, the dedicated graphics card and an optional Defender folder exclusion for each game you add

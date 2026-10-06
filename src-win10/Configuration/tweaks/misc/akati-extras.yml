@@ -60,3 +60,11 @@ actions:
     runas: currentUserElevated
     wait: true
     option: 'desktop-menu'
+
+    # Akati OS icon next to the clock (option, ticked by default): AkatiTray.ps1 registers its sign-in task
+    # (this user, normal rights). It shows CPU and RAM, a menu with apps and tools, and runs the automatic Game boost
+  - !powerShell:
+    command: '& (Join-Path ([Environment]::GetFolderPath(''Windows'')) ''AtlasModules\AkatiCenter\AkatiTray.ps1'') -Install'
+    runas: currentUserElevated
+    wait: true
+    option: 'tray-icon'

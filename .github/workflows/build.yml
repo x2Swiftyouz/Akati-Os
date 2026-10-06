@@ -101,6 +101,10 @@ jobs:
           Write-Host "Checked $($files.Count) files, $bad errors"
           if ($bad) { exit 1 }
 
+      - name: Check Akati OS Center (texts, window names, gaming apps)
+        shell: pwsh
+        run: ./tools/test-center.ps1
+
       - name: Check the Riot installer signature
         # GAMEAPPS.ps1 runs the Riot installer only when it is signed by Riot Games. Warning only, so a
         # download problem on Riot's side does not fail the build.

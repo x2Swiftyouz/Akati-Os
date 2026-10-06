@@ -98,6 +98,8 @@ Untick it if you use a printer or share files between PCs at home. A restart (se
 
 **Turn off notifications** (ticked by default) turns off the "Get notifications from apps and other senders" switch, so no pop-ups appear while you play. Windows Security warnings and messages from Discord or Steam are not shown as pop-ups either. Turn it on again in Settings > System > Notifications.
 
+**Show Akati OS next to the clock** (ticked by default) adds the Akati OS icon to the notification area. Point at it to see CPU and RAM use; its menu opens Akati OS Center, frees up RAM, lists your apps and games, starts or stops Game boost and turns the **automatic Game boost** on or off: when a game from **My games** (Game boost page) opens, Game boost starts, and it stops again when the game closes. The icon runs with normal rights through the sign-in task `\AkatiOS\Akati OS tray`; turn it off in Akati OS Center > Tweaks > Memory and system.
+
 **Turn off Xbox Game Bar** (ticked by default) turns off Game Bar (Win+G) and its background clip recording, and the controller button that opens it. Game Mode and fullscreen optimizations stay as they are. Turn it on again in Settings > Gaming > Game Bar.
 
 **ภาษาไทย**: "Turn off notifications" (ติ๊กไว้) ปิดสวิตช์ "Get notifications from apps and other senders" จะไม่มีป๊อปอัปเด้งระหว่างเล่นเกม รวมถึงคำเตือนของ Windows Security และข้อความจาก Discord หรือ Steam ด้วย เปิดกลับได้ที่ Settings > System > Notifications ส่วน "Turn off Xbox Game Bar" (ติ๊กไว้) ปิด Game Bar (Win+G) การอัดคลิปเบื้องหลัง และปุ่มเปิดจากจอย ไม่แตะ Game Mode เปิดกลับได้ที่ Settings > Gaming > Game Bar
@@ -158,6 +160,8 @@ These are not on the setup pages. Turn them on in **Akati OS Center > Tweaks** i
 **ภาษาไทย**: หน้าปรับแต่งของ Akati OS Center มีหมวดเพิ่ม: อินพุตและ latency (timer resolution, ปุ่มลัด Sticky Keys), เครือข่าย (DNS, Nagle, การประหยัดไฟของการ์ดแลน), หน้าจอและกราฟิก (อัตรารีเฟรชสูงสุด, MPO, MSI mode ของการ์ดจอ), หน่วยความจำและระบบ (Memory compression แนะนำตาม RAM, Core isolation, หน่วงเวลาแอปตอนล็อกอิน) บูสต์เกมคืน standby memory ได้ และ "เกมของฉัน" ใช้เพิ่มไฟล์ .exe ของเกมเพื่อให้ CPU ความสำคัญสูง ใช้การ์ดจอแยก และเลือกให้ Defender ข้ามโฟลเดอร์เกมได้ ลบเกมออกแล้วทุกอย่างกลับเหมือนเดิม
 
 ## Akati OS Center
+
+**Ctrl+K** (or the search field at the top of the sidebar) searches everything: pages, settings, gaming apps, your games and actions (free up RAM, flush DNS cache, restart Explorer, Game boost, ping test, update check, language, problem report). Up and Down choose, Enter runs. **Appearance > Akati OS Center look** switches between Auto (like the Windows app mode), Dark and Light. After an update, a **What's new** window shows once.
 
 The **Akati OS Center** app (desktop and Start menu) is the one place for everything Akati OS adds: live CPU, RAM and GPU usage, gaming apps (with updates) and GPU driver links, **Game boost** (one-click Game Mode, ping test, startup apps), tweaks (the switches show the real state of your PC), temp file cleaner, themes (Dark, Light, Slideshow), accent colors, wallpapers, Akati OS cursor and sounds, **Tweaks** (gaming switches and every AtlasOS setting, with search and a restore point first), a problem report and the update check. There is no Atlas folder shortcut any more; the files stay in `C:\Windows\AtlasDesktop` because AtlasOS scripts use them. It asks for administrator rights. Switch between English and Thai at the bottom left.
 

@@ -186,6 +186,10 @@ Get-CimInstance -Namespace root\Microsoft\Windows\DeviceGuard -ClassName Win32_D
 - [ ] รอบ B: ติดตั้งครบทุกตัว (Epic, EA, Ubisoft, Battle.net ใน `C:\Program Files\Battle.net`, OBS) และเปิดได้
 - [ ] หน้า "Remove Microsoft Store" ติ๊กไว้เป็นค่าเริ่มต้น หลังติดตั้ง Microsoft Store ต้องไม่มีใน Start menu และ taskbar แต่แอปเกมยังติดตั้งจาก Center ได้
 - [ ] "Turn off unused services" (ติ๊กไว้): หลังรีสตาร์ต `Get-Service Spooler, WSearch, SysMain, SSDPSRV | Select Name, Status, StartType` ต้องเป็น Stopped / Disabled ทั้งหมด และช่องค้นหาใน Start ยังหาแอปเจอ
+- [ ] หน้า setup "Input and latency" ติ๊กไว้ทั้งสองข้อ หลังติดตั้ง: Task Scheduler มี "Force Timer Resolution" และ MeasureSleep.exe วัดได้ประมาณ 0.5 ms กด Shift 5 ครั้งต้องไม่มีหน้าต่าง Sticky Keys
+- [ ] Center > ปรับแต่ง: มีหมวด อินพุตและ latency / เครือข่าย / หน้าจอและกราฟิก / หน่วยความจำและระบบ สวิตช์ timer resolution เปิดอยู่ เปลี่ยน DNS เป็น Cloudflare แล้ว `ipconfig /all` แสดง 1.1.1.1 กลับเป็นอัตโนมัติได้
+- [ ] ถ้าจอตั้งไว้ต่ำกว่าค่าสูงสุด แถวอัตรารีเฟรชมีปุ่ม "ใช้ xxx Hz" กดแล้วจอเปลี่ยน และชิปบน Dashboard แสดงค่าใหม่
+- [ ] บูสต์เกม > เกมของฉัน: เพิ่ม .exe ของเกม แถวขึ้นพร้อม "ความสำคัญสูง" และ "การ์ดจอแยก" เปิดอยู่ ลบแล้วค่ากลับ (ดู `HKLM\...\Image File Execution Options\<game>.exe`)
 - [ ] Settings > System > Notifications: "Get notifications from apps" ปิดอยู่ และ Settings > Gaming > Game Bar ปิดอยู่ (เปิดกลับได้ ไม่เป็นสีเทา)
 - [ ] Akati OS Center > ปรับแต่ง > เปิดสวิตช์ Microsoft Store แล้ว Store กลับมา (อาจใช้เวลาประมาณ 1 นาที)
 

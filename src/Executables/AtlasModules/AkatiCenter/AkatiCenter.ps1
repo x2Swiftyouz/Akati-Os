@@ -119,6 +119,26 @@ $strings = @{
         'tw.maxperf' = 'Maximum Performance power plan'; 'tw.maxperf.d' = 'Atlas Power Scheme with power saving off. Best for desktops, uses more battery on laptops.'
         'tw.hibernation' = 'Hibernation'; 'tw.hibernation.d' = 'Off saves disk space. Shut down and restart work normally.'
         'tw.store' = 'Microsoft Store'; 'tw.store.d' = 'Needed by the Xbox app and Game Pass. Installing it again can take a minute.'
+        'tw.group.latency' = 'Input and latency'; 'tw.group.network' = 'Network'; 'tw.group.graphics' = 'Display and graphics'; 'tw.group.system' = 'Memory and system'
+        'tw.timer' = 'Timer resolution 0.5 ms'; 'tw.timer.d' = 'Windows wakes up more often, so games keep a steadier frame time and lower input delay. Uses a little more power. Recommended: on (AtlasOS script).'
+        'tw.access' = 'Sticky Keys and Filter Keys shortcuts'; 'tw.access.d' = 'Off: pressing Shift 5 times or holding Shift in a game no longer opens a window. The accessibility features still work from Settings. Takes effect after you sign in again.'
+        'tw.dns' = 'DNS server'; 'tw.dns.d' = 'Which server turns names into addresses. Cloudflare and Google are often faster than your provider. Does not change ping inside games.'
+        'dns.auto' = 'Automatic'; 'dns.cloudflare' = 'Cloudflare'; 'dns.google' = 'Google'; 'status.dns' = 'DNS: {0}'
+        'tw.nagle' = "Nagle's algorithm"; 'tw.nagle.d' = 'Windows waits a moment to send small packets together. Off can lower delay in some older online games (for example World of Warcraft); most games already turn it off themselves.'
+        'tw.nic' = 'Network adapter power saving and interrupt moderation'; 'tw.nic.d' = 'Off: the network card answers every packet at once and does not save power. Slightly lower delay, a little more CPU use. The connection drops for a few seconds when changed.'
+        'tw.refresh' = 'Screen refresh rate'; 'tw.refresh.now' = '{0} Hz now. This screen can do {1} Hz: games look smoother and react faster at the highest rate.'
+        'tw.refresh.max' = '{0} Hz, the highest this screen can do.'; 'tw.refresh.use' = 'Use {0} Hz'; 'status.refresh' = 'Screen set to {0} Hz'; 'status.refreshfail' = 'Could not change the refresh rate ({0})'
+        'tw.mpo' = 'Multiplane overlay (MPO)'; 'tw.mpo.d' = 'Off fixes flickering, black screens and stutter on some PCs (often NVIDIA with two screens). Leave it on if you have no problems.'
+        'tw.msi' = 'GPU message signaled interrupts (MSI mode)'; 'tw.msi.d' = 'The graphics card talks to the CPU with MSI instead of shared interrupt lines: lower latency. Most new cards already use it. Recommended: on.'
+        'tw.memcomp' = 'Memory compression'; 'tw.memcomp.d' = 'Windows compresses memory instead of writing it to disk. Saves RAM, costs a little CPU.'
+        'tw.memcomp.off' = 'Recommended for this PC ({0} GB RAM): off.'; 'tw.memcomp.on' = 'Recommended for this PC ({0} GB RAM): on.'; 'tw.memcomp.nosysmain' = 'Needs SysMain (SuperFetch): turn it on in System (AtlasOS) below first.'
+        'tw.vbs' = 'Core isolation (VBS and Memory integrity)'; 'tw.vbs.d' = 'Off can make games up to about 10% faster, but some protection against malware is gone. Some anti-cheat (Valorant, FACEIT) may need it on (same values as the AtlasOS VBS scripts).'
+        'tw.startdelay' = 'Delay for startup apps'; 'tw.startdelay.d' = 'Off: apps that start at sign-in open right away instead of a few seconds later.'
+        'chip.hz' = 'Screen {0} Hz'; 'chip.hzlow' = 'Screen {0} Hz · can do {1} Hz'
+        'games.title' = 'My games'; 'games.add' = 'Add game'; 'games.empty' = 'No games added yet. Add the .exe file of a game.'
+        'games.sub' = 'High priority: the game gets the CPU before other apps. Dedicated GPU: laptops with two graphics chips use the fast one. Skip Defender: Defender does not scan the game folder (faster loading, less protection). Removing a game puts everything back.'
+        'games.cpu' = 'High priority'; 'games.gpu' = 'Dedicated GPU'; 'games.defender' = 'Skip Defender'; 'games.remove' = 'Remove'; 'games.nodefender' = 'Defender is off or not available'
+        'games.pick' = 'Choose the game (.exe)'; 'status.gameadded' = '{0} added'; 'status.gameremoved' = '{0} removed, its settings are back'
         'theme.dark' = 'Akati OS Dark'; 'theme.light' = 'Akati OS Light'; 'theme.slideshow' = 'Akati OS Slideshow'
         'theme.slideshow.d' = 'Wallpaper changes every 30 minutes'
         'nav.boost' = 'Game boost'
@@ -152,6 +172,7 @@ $strings = @{
         'boost.power' = 'Switch to the highest performance power plan'
         'boost.apps' = 'Close background apps'; 'boost.noapps' = 'none running now'
         'boost.notify' = 'Turn off notifications'
+        'boost.memory' = 'Free up standby memory (files Windows keeps in RAM; helps on PCs with little RAM)'
         'status.booston' = 'Game boost is on. Have fun!'; 'status.boostoff' = 'Game boost is off, your settings are back'
         'ping.title' = 'Ping to game servers'
         'ping.sub' = 'Connection time to the cloud data centers where many games run their Asian servers. Lower is better: under 60 ms is great.'
@@ -264,6 +285,26 @@ $strings = @{
         'tw.maxperf' = 'Power plan ประสิทธิภาพสูงสุด'; 'tw.maxperf.d' = 'Atlas Power Scheme และปิดการประหยัดพลังงาน เหมาะกับคอมตั้งโต๊ะ โน้ตบุ๊กจะเปลืองแบต'
         'tw.hibernation' = 'Hibernation'; 'tw.hibernation.d' = 'ปิดไว้ช่วยประหยัดพื้นที่ดิสก์ ปิดเครื่องและรีสตาร์ตได้ตามปกติ'
         'tw.store' = 'Microsoft Store'; 'tw.store.d' = 'แอป Xbox และ Game Pass ต้องใช้ การติดตั้งกลับอาจใช้เวลาประมาณ 1 นาที'
+        'tw.group.latency' = 'อินพุตและ latency'; 'tw.group.network' = 'เครือข่าย'; 'tw.group.graphics' = 'หน้าจอและกราฟิก'; 'tw.group.system' = 'หน่วยความจำและระบบ'
+        'tw.timer' = 'Timer resolution 0.5 ms'; 'tw.timer.d' = 'Windows ตื่นถี่ขึ้น เฟรมเกมนิ่งขึ้นและ input delay ลดลง ใช้ไฟเพิ่มเล็กน้อย แนะนำ: เปิด (สคริปต์ของ AtlasOS)'
+        'tw.access' = 'ปุ่มลัด Sticky Keys และ Filter Keys'; 'tw.access.d' = 'ปิด: กด Shift 5 ครั้งหรือกด Shift ค้างในเกมจะไม่มีหน้าต่างเด้ง ฟีเจอร์ช่วยการเข้าถึงยังใช้ได้จาก Settings มีผลหลังล็อกอินใหม่'
+        'tw.dns' = 'DNS server'; 'tw.dns.d' = 'เซิร์ฟเวอร์ที่แปลงชื่อเว็บเป็นที่อยู่ Cloudflare และ Google มักเร็วกว่าของผู้ให้บริการ ไม่ได้ลดปิงในเกม'
+        'dns.auto' = 'อัตโนมัติ'; 'dns.cloudflare' = 'Cloudflare'; 'dns.google' = 'Google'; 'status.dns' = 'DNS: {0}'
+        'tw.nagle' = "Nagle's algorithm"; 'tw.nagle.d' = 'Windows รอรวมแพ็กเก็ตเล็ก ๆ ก่อนส่ง ปิดแล้วช่วยลด delay ในเกมออนไลน์เก่าบางเกม (เช่น World of Warcraft) เกมส่วนใหญ่ปิดเองอยู่แล้ว'
+        'tw.nic' = 'การประหยัดไฟและ interrupt moderation ของการ์ดแลน'; 'tw.nic.d' = 'ปิด: การ์ดแลนตอบทุกแพ็กเก็ตทันทีและไม่ประหยัดไฟ delay ลดลงเล็กน้อย ใช้ CPU เพิ่มนิดหน่อย เน็ตจะหลุดไม่กี่วินาทีตอนเปลี่ยน'
+        'tw.refresh' = 'อัตรารีเฟรชหน้าจอ'; 'tw.refresh.now' = 'ตอนนี้ {0} Hz จอนี้ทำได้ถึง {1} Hz ที่ค่าสูงสุดเกมจะลื่นและตอบสนองไวขึ้น'
+        'tw.refresh.max' = '{0} Hz สูงสุดของจอนี้แล้ว'; 'tw.refresh.use' = 'ใช้ {0} Hz'; 'status.refresh' = 'ตั้งจอเป็น {0} Hz แล้ว'; 'status.refreshfail' = 'เปลี่ยนอัตรารีเฟรชไม่ได้ ({0})'
+        'tw.mpo' = 'Multiplane overlay (MPO)'; 'tw.mpo.d' = 'ปิดแล้วแก้จอกระพริบ จอดำ และกระตุกในบางเครื่อง (มักเป็น NVIDIA กับจอสองจอ) ถ้าไม่มีปัญหาให้เปิดไว้'
+        'tw.msi' = 'MSI mode ของการ์ดจอ'; 'tw.msi.d' = 'การ์ดจอคุยกับ CPU แบบ MSI แทนสาย interrupt ที่ใช้ร่วมกัน latency ต่ำลง การ์ดใหม่ส่วนใหญ่ใช้อยู่แล้ว แนะนำ: เปิด'
+        'tw.memcomp' = 'Memory compression'; 'tw.memcomp.d' = 'Windows บีบอัดหน่วยความจำแทนการเขียนลงดิสก์ ประหยัด RAM แต่ใช้ CPU เล็กน้อย'
+        'tw.memcomp.off' = 'แนะนำสำหรับเครื่องนี้ (RAM {0} GB): ปิด'; 'tw.memcomp.on' = 'แนะนำสำหรับเครื่องนี้ (RAM {0} GB): เปิด'; 'tw.memcomp.nosysmain' = 'ต้องเปิด SysMain (SuperFetch) ก่อน ในหมวดระบบ (AtlasOS) ด้านล่าง'
+        'tw.vbs' = 'Core isolation (VBS และ Memory integrity)'; 'tw.vbs.d' = 'ปิดแล้วเกมเร็วขึ้นได้ถึงประมาณ 10% แต่การป้องกันมัลแวร์บางส่วนหายไป anti-cheat บางตัว (Valorant, FACEIT) อาจต้องเปิดไว้ (ค่าเดียวกับสคริปต์ VBS ของ AtlasOS)'
+        'tw.startdelay' = 'หน่วงเวลาแอปที่เปิดตอนล็อกอิน'; 'tw.startdelay.d' = 'ปิด: แอปที่เปิดตอนล็อกอินจะเปิดทันที ไม่ต้องรอหลายวินาที'
+        'chip.hz' = 'จอ {0} Hz'; 'chip.hzlow' = 'จอ {0} Hz · ทำได้ {1} Hz'
+        'games.title' = 'เกมของฉัน'; 'games.add' = 'เพิ่มเกม'; 'games.empty' = 'ยังไม่ได้เพิ่มเกม เลือกไฟล์ .exe ของเกม'
+        'games.sub' = 'ความสำคัญสูง: เกมได้ CPU ก่อนแอปอื่น การ์ดจอแยก: โน้ตบุ๊กที่มีชิปกราฟิกสองตัวจะใช้ตัวแรง ข้าม Defender: Defender ไม่สแกนโฟลเดอร์เกม (โหลดเร็วขึ้น แต่ป้องกันน้อยลง) ลบเกมออกแล้วทุกอย่างกลับเหมือนเดิม'
+        'games.cpu' = 'ความสำคัญสูง'; 'games.gpu' = 'การ์ดจอแยก'; 'games.defender' = 'ข้าม Defender'; 'games.remove' = 'ลบ'; 'games.nodefender' = 'Defender ปิดอยู่หรือใช้ไม่ได้'
+        'games.pick' = 'เลือกเกม (.exe)'; 'status.gameadded' = 'เพิ่ม {0} แล้ว'; 'status.gameremoved' = 'ลบ {0} แล้ว การตั้งค่ากลับเป็นเหมือนเดิม'
         'theme.dark' = 'Akati OS Dark'; 'theme.light' = 'Akati OS Light'; 'theme.slideshow' = 'Akati OS Slideshow'
         'theme.slideshow.d' = 'เปลี่ยน wallpaper ทุก 30 นาที'
         'nav.boost' = 'บูสต์เกม'
@@ -297,6 +338,7 @@ $strings = @{
         'boost.power' = 'เปลี่ยนเป็น power plan ประสิทธิภาพสูงสุด'
         'boost.apps' = 'ปิดแอปเบื้องหลัง'; 'boost.noapps' = 'ตอนนี้ไม่มีที่เปิดอยู่'
         'boost.notify' = 'ปิดการแจ้งเตือน'
+        'boost.memory' = 'คืน standby memory (ไฟล์ที่ Windows เก็บไว้ใน RAM ช่วยเครื่อง RAM น้อย)'
         'status.booston' = 'เปิดบูสต์เกมแล้ว ขอให้สนุก!'; 'status.boostoff' = 'ปิดบูสต์เกมแล้ว การตั้งค่ากลับเป็นเหมือนเดิม'
         'ping.title' = 'ปิงไปเซิร์ฟเวอร์เกม'
         'ping.sub' = 'เวลาเชื่อมต่อไปศูนย์ข้อมูลคลาวด์ที่เกมออนไลน์หลายเกมใช้วางเซิร์ฟเวอร์เอเชีย ยิ่งต่ำยิ่งดี ต่ำกว่า 60 ms ถือว่าดีมาก'
@@ -653,6 +695,11 @@ function Update-Chips {
     [void]$ui.StatusChips.Children.Add((New-Chip (T $(if ($boost) { 'chip.boost.on' } else { 'chip.boost.off' })) $(if ($boost) { $good } else { $muted })))
     $plan = if ([string](powercfg /getactivescheme) -match '\((.+)\)\s*$') { $Matches[1] } else { '-' }
     [void]$ui.StatusChips.Children.Add((New-Chip ((T 'chip.power') -f $plan) $window.FindResource('Accent2')))
+    # Screen refresh rate, orange when the screen can do more
+    if ($script:screenNow -gt 1) {
+        if ($script:screenMax -gt $script:screenNow) { [void]$ui.StatusChips.Children.Add((New-Chip ((T 'chip.hzlow') -f $script:screenNow, $script:screenMax) '#FF9F0A')) }
+        else { [void]$ui.StatusChips.Children.Add((New-Chip ((T 'chip.hz') -f $script:screenNow) $muted)) }
+    }
     if ($stats.Defender -ge 0) {
         [void]$ui.StatusChips.Children.Add((New-Chip (T $(if ($stats.Defender -eq 1) { 'chip.defender.on' } else { 'chip.defender.off' })) $(if ($stats.Defender -eq 1) { $good } else { '#FF9F0A' })))
     }
@@ -1337,6 +1384,10 @@ function Start-Boost {
             $key.Close()
         } catch { $failed += 'notify' }
     }
+    if ($ui.BoostMemory.IsChecked) {
+        # The standby list fills up again by itself, so there is nothing to undo at Stop
+        try { if ([AkatiOS.Perf]::PurgeStandbyList() -ne 0) { $failed += 'memory' } } catch { $failed += 'memory' }
+    }
     if ($failed.Count) { throw ((T 'status.boostpartial') -f ($failed -join ', ')) }
 }
 
@@ -1524,8 +1575,97 @@ function Invoke-AtlasScript([string]$relative, [string]$pattern) {
     if ($file) { Start-Process cmd.exe -ArgumentList "/c `"`"$($file.FullName)`" /silent`"" -WindowStyle Hidden -Wait }
 }
 
+# Screen refresh rate and the standby memory list (Windows API)
+Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+namespace AkatiOS {
+    // Display refresh rate (primary screen) and the standby memory list
+    public static class Perf {
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        public struct DEVMODE {
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public string dmDeviceName;
+            public short dmSpecVersion, dmDriverVersion, dmSize, dmDriverExtra;
+            public int dmFields, dmPositionX, dmPositionY, dmDisplayOrientation, dmDisplayFixedOutput;
+            public short dmColor, dmDuplex, dmYResolution, dmTTOption, dmCollate;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public string dmFormName;
+            public short dmLogPixels;
+            public int dmBitsPerPel, dmPelsWidth, dmPelsHeight, dmDisplayFlags, dmDisplayFrequency;
+            public int dmICMMethod, dmICMIntent, dmMediaType, dmDitherType, dmReserved1, dmReserved2, dmPanningWidth, dmPanningHeight;
+        }
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern bool EnumDisplaySettings(string device, int mode, ref DEVMODE dm);
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int ChangeDisplaySettingsEx(string device, ref DEVMODE dm, IntPtr hwnd, int flags, IntPtr param);
+
+        static DEVMODE NewMode() { DEVMODE dm = new DEVMODE(); dm.dmSize = (short)Marshal.SizeOf(typeof(DEVMODE)); return dm; }
+        // Width, height and refresh rate now (0 when unknown)
+        public static int[] Current() {
+            DEVMODE dm = NewMode();
+            if (!EnumDisplaySettings(null, -1, ref dm)) return new int[] { 0, 0, 0 };
+            return new int[] { dm.dmPelsWidth, dm.dmPelsHeight, dm.dmDisplayFrequency };
+        }
+        // Highest refresh rate at the current resolution and color depth
+        public static int MaxHz() {
+            DEVMODE cur = NewMode();
+            if (!EnumDisplaySettings(null, -1, ref cur)) return 0;
+            int max = 0;
+            DEVMODE dm = NewMode();
+            for (int i = 0; EnumDisplaySettings(null, i, ref dm); i++) {
+                if (dm.dmPelsWidth == cur.dmPelsWidth && dm.dmPelsHeight == cur.dmPelsHeight && dm.dmBitsPerPel == cur.dmBitsPerPel && dm.dmDisplayFrequency > max) max = dm.dmDisplayFrequency;
+                dm = NewMode();
+            }
+            return max;
+        }
+        // 0 = done (DISP_CHANGE_SUCCESSFUL); saved for the next start too
+        public static int SetHz(int hz) {
+            DEVMODE dm = NewMode();
+            if (!EnumDisplaySettings(null, -1, ref dm)) return -1;
+            dm.dmDisplayFrequency = hz;
+            dm.dmFields = 0x400000; // DM_DISPLAYFREQUENCY
+            return ChangeDisplaySettingsEx(null, ref dm, IntPtr.Zero, 1, IntPtr.Zero); // CDS_UPDATEREGISTRY
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 4)]
+        struct TOKEN_PRIVILEGES { public int Count; public long Luid; public int Attributes; }
+        [DllImport("advapi32.dll", SetLastError = true)] static extern bool OpenProcessToken(IntPtr process, int access, out IntPtr token);
+        [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Unicode)] static extern bool LookupPrivilegeValue(string system, string name, out long luid);
+        [DllImport("advapi32.dll", SetLastError = true)] static extern bool AdjustTokenPrivileges(IntPtr token, bool disableAll, ref TOKEN_PRIVILEGES state, int length, IntPtr previous, IntPtr returnLength);
+        [DllImport("kernel32.dll")] static extern IntPtr GetCurrentProcess();
+        [DllImport("kernel32.dll")] static extern bool CloseHandle(IntPtr handle);
+        [DllImport("ntdll.dll")] static extern int NtSetSystemInformation(int infoClass, ref int info, int length);
+        // Empties the standby list (file cache Windows keeps in RAM), like RAMMap "Empty Standby List".
+        // Needs administrator rights. Returns the NTSTATUS, 0 = done.
+        public static int PurgeStandbyList() {
+            IntPtr token;
+            if (!OpenProcessToken(GetCurrentProcess(), 0x28, out token)) return -1; // TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY
+            try {
+                TOKEN_PRIVILEGES tp = new TOKEN_PRIVILEGES();
+                tp.Count = 1; tp.Attributes = 2; // SE_PRIVILEGE_ENABLED
+                if (!LookupPrivilegeValue(null, "SeProfileSingleProcessPrivilege", out tp.Luid)) return -2;
+                if (!AdjustTokenPrivileges(token, false, ref tp, 0, IntPtr.Zero, IntPtr.Zero)) return -3;
+            } finally { CloseHandle(token); }
+            int command = 4; // MemoryPurgeStandbyList
+            return NtSetSystemInformation(80, ref command, 4); // SystemMemoryListInformation
+        }
+    }
+}
+'@
+
 $gpuKey = 'HKLM:\SYSTEM\CurrentControlSet\Control\GraphicsDrivers'
 $dxKey = 'HKCU:\Software\Microsoft\DirectX\UserGpuPreferences'
+$tcpipKey = 'HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces'
+$dwmKey = 'HKLM:\SOFTWARE\Microsoft\Windows\Dwm'
+$serializeKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Serialize'
+$deviceGuardKey = 'HKLM:\SYSTEM\CurrentControlSet\Control\DeviceGuard'
+$hvciKey = "$deviceGuardKey\Scenarios\HypervisorEnforcedCodeIntegrity"
+# Flags bit 4 = the keyboard shortcut of Sticky Keys, Filter Keys (Keyboard Response) and Toggle Keys
+$accessKeys = 'HKCU:\Control Panel\Accessibility\StickyKeys', 'HKCU:\Control Panel\Accessibility\Keyboard Response', 'HKCU:\Control Panel\Accessibility\ToggleKeys'
+# Registry keys of the MSI setting of each real graphics card (PCI)
+function Get-GpuMsiKeys {
+    @($gpus | Where-Object { $_.PNPDeviceID -like 'PCI\*' } | ForEach-Object {
+        "HKLM:\SYSTEM\CurrentControlSet\Enum\$($_.PNPDeviceID)\Device Parameters\Interrupt Management\MessageSignaledInterruptProperties" })
+}
+# Group: the section on the Tweaks page (none = Gaming). Script: an unchanged AtlasOS script in AtlasDesktop,
+# run with /silent in the background. Work: a script block run in the background, param($on).
 $tweaks = @(
     @{ Key = 'hags'; Glyph = [char]0xE7F4; Restart = $true
        Get = { (Get-RegValue $gpuKey 'HwSchMode') -eq 2 }
@@ -1542,15 +1682,104 @@ $tweaks = @(
        Set = { param($on)
                if (!(Test-Path 'HKCU:\Software\Microsoft\GameBar')) { New-Item -Path 'HKCU:\Software\Microsoft\GameBar' -Force | Out-Null }
                Set-ItemProperty -Path 'HKCU:\Software\Microsoft\GameBar' -Name AutoGameModeEnabled -Value $(if ($on) { 1 } else { 0 }) -Type DWord -Force } }
-    @{ Key = 'maxperf'; Glyph = [char]0xE945; Slow = $true
-       Get = { [string](powercfg /getactivescheme) -match '11111111-1111-1111-1111-111111111111' }
-       Set = { param($on) if ($on) { Invoke-AtlasScript '3. General Configuration\Power-saving' 'Disable Power-saving*.cmd' } else { Invoke-AtlasScript '3. General Configuration\Power-saving' 'Default Power-saving*.cmd' } } }
+    @{ Key = 'maxperf'; Glyph = [char]0xE945
+       Script = @{ Folder = '3. General Configuration\Power-saving'; On = 'Disable Power-saving*.cmd'; Off = 'Default Power-saving*.cmd' }
+       Get = { [string](powercfg /getactivescheme) -match '11111111-1111-1111-1111-111111111111' } }
     @{ Key = 'store'; Glyph = [char]0xE719; Slow = $true
        Get = { [bool](Get-AppxPackage -Name 'Microsoft.WindowsStore' -ErrorAction SilentlyContinue) } }
-    @{ Key = 'hibernation'; Glyph = [char]0xE708; Slow = $true
-       Get = { (Get-RegValue 'HKLM:\SYSTEM\CurrentControlSet\Control\Power' 'HibernateEnabled') -eq 1 }
-       Set = { param($on) if ($on) { Invoke-AtlasScript '3. General Configuration\Hibernation' 'Enable Hibernation*.cmd' } else { Invoke-AtlasScript '3. General Configuration\Hibernation' 'Disable Hibernation*.cmd' } } }
+    @{ Key = 'hibernation'; Glyph = [char]0xE708
+       Script = @{ Folder = '3. General Configuration\Hibernation'; On = 'Enable Hibernation*.cmd'; Off = 'Disable Hibernation*.cmd' }
+       Get = { (Get-RegValue 'HKLM:\SYSTEM\CurrentControlSet\Control\Power' 'HibernateEnabled') -eq 1 } }
+
+    # Input and latency
+    @{ Key = 'timer'; Group = 'latency'; Glyph = [char]0xE916; Restart = $true
+       Script = @{ Folder = '3. General Configuration\Timer Resolution'; On = 'Enable timer resolution*.cmd'; Off = 'Disable timer resolution*.cmd' }
+       Get = { [bool](Get-ScheduledTask -TaskName 'Force Timer Resolution' -ErrorAction SilentlyContinue) } }
+    @{ Key = 'access'; Group = 'latency'; Glyph = [char]0xE765; Restart = $true
+       Get = { ([int](Get-RegValue $accessKeys[0] 'Flags') -band 4) -ne 0 }
+       Set = { param($on)
+               foreach ($k in $accessKeys) {
+                   if (!(Test-Path $k)) { continue }
+                   $flags = [int](Get-RegValue $k 'Flags')
+                   $flags = if ($on) { $flags -bor 4 } else { $flags -band (-bnot 4) }
+                   Set-ItemProperty -Path $k -Name Flags -Value ([string]$flags) -Type String -Force
+               } } }
+
+    # Network (the DNS row is added below)
+    @{ Key = 'nagle'; Group = 'network'; Glyph = [char]0xE968; Restart = $true
+       Get = { !@(Get-ChildItem -Path $tcpipKey -ErrorAction SilentlyContinue | Where-Object { (Get-ItemProperty -LiteralPath $_.PSPath -ErrorAction SilentlyContinue).TcpAckFrequency -eq 1 }).Count }
+       Set = { param($on)
+               foreach ($i in @(Get-ChildItem -Path $tcpipKey -ErrorAction SilentlyContinue)) {
+                   if ($on) { Remove-ItemProperty -LiteralPath $i.PSPath -Name TcpAckFrequency, TCPNoDelay -ErrorAction SilentlyContinue }
+                   else {
+                       Set-ItemProperty -LiteralPath $i.PSPath -Name TcpAckFrequency -Value 1 -Type DWord -Force
+                       Set-ItemProperty -LiteralPath $i.PSPath -Name TCPNoDelay -Value 1 -Type DWord -Force
+                   }
+               } } }
+    @{ Key = 'nic'; Group = 'network'; Glyph = [char]0xE839
+       Get = { $names = @(Get-NetAdapter -Physical -ErrorAction Stop | ForEach-Object { $_.Name })
+               $props = @(Get-NetAdapterAdvancedProperty -Name $names -AllProperties -ErrorAction Stop | Where-Object { $_.RegistryKeyword -in '*InterruptModeration', '*EEE' })
+               if (!$props.Count) { throw 'not supported' }
+               [bool]@($props | Where-Object { [string]$_.RegistryValue -eq '1' }).Count }
+       Work = { param($on)
+                foreach ($a in @(Get-NetAdapter -Physical)) {
+                    foreach ($kw in '*InterruptModeration', '*EEE') {
+                        Set-NetAdapterAdvancedProperty -Name $a.Name -RegistryKeyword $kw -RegistryValue $(if ($on) { 1 } else { 0 }) -ErrorAction SilentlyContinue
+                    }
+                } } }
+
+    # Display and graphics (the refresh rate row is added below)
+    @{ Key = 'mpo'; Group = 'graphics'; Glyph = [char]0xE7F4; Restart = $true
+       Get = { (Get-RegValue $dwmKey 'OverlayTestMode') -ne 5 }
+       Set = { param($on)
+               if ($on) { Remove-ItemProperty -Path $dwmKey -Name OverlayTestMode -ErrorAction SilentlyContinue }
+               else { Set-ItemProperty -Path $dwmKey -Name OverlayTestMode -Value 5 -Type DWord -Force } } }
+    @{ Key = 'msi'; Group = 'graphics'; Glyph = [char]0xE964; Restart = $true
+       Get = { $keys = @(Get-GpuMsiKeys); if (!$keys.Count) { throw 'no graphics card' }
+               !@($keys | Where-Object { (Get-RegValue $_ 'MSISupported') -ne 1 }).Count }
+       Set = { param($on)
+               foreach ($k in @(Get-GpuMsiKeys)) {
+                   if (!(Test-Path $k)) { New-Item -Path $k -Force | Out-Null }
+                   Set-ItemProperty -Path $k -Name MSISupported -Value $(if ($on) { 1 } else { 0 }) -Type DWord -Force
+               } } }
+
+    # Memory and system
+    @{ Key = 'memcomp'; Group = 'system'; Glyph = [char]0xE964; Restart = $true
+       Get = { if ((Get-Service SysMain -ErrorAction Stop).StartType -eq 'Disabled') { throw 'SysMain is off' }
+               [bool](Get-MMAgent -ErrorAction Stop).MemoryCompression }
+       Work = { param($on)
+                try { if ($on) { Enable-MMAgent -MemoryCompression -ErrorAction Stop } else { Disable-MMAgent -MemoryCompression -ErrorAction Stop } }
+                catch { $_.Exception.Message } } }
+    # The same two values as the AtlasOS scripts "Enable VBS" / "Disable VBS" (AtlasOS 0.4.1 for Windows 10 has no such scripts)
+    @{ Key = 'vbs'; Group = 'system'; Glyph = [char]0xE72E; Restart = $true
+       Get = { (Get-RegValue $hvciKey 'Enabled') -eq 1 }
+       Set = { param($on)
+               foreach ($k in $hvciKey, $deviceGuardKey) { if (!(Test-Path $k)) { New-Item -Path $k -Force | Out-Null } }
+               Set-ItemProperty -Path $hvciKey -Name Enabled -Value $(if ($on) { 1 } else { 0 }) -Type DWord -Force
+               Set-ItemProperty -Path $deviceGuardKey -Name EnableVirtualizationBasedSecurity -Value $(if ($on) { 1 } else { 0 }) -Type DWord -Force } }
+    @{ Key = 'startdelay'; Group = 'system'; Glyph = [char]0xE823
+       Get = { (Get-RegValue $serializeKey 'StartupDelayInMSec') -ne 0 }
+       Set = { param($on)
+               if ($on) { Remove-ItemProperty -Path $serializeKey -Name StartupDelayInMSec, WaitForIdleState -ErrorAction SilentlyContinue }
+               else {
+                   if (!(Test-Path $serializeKey)) { New-Item -Path $serializeKey -Force | Out-Null }
+                   Set-ItemProperty -Path $serializeKey -Name StartupDelayInMSec -Value 0 -Type DWord -Force
+                   Set-ItemProperty -Path $serializeKey -Name WaitForIdleState -Value 0 -Type DWord -Force
+               } } }
 )
+
+# One gray heading and one grouped list per section (Gaming is in the XAML)
+$tweakLists = @{ gaming = $ui.TweaksList }
+foreach ($g in 'latency', 'network', 'graphics', 'system') {
+    $head = New-Text (T "tw.group.$g") 13 'SemiBold' "t:tw.group.$g"
+    $head.Style = $window.FindResource('Section')
+    $card = New-Object System.Windows.Controls.Border
+    $card.Style = $window.FindResource('Card'); $card.Padding = '0'; $card.Margin = '0,0,0,22'
+    $list = New-Object System.Windows.Controls.StackPanel
+    $card.Child = $list
+    [void]$ui.TweakGroups.Children.Add($head); [void]$ui.TweakGroups.Children.Add($card)
+    $tweakLists[$g] = $list
+}
 
 foreach ($tw in $tweaks) {
     if ($tw.Win11 -and $build -lt 22000) { continue }
@@ -1573,45 +1802,212 @@ foreach ($tw in $tweaks) {
             $tg = $ctx.Tweak.Toggle
             try { $tg.IsChecked = [bool](& $ctx.Tweak.Get) } catch { }
             $tg.IsEnabled = $true
+            # A Work block returns an error message when it failed
+            $err = Get-LastOutput $r
+            if ($err -is [string] -and $err) { Set-Status "$($ctx.Name): $err"; return }
             $msg = (T 'status.tweakdone') -f $ctx.Name
             if ($ctx.Tweak.Restart) { $msg += ' · ' + (T 'restart') }
             Set-Status $msg
         }
-        if ($t.Slow) {
-            # Atlas scripts take a few seconds: run them in the background
-            if ($t.Key -eq 'store') {
-                Start-Work {
-                    param($on)
-                    if ($on) {
-                        # wsreset -i installs the Microsoft Store again in the background
-                        Start-Process wsreset.exe -ArgumentList '-i' -WindowStyle Hidden -Wait
-                        $deadline = (Get-Date).AddSeconds(90)
-                        while (!(Get-AppxPackage -Name 'Microsoft.WindowsStore') -and (Get-Date) -lt $deadline) { Start-Sleep -Seconds 3 }
-                    } else {
-                        Get-Process -Name 'WinStore.App' -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
-                        Get-AppxPackage -AllUsers -Name 'Microsoft.WindowsStore' | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue
-                        Get-AppxProvisionedPackage -Online | Where-Object DisplayName -eq 'Microsoft.WindowsStore' |
-                            Remove-AppxProvisionedPackage -Online -ErrorAction SilentlyContinue | Out-Null
-                    }
-                } @($on) $finish $context
-                return
-            }
+        if ($t.Script) {
+            # AtlasOS script, in the background; some end with "pause" even when silent, so input comes from nul
             Start-Work {
-                param($desktop, $relative, $pattern)
-                $file = Get-ChildItem -Path (Join-Path $desktop $relative) -Filter $pattern -ErrorAction SilentlyContinue | Select-Object -First 1
-                if ($file) { Start-Process cmd.exe -ArgumentList "/c `"`"$($file.FullName)`" /silent`"" -WindowStyle Hidden -Wait }
-            } $(
-                if ($t.Key -eq 'maxperf') { @($desktop, '3. General Configuration\Power-saving', $(if ($on) { 'Disable Power-saving*.cmd' } else { 'Default Power-saving*.cmd' })) }
-                else { @($desktop, '3. General Configuration\Hibernation', $(if ($on) { 'Enable Hibernation*.cmd' } else { 'Disable Hibernation*.cmd' })) }
-            ) $finish $context
+                param($desktop, $folder, $pattern)
+                $file = Get-ChildItem -Path (Join-Path $desktop $folder) -Filter $pattern -ErrorAction SilentlyContinue | Select-Object -First 1
+                if ($file) { Start-Process cmd.exe -ArgumentList "/c `"`"$($file.FullName)`" /silent < nul`"" -WindowStyle Hidden -Wait }
+                else { "AtlasOS script not found: $folder\$pattern" }
+            } @($desktop, $t.Script.Folder, $(if ($on) { $t.Script.On } else { $t.Script.Off })) $finish $context
+            return
+        }
+        if ($t.Work) {
+            Start-Work $t.Work @($on) $finish $context
+            return
+        }
+        if ($t.Key -eq 'store') {
+            Start-Work {
+                param($on)
+                if ($on) {
+                    # wsreset -i installs the Microsoft Store again in the background
+                    Start-Process wsreset.exe -ArgumentList '-i' -WindowStyle Hidden -Wait
+                    $deadline = (Get-Date).AddSeconds(90)
+                    while (!(Get-AppxPackage -Name 'Microsoft.WindowsStore') -and (Get-Date) -lt $deadline) { Start-Sleep -Seconds 3 }
+                } else {
+                    Get-Process -Name 'WinStore.App' -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+                    Get-AppxPackage -AllUsers -Name 'Microsoft.WindowsStore' | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue
+                    Get-AppxProvisionedPackage -Online | Where-Object DisplayName -eq 'Microsoft.WindowsStore' |
+                        Remove-AppxProvisionedPackage -Online -ErrorAction SilentlyContinue | Out-Null
+                }
+            } @($on) $finish $context
         } else {
             try { & $t.Set $on } catch { }
             & $finish $null $context
         }
     })
-    [void]$ui.TweaksList.Children.Add($row.Row)
+    $group = if ($t.Group) { $t.Group } else { 'gaming' }
+    $tw.Row = $row.Row
+    [void]$tweakLists[$group].Children.Add($row.Row)
 }
-Update-Separators $ui.TweaksList
+
+# DNS: Automatic / Cloudflare / Google on the connected network adapters (IPv4 and IPv6)
+$dnsServers = @{
+    cloudflare = '1.1.1.1', '1.0.0.1', '2606:4700:4700::1111', '2606:4700:4700::1001'
+    google     = '8.8.8.8', '8.8.4.4', '2001:4860:4860::8888', '2001:4860:4860::8844'
+}
+function Get-DnsChoice {
+    $idx = @(Get-NetAdapter -Physical -ErrorAction SilentlyContinue | Where-Object Status -eq 'Up' | ForEach-Object { $_.ifIndex })
+    if (!$idx.Count) { return $null }
+    $servers = @(Get-DnsClientServerAddress -InterfaceIndex $idx -AddressFamily IPv4 -ErrorAction SilentlyContinue | ForEach-Object { $_.ServerAddresses })
+    if ($servers -contains '1.1.1.1') { 'cloudflare' } elseif ($servers -contains '8.8.8.8') { 'google' } else { 'auto' }
+}
+$dnsSegments = New-Object System.Windows.Controls.Border
+$dnsSegments.Background = '#232325'; $dnsSegments.BorderBrush = '#38383A'; $dnsSegments.BorderThickness = '1'; $dnsSegments.CornerRadius = 7; $dnsSegments.Padding = '2'
+$dnsPanel = New-Object System.Windows.Controls.StackPanel; $dnsPanel.Orientation = 'Horizontal'
+$dnsSegments.Child = $dnsPanel
+$dnsChoice = Get-DnsChoice
+foreach ($choice in 'auto', 'cloudflare', 'google') {
+    $seg = New-Object System.Windows.Controls.RadioButton
+    $seg.Style = $window.FindResource('Segment'); $seg.GroupName = 'Dns'; $seg.Content = T "dns.$choice"; $seg.Tag = "t:dns.$choice"
+    $seg.IsChecked = $choice -eq $dnsChoice
+    $seg.IsEnabled = [bool]$dnsChoice
+    $seg.Add_Click({
+        $choice = $this.Tag.Substring(6)
+        Set-Status ((T 'status.tweak') -f (T 'tw.dns')) $true
+        Start-Work {
+            param($choice, $servers)
+            foreach ($i in @(Get-NetAdapter -Physical | Where-Object Status -eq 'Up')) {
+                if ($choice -eq 'auto') { Set-DnsClientServerAddress -InterfaceIndex $i.ifIndex -ResetServerAddresses }
+                else { Set-DnsClientServerAddress -InterfaceIndex $i.ifIndex -ServerAddresses $servers }
+            }
+            Clear-DnsClientCache
+        } @($choice, $dnsServers[$choice]) { param($r, $c) Set-Status ((T 'status.dns') -f (T "dns.$c")) } $choice
+    })
+    [void]$dnsPanel.Children.Add($seg)
+}
+$dnsRow = New-Row ([string][char]0xE774) (T 'tw.dns') 't:tw.dns' $dnsSegments 't:tw.dns.d'
+$dnsRow.Sub.Text = T 'tw.dns.d'
+$tweakLists['network'].Children.Insert(0, $dnsRow.Row)
+
+# Screen refresh rate: the highest the primary screen can do at its resolution
+$refreshButton = New-Object System.Windows.Controls.Button
+$refreshButton.Style = $window.FindResource('PillAccent')
+$refreshRow = New-Row ([string][char]0xE7F8) (T 'tw.refresh') 't:tw.refresh' $refreshButton $null
+function Update-RefreshRow {
+    try { $script:screenNow = [AkatiOS.Perf]::Current()[2]; $script:screenMax = [AkatiOS.Perf]::MaxHz() } catch { $script:screenNow = 0; $script:screenMax = 0 }
+    $refreshRow.Row.Visibility = if ($script:screenMax -gt 1) { 'Visible' } else { 'Collapsed' }
+    if ($script:screenMax -gt $script:screenNow) {
+        $refreshRow.Sub.Text = (T 'tw.refresh.now') -f $script:screenNow, $script:screenMax
+        $refreshButton.Content = (T 'tw.refresh.use') -f $script:screenMax; $refreshButton.Visibility = 'Visible'
+    } else {
+        $refreshRow.Sub.Text = (T 'tw.refresh.max') -f $script:screenNow
+        $refreshButton.Visibility = 'Collapsed'
+    }
+}
+$refreshButton.Add_Click({
+    $result = [AkatiOS.Perf]::SetHz($script:screenMax)
+    if ($result -eq 0) { Set-Status ((T 'status.refresh') -f $script:screenMax) } else { Set-Status ((T 'status.refreshfail') -f $result) }
+    Update-RefreshRow; Update-Chips
+})
+$tweakLists['graphics'].Children.Insert(0, $refreshRow.Row)
+Update-RefreshRow
+
+# Memory compression: the advice depends on the RAM of this PC
+$ramGb = try { [Math]::Round((Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory / 1GB) } catch { 0 }
+function Update-TweakHints {
+    $mc = $tweaks | Where-Object { $_.Key -eq 'memcomp' }
+    if (!$mc.Sub) { return }
+    $hint = if (!$mc.Toggle.IsEnabled) { T 'tw.memcomp.nosysmain' } elseif ($ramGb -ge 16) { (T 'tw.memcomp.off') -f $ramGb } else { (T 'tw.memcomp.on') -f $ramGb }
+    $mc.Sub.Text = (T 'tw.memcomp.d') + ' ' + $hint
+}
+Update-TweakHints
+foreach ($list in $tweakLists.Values) { Update-Separators $list }
+
+# ---------------------------------------------------------------------------------------------
+# Game boost > My games: settings for each game the user adds (its .exe)
+#   High priority: Image File Execution Options\<exe>\PerfOptions CpuPriorityClass = 3
+#   Dedicated GPU: DirectX\UserGpuPreferences <path> = GpuPreference=2;
+#   Skip Defender: Defender exclusion for the game folder
+# The list itself is kept in HKCU\Software\AkatiOS\Center\Games. Removing a game undoes all three.
+# ---------------------------------------------------------------------------------------------
+$gamesKey = 'HKCU:\Software\AkatiOS\Center\Games'
+$ifeoKey = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options'
+function Get-GameOption([string]$path, [string]$kind, $exclusions) {
+    switch ($kind) {
+        'cpu' { return (Get-RegValue "$ifeoKey\$(Split-Path $path -Leaf)\PerfOptions" 'CpuPriorityClass') -eq 3 }
+        'gpu' { return (Get-RegValue $dxKey $path) -match 'GpuPreference=2' }
+        'defender' { return @($exclusions) -contains (Split-Path $path -Parent) }
+    }
+}
+function Set-GameOption([string]$path, [string]$kind, [bool]$on) {
+    switch ($kind) {
+        'cpu' {
+            $k = "$ifeoKey\$(Split-Path $path -Leaf)\PerfOptions"
+            if ($on) { if (!(Test-Path $k)) { New-Item -Path $k -Force | Out-Null }; Set-ItemProperty -Path $k -Name CpuPriorityClass -Value 3 -Type DWord -Force }
+            else { Remove-ItemProperty -Path $k -Name CpuPriorityClass -ErrorAction SilentlyContinue }
+        }
+        'gpu' {
+            if ($on) { if (!(Test-Path $dxKey)) { New-Item -Path $dxKey -Force | Out-Null }; Set-ItemProperty -Path $dxKey -Name $path -Value 'GpuPreference=2;' -Type String -Force }
+            else { Remove-ItemProperty -Path $dxKey -Name $path -ErrorAction SilentlyContinue }
+        }
+        'defender' {
+            if ($on) { Add-MpPreference -ExclusionPath (Split-Path $path -Parent) -ErrorAction Stop }
+            else { Remove-MpPreference -ExclusionPath (Split-Path $path -Parent) -ErrorAction SilentlyContinue }
+        }
+    }
+}
+function Show-Games {
+    $ui.GamesList.Children.Clear()
+    $paths = @(if (Test-Path $gamesKey) { (Get-Item $gamesKey).Property })
+    # Defender exclusions are read once per refresh (null when Defender is off)
+    $exclusions = try { @((Get-MpPreference -ErrorAction Stop).ExclusionPath) } catch { $null }
+    foreach ($path in $paths) {
+        $right = New-Object System.Windows.Controls.StackPanel; $right.Orientation = 'Horizontal'
+        foreach ($kind in 'cpu', 'gpu', 'defender') {
+            $chip = New-Object System.Windows.Controls.CheckBox
+            $chip.Style = $window.FindResource('Chip'); $chip.Content = T "games.$kind"; $chip.Margin = '0,0,6,0'; $chip.VerticalAlignment = 'Center'
+            $chip.Tag = @{ Path = $path; Kind = $kind }
+            $chip.IsChecked = Get-GameOption $path $kind $exclusions
+            if ($kind -eq 'defender' -and $null -eq $exclusions) { $chip.IsEnabled = $false; $chip.ToolTip = T 'games.nodefender' }
+            $chip.Add_Click({
+                $t = $this.Tag
+                try { Set-GameOption $t.Path $t.Kind ([bool]$this.IsChecked) } catch { $this.IsChecked = !$this.IsChecked; Set-Status $_.Exception.Message }
+            })
+            [void]$right.Children.Add($chip)
+        }
+        $remove = New-Object System.Windows.Controls.Button
+        $remove.Style = $window.FindResource('Bare'); $remove.Padding = '7'; $remove.Margin = '4,0,0,0'; $remove.ToolTip = T 'games.remove'; $remove.Tag = $path
+        $x = New-Text ([string][char]0xE711) 12; $x.Style = $window.FindResource('Glyph'); $remove.Content = $x
+        $remove.Add_Click({
+            $path = $this.Tag
+            foreach ($kind in 'cpu', 'gpu', 'defender') { try { Set-GameOption $path $kind $false } catch { } }
+            Remove-ItemProperty -Path $gamesKey -Name $path -ErrorAction SilentlyContinue
+            Set-Status ((T 'status.gameremoved') -f [IO.Path]::GetFileNameWithoutExtension($path))
+            Show-Games
+        })
+        [void]$right.Children.Add($remove)
+        $name = try { (Get-Item -LiteralPath $path -ErrorAction Stop).VersionInfo.FileDescription } catch { $null }
+        if (!$name) { $name = [IO.Path]::GetFileNameWithoutExtension($path) }
+        $row = New-Row ([string][char]0xE7FC) $name $null $right $null
+        $row.Sub.Text = Split-Path $path -Parent
+        $icon = Get-FileIcon @($path)
+        if ($icon) { Set-RowIcon $row $icon }
+        [void]$ui.GamesList.Children.Add($row.Row)
+    }
+    $ui.GamesEmpty.Visibility = if ($paths.Count) { 'Collapsed' } else { 'Visible' }
+    Update-Separators $ui.GamesList
+}
+$ui.GameAddButton.Add_Click({
+    $dialog = New-Object Microsoft.Win32.OpenFileDialog
+    $dialog.Title = T 'games.pick'; $dialog.Filter = 'Games (*.exe)|*.exe'
+    if (!$dialog.ShowDialog($window)) { return }
+    $path = $dialog.FileName
+    if (!(Test-Path $gamesKey)) { New-Item -Path $gamesKey -Force | Out-Null }
+    Set-ItemProperty -Path $gamesKey -Name $path -Value 1 -Type DWord -Force
+    # High priority and the dedicated GPU at once; skipping Defender is the user's choice
+    foreach ($kind in 'cpu', 'gpu') { try { Set-GameOption $path $kind $true } catch { } }
+    Set-Status ((T 'status.gameadded') -f [IO.Path]::GetFileNameWithoutExtension($path))
+    Show-Games
+})
+Show-Games
 
 # ---------------------------------------------------------------------------------------------
 # Cleaner
@@ -2470,6 +2866,9 @@ function Update-Language {
     if ($stats.Top) { Show-TopApps }
     foreach ($a in $apps) { if ($a.State -ne 'install') { Update-AppRow $a } }
     Update-AppsToolbar
+    Update-RefreshRow
+    Update-TweakHints
+    Show-Games
     Update-ThemeCards
     Update-GpuText
     Update-BoostCard

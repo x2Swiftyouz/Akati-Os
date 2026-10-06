@@ -102,6 +102,16 @@ Untick it if you use a printer or share files between PCs at home. A restart (se
 
 **ภาษาไทย**: "Turn off notifications" (ติ๊กไว้) ปิดสวิตช์ "Get notifications from apps and other senders" จะไม่มีป๊อปอัปเด้งระหว่างเล่นเกม รวมถึงคำเตือนของ Windows Security และข้อความจาก Discord หรือ Steam ด้วย เปิดกลับได้ที่ Settings > System > Notifications ส่วน "Turn off Xbox Game Bar" (ติ๊กไว้) ปิด Game Bar (Win+G) การอัดคลิปเบื้องหลัง และปุ่มเปิดจากจอย ไม่แตะ Game Mode เปิดกลับได้ที่ Settings > Gaming > Game Bar
 
+## Input and latency
+
+**Force 0.5 ms timer resolution** (ticked by default) runs the unchanged AtlasOS script "Enable timer resolution": Windows wakes up more often, so games keep a steadier frame time and lower input delay. It uses a little more power. Check it with `MeasureSleep.exe` in `C:\Windows\AtlasDesktop\3. General Configuration\Timer Resolution`.
+
+**Turn off Sticky Keys and Filter Keys shortcuts** (ticked by default): pressing Shift 5 times or holding Shift in a game no longer opens a window. The accessibility features themselves still work from Settings > Accessibility > Keyboard.
+
+Both can be changed later in **Akati OS Center > Tweaks > Input and latency**.
+
+**ภาษาไทย**: "Force 0.5 ms timer resolution" (ติ๊กไว้) รันสคริปต์ "Enable timer resolution" ของ AtlasOS ทำให้เฟรมเกมนิ่งขึ้นและ input delay ลดลง ใช้ไฟเพิ่มเล็กน้อย ส่วน "Turn off Sticky Keys and Filter Keys shortcuts" (ติ๊กไว้) กด Shift 5 ครั้งหรือกดค้างในเกมจะไม่มีหน้าต่างเด้ง ฟีเจอร์ช่วยการเข้าถึงยังใช้ได้จาก Settings เปลี่ยนทีหลังได้ใน Akati OS Center > ปรับแต่ง > อินพุตและ latency
+
 ## Gaming tweaks
 
 These are not on the setup pages. Turn them on in **Akati OS Center > Tweaks** if you want them. They do not help every PC. Try them and turn them off if games run worse.
@@ -112,6 +122,28 @@ These are not on the setup pages. Turn them on in **Akati OS Center > Tweaks** i
 **ภาษาไทย**: ไม่มีในหน้าติดตั้งแล้ว เปิดได้ใน Akati OS Center > ปรับแต่ง เพราะไม่ได้ช่วยทุกเครื่อง ถ้าเปิดแล้วเกมแย่ลงให้ปิดกลับ
 - Hardware-accelerated GPU scheduling: ให้การ์ดจอจัดการหน่วยความจำเอง ต้องใช้การ์ดจอและไดรเวอร์ที่รองรับ มีผลหลังรีสตาร์ต
 - Optimizations for windowed games (เฉพาะ Windows 11): ลด latency ของเกม DirectX 10/11 ที่เล่นแบบหน้าต่างหรือ borderless
+
+## More tweaks in Akati OS Center
+
+**Akati OS Center > Tweaks** also has these sections. Each switch shows the current state of your PC (on = the Windows default unless written otherwise); turn one back if games run worse.
+
+| Section | Switch | What it does |
+|---|---|---|
+| Input and latency | Timer resolution 0.5 ms | See [Input and latency](#input-and-latency) |
+| | Sticky Keys and Filter Keys shortcuts | See [Input and latency](#input-and-latency) |
+| Network | DNS server | Automatic, Cloudflare (1.1.1.1) or Google (8.8.8.8) on the connected network adapters. Faster web lookups; it does not change ping in games |
+| | Nagle's algorithm | Off can lower delay in some older online games; most games already turn it off themselves |
+| | Network adapter power saving and interrupt moderation | Off: slightly lower network delay, a little more CPU. The connection drops for a few seconds when changed |
+| Display and graphics | Screen refresh rate | Shows the refresh rate of the main screen and sets the highest it can do (many screens run at 60 Hz until changed) |
+| | Multiplane overlay (MPO) | Off fixes flickering and stutter on some PCs; leave it on otherwise |
+| | GPU MSI mode | Message signaled interrupts for the graphics card: lower latency. Most new cards already use it |
+| Memory and system | Memory compression | Advice by RAM: off with 16 GB or more, on with less. Needs SysMain (SuperFetch) on |
+| | Core isolation (VBS and Memory integrity) | Off can make games up to about 10% faster but removes some malware protection; some anti-cheat needs it on |
+| | Delay for startup apps | Off: apps that start at sign-in open right away |
+
+**Game boost** can also free up standby memory (the file cache Windows keeps in RAM) when it starts, which helps PCs with little RAM. **My games** on the Game boost page: add a game's .exe to give it high CPU priority and the dedicated graphics card (laptops with two graphics chips), and optionally let Defender skip its folder. Removing the game puts all three back.
+
+**ภาษาไทย**: หน้าปรับแต่งของ Akati OS Center มีหมวดเพิ่ม: อินพุตและ latency (timer resolution, ปุ่มลัด Sticky Keys), เครือข่าย (DNS, Nagle, การประหยัดไฟของการ์ดแลน), หน้าจอและกราฟิก (อัตรารีเฟรชสูงสุด, MPO, MSI mode ของการ์ดจอ), หน่วยความจำและระบบ (Memory compression แนะนำตาม RAM, Core isolation, หน่วงเวลาแอปตอนล็อกอิน) บูสต์เกมคืน standby memory ได้ และ "เกมของฉัน" ใช้เพิ่มไฟล์ .exe ของเกมเพื่อให้ CPU ความสำคัญสูง ใช้การ์ดจอแยก และเลือกให้ Defender ข้ามโฟลเดอร์เกมได้ ลบเกมออกแล้วทุกอย่างกลับเหมือนเดิม
 
 ## Akati OS Center
 

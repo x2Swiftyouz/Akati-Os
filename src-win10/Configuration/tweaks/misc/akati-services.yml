@@ -1,6 +1,6 @@
 ---
 title: Akati OS Unused Services
-description: Turns off printing, search indexing, SuperFetch, network discovery and MSDTC when selected during setup (Akati OS)
+description: Turns off printing, search indexing, SuperFetch, network discovery and MSDTC, and sets the timer resolution, when selected during setup (Akati OS)
 actions:
     # Turn off services most gaming PCs do not use (option, ticked by default): printing, search
     # indexing, SuperFetch and network discovery. These are the unchanged AtlasOS scripts, the same as
@@ -36,3 +36,12 @@ actions:
     # Distributed Transaction Coordinator (MSDTC): only database and server software uses it, but it is
     # started at times and stays in the background. Disabled from the next start (default: Manual, 3)
   - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Services\MSDTC', value: 'Start', data: '4', type: REG_DWORD, option: 'disable-unused-services'}
+    # Timer resolution 0.5 ms (option, ticked by default): the unchanged AtlasOS script, which sets
+    # GlobalTimerResolutionRequests and adds the "Force Timer Resolution" task. Off again in Akati OS Center > Tweaks.
+  - !writeStatus: {status: 'Setting timer resolution', option: 'enable-timer-resolution'}
+  - !cmd:
+    command: '"AtlasDesktop\3. General Configuration\Timer Resolution\Enable timer resolution.cmd" /silent < nul'
+    exeDir: true
+    wait: true
+    runas: currentUserElevated
+    option: 'enable-timer-resolution'

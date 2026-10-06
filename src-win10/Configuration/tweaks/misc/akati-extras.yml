@@ -21,6 +21,12 @@ actions:
   - !registryValue: {path: 'HKCU\SOFTWARE\Microsoft\GameBar', value: 'ShowStartupPanel', data: '0', type: REG_DWORD, option: 'disable-game-bar'}
   - !registryValue: {path: 'HKCU\SOFTWARE\Microsoft\GameBar', value: 'GamePanelStartupTipIndex', data: '3', type: REG_DWORD, option: 'disable-game-bar'}
 
+    # Sticky Keys, Filter Keys and Toggle Keys: their keyboard shortcuts off (option, ticked by default), so
+    # pressing Shift 5 times or holding it in a game no longer opens a window. Windows defaults with bit 4
+    # (the shortcut) cleared: 510 > 506, 126 > 122, 62 > 58. Can be turned on again in Akati OS Center > Tweaks.
+  - !registryValue: {path: 'HKCU\Control Panel\Accessibility\StickyKeys', value: 'Flags', data: '506', type: REG_SZ, option: 'disable-accessibility-shortcuts'}
+  - !registryValue: {path: 'HKCU\Control Panel\Accessibility\Keyboard Response', value: 'Flags', data: '122', type: REG_SZ, option: 'disable-accessibility-shortcuts'}
+  - !registryValue: {path: 'HKCU\Control Panel\Accessibility\ToggleKeys', value: 'Flags', data: '58', type: REG_SZ, option: 'disable-accessibility-shortcuts'}
 
     # Windows Terminal color scheme and profile for all users (a Terminal "fragment")
   - !powerShell:

@@ -269,6 +269,31 @@
             </Setter>
         </Style>
 
+        <!-- A small on/off pill (My games: High priority, Dedicated GPU, Skip Defender) -->
+        <Style x:Key="Chip" TargetType="CheckBox">
+            <Setter Property="Foreground" Value="#D1D1D6"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <Border x:Name="Bd" Background="#3A3A3C" CornerRadius="12" Padding="11,4">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource Accent}"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.4"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style x:Key="Action" TargetType="Button">
             <Setter Property="Foreground" Value="#EBEBF0"/>
             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
@@ -793,6 +818,23 @@
                                     <CheckBox x:Name="BoostPower" Style="{StaticResource Tick}" IsChecked="True" Margin="0,4"><TextBlock Tag="t:boost.power" Text="Switch to the highest performance power plan"/></CheckBox>
                                     <CheckBox x:Name="BoostApps" Style="{StaticResource Tick}" IsChecked="True" Margin="0,4"><TextBlock x:Name="BoostAppsText" Tag="t:boost.apps" Text="Close background apps" TextWrapping="Wrap"/></CheckBox>
                                     <CheckBox x:Name="BoostNotify" Style="{StaticResource Tick}" IsChecked="True" Margin="0,4"><TextBlock Tag="t:boost.notify" Text="Turn off notifications"/></CheckBox>
+                                    <CheckBox x:Name="BoostMemory" Style="{StaticResource Tick}" IsChecked="True" Margin="0,4"><TextBlock Tag="t:boost.memory" Text="Free up standby memory" TextWrapping="Wrap"/></CheckBox>
+                                </StackPanel>
+                            </Border>
+                            <!-- My games: per game settings, added by the user -->
+                            <Border Style="{StaticResource Card}" Padding="8" Margin="0,0,0,16">
+                                <StackPanel>
+                                    <DockPanel Margin="14,8,14,6">
+                                        <Button x:Name="GameAddButton" DockPanel.Dock="Right" Style="{StaticResource PillAccent}" VerticalAlignment="Top">
+                                            <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE710;" FontSize="12" Margin="0,0,8,0"/><TextBlock Tag="t:games.add" Text="Add game"/></StackPanel>
+                                        </Button>
+                                        <StackPanel Margin="0,0,12,0">
+                                            <TextBlock Tag="t:games.title" Text="My games" Style="{StaticResource CardTitle}"/>
+                                            <TextBlock Tag="t:games.sub" Text="Settings for each game." Style="{StaticResource Muted}" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </DockPanel>
+                                    <StackPanel x:Name="GamesList"/>
+                                    <TextBlock x:Name="GamesEmpty" Tag="t:games.empty" Text="No games added yet." Style="{StaticResource Muted}" Margin="14,8"/>
                                 </StackPanel>
                             </Border>
                             <Border Style="{StaticResource Card}" Margin="0,0,0,16">
@@ -831,6 +873,8 @@
                             <Border Style="{StaticResource Card}" Padding="0" Margin="0,0,0,22">
                                 <StackPanel x:Name="TweaksList"/>
                             </Border>
+                            <!-- More sections (latency, network, graphics, memory), filled by AkatiCenter.ps1 -->
+                            <StackPanel x:Name="TweakGroups"/>
                             <TextBlock Tag="t:tweaks.system" Text="System (AtlasOS)" Style="{StaticResource Section}"/>
                             <TextBlock Tag="t:system.sub" Text="All AtlasOS settings. A button applies that option; scripts open in a window that explains what they change." Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,4,0,14"/>
                             <Border Style="{StaticResource Card}" Padding="14,10" Margin="0,0,0,16">

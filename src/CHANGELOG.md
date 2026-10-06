@@ -3,6 +3,9 @@
 ## v1.4.1
 
 ### Added
+- Setup page **Input and latency** (both ticked): timer resolution 0.5 ms (AtlasOS script) and Sticky Keys / Filter Keys shortcuts off
+- Akati OS Center > Tweaks: new sections **Input and latency**, **Network** (DNS: Automatic / Cloudflare / Google, Nagle's algorithm, network adapter power saving and interrupt moderation), **Display and graphics** (highest screen refresh rate, multiplane overlay, GPU MSI mode) and **Memory and system** (memory compression with advice by RAM, core isolation, startup app delay). The Dashboard shows the screen refresh rate
+- Game boost: frees up standby memory, and **My games**: high CPU priority, the dedicated graphics card and an optional Defender folder exclusion for each game you add
 - Gaming apps: **Riot Client** (VALORANT; League of Legends and TFT from Riot Client, official installer checked for Riot's signature), **GOG GALAXY**, **Rockstar Games Launcher** and **MSI Afterburner**
 - Setup option **Turn off unused services** (ticked by default, on the Microsoft Store page): runs the unchanged AtlasOS scripts that turn off printing, search indexing, SuperFetch (SysMain) and network discovery, and disables the Distributed Transaction Coordinator (MSDTC), so fewer processes run in the background. Untick it if you use a printer or share files at home; each one can be turned on again in Akati OS Center > Tweaks
 - Setup page **Notifications and Game Bar** (both ticked by default): turns off Windows notifications and Xbox Game Bar (Win+G, background clip recording, controller button). Both can be turned on again in Windows Settings; Game Mode is not changed

@@ -200,7 +200,8 @@ function Set-CenterLook([string]$name) {
     }
 }
 function Get-RegValue($path, $name) { (Get-ItemProperty -Path $path -Name $name -ErrorAction SilentlyContinue).$name }
-Set-CenterLook (Get-LookName)
+# Screenshot mode: dark, whatever the CI machine uses (the light look has its own screenshots)
+Set-CenterLook $(if ($Screenshot) { 'dark' } else { Get-LookName })
 
 # ---------------------------------------------------------------------------------------------
 # Background work: runs a script block in another runspace, then calls back on the UI thread

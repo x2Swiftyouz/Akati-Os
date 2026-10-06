@@ -54,6 +54,8 @@ actions:
   - !taskKill: {name: 'explorer'}
   - !taskKill: {name: 'ShellExperienceHost'}
   - !run: {exe: 'explorer.exe', runas: 'currentUser', wait: false}
+  # Akati OS: open Task Manager, so the user can see what the playbook is doing while it runs
+  - !run: {exe: 'taskmgr.exe', runas: 'currentUser', wait: false}
 
   # Configure PowerShell first so that other PowerShell scripts work
   # NGEN - .NET assemblies PowerShell optimization

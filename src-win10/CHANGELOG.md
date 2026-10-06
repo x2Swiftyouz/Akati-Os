@@ -27,6 +27,7 @@
 - Pages fade in
 - Window buttons like macOS at the top left: close, minimize and full screen (fills the screen, the taskbar stays visible). Double-click the top bar for full screen too
 - The window fits on small screens (it was cut off on a 1024 x 768 screen)
+- Setup opens Task Manager after it restarts Explorer, so you can see what is running while the playbook works
 - `tools/make-assets.py` draws the new wallpapers, cursors and sounds from code (no third-party art)
 
 ## v1.3.1

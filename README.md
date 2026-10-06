@@ -6,6 +6,8 @@ Personal Windows 11 playbook for [AME Wizard](https://ameliorated.io), focused o
 
 Akati OS is based on [AtlasOS](https://github.com/Atlas-OS/Atlas) v0.5.0 (Windows 11) and v0.4.1 (Windows 10), and is licensed under GPL-3.0. It is **not** an official AtlasOS project. Every change from AtlasOS is listed in [docs/CHANGES-FROM-ATLAS.md](docs/CHANGES-FROM-ATLAS.md).
 
+> ⚠️ AME Wizard currently labels Akati OS as "Malicious". It is not meant to be: the full source is here and every change is listed in [docs/CHANGES-FROM-ATLAS.md](docs/CHANGES-FROM-ATLAS.md). Ameliorated is being contacted; see the release notes.
+
 > ⚠️ Back up your files first. A playbook cannot be fully undone: to go back, reinstall Windows. Test in a virtual machine first.
 
 ## ภาษาไทย
@@ -31,7 +33,7 @@ Akati OS คือ playbook สำหรับ Windows 11 เน้นเล่�
 - Akati OS Dark, Light and Slideshow themes, wallpapers and lock screen (no AtlasOS logo)
 - No apps are installed during setup: install them when you want from Akati OS Center. Optional: remove the Microsoft Store
 - Visual C++ and DirectX runtimes are always installed (from AtlasOS)
-- **Akati OS Center** app, the one place for everything: install gaming apps (Steam, Epic Games Launcher, EA app, Ubisoft Connect, Battle.net, Discord, OBS Studio), GPU driver links, gaming tweaks, cleaner, themes, live CPU/RAM/GPU usage, update check and **System settings** with every AtlasOS setting (no Atlas folder shortcut)
+- **Akati OS Center** app, the one place for everything: install and update gaming apps (Steam, Epic Games Launcher, EA app, Ubisoft Connect, Battle.net, Discord, OBS Studio), GPU driver links, **Game boost** (one-click Game Mode, ping test, startup apps), gaming tweaks, cleaner, themes, accent colors, wallpapers, Akati OS cursor and sounds, live CPU/RAM/GPU usage, problem report, update check and **System settings** with every AtlasOS setting in English and Thai (no Atlas folder shortcut)
 - Akati OS Slideshow theme and a Windows Terminal color scheme
 - Defaults: Maximum Performance and Disable Hibernation are checked
 
@@ -41,7 +43,7 @@ Akati OS คือ playbook สำหรับ Windows 11 เน้นเล่�
 2. Download the `.apbx` for your Windows version and `SHA256SUMS.txt` from [Releases](../../releases/latest).
 3. Check the hash in PowerShell. The value must match the line for your file in `SHA256SUMS.txt`:
    ```powershell
-   (Get-FileHash .\AkatiOS_v1.3.1.apbx -Algorithm SHA256).Hash.ToLower()
+   (Get-FileHash .\AkatiOS_v1.4.0.apbx -Algorithm SHA256).Hash.ToLower()
    Get-Content .\SHA256SUMS.txt
    ```
 4. Open AME Wizard and drag the `.apbx` file into it.
@@ -49,7 +51,7 @@ Akati OS คือ playbook สำหรับ Windows 11 เน้นเล่�
 
 ## Windows 10
 
-`AkatiOS-Win10_v<version>.apbx` is a separate playbook for Windows 10 22H2 (build 19045). It is based on AtlasOS v0.4.1, the last AtlasOS version that supports Windows 10, and has the same Akati OS changes (themes, gaming apps page, Akati OS Center, defaults). Source: `src-win10/`.
+`AkatiOS-Win10_v<version>.apbx` is a separate playbook for Windows 10 22H2 (build 19045). It is based on AtlasOS v0.4.1, the last AtlasOS version that supports Windows 10, and has the same Akati OS changes (themes, Akati OS Center, defaults; no Mica backdrop on Windows 10). Source: `src-win10/`.
 
 > ⚠️ Microsoft ended support for Windows 10 on October 14, 2025, and Extended Security Updates for home users end on October 13, 2026. After that there are no security updates. Use the Windows 11 version if your PC can run Windows 11.
 
@@ -79,8 +81,8 @@ Every push also builds the playbook on GitHub Actions. The `.apbx` is under **Ar
 2. Run the checklist in [docs/TESTING.md](docs/TESTING.md).
 3. Merge to `main`, then tag and push:
    ```
-   git tag v1.3.1
-   git push origin v1.3.1
+   git tag v1.4.0
+   git push origin v1.4.0
    ```
    Or without git: Actions > Build playbook > Run workflow, branch `main`, tick **Publish release**.
 4. GitHub Actions checks the versions, builds both `.apbx` files and publishes the release with `SHA256SUMS.txt`. Release notes come from `src/CHANGELOG.md`.

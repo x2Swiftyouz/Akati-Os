@@ -1,5 +1,40 @@
 # Changelog
 
+## v1.4.0
+
+### Known issues
+- AME Wizard 0.8.4 shows "This Playbook was detected as intentionally malicious, and has been reported to Ameliorated" for Akati OS (also for v1.3.x). Akati OS is not meant to be malicious: the full source is in this repository and every change from AtlasOS is listed in `docs/CHANGES-FROM-ATLAS.md`. Ameliorated is being contacted to find out why; whatever they report will be fixed. Nothing was changed to get around AME Wizard's checks
+- AME Wizard needs Microsoft Defender real-time protection turned off before it starts, otherwise it stops with "Could not initialize process"
+
+### Added
+- **Game boost** page in Akati OS Center:
+  - **Game Mode** in one click: switches to the highest performance power plan, closes background apps (OneDrive, Teams, Spotify, Phone Link, Dropbox, Google Drive, Skype) and turns notifications off. Stop puts everything back, also after a restart
+  - **Ping test** to cloud data centers near Thailand (Bangkok, Singapore, Hong Kong, Tokyo), with a live graph
+  - **Startup apps**: turn apps that start at sign-in on or off, like the Startup tab of Task Manager
+- Gaming apps:
+  - the real icon of each installed app
+  - a progress bar with the download percentage, and a Cancel button
+  - tick several apps and install them in one go (one after another)
+  - **Check for updates** and **Update all** with WinGet (Steam and Discord update themselves)
+  - the GPU driver button of the graphics card in the PC is highlighted
+- System settings:
+  - Thai and English names and a short explanation for each AtlasOS setting
+  - short button labels (Enable / Disable) and a **default** badge
+  - a restore point is created before the first change (can be turned off)
+- Appearance:
+  - 7 **accent colors** for Akati OS Center, the Windows accent color and the Akati OS Terminal colors
+  - wallpaper picker and 4 new wallpapers (Aurora, Sunset, Ocean, Mist), also in the Slideshow theme
+  - **Akati OS cursor** (arrow and busy cursors) and **Akati OS sounds**, or back to the Windows ones, or no sounds
+- About: **Create problem report** saves a .zip on the desktop with the Akati OS logs and PC details (user name and PC name removed)
+- Welcome screen the first time Akati OS Center opens (language, gaming apps, theme)
+- Keyboard shortcuts: Ctrl+1 to Ctrl+8 switch pages, Ctrl+F searches the system settings, Esc
+- Pages fade in
+- Window buttons like macOS at the top left: close, minimize and full screen (fills the screen, the taskbar stays visible). Double-click the top bar for full screen too
+- The window fits on small screens (it was cut off on a 1024 x 768 screen)
+- Akati OS Dark and Light wallpapers: "Akati OS" is in the middle, without the "performance · privacy · clean" line
+- `tools/make-assets.py` draws the new wallpapers, cursors and sounds from code (no third-party art)
+- Windows 11: Mica backdrop (the see-through background of Windows 11 apps) in Akati OS Center
+
 ## v1.3.1
 
 ### Changed

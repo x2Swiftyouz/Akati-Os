@@ -56,7 +56,9 @@ The AtlasOS wallpapers and themes are removed, so the Atlas logo is not used: `E
 | `Executables/AtlasModules/Other/AkatiOS/terminal-fragment.json` | Windows Terminal color scheme and profile, copied to `%ProgramData%\Microsoft\Windows Terminal\Fragments\AkatiOS` |
 | `Executables/AtlasModules/AkatiCenter/` | Akati OS Center app: `AkatiCenter.ps1` (PowerShell + WPF), `AkatiCenter.xaml` (window layout), `logo.png`. Shortcuts are created by `akati-extras.yml` |
 | `Executables/Themes/akatios-dark.theme`, `akatios-light.theme`, `akatios-slideshow.theme` | Themes |
-| `Executables/AtlasModules/Wallpapers/akatios-*.png` | Wallpapers and lock screen |
+| `Executables/AtlasModules/Wallpapers/akatios-*.png` | Wallpapers and lock screen (Aurora, Sunset, Ocean and Mist are drawn by `tools/make-assets.py`) |
+| `Executables/AtlasModules/Other/AkatiOS/Cursors/` | Akati OS arrow and busy cursors (`.cur`, `.ani`), drawn by `tools/make-assets.py`. Only used when the user picks them in Akati OS Center |
+| `Executables/AtlasModules/Other/AkatiOS/Sounds/` | Akati OS system sounds (`.wav`), made by `tools/make-assets.py`. Only used when the user picks them in Akati OS Center |
 | `Executables/AtlasModules/Other/akatios-folder.ico` | Icon of the Akati OS Center shortcuts |
 | `README.md`, `CHANGELOG.md`, `CREDITS.txt` | Documentation and credits |
 
@@ -92,14 +94,23 @@ Discord is never installed silently (no WinGet, no `-s`): after a silent install
 
 It runs only when the user opens it and asks for administrator rights. Everything it changes is listed here:
 
-- **Gaming apps**: runs `GAMEAPPS.ps1 -App <name>` (see above)
+- **Gaming apps**: runs `GAMEAPPS.ps1 -App <name>` (see above), one app at a time; Cancel stops that script and what it started (`taskkill /T`, and the `AkatiOS Install Discord` task). `GAMEAPPS.ps1` writes its progress to `%LOCALAPPDATA%\AkatiOS\Logs\GAMEAPPS-<app>.progress`. **Check for updates** runs `winget list --id <id> --upgrade-available` for each installed app and **Update** runs `winget upgrade --id <id> --silent` (not for Steam and Discord, which update themselves). The GPU names come from `Win32_VideoController`
+- **Game boost**: Start saves what it changes in `HKCU\Software\AkatiOS\Center\Boost` and then, for the ticked items: activates the first power plan found of Atlas Power Scheme, Ultimate Performance or High performance (`powercfg /setactive`); closes OneDrive (`/shutdown`), Teams, Spotify, Phone Link, Dropbox, Google Drive and Skype; sets `HKCU\Software\Microsoft\Windows\CurrentVersion\PushNotifications` `ToastEnabled` to 0. Stop sets the old power plan and `ToastEnabled` again, starts the closed apps again (through `explorer.exe`, not elevated) and deletes the key
+- **Ping**: only while the test runs and the page is open, a TCP connection to port 443 of `dynamodb.<region>.amazonaws.com` (ap-southeast-7, ap-southeast-1, ap-east-1, ap-northeast-1) every 2 seconds. No data is sent
+- **Startup apps**: reads the `Run` keys (HKCU, HKLM, HKLM WOW6432Node) and the Startup folders; a switch writes the on/off value to `...\Explorer\StartupApproved\Run`, `Run32` or `StartupFolder`, like Task Manager. The startup entries themselves are not changed
 - **Tweaks**: the registry values in [Gaming tweaks](#gaming-tweaks-registry), plus Game Mode (`HKCU\Software\Microsoft\GameBar` `AutoGameModeEnabled`), and runs the unchanged AtlasOS scripts in `AtlasDesktop\3. General Configuration\Power-saving` and `\Hibernation` with `/silent`
 - **Cleaner**: deletes the contents of `%TEMP%`, `%windir%\Temp`, `%LOCALAPPDATA%\CrashDumps` and empties the Recycle Bin, only for the items the user ticks
 - **Microsoft Store switch**: off removes the `Microsoft.WindowsStore` package for all users; on runs `wsreset -i`, which installs it again
 - **Appearance**: opens an Akati OS `.theme` file, which Windows applies
-- **System settings**: lists every file in `C:\Windows\AtlasDesktop` (the unchanged AtlasOS settings), one row per folder. A `.reg` file is imported with `reg import`, a `.cmd` script opens in a console window (the AtlasOS script explains the change), links and other files are opened. Nothing runs until the user clicks a button
+- **System settings**: lists every file in `C:\Windows\AtlasDesktop` (the unchanged AtlasOS settings), one row per folder, with English and Thai names. A `.reg` file is imported with `reg import`, a `.cmd` script opens in a console window (the AtlasOS script explains the change), links and other files are opened. Nothing runs until the user clicks a button. Before the first `.reg`, `.cmd` or `.ps1` in a window, `Checkpoint-Computer` creates a restore point (switch on the page, saved as `RestorePoint` in `HKCU\Software\AkatiOS\Center`); System Restore is not turned on if it is off
+- **Accent color**: `HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Accent` (`AccentPalette`, `AccentColorMenu`, `StartColorMenu`), `HKCU\Software\Microsoft\Windows\DWM` (`AccentColor`, `ColorizationColor`, `ColorizationAfterglow`), `HKCU\Control Panel\Desktop` `AutoColorization` = 0, and the colors in `%ProgramData%\Microsoft\Windows Terminal\Fragments\AkatiOS\akatios.json`
+- **Wallpapers**: `SystemParametersInfo(SPI_SETDESKWALLPAPER)` with Fill
+- **Cursor**: `HKCU\Control Panel\Cursors` (Akati OS: `Arrow`, `Wait`, `AppStarting`; the other pointers are the Windows ones), then `SPI_SETCURSORS`
+- **Sounds**: `HKCU\AppEvents\Schemes\Apps\.Default\<event>\.Current` for `.Default`, `SystemAsterisk`, `SystemExclamation`, `SystemHand`, `SystemNotification`, `Notification.Default`, `DeviceConnect`, `DeviceDisconnect`: Akati OS sounds, the Windows sounds in `%windir%\Media`, or none
+- **Problem report**: writes `AkatiOS-report-<date>.zip` on the desktop with `system.txt` (Windows, CPU, GPU, RAM, disk, power plan, WinGet version, app states) and the logs in `%LOCALAPPDATA%\AkatiOS\Logs`, with the user name and PC name replaced. Nothing is uploaded
 - **Update check**: reads `https://api.github.com/repos/x2Swiftyouz/Akati-Os/releases/latest`, compares it with the installed version and can open the release page. It does not download or install anything and does not run on a schedule
-- Saves the chosen language to `HKCU\Software\AkatiOS\Center`
+- Saves the language, accent color and "welcome shown" to `HKCU\Software\AkatiOS\Center`
+- Windows 11: Mica backdrop with `DwmSetWindowAttribute` (on its own window only)
 - Reads usage with CIM (`Win32_PerfFormattedData_*`); nothing is sent anywhere
 
 No other downloads were added. All other downloads (7-Zip, Visual C++, DirectX, browsers, Atlas Toolbox) come from the unchanged AtlasOS `SOFTWARE.ps1`.

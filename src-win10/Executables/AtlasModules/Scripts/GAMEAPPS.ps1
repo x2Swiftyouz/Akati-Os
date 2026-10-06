@@ -7,7 +7,7 @@ param (
     [switch]$FromTask
 )
 
-# Akati OS: installs one gaming app (used during setup and by AtlasDesktop\Akati OS\Install Gaming Apps).
+# Akati OS: installs one gaming app (used by Akati OS Center > Gaming apps).
 # Uses WinGet first (installer hashes are verified by WinGet).
 # Falls back to the official direct download where one exists.
 
@@ -37,6 +37,44 @@ $apps = @{
 
 if (!$apps.ContainsKey($App)) { Write-Error "Unknown app: $App"; exit 0 }
 $info = $apps[$App]
+
+# Progress for Akati OS Center: "<stage>|<percent>" in %LOCALAPPDATA%\AkatiOS\Logs\GAMEAPPS-<App>.progress
+# (stage: winget, download, install, user, finish; percent is -1 when unknown)
+$progressFile = Join-Path $env:LOCALAPPDATA "AkatiOS\Logs\GAMEAPPS-$App.progress"
+function Set-Progress([string]$stage, [int]$percent = -1) {
+    try { [IO.File]::WriteAllText($progressFile, "$stage|$percent") } catch {}
+}
+
+# Downloads with curl.exe and reports the percentage while it runs
+function Get-Download([string]$url, [string]$out, [string[]]$curlArgs) {
+    $length = 0
+    try {
+        $head = & curl.exe -sIL $url --connect-timeout 10 2>$null
+        $m = [regex]::Matches(($head -join "`n"), '(?im)^content-length:\s*(\d+)')
+        if ($m.Count) { $length = [double]$m[$m.Count - 1].Groups[1].Value }
+    } catch {}
+    # A tiny size is the length of a redirect or error page, not of the installer: percent unknown
+    if ($length -lt 100KB) { $length = 0 }
+    Set-Progress download $(if ($length -gt 0) { 0 } else { -1 })
+    $p = Start-Process curl.exe -ArgumentList (@('-LSs', "`"$url`"", '-o', "`"$out`"") + $curlArgs) -WindowStyle Hidden -PassThru
+    $null = $p.Handle
+    while (!$p.HasExited) {
+        if ($length -gt 0 -and (Test-Path $out)) {
+            # Get-Item shows the size NTFS keeps in the folder, which stays 0 until curl closes the file.
+            # Opening the file (read only, shared with curl) gives the real size while it downloads.
+            $size = 0
+            try {
+                $fs = [IO.File]::Open($out, 'Open', 'Read', 'ReadWrite, Delete')
+                $size = $fs.Length
+                $fs.Close()
+            } catch {}
+            # Bigger than announced: the size was wrong, show the download without a percentage
+            if ($size -gt $length) { $length = 0; Set-Progress download } else { Set-Progress download ([int](100 * $size / $length)) }
+        }
+        Start-Sleep -Milliseconds 500
+    }
+    return ($p.ExitCode -eq 0 -and (Test-Path $out))
+}
 
 function Test-Installed {
     if ($info.Installed) { return [bool](& $info.Installed) }
@@ -141,6 +179,7 @@ if ($FromTask) {
 # exits and leaves Discord half installed. So wait until Discord is installed and its setup has ended.
 function Wait-DiscordSetup {
     if ($App -ne 'Discord') { return }
+    Set-Progress finish
     $deadline = (Get-Date).AddMinutes(5)
     do {
         Start-Sleep -Seconds 3
@@ -161,6 +200,7 @@ if ($App -eq 'Discord' -and (Test-Elevated)) {
         $principal = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive -RunLevel Limited
         Register-ScheduledTask -TaskName $task -Action $action -Principal $principal -Force | Out-Null
         Write-Output "Installing $App as $env:USERNAME (without admin rights)..."
+        Set-Progress user
         Start-ScheduledTask -TaskName $task
         Start-Sleep -Seconds 3
         $deadline = (Get-Date).AddMinutes(10)
@@ -181,6 +221,7 @@ if ($App -eq 'Discord' -and (Test-Path "$env:LOCALAPPDATA\Discord") -and !(Get-P
 
 # Runs an installer with the app's switches (hidden, silent), or without any (visible) when it has none
 function Start-Installer([string]$file) {
+    Set-Progress install
     if ($info.Args) { Start-Process -FilePath $file -ArgumentList $info.Args -WindowStyle Hidden -PassThru }
     else { Start-Process -FilePath $file -PassThru }
 }
@@ -205,6 +246,7 @@ if ($FromTask -and $info.Url -and (Test-Path $cached)) {
 # Try WinGet
 if (!$info.NoWinget -and (Get-Command winget -EA 0)) {
     Write-Output "Installing $App with WinGet..."
+    Set-Progress winget
     # --source winget: the apps are in the WinGet community repository, so the Microsoft Store is not needed
     $wingetArgs = @('install', '--id', $info.Id, '--exact', '--source', 'winget', '--silent', '--accept-package-agreements', '--accept-source-agreements', '--disable-interactivity')
     if ($info.Extra) { $wingetArgs += $info.Extra }
@@ -228,8 +270,7 @@ New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
 $file = "$tempDir\$App-Setup.exe"
 
 Write-Output "Downloading $App from the official site..."
-& curl.exe -LSs $info.Url -o $file $timeouts
-if ($? -and (Test-Path $file)) {
+if (Get-Download $info.Url $file $timeouts) {
     $proc = Start-Installer $file
     $null = $proc.Handle
     # Max 5 minutes so a stuck installer does not block setup

@@ -16,6 +16,10 @@ ImagesRootPath=%windir%\AtlasModules\Wallpapers
 Item0Path=%windir%\AtlasModules\Wallpapers\akatios-dark.png
 Item1Path=%windir%\AtlasModules\Wallpapers\akatios-light.png
 Item2Path=%windir%\AtlasModules\Wallpapers\akatios-lockscreen.png
+Item3Path=%windir%\AtlasModules\Wallpapers\akatios-aurora.png
+Item4Path=%windir%\AtlasModules\Wallpapers\akatios-sunset.png
+Item5Path=%windir%\AtlasModules\Wallpapers\akatios-ocean.png
+Item6Path=%windir%\AtlasModules\Wallpapers\akatios-mist.png
 
 [Control Panel\Cursors]
 AppStarting=%SystemRoot%\cursors\aero_working.ani

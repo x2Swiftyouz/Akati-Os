@@ -60,7 +60,14 @@ function Get-Download([string]$url, [string]$out, [string[]]$curlArgs) {
     $null = $p.Handle
     while (!$p.HasExited) {
         if ($length -gt 0 -and (Test-Path $out)) {
-            $size = (Get-Item $out).Length
+            # Get-Item shows the size NTFS keeps in the folder, which stays 0 until curl closes the file.
+            # Opening the file (read only, shared with curl) gives the real size while it downloads.
+            $size = 0
+            try {
+                $fs = [IO.File]::Open($out, 'Open', 'Read', 'ReadWrite, Delete')
+                $size = $fs.Length
+                $fs.Close()
+            } catch {}
             # Bigger than announced: the size was wrong, show the download without a percentage
             if ($size -gt $length) { $length = 0; Set-Progress download } else { Set-Progress download ([int](100 * $size / $length)) }
         }

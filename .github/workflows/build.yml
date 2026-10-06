@@ -101,6 +101,19 @@ jobs:
           Write-Host "Checked $($files.Count) files, $bad errors"
           if ($bad) { exit 1 }
 
+      - name: Check the Riot installer signature
+        # GAMEAPPS.ps1 runs the Riot installer only when it is signed by Riot Games. Warning only, so a
+        # download problem on Riot's side does not fail the build.
+        if: github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        shell: powershell
+        run: |
+          $file = "$env:RUNNER_TEMP\riot.exe"
+          curl.exe -LSs "https://valorant.secure.dyn.riotcdn.net/channels/public/x/installer/current/live.live.ap.exe" -o $file
+          $sig = Get-AuthenticodeSignature -FilePath $file
+          Write-Host "Size: $((Get-Item $file).Length) bytes; signature: $($sig.Status); signer: $($sig.SignerCertificate.Subject)"
+          if ($sig.Status -ne 'Valid' -or $sig.SignerCertificate.Subject -notlike '*Riot Games*') { Write-Host "::warning::The Riot installer is not signed by Riot Games"; exit 1 }
+
       - name: Render Akati OS Center screenshots
         shell: powershell
         run: |

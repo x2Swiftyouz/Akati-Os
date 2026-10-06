@@ -141,6 +141,71 @@
             </Setter>
         </Style>
 
+        <!-- App Store style buttons: gray capsule (Get, Open), accent capsule (Update) -->
+        <Style x:Key="Pill" TargetType="Button">
+            <Setter Property="Foreground" Value="{DynamicResource Accent2}"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Padding" Value="16,5"/>
+            <Setter Property="MinWidth" Value="84"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="#3A3A3C" CornerRadius="14" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#48484A"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.4"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="PillAccent" TargetType="Button" BasedOn="{StaticResource Pill}">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{DynamicResource Accent}" CornerRadius="14" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.88"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.4"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <!-- No background: the progress ring and the "..." button of an app -->
+        <Style x:Key="Bare" TargetType="Button">
+            <Setter Property="Foreground" Value="#D1D1D6"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="Transparent" CornerRadius="14" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#3A3A3C"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style x:Key="Action" TargetType="Button">
             <Setter Property="Foreground" Value="#EBEBF0"/>
             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
@@ -591,9 +656,9 @@
                         <StackPanel>
                             <TextBlock Tag="t:gaming.title" Text="Gaming apps" FontSize="24" FontWeight="Bold" Visibility="Collapsed"/>
                             <TextBlock Tag="t:gaming.sub" Text="Akati OS does not install apps during setup. Install them here, from official sources." Style="{StaticResource Muted}" Margin="0,4,0,18"/>
-                            <Border Style="{StaticResource Card}" Padding="8" Margin="0,0,0,16">
+                            <Border Style="{StaticResource Card}" Padding="8" Margin="0,0,0,20">
                                 <StackPanel>
-                                    <DockPanel Margin="14,8,14,6">
+                                    <DockPanel Margin="14,6,14,6">
                                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                                             <Button x:Name="CheckUpdatesButton" Style="{StaticResource Secondary}" Margin="0,0,8,0">
                                                 <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE895;" FontSize="13" Margin="0,0,8,0"/><TextBlock Tag="t:apps.check" Text="Check for updates"/></StackPanel>
@@ -607,14 +672,16 @@
                                         </StackPanel>
                                         <TextBlock x:Name="AppsHint" Tag="t:apps.hint" Text="Tick apps to install several at once." Style="{StaticResource Muted}" VerticalAlignment="Center" Margin="0,0,12,0"/>
                                     </DockPanel>
-                                    <StackPanel x:Name="AppsList"/>
                                 </StackPanel>
                             </Border>
+                            <!-- One section per category, filled by AkatiCenter.ps1 -->
+                            <StackPanel x:Name="AppsGroups"/>
+                            <TextBlock Tag="t:gpu.title" Text="GPU drivers" Style="{StaticResource Section}"/>
                             <Border Style="{StaticResource Card}" Margin="0,0,0,16">
                                 <StackPanel>
-                                    <TextBlock Tag="t:gpu.title" Text="GPU drivers" Style="{StaticResource CardTitle}"/>
-                                    <TextBlock Tag="t:gpu.sub" Text="Opens the official driver download page." Style="{StaticResource Muted}" Margin="0,4,0,4"/>
-                                    <TextBlock x:Name="GpuDetected" Text="" Foreground="{DynamicResource Accent2}" FontSize="12" Margin="0,0,0,14" TextWrapping="Wrap"/>
+                                    <TextBlock Tag="t:gpu.sub" Text="Opens the official driver download page." Style="{StaticResource Muted}" Margin="0,0,0,4"/>
+                                    <TextBlock x:Name="GpuDetected" Text="" Foreground="{DynamicResource Accent2}" FontSize="12" Margin="0,0,0,4" TextWrapping="Wrap"/>
+                                    <TextBlock x:Name="GpuDriver" Text="" Style="{StaticResource Muted}" FontSize="12" Margin="0,0,0,14"/>
                                     <StackPanel Orientation="Horizontal">
                                         <Button x:Name="GpuNvidia" Style="{StaticResource Secondary}" Content="NVIDIA" Margin="0,0,10,0" MinWidth="110"/>
                                         <Button x:Name="GpuAmd" Style="{StaticResource Secondary}" Content="AMD" Margin="0,0,10,0" MinWidth="110"/>

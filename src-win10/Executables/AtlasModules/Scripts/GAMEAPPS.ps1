@@ -33,6 +33,15 @@ $apps = @{
     Ubisoft   = @{ Id = 'Ubisoft.Connect' }
     BattleNet = @{ Id = 'Blizzard.BattleNet'; Extra = @('--location', "$env:ProgramFiles\Battle.net") }
     OBS       = @{ Id = 'OBSProject.OBSStudio' }
+    # Riot: WinGet only has full game packages, so the official VALORANT (Asia Pacific) installer from Riot is
+    # used. It has no silent switch: its window opens, the user clicks Install, and it installs Riot Client
+    # and VALORANT (League of Legends and TFT are added from Riot Client).
+    Riot      = @{ Id = 'RiotGames.Valorant.AP'; Url = 'https://valorant.secure.dyn.riotcdn.net/channels/public/x/installer/current/live.live.ap.exe'; NoWinget = $true
+                   Window = $true; Signer = 'Riot Games'
+                   Installed = { Test-Path "$env:SystemDrive\Riot Games\Riot Client\RiotClientServices.exe" } }
+    GOG       = @{ Id = 'GOG.Galaxy';             Installed = { Test-Path "${env:ProgramFiles(x86)}\GOG Galaxy\GalaxyClient.exe" } }
+    Rockstar  = @{ Id = 'RockstarGames.Launcher'; Installed = { Test-Path "$env:ProgramFiles\Rockstar Games\Launcher\Launcher.exe" } }
+    Afterburner = @{ Id = 'Guru3D.Afterburner';   Installed = { Test-Path "${env:ProgramFiles(x86)}\MSI Afterburner\MSIAfterburner.exe" } }
 }
 
 if (!$apps.ContainsKey($App)) { Write-Error "Unknown app: $App"; exit 0 }
@@ -221,7 +230,7 @@ if ($App -eq 'Discord' -and (Test-Path "$env:LOCALAPPDATA\Discord") -and !(Get-P
 
 # Runs an installer with the app's switches (hidden, silent), or without any (visible) when it has none
 function Start-Installer([string]$file) {
-    Set-Progress install
+    if ($info.Window) { Set-Progress window } else { Set-Progress install }
     if ($info.Args) { Start-Process -FilePath $file -ArgumentList $info.Args -WindowStyle Hidden -PassThru }
     else { Start-Process -FilePath $file -PassThru }
 }
@@ -271,10 +280,19 @@ $file = "$tempDir\$App-Setup.exe"
 
 Write-Output "Downloading $App from the official site..."
 if (Get-Download $info.Url $file $timeouts) {
+    # Run it only when it is signed by the app's publisher (for the apps that name one)
+    if ($info.Signer) {
+        $sig = Get-AuthenticodeSignature -FilePath $file
+        if ($sig.Status -ne 'Valid' -or $sig.SignerCertificate.Subject -notlike "*$($info.Signer)*") {
+            Write-Warning "The downloaded $App installer is not signed by $($info.Signer) ($($sig.Status)), not running it."
+            Remove-Item -Path $tempDir -Force -Recurse -EA 0
+            exit 0
+        }
+    }
     $proc = Start-Installer $file
     $null = $proc.Handle
-    # Max 5 minutes so a stuck installer does not block setup
-    if (!$proc.WaitForExit(300000)) { Write-Warning "$App installer timed out." } else { Write-Output "$App installer exit code: $($proc.ExitCode)" }
+    # Max 5 minutes so a stuck installer does not block setup (15 when the user has to click in its window)
+    if (!$proc.WaitForExit($(if ($info.Window) { 900000 } else { 300000 }))) { Write-Warning "$App installer timed out." } else { Write-Output "$App installer exit code: $($proc.ExitCode)" }
     Wait-DiscordSetup
     if (Test-Installed) { Write-Output "$App installed."; Remove-SignInTask } else { Write-Warning "$App is not fully installed." }
     Stop-AutoStartedApp

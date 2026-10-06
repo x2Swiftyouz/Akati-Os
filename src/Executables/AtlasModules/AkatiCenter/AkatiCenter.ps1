@@ -126,8 +126,20 @@ $strings = @{
         'update' = 'Update'; 'updating' = 'Updating...'; 'updateavailable' = 'Update available'; 'selfupdate' = 'updates itself'
         'apps.check' = 'Check for updates'; 'apps.updateall' = 'Update all'; 'apps.installselected' = 'Install selected'
         'apps.hint' = 'Tick apps to install several at once. They install one after another.'
+        'apps.cat.launchers' = 'Game launchers'; 'apps.cat.social' = 'Chat and streaming'; 'apps.cat.tools' = 'Tools'
+        'get' = 'Get'; 'open' = 'Open'; 'more' = 'More'; 'openfolder' = 'Open folder'; 'uninstall' = 'Uninstall'
+        'uninstall.confirm' = 'Uninstall {0}? Its own uninstaller opens.'; 'uninstalling' = 'Uninstalling, finish in its window...'
+        'status.opening' = 'Opening {0}'; 'status.uninstalled' = '{0} uninstalled'; 'status.nouninstaller' = 'No uninstaller found for {0}. Opening Apps and features.'
+        'app.desc.Steam' = 'The biggest PC game store and your Steam library'; 'app.desc.Epic' = 'Fortnite, Epic exclusives and free games every week'
+        'app.desc.EA' = 'EA SPORTS FC, Apex Legends, Battlefield and EA Play'; 'app.desc.Ubisoft' = "Assassin's Creed, Rainbow Six Siege and Ubisoft+"
+        'app.desc.BattleNet' = 'Overwatch 2, Diablo, World of Warcraft and Call of Duty'; 'app.desc.Riot' = 'Installs VALORANT (Asia Pacific). Add League of Legends and TFT in Riot Client'
+        'app.desc.GOG' = 'DRM-free games, and one library for all your stores'; 'app.desc.Rockstar' = 'GTA V, Red Dead Redemption 2 and Rockstar games'
+        'app.desc.Discord' = 'Voice, video and text chat with friends'; 'app.desc.OBS' = 'Record and stream your games'
+        'app.desc.Afterburner' = 'FPS, temperatures and GPU usage on screen while you play, and GPU tuning'
+        'gpu.driver' = '{0}: driver {1} from {2}'; 'gpu.old' = 'More than 6 months old, check for a newer driver.'
         'stage.winget' = 'Installing with WinGet...'; 'stage.download' = 'Downloading'; 'stage.install' = 'Installing...'
         'stage.user' = 'Installing for your account...'; 'stage.finish' = 'Finishing...'
+        'stage.window' = 'Click Install in its window to finish...'
         'status.cancelled' = '{0}: cancelled'; 'status.updating' = 'Updating {0}...'; 'status.updated' = '{0} updated'
         'status.updatefailed' = '{0} could not be updated'; 'status.checkingapps' = 'Checking WinGet for app updates...'
         'status.updatesfound' = '{0} update(s) available'; 'status.noupdates' = 'All apps are up to date'
@@ -258,8 +270,20 @@ $strings = @{
         'update' = 'อัปเดต'; 'updating' = 'กำลังอัปเดต...'; 'updateavailable' = 'มีอัปเดต'; 'selfupdate' = 'อัปเดตตัวเอง'
         'apps.check' = 'ตรวจอัปเดต'; 'apps.updateall' = 'อัปเดตทั้งหมด'; 'apps.installselected' = 'ติดตั้งที่เลือก'
         'apps.hint' = 'ติ๊กหลายแอปเพื่อติดตั้งทีเดียว ระบบจะติดตั้งให้ทีละตัว'
+        'apps.cat.launchers' = 'ตัวเปิดเกม'; 'apps.cat.social' = 'แชทและสตรีม'; 'apps.cat.tools' = 'เครื่องมือ'
+        'get' = 'ติดตั้ง'; 'open' = 'เปิด'; 'more' = 'เพิ่มเติม'; 'openfolder' = 'เปิดโฟลเดอร์'; 'uninstall' = 'ถอนการติดตั้ง'
+        'uninstall.confirm' = 'ถอนการติดตั้ง {0} ใช่ไหม ตัวถอนการติดตั้งของแอปจะเปิดขึ้นมา'; 'uninstalling' = 'กำลังถอนการติดตั้ง ทำต่อในหน้าต่างของแอป...'
+        'status.opening' = 'กำลังเปิด {0}'; 'status.uninstalled' = 'ถอนการติดตั้ง {0} แล้ว'; 'status.nouninstaller' = 'ไม่พบตัวถอนการติดตั้งของ {0} กำลังเปิด Apps and features'
+        'app.desc.Steam' = 'ร้านเกม PC ที่ใหญ่ที่สุด และคลังเกม Steam ของคุณ'; 'app.desc.Epic' = 'Fortnite, เกมเฉพาะ Epic และเกมฟรีทุกสัปดาห์'
+        'app.desc.EA' = 'EA SPORTS FC, Apex Legends, Battlefield และ EA Play'; 'app.desc.Ubisoft' = "Assassin's Creed, Rainbow Six Siege และ Ubisoft+"
+        'app.desc.BattleNet' = 'Overwatch 2, Diablo, World of Warcraft และ Call of Duty'; 'app.desc.Riot' = 'ติดตั้ง VALORANT (เอเชียแปซิฟิก) ส่วน League of Legends และ TFT เพิ่มได้ใน Riot Client'
+        'app.desc.GOG' = 'เกมไม่มี DRM และรวมคลังเกมจากทุกร้านไว้ที่เดียว'; 'app.desc.Rockstar' = 'GTA V, Red Dead Redemption 2 และเกมของ Rockstar'
+        'app.desc.Discord' = 'แชทเสียง วิดีโอ และข้อความกับเพื่อน'; 'app.desc.OBS' = 'อัดและสตรีมเกม'
+        'app.desc.Afterburner' = 'ดู FPS อุณหภูมิ และการใช้ GPU บนจอระหว่างเล่น และปรับแต่งการ์ดจอ'
+        'gpu.driver' = '{0}: ไดรเวอร์ {1} วันที่ {2}'; 'gpu.old' = 'เก่ากว่า 6 เดือน ลองดูว่ามีไดรเวอร์ใหม่กว่านี้ไหม'
         'stage.winget' = 'กำลังติดตั้งด้วย WinGet...'; 'stage.download' = 'กำลังดาวน์โหลด'; 'stage.install' = 'กำลังติดตั้ง...'
         'stage.user' = 'กำลังติดตั้งให้บัญชีของคุณ...'; 'stage.finish' = 'กำลังจบการติดตั้ง...'
+        'stage.window' = 'กด Install ในหน้าต่างของแอปเพื่อติดตั้งต่อ...'
         'status.cancelled' = '{0}: ยกเลิกแล้ว'; 'status.updating' = 'กำลังอัปเดต {0}...'; 'status.updated' = 'อัปเดต {0} แล้ว'
         'status.updatefailed' = 'อัปเดต {0} ไม่สำเร็จ'; 'status.checkingapps' = 'กำลังตรวจอัปเดตแอปจาก WinGet...'
         'status.updatesfound' = 'มีอัปเดต {0} รายการ'; 'status.noupdates' = 'แอปทั้งหมดเป็นเวอร์ชันล่าสุด'
@@ -377,6 +401,7 @@ function Set-Language {
 }
 
 function Set-Status([string]$text, [bool]$busy = $false) {
+    $script:statusBusy = $busy
     $ui.StatusText.Text = $text
     $ui.StatusDot.Fill = if ($busy) { $window.FindResource('Accent2') } else { $window.FindResource('Good') }
 }
@@ -653,22 +678,36 @@ function Show-TopApps {
 # Gaming apps
 # ---------------------------------------------------------------------------------------------
 # Id: WinGet package (used for updates). SelfUpdate: the app updates itself. Exe: where its icon comes from.
+# Cat: section on the page. Mono and Color: the tile shown until the app is installed (then its own icon).
+# Arp: the DisplayName of its entry in Apps & features, for Uninstall.
 $apps = @(
-    @{ Key = 'Steam';     Name = 'Steam';               Glyph = [char]0xE7FC; Path = "${env:ProgramFiles(x86)}\Steam\steam.exe"; SelfUpdate = $true
-       Exe = @("${env:ProgramFiles(x86)}\Steam\steam.exe") }
-    @{ Key = 'Discord';   Name = 'Discord';             Glyph = [char]0xE8BD; Path = "$env:LOCALAPPDATA\Discord\packages\RELEASES"; SelfUpdate = $true
-       Exe = @("$env:LOCALAPPDATA\Discord\app-*\Discord.exe") }
-    @{ Key = 'Epic';      Name = 'Epic Games Launcher'; Glyph = [char]0xE7FC; Path = "${env:ProgramFiles(x86)}\Epic Games\Launcher"; Id = 'EpicGames.EpicGamesLauncher'
+    @{ Key = 'Steam';      Cat = 'launchers'; Name = 'Steam';                   Mono = 'S';  Color = '#2A475E'; Arp = 'Steam'; SelfUpdate = $true
+       Path = "${env:ProgramFiles(x86)}\Steam\steam.exe"; Exe = @("${env:ProgramFiles(x86)}\Steam\steam.exe") }
+    @{ Key = 'Epic';       Cat = 'launchers'; Name = 'Epic Games Launcher';     Mono = 'E';  Color = '#4A4A4F'; Arp = 'Epic Games Launcher'; Id = 'EpicGames.EpicGamesLauncher'
+       Path = "${env:ProgramFiles(x86)}\Epic Games\Launcher"
        Exe = @("${env:ProgramFiles(x86)}\Epic Games\Launcher\Portal\Binaries\Win64\EpicGamesLauncher.exe", "${env:ProgramFiles(x86)}\Epic Games\Launcher\Portal\Binaries\Win32\EpicGamesLauncher.exe") }
-    @{ Key = 'EA';        Name = 'EA app';              Glyph = [char]0xE7FC; Path = "$env:ProgramFiles\Electronic Arts\EA Desktop"; Id = 'ElectronicArts.EADesktop'
-       Exe = @("$env:ProgramFiles\Electronic Arts\EA Desktop\EA Desktop\EADesktop.exe") }
-    @{ Key = 'Ubisoft';   Name = 'Ubisoft Connect';     Glyph = [char]0xE7FC; Path = "${env:ProgramFiles(x86)}\Ubisoft\Ubisoft Game Launcher"; Id = 'Ubisoft.Connect'
+    @{ Key = 'EA';         Cat = 'launchers'; Name = 'EA app';                  Mono = 'EA'; Color = '#E5383B'; Arp = 'EA app'; Id = 'ElectronicArts.EADesktop'
+       Path = "$env:ProgramFiles\Electronic Arts\EA Desktop"; Exe = @("$env:ProgramFiles\Electronic Arts\EA Desktop\EA Desktop\EADesktop.exe") }
+    @{ Key = 'Ubisoft';    Cat = 'launchers'; Name = 'Ubisoft Connect';         Mono = 'U';  Color = '#0A6CD6'; Arp = 'Ubisoft Connect'; Id = 'Ubisoft.Connect'
+       Path = "${env:ProgramFiles(x86)}\Ubisoft\Ubisoft Game Launcher"
        Exe = @("${env:ProgramFiles(x86)}\Ubisoft\Ubisoft Game Launcher\UbisoftConnect.exe", "${env:ProgramFiles(x86)}\Ubisoft\Ubisoft Game Launcher\upc.exe") }
-    @{ Key = 'BattleNet'; Name = 'Battle.net';          Glyph = [char]0xE7FC; Path = "$env:ProgramFiles\Battle.net"; Path2 = "${env:ProgramFiles(x86)}\Battle.net"; Id = 'Blizzard.BattleNet'
+    @{ Key = 'BattleNet';  Cat = 'launchers'; Name = 'Battle.net';              Mono = 'B';  Color = '#148EFF'; Arp = 'Battle.net'; Id = 'Blizzard.BattleNet'
+       Path = "$env:ProgramFiles\Battle.net"; Path2 = "${env:ProgramFiles(x86)}\Battle.net"
        Exe = @("$env:ProgramFiles\Battle.net\Battle.net Launcher.exe", "${env:ProgramFiles(x86)}\Battle.net\Battle.net Launcher.exe", "$env:ProgramFiles\Battle.net\Battle.net.exe") }
-    @{ Key = 'OBS';       Name = 'OBS Studio';          Glyph = [char]0xE714; Path = "$env:ProgramFiles\obs-studio"; Id = 'OBSProject.OBSStudio'
-       Exe = @("$env:ProgramFiles\obs-studio\bin\64bit\obs64.exe") }
+    @{ Key = 'Riot';       Cat = 'launchers'; Name = 'Riot Client (VALORANT)';  Mono = 'R';  Color = '#D13639'; Arp = 'VALORANT'; SelfUpdate = $true
+       Path = "$env:SystemDrive\Riot Games\Riot Client\RiotClientServices.exe"; Exe = @("$env:SystemDrive\Riot Games\Riot Client\RiotClientServices.exe") }
+    @{ Key = 'GOG';        Cat = 'launchers'; Name = 'GOG GALAXY';              Mono = 'G';  Color = '#86328A'; Arp = 'GOG GALAXY*'; Id = 'GOG.Galaxy'
+       Path = "${env:ProgramFiles(x86)}\GOG Galaxy\GalaxyClient.exe"; Exe = @("${env:ProgramFiles(x86)}\GOG Galaxy\GalaxyClient.exe") }
+    @{ Key = 'Rockstar';   Cat = 'launchers'; Name = 'Rockstar Games Launcher'; Mono = 'R'; Color = '#C98A0B'; Arp = 'Rockstar Games Launcher'; Id = 'RockstarGames.Launcher'
+       Path = "$env:ProgramFiles\Rockstar Games\Launcher\Launcher.exe"; Exe = @("$env:ProgramFiles\Rockstar Games\Launcher\Launcher.exe") }
+    @{ Key = 'Discord';    Cat = 'social';    Name = 'Discord';                 Mono = 'D';  Color = '#5865F2'; Arp = 'Discord'; SelfUpdate = $true
+       Path = "$env:LOCALAPPDATA\Discord\packages\RELEASES"; Exe = @("$env:LOCALAPPDATA\Discord\app-*\Discord.exe") }
+    @{ Key = 'OBS';        Cat = 'social';    Name = 'OBS Studio';              Mono = 'O';  Color = '#5C5C66'; Arp = 'OBS Studio*'; Id = 'OBSProject.OBSStudio'
+       Path = "$env:ProgramFiles\obs-studio"; Exe = @("$env:ProgramFiles\obs-studio\bin\64bit\obs64.exe") }
+    @{ Key = 'Afterburner'; Cat = 'tools';    Name = 'MSI Afterburner';         Mono = 'A';  Color = '#B3202A'; Arp = 'MSI Afterburner*'; Id = 'Guru3D.Afterburner'
+       Path = "${env:ProgramFiles(x86)}\MSI Afterburner\MSIAfterburner.exe"; Exe = @("${env:ProgramFiles(x86)}\MSI Afterburner\MSIAfterburner.exe") }
 )
+$appCats = 'launchers', 'social', 'tools'
 
 function New-Text([string]$text, [double]$size = 13, [string]$weight = 'Normal', [string]$tag = $null) {
     $tb = New-Object System.Windows.Controls.TextBlock
@@ -747,6 +786,50 @@ function Test-App($app) {
     return $false
 }
 
+# App Store style progress ring on the button: the arc shows the percentage, the square means Stop.
+# Unknown percentage: a short arc that turns. Waiting in the queue: the ring without an arc.
+function New-Ring {
+    $grid = New-Object System.Windows.Controls.Grid
+    $grid.Width = 28; $grid.Height = 28
+    $track = New-Object System.Windows.Shapes.Ellipse
+    $track.Stroke = '#48484A'; $track.StrokeThickness = 2.5
+    $arc = New-Object System.Windows.Shapes.Path
+    $arc.StrokeThickness = 2.5; $arc.StrokeStartLineCap = 'Round'; $arc.StrokeEndLineCap = 'Round'
+    $arc.SetResourceReference([System.Windows.Shapes.Shape]::StrokeProperty, 'Accent2')
+    $spin = New-Object System.Windows.Media.RotateTransform
+    $arc.RenderTransformOrigin = '0.5,0.5'; $arc.RenderTransform = $spin
+    $stop = New-Object System.Windows.Shapes.Rectangle
+    $stop.Width = 8; $stop.Height = 8; $stop.RadiusX = 1.5; $stop.RadiusY = 1.5
+    $stop.SetResourceReference([System.Windows.Shapes.Shape]::FillProperty, 'Accent2')
+    [void]$grid.Children.Add($track); [void]$grid.Children.Add($arc); [void]$grid.Children.Add($stop)
+    return @{ Root = $grid; Arc = $arc; Spin = $spin; Spinning = $false }
+}
+# $percent: 0-100, -1 unknown (turning), -2 waiting (no arc)
+function Set-Ring($ring, [int]$percent) {
+    $turn = $percent -eq -1
+    if ($turn -ne $ring.Spinning) {
+        if ($turn) {
+            $anim = New-Object System.Windows.Media.Animation.DoubleAnimation 0, 360, (New-Object System.Windows.Duration ([TimeSpan]::FromSeconds(1)))
+            $anim.RepeatBehavior = [System.Windows.Media.Animation.RepeatBehavior]::Forever
+            $ring.Spin.BeginAnimation([System.Windows.Media.RotateTransform]::AngleProperty, $anim)
+        } else { $ring.Spin.BeginAnimation([System.Windows.Media.RotateTransform]::AngleProperty, $null); $ring.Spin.Angle = 0 }
+        $ring.Spinning = $turn
+    }
+    if ($percent -eq -2) { $ring.Arc.Data = $null; return }
+    $value = if ($turn) { 25 } else { [Math]::Max(2, [Math]::Min(100, $percent)) }
+    $r = 12.75; $c = 14
+    if ($value -ge 100) { $ring.Arc.Data = New-Object System.Windows.Media.EllipseGeometry (New-Object System.Windows.Point $c, $c), $r, $r; return }
+    $a = [Math]::PI * 2 * $value / 100
+    $end = New-Object System.Windows.Point ($c + $r * [Math]::Sin($a)), ($c - $r * [Math]::Cos($a))
+    $seg = New-Object System.Windows.Media.ArcSegment $end, (New-Object System.Windows.Size $r, $r), 0, ($value -gt 50), ([System.Windows.Media.SweepDirection]::Clockwise), $true
+    $fig = New-Object System.Windows.Media.PathFigure
+    $fig.StartPoint = New-Object System.Windows.Point $c, ($c - $r)
+    $fig.Segments.Add($seg)
+    $geo = New-Object System.Windows.Media.PathGeometry
+    $geo.Figures.Add($fig)
+    $ring.Arc.Data = $geo
+}
+
 # State of a row: idle, queued, install, update. Only one install or update runs at a time
 # (installers and WinGet do not like to run side by side), the others wait in the queue.
 $progressDir = Join-Path $env:LOCALAPPDATA 'AkatiOS\Logs'
@@ -757,28 +840,91 @@ function Update-AppRow($app) {
     $busy = $app.State -ne 'idle'
     $app.Check.Visibility = if ($installed -or $busy) { 'Hidden' } else { 'Visible' }
     if ($installed -or $busy) { $app.Check.IsChecked = $false }
-    switch ($app.State) {
-        'install' { $btn.Content = T 'cancel'; $btn.Style = $window.FindResource('Secondary'); $btn.IsEnabled = $true; $app.Bar.Visibility = 'Visible'; return }
-        'update'  { $btn.Content = T 'cancel'; $btn.Style = $window.FindResource('Secondary'); $btn.IsEnabled = $true; $app.Bar.Visibility = 'Visible'; $app.Bar.IsIndeterminate = $true; $app.Sub.Text = T 'updating'; return }
-        'queued'  { $btn.Content = T 'cancel'; $btn.Style = $window.FindResource('Secondary'); $btn.IsEnabled = $true; $app.Bar.Visibility = 'Collapsed'; $app.Sub.Text = T 'queued'; $app.Sub.Foreground = $window.FindResource('MutedBrush'); return }
-    }
+    $app.More.Visibility = if ($installed -and !$busy -and !$app.Uninstalling) { 'Visible' } else { 'Collapsed' }
     $app.Bar.Visibility = 'Collapsed'
-    $btn.Style = $window.FindResource('Primary')
-    if ($installed -and $app.HasUpdate) {
+    if ($busy) {
+        $btn.Style = $window.FindResource('Bare'); $btn.Padding = '4'; $btn.MinWidth = 0; $btn.Content = $app.Ring.Root; $btn.IsEnabled = $true
+        $btn.ToolTip = T 'cancel'
+        switch ($app.State) {
+            'update' { Set-Ring $app.Ring -1; $app.Sub.Text = T 'updating'; $app.Sub.Foreground = $window.FindResource('Accent2') }
+            'queued' { Set-Ring $app.Ring -2; $app.Sub.Text = T 'queued'; $app.Sub.Foreground = $window.FindResource('MutedBrush') }
+        }
+        return
+    }
+    Set-Ring $app.Ring -2
+    $btn.ToolTip = $null; $btn.ClearValue([System.Windows.Controls.Control]::PaddingProperty); $btn.ClearValue([System.Windows.FrameworkElement]::MinWidthProperty)
+    $btn.IsEnabled = !$app.Uninstalling
+    if ($app.Uninstalling) {
+        $app.Sub.Text = T 'uninstalling'; $app.Sub.Foreground = $window.FindResource('Accent2')
+        $btn.Style = $window.FindResource('Pill'); $btn.Content = T 'open'
+    } elseif ($installed -and $app.HasUpdate) {
         $app.Sub.Text = T 'updateavailable'; $app.Sub.Foreground = $window.FindResource('Accent2')
-        $btn.Content = T 'update'; $btn.IsEnabled = $true
+        $btn.Style = $window.FindResource('PillAccent'); $btn.Content = T 'update'
     } elseif ($installed) {
         $app.Sub.Text = if ($app.SelfUpdate) { (T 'installed') + ' · ' + (T 'selfupdate') } else { T 'installed' }
         $app.Sub.Foreground = $window.FindResource('Good')
-        $btn.Content = T 'installed'; $btn.IsEnabled = $false
+        $btn.Style = $window.FindResource('Pill'); $btn.Content = T 'open'
     } else {
-        $app.Sub.Text = T 'notinstalled'; $app.Sub.Foreground = $window.FindResource('MutedBrush')
-        $btn.Content = T 'install'; $btn.IsEnabled = $true
+        $app.Sub.Text = T "app.desc.$($app.Key)"; $app.Sub.Foreground = $window.FindResource('MutedBrush')
+        $btn.Style = $window.FindResource('Pill'); $btn.Content = T 'get'
     }
     if ($installed -and !$app.HasIcon) {
         $image = Get-FileIcon $app.Exe
-        if ($image) { Set-RowIcon $app.RowParts $image; $app.HasIcon = $true }
+        if ($image) { $app.RowParts.Icon.Background = '#3A3A3C'; Set-RowIcon $app.RowParts $image; $app.HasIcon = $true }
+    } elseif (!$installed -and $app.HasIcon) {
+        # Uninstalled: back to the letter tile
+        $app.RowParts.Icon.Background = $app.Color; $app.RowParts.Icon.Child = $app.Tile; $app.HasIcon = $false
     }
+}
+
+# Opens an installed app as the signed-in user (through Explorer), not as administrator like this window
+function Get-AppExe($app) {
+    foreach ($pattern in $app.Exe) {
+        $file = Get-Item -Path $pattern -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+        if ($file) { return $file.FullName }
+    }
+    return $null
+}
+function Open-App($app) {
+    $exe = Get-AppExe $app
+    if (!$exe) { return }
+    Start-Process explorer.exe -ArgumentList "`"$exe`""
+    Set-Status ((T 'status.opening') -f $app.Name)
+}
+function Open-AppFolder($app) {
+    $exe = Get-AppExe $app
+    $folder = if ($exe) { Split-Path $exe -Parent } elseif (Test-Path -LiteralPath $app.Path -PathType Container) { $app.Path } else { $null }
+    if ($folder) { Start-Process explorer.exe -ArgumentList "`"$folder`"" }
+}
+# Uninstall runs the app's own uninstaller from its entry in Apps & features (it shows its own window)
+function Find-Uninstaller($app) {
+    foreach ($root in 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall', 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall', 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall') {
+        foreach ($key in @(Get-ChildItem -Path $root -ErrorAction SilentlyContinue)) {
+            $entry = Get-ItemProperty -LiteralPath $key.PSPath -ErrorAction SilentlyContinue
+            if ($entry.DisplayName -like $app.Arp -and $entry.UninstallString) { return [string]$entry.UninstallString }
+        }
+    }
+    return $null
+}
+function Start-Uninstall($app) {
+    $answer = [System.Windows.MessageBox]::Show(((T 'uninstall.confirm') -f $app.Name), 'Akati OS Center', 'YesNo', 'Question')
+    if ($answer -ne 'Yes') { return }
+    $command = Find-Uninstaller $app
+    if (!$command) { Set-Status ((T 'status.nouninstaller') -f $app.Name); Start-Process 'ms-settings:appsfeatures'; return }
+    $app.Uninstalling = $true
+    Update-AppRow $app
+    Set-Status ((T 'uninstalling')) $true
+    Start-Work {
+        param($command)
+        # cmd.exe runs the command line exactly as Apps & features would (quotes and switches included)
+        $p = Start-Process cmd.exe -ArgumentList "/c `"$command`"" -WindowStyle Hidden -PassThru
+        $p.WaitForExit()
+    } @($command) {
+        param($r, $app)
+        $app.Uninstalling = $false
+        if (Test-App $app) { Set-Status (T 'ready') } else { Set-Status ((T 'status.uninstalled') -f $app.Name) }
+        Update-AppRow $app; Update-AppsToolbar
+    } $app
 }
 
 function Update-AppsToolbar {
@@ -797,7 +943,7 @@ function Start-NextApp {
     $next.Shared = [hashtable]::Synchronized(@{ Pid = 0 })
     $progressFile = Join-Path $progressDir "GAMEAPPS-$($next.Key).progress"
     Remove-Item -LiteralPath $progressFile -Force -ErrorAction SilentlyContinue
-    $next.Bar.IsIndeterminate = $true; $next.Bar.Value = 0
+    Set-Ring $next.Ring -1
     $next.Sub.Text = if ($mode -eq 'update') { T 'updating' } else { T 'preparing' }
     $next.Sub.Foreground = $window.FindResource('Accent2')
     Update-AppRow $next
@@ -872,35 +1018,71 @@ function Update-AppProgress {
             if ($stage -eq 'finish') { Start-NextApp }
         }
         if ($stage -eq 'download' -and $percent -ge 0) {
-            $app.Bar.IsIndeterminate = $false; $app.Bar.Value = $percent
+            Set-Ring $app.Ring $percent
             $app.Sub.Text = (T 'stage.download') + " $percent%"
         } else {
-            $app.Bar.IsIndeterminate = $true
+            Set-Ring $app.Ring -1
             $app.Sub.Text = T "stage.$stage"
         }
     }
 }
 
+# One gray heading and one grouped list per category
+$appLists = @{}
+foreach ($cat in $appCats) {
+    $head = New-Text (T "apps.cat.$cat") 13 'SemiBold' "t:apps.cat.$cat"
+    $head.Style = $window.FindResource('Section')
+    $card = New-Object System.Windows.Controls.Border
+    $card.Style = $window.FindResource('Card'); $card.Padding = '0'; $card.Margin = '0,0,0,20'
+    $list = New-Object System.Windows.Controls.StackPanel
+    $card.Child = $list
+    [void]$ui.AppsGroups.Children.Add($head); [void]$ui.AppsGroups.Children.Add($card)
+    $appLists[$cat] = $list
+}
 foreach ($app in $apps) {
     $btn = New-Object System.Windows.Controls.Button
-    $btn.Style = $window.FindResource('Primary'); $btn.MinWidth = 120
+    $btn.Style = $window.FindResource('Pill')
+    $more = New-Object System.Windows.Controls.Button
+    $more.Style = $window.FindResource('Bare'); $more.Padding = '7'; $more.Margin = '0,0,8,0'; $more.ToolTip = T 'more'
+    $dots = New-Text ([string][char]0xE712) 14; $dots.Style = $window.FindResource('Glyph'); $more.Content = $dots
+    $right = New-Object System.Windows.Controls.StackPanel; $right.Orientation = 'Horizontal'
+    [void]$right.Children.Add($more); [void]$right.Children.Add($btn)
     $check = New-Object System.Windows.Controls.CheckBox
     $check.Style = $window.FindResource('Tick')
     $check.Add_Click({ Update-AppsToolbar })
-    $row = New-Row ([string]$app.Glyph) $app.Name $null $btn $null $check
-    $app.Sub = $row.Sub; $app.Button = $btn; $app.Check = $check; $app.Bar = $row.Bar; $app.RowParts = $row
-    $app.State = 'idle'; $app.HasUpdate = $false
-    $btn.Tag = $app
+    $row = New-Row ([string][char]0xE7FC) $app.Name $null $right $null $check
+    # Letter tile until the app is installed (no logos)
+    $tile = New-Text $app.Mono $(if ($app.Mono.Length -gt 1) { 11 } else { 14 }) 'Bold'
+    $tile.Foreground = 'White'; $tile.HorizontalAlignment = 'Center'; $tile.VerticalAlignment = 'Center'
+    $row.Icon.Background = $app.Color; $row.Icon.Child = $tile
+    $app.Tile = $tile; $app.Ring = New-Ring
+    $app.Sub = $row.Sub; $app.Button = $btn; $app.More = $more; $app.Check = $check; $app.Bar = $row.Bar; $app.RowParts = $row
+    $app.State = 'idle'; $app.HasUpdate = $false; $app.Uninstalling = $false
+    $btn.Tag = $app; $more.Tag = $app
     $btn.Add_Click({
         $a = $this.Tag
         if ($a.State -ne 'idle') { Stop-AppJob $a; return }
-        if ((Test-App $a) -and $a.HasUpdate) { Add-AppToQueue $a 'update' } else { Add-AppToQueue $a 'install' }
+        if (Test-App $a) { if ($a.HasUpdate) { Add-AppToQueue $a 'update' } else { Open-App $a } } else { Add-AppToQueue $a 'install' }
     })
-    [void]$ui.AppsList.Children.Add($row.Row)
+    $more.Add_Click({
+        $a = $this.Tag
+        $menu = New-Object System.Windows.Controls.ContextMenu
+        $menu.Background = '#2C2C2E'; $menu.Foreground = '#EBEBF0'; $menu.BorderBrush = '#48484A'
+        foreach ($item in @(@{ Text = T 'openfolder'; Action = 'folder' }, @{ Text = T 'uninstall'; Action = 'uninstall' })) {
+            $mi = New-Object System.Windows.Controls.MenuItem
+            $mi.Header = $item.Text; $mi.Tag = @{ App = $a; Action = $item.Action }; $mi.Foreground = '#EBEBF0'
+            $mi.Add_Click({ if ($this.Tag.Action -eq 'folder') { Open-AppFolder $this.Tag.App } else { Start-Uninstall $this.Tag.App } })
+            [void]$menu.Items.Add($mi)
+        }
+        $menu.PlacementTarget = $this; $menu.Placement = 'Bottom'; $menu.IsOpen = $true
+    })
+    [void]$appLists[$app.Cat].Children.Add($row.Row)
     Update-AppRow $app
 }
 Update-AppsToolbar
-Update-Separators $ui.AppsList
+foreach ($list in $appLists.Values) { Update-Separators $list }
+# Installed or uninstalled outside this window: look again when the window comes back to the front
+$window.Add_Activated({ foreach ($a in $apps) { if ($a.State -eq 'idle' -and !$a.Uninstalling) { Update-AppRow $a } }; Update-AppsToolbar })
 
 $ui.InstallSelectedButton.Add_Click({
     foreach ($a in $apps) { if ($a.Check.IsChecked -and $a.State -eq 'idle') { $a.Check.IsChecked = $false; Add-AppToQueue $a 'install' } }
@@ -943,7 +1125,8 @@ $ui.CheckUpdatesButton.Add_Click({
 })
 
 # GPU drivers: highlight the vendor of the graphics card in this PC
-$gpuNames = @(try { Get-CimInstance Win32_VideoController | Where-Object { $_.Name -notmatch 'Basic Display|Remote|Virtual|VMware|Hyper-V|Parsec' } | ForEach-Object { $_.Name } } catch { })
+$gpus = @(try { Get-CimInstance Win32_VideoController | Where-Object { $_.Name -notmatch 'Basic Display|Remote|Virtual|VMware|Hyper-V|Parsec' } } catch { })
+$gpuNames = @($gpus | ForEach-Object { $_.Name })
 $gpuVendors = @{ GpuNvidia = 'NVIDIA|GeForce|Quadro|RTX|GTX'; GpuAmd = 'AMD|Radeon|ATI '; GpuIntel = 'Intel|Arc ' }
 $script:gpuFound = @()
 foreach ($k in $gpuVendors.Keys) {
@@ -953,6 +1136,18 @@ foreach ($k in $gpuVendors.Keys) {
 }
 function Update-GpuText {
     $ui.GpuDetected.Text = if ($gpuNames.Count) { (T 'gpu.detected') -f ($gpuNames -join ', ') } else { T 'gpu.none' }
+    # Installed driver version and date; older than about 6 months: a hint to look for a newer one
+    $culture = [Globalization.CultureInfo]::GetCultureInfo($(if ($lang -eq 'th') { 'th-TH' } else { 'en-US' }))
+    $lines = @(); $old = $false
+    foreach ($g in $gpus) {
+        if (!$g.DriverVersion -or !$g.DriverDate) { continue }
+        $lines += (T 'gpu.driver') -f $g.Name, $g.DriverVersion, $g.DriverDate.ToString('d MMMM yyyy', $culture)
+        if (((Get-Date) - $g.DriverDate).TotalDays -gt 180) { $old = $true }
+    }
+    if ($old) { $lines += T 'gpu.old' }
+    $ui.GpuDriver.Text = $lines -join "`n"
+    $ui.GpuDriver.Visibility = if ($lines.Count) { 'Visible' } else { 'Collapsed' }
+    if ($old) { $ui.GpuDriver.Foreground = '#FF9F0A' } else { $ui.GpuDriver.Foreground = $window.FindResource('MutedBrush') }
 }
 Update-GpuText
 $ui.GpuNvidia.Add_Click({ Start-Process 'https://www.nvidia.com/en-us/drivers/' })
@@ -2101,6 +2296,8 @@ function Show-Page([string]$name) {
         }
     }
     $ui.PageTitle.Text = T "nav.$name"
+    # A finished message belongs to the page it came from; work that still runs keeps its message
+    if (!$script:statusBusy) { Set-Status (T 'ready') }
     if ($name -eq 'cleaner' -and $ui.CleanTotal.Text -eq '-') { Start-Scan }
     if ($name -eq 'boost') { Update-BoostCard }
 }
@@ -2247,14 +2444,14 @@ if ($Screenshot) {
             if ($p -eq 'cleaner') { $ui.CleanTotal.Text = '0 KB' }
             if ($p -eq 'gaming') {
                 # Show the progress bar and queue states once
-                $apps[2].State = 'install'; $apps[2].Bar.IsIndeterminate = $false; $apps[2].Bar.Value = 45; $apps[2].Sub.Text = (T 'stage.download') + ' 45%'; Update-AppRow $apps[2]
+                $apps[2].State = 'install'; Update-AppRow $apps[2]; Set-Ring $apps[2].Ring 45; $apps[2].Sub.Text = (T 'stage.download') + ' 45%'; $apps[2].Sub.Foreground = $window.FindResource('Accent2')
                 $apps[3].State = 'queued'; Update-AppRow $apps[3]
                 $apps[4].Check.IsChecked = $true; Update-AppsToolbar
             }
             if ($p -eq 'tweaks') { $ui.SystemList.Measure((New-Object System.Windows.Size 800, 10000)) }
             Save-Shot "$p-$l.png"
             if ($p -eq 'gaming') { foreach ($i in 2, 3) { $apps[$i].State = 'idle'; Update-AppRow $apps[$i] }; $apps[4].Check.IsChecked = $false }
-            if ($p -eq 'appearance' -or $p -eq 'tweaks' -or $p -eq 'boost') {
+            if ($p -eq 'appearance' -or $p -eq 'tweaks' -or $p -eq 'boost' -or $p -eq 'gaming') {
                 # The lower part of long pages
                 $sv = $ui["Page$(Get-PageId $p)"]
                 $sv.UpdateLayout(); $sv.ScrollToVerticalOffset(100000); $sv.UpdateLayout()

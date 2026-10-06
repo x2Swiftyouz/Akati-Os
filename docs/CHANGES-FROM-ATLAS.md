@@ -34,7 +34,7 @@ W11 = Windows 11 playbook, W10 = Windows 10 playbook.
 |---|---|---|
 | `playbook.conf` | W11, W10 | Name (`AkatiOS` / `AkatiOS10`), title, version, own UniqueId, descriptions, own Git and install guide links, AtlasOS website/donate/Git links removed, "Learn more" links point to [OPTIONS.md](OPTIONS.md); `IsChecked` defaults; anti-cheat warnings; Remove Microsoft Store page (no gaming app pages: apps are installed from Akati OS Center). W11: `UpgradableFrom` removed, build 26300 added, OOBE text. W10: build 19045 only, Windows 10 end of support warning |
 | `playbook.png`, `Executables/user.png` | W11, W10 | Akati OS images |
-| `Configuration/custom.yml` | W11, W10 | Runs `tweaks\misc\akati-extras.yml` after `atlas\start.yml`; opens Task Manager (`taskmgr.exe`, as the signed-in user) after Explorer is restarted, so the user can watch the setup. W11: one status text |
+| `Configuration/custom.yml` | W11, W10 | Runs `tweaks\misc\akati-extras.yml` after `atlas\start.yml`; opens Task Manager (`Start-Process Taskmgr.exe`, elevated as the signed-in user, because Task Manager needs admin rights) after Explorer is restarted, so the user can watch the setup. W11: one status text |
 | `Configuration/atlas/start.yml` | W11 | One status text |
 | `Configuration/tweaks/misc/config-oem-information.yml` | W11, W10 | Shows "Akati OS" version, AtlasOS support links removed, writes the version to `HKLM\SOFTWARE\AkatiOS` (used by the update checker) |
 | `Configuration/tweaks/qol/appearance/atlas-theme.yml` | W11, W10 | Default theme is `akatios-dark.theme` |

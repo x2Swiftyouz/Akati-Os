@@ -15,13 +15,28 @@ Akati OS is based on [AtlasOS](https://github.com/Atlas-OS/Atlas) v0.5.0 (Window
 Akati OS คือ playbook สำหรับ Windows 11 เน้นเล่นเกม ความเป็นส่วนตัว ลบแอปที่ไม่ใช้ และธีมของตัวเอง ดัดแปลงจาก AtlasOS v0.5.0 (GPL-3.0) ไม่ใช่โปรเจกต์ทางการของ AtlasOS
 
 - โหลดไฟล์ `.apbx` จากหน้า [Releases](../../releases/latest) แล้วตรวจ SHA256 ก่อนใช้ (ดูวิธีด้านล่าง)
-- Windows 11 ใช้ `AkatiOS_v<เวอร์ชัน>.apbx` ส่วน Windows 10 22H2 ใช้ `AkatiOS-Win10_v<เวอร์ชัน>.apbx` (Windows 10 หมดซัพพอร์ตแล้ว ถ้าลง Windows 11 ได้ให้ใช้ Windows 11)
+- Windows 11 ใช้ `AkatiOS-Win11_v<เวอร์ชัน>.apbx` ส่วน Windows 10 22H2 ใช้ `AkatiOS-Win10_v<เวอร์ชัน>.apbx` (Windows 10 หมดซัพพอร์ตแล้ว ถ้าลง Windows 11 ได้ให้ใช้ Windows 11)
 - **สำรองไฟล์ก่อน** ย้อนกลับไม่ได้ทั้งหมด ถ้าจะกลับต้องลง Windows ใหม่
 - ทดสอบใน VM ก่อนใช้กับเครื่องจริง ดู [docs/TESTING.md](docs/TESTING.md)
 
+### ไฟล์ไหนใช้กับ Windows อะไร
+
+| | Windows 11 | Windows 10 |
+|---|---|---|
+| ไฟล์ | `AkatiOS-Win11_v<เวอร์ชัน>.apbx` | `AkatiOS-Win10_v<เวอร์ชัน>.apbx` |
+| ชื่อใน AME Wizard | **AkatiOS11**, "Akati OS v<เวอร์ชัน> for Windows 11" | **AkatiOS10**, "Akati OS v<เวอร์ชัน> for Windows 10" |
+| Windows ที่รองรับ | 24H2 (build 26100), 25H2 (26200), 26H2 (26300) | 22H2 (build 19045) เท่านั้น |
+| ต้องลง Windows ใหม่ก่อน | แนะนำ | ต้อง (AME Wizard ตรวจ) |
+
+เช็กเวอร์ชัน: กด Win+R พิมพ์ `winver` แล้วดู Version และ OS Build
+
+- Windows ที่ถูกปรับแต่งมาแล้ว เช่น imOS 10 ก็ยังเป็น Windows 10 ใช้ไฟล์ Win10 (ยังไม่ได้ทดสอบเต็มรูปแบบ บางขั้นอาจไม่ผ่านเพราะ Windows ตัวนั้นลบบางส่วนออกไปแล้ว)
+- ใช้ผิดไฟล์ AME Wizard จะขึ้น "Requirements not met: This Windows build is not supported by this Playbook" ไม่มีอะไรพัง ให้เปลี่ยนไปใช้ไฟล์ที่ถูก
+- build อื่น เช่น Windows 10 21H2 (19044) หรือ Windows 11 23H2 (22631) ใช้ไม่ได้ทั้ง 2 ไฟล์
+
 ## Requirements
 
-- Windows 11 24H2 (build 26100), 25H2 (build 26200) or 26H2 (build 26300): `AkatiOS_v<version>.apbx`
+- Windows 11 24H2 (build 26100), 25H2 (build 26200) or 26H2 (build 26300): `AkatiOS-Win11_v<version>.apbx`
 - Windows 10 22H2 (build 19045): `AkatiOS-Win10_v<version>.apbx`, see [Windows 10](#windows-10)
 - Windows 11 26H1 (build 28000, for some new devices only) is not supported
 - Internet connection during setup
@@ -43,7 +58,7 @@ Akati OS คือ playbook สำหรับ Windows 11 เน้นเล่�
 2. Download the `.apbx` for your Windows version and `SHA256SUMS.txt` from [Releases](../../releases/latest).
 3. Check the hash in PowerShell. The value must match the line for your file in `SHA256SUMS.txt`:
    ```powershell
-   (Get-FileHash .\AkatiOS_v1.4.1.apbx -Algorithm SHA256).Hash.ToLower()
+   (Get-FileHash .\AkatiOS-Win11_v1.4.1.apbx -Algorithm SHA256).Hash.ToLower()
    Get-Content .\SHA256SUMS.txt
    ```
 4. Open AME Wizard and drag the `.apbx` file into it.
@@ -71,7 +86,7 @@ The Windows 11 playbook source is in `src/`, the Windows 10 one in `src-win10/`.
 ./build.sh      # Linux/macOS, needs 7z or zip
 ```
 
-The output is `dist/AkatiOS_v<version>.apbx`, `dist/AkatiOS-Win10_v<version>.apbx` and `dist/SHA256SUMS.txt`.
+The output is `dist/AkatiOS-Win11_v<version>.apbx`, `dist/AkatiOS-Win10_v<version>.apbx` and `dist/SHA256SUMS.txt`.
 
 Every push also builds the playbook on GitHub Actions. The `.apbx` is under **Artifacts** on the run page.
 

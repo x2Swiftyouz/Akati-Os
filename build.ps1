@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
     Pack each playbook into dist\ (zip, password "malte") and write dist\SHA256SUMS.txt:
-      src\        -> dist\AkatiOS_v<version>.apbx        (Windows 11)
+      src\        -> dist\AkatiOS-Win11_v<version>.apbx  (Windows 11)
       src-win10\  -> dist\AkatiOS-Win10_v<version>.apbx  (Windows 10)
     The version is read from each playbook.conf <Version>.
 .EXAMPLE
@@ -15,7 +15,7 @@ $root     = $PSScriptRoot
 $dist     = Join-Path $root 'dist'
 $password = 'malte'
 $variants = @(
-    @{ Src = 'src';       Prefix = 'AkatiOS' },
+    @{ Src = 'src';       Prefix = 'AkatiOS-Win11' },
     @{ Src = 'src-win10'; Prefix = 'AkatiOS-Win10' }
 )
 

@@ -30,7 +30,7 @@ Akati OS คือ playbook สำหรับ Windows 11 เน้นเล่�
 
 1. Back up your files. This playbook cannot be fully undone. To go back, reinstall Windows.
 2. Test in a virtual machine first.
-3. Download `AkatiOS_v1.4.1.apbx` from Releases and check its SHA256 hash against `SHA256SUMS.txt`.
+3. Download `AkatiOS-Win11_v1.4.1.apbx` from Releases and check its SHA256 hash against `SHA256SUMS.txt`.
 4. Open AME Wizard and drag the `.apbx` file into it.
 5. Follow the setup pages.
 
@@ -47,7 +47,7 @@ The playbook source is in `src/`. The `.apbx` file is a zip archive of it with t
 ./build.sh      # Linux/macOS, needs 7z or zip
 ```
 
-The output is `dist/AkatiOS_v<version>.apbx` and `dist/SHA256SUMS.txt`.
+The output is `dist/AkatiOS-Win11_v<version>.apbx` and `dist/SHA256SUMS.txt`.
 
 ## Credits
 

@@ -198,7 +198,7 @@ jobs:
             echo
             echo "## Download"
             echo
-            echo "- Windows 11 (24H2, 25H2, 26H2): \`AkatiOS_v$version.apbx\`"
+            echo "- Windows 11 (24H2, 25H2, 26H2): \`AkatiOS-Win11_v$version.apbx\`"
             echo "- Windows 10 22H2: \`AkatiOS-Win10_v$version.apbx\` (Windows 10 is out of support, use the Windows 11 version if you can)"
             echo
             echo "Check the file against \`SHA256SUMS.txt\`:"

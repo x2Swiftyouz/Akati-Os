@@ -48,10 +48,10 @@
 
 ### เตรียมไฟล์ playbook
 - [ ] build จาก repo: `.\build.ps1` (หรือ `./build.sh`)
-- [ ] ก๊อป `dist\AkatiOS_v<version>.apbx` และ `dist\SHA256SUMS.txt` เข้า VM
+- [ ] ก๊อป `dist\AkatiOS-Win11_v<version>.apbx` และ `dist\SHA256SUMS.txt` เข้า VM
 - [ ] ตรวจ hash ใน VM:
   ```powershell
-  (Get-FileHash .\AkatiOS_v1.4.1.apbx -Algorithm SHA256).Hash.ToLower()
+  (Get-FileHash .\AkatiOS-Win11_v1.4.1.apbx -Algorithm SHA256).Hash.ToLower()
   Get-Content .\SHA256SUMS.txt
   ```
   สองค่าต้องตรงกัน

@@ -6,7 +6,7 @@ There are two playbooks:
 
 | Playbook | Source | File | Base |
 |---|---|---|---|
-| Windows 11 (24H2, 25H2, 26H2) | `src/` | `AkatiOS_v<version>.apbx` | AtlasOS tag `0.5.0-hotfix`, commit `6cbd1a3` |
+| Windows 11 (24H2, 25H2, 26H2) | `src/` | `AkatiOS-Win11_v<version>.apbx` | AtlasOS tag `0.5.0-hotfix`, commit `6cbd1a3` |
 | Windows 10 22H2 | `src-win10/` | `AkatiOS-Win10_v<version>.apbx` | AtlasOS tag `0.4.1`, commit `16533c1` |
 
 Both use [Atlas-OS/Atlas](https://github.com/Atlas-OS/Atlas), folder `src/playbook`. Every file not listed below is identical to the AtlasOS base (ignoring CRLF/LF line endings).
@@ -32,7 +32,7 @@ W11 = Windows 11 playbook, W10 = Windows 10 playbook.
 
 | File | In | Change |
 |---|---|---|
-| `playbook.conf` | W11, W10 | Name (`AkatiOS` / `AkatiOS10`), title, version, own UniqueId, descriptions, own Git and install guide links, AtlasOS website/donate/Git links removed, "Learn more" links point to [OPTIONS.md](OPTIONS.md); `IsChecked` defaults; anti-cheat warnings; Remove Microsoft Store page (no gaming app pages: apps are installed from Akati OS Center). W11: `UpgradableFrom` removed, build 26300 added, OOBE text. W10: build 19045 only, Windows 10 end of support warning |
+| `playbook.conf` | W11, W10 | Name (`AkatiOS11` / `AkatiOS10`), title, version, own UniqueId, descriptions, own Git and install guide links, AtlasOS website/donate/Git links removed, "Learn more" links point to [OPTIONS.md](OPTIONS.md); `IsChecked` defaults; anti-cheat warnings; Remove Microsoft Store page (no gaming app pages: apps are installed from Akati OS Center). W11: `UpgradableFrom` removed, build 26300 added, OOBE text. W10: build 19045 only, Windows 10 end of support warning |
 | `playbook.png`, `Executables/user.png` | W11, W10 | Akati OS images |
 | `Configuration/custom.yml` | W11, W10 | Runs `tweaks\misc\akati-extras.yml` after `atlas\start.yml`, and `tweaks\misc\akati-services.yml` after all other tasks. W11: one status text |
 | `Configuration/atlas/start.yml` | W11 | One status text; the optional Atlas Toolbox install is removed |

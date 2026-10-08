@@ -1656,7 +1656,7 @@ function Invoke-Tweak($t, [bool]$on) {
         $err = Get-LastOutput $r
         if ($err -is [string] -and $err) { Set-Status "$($ctx.Name): $err"; return }
         $msg = (T 'status.tweakdone') -f $ctx.Name
-        if ($ctx.Tweak.Restart) { $msg += ' · ' + (T 'restart') }
+        if ($ctx.Tweak.Restart) { $msg += ' · ' + (T 'restart'); Set-RestartNeeded }
         Set-Status $msg
     }
     if ($t.Script) {
@@ -1695,6 +1695,53 @@ function Invoke-Tweak($t, [bool]$on) {
     }
 }
 
+# A bar in the title bar when a change needs a restart, with "Restart now"
+function Set-RestartNeeded { if (!$Screenshot) { $ui.RestartBar.Visibility = 'Visible' } }
+$ui.RestartNow.Add_Click({
+    if ([System.Windows.MessageBox]::Show((T 'restart.ask'), 'Akati OS Center', 'YesNo', 'Question') -eq 'Yes') { Restart-Computer -Force }
+})
+
+# A short message at the bottom of the page after a switch changed, with Undo
+$script:toastUndo = $null
+$toastTimer = New-Object System.Windows.Threading.DispatcherTimer
+$toastTimer.Interval = [TimeSpan]::FromSeconds(6)
+$toastTimer.Add_Tick({ $toastTimer.Stop(); $ui.Toast.Visibility = 'Collapsed' })
+function Show-Toast([string]$text, $undo) {
+    $ui.ToastText.Text = $text
+    $script:toastUndo = $undo
+    $ui.ToastUndo.Visibility = if ($undo) { 'Visible' } else { 'Collapsed' }
+    $ui.Toast.Visibility = 'Visible'
+    $toastTimer.Stop(); $toastTimer.Start()
+}
+$ui.ToastUndo.Add_Click({
+    $u = $script:toastUndo; $script:toastUndo = $null
+    $toastTimer.Stop(); $ui.Toast.Visibility = 'Collapsed'
+    if ($u) { $u.Tweak.Toggle.IsChecked = $u.Before; Invoke-Tweak $u.Tweak $u.Before }
+})
+
+# "What it changes" under a switch: the PowerShell the switch runs, or the AtlasOS scripts it starts
+function Format-Code([scriptblock]$block) {
+    $lines = @($block.ToString().Trim("`r", "`n") -split "`r?`n")
+    $indent = @($lines | Select-Object -Skip 1 | Where-Object { $_.Trim() } | ForEach-Object { $_.Length - $_.TrimStart().Length } | Measure-Object -Minimum).Minimum
+    if ($indent) { $lines = @($lines[0].Trim()) + @($lines | Select-Object -Skip 1 | ForEach-Object { if ($_.Length -ge $indent) { $_.Substring($indent) } else { $_.TrimStart() } }) }
+    ($lines -join "`r`n").Trim()
+}
+function Add-Details($row, [string]$code) {
+    $link = New-Text (T 'tw.details') 12 'Normal' 't:tw.details'
+    $link.SetResourceReference([System.Windows.Controls.TextBlock]::ForegroundProperty, 'Accent2')
+    $link.Cursor = 'Hand'; $link.Margin = '0,4,0,0'; $link.HorizontalAlignment = 'Left'
+    $box = New-Object System.Windows.Controls.TextBox
+    $box.Text = $code; $box.IsReadOnly = $true; $box.FontFamily = 'Cascadia Mono, Consolas'; $box.FontSize = 11
+    $box.TextWrapping = 'Wrap'; $box.Margin = '0,6,16,2'; $box.Padding = '8,6'; $box.BorderThickness = '0'; $box.Visibility = 'Collapsed'
+    $box.SetResourceReference([System.Windows.Controls.Control]::BackgroundProperty, 'Field')
+    $box.SetResourceReference([System.Windows.Controls.Control]::ForegroundProperty, 'Text2')
+    $link.DataContext = $box
+    $link.Add_MouseLeftButtonUp({ $b = $this.DataContext; $b.Visibility = if ($b.Visibility -eq 'Visible') { 'Collapsed' } else { 'Visible' } })
+    $panel = $row.Sub.Parent
+    $at = $panel.Children.IndexOf($row.Sub) + 1
+    $panel.Children.Insert($at, $box); $panel.Children.Insert($at, $link)
+}
+
 foreach ($tw in $tweaks) {
     if ($tw.Win11 -and $build -lt 22000) { continue }
     $toggle = New-Object System.Windows.Controls.CheckBox
@@ -1702,6 +1749,9 @@ foreach ($tw in $tweaks) {
     $row = New-Row ([string]$tw.Glyph) (T "tw.$($tw.Key)") "t:tw.$($tw.Key)" $toggle "t:tw.$($tw.Key).d"
     $row.Sub.Text = T "tw.$($tw.Key).d"
     $tw.Toggle = $toggle; $tw.Sub = $row.Sub
+    $code = if ($tw.Script) { "AtlasDesktop\$($tw.Script.Folder)\$($tw.Script.On)`r`nAtlasDesktop\$($tw.Script.Folder)\$($tw.Script.Off)" }
+            elseif ($tw.Work) { Format-Code $tw.Work } elseif ($tw.Set) { Format-Code $tw.Set } else { '' }
+    if ($code) { Add-Details $row $code }
     if ($tw.Async -and !$Screenshot) {
         # Slow to read (modules, Store, network): read in the background, the switch is filled in when done.
         # These Get blocks use only cmdlets, no variables of this script.
@@ -1716,7 +1766,11 @@ foreach ($tw in $tweaks) {
         try { $toggle.IsChecked = [bool](& $tw.Get) } catch { $toggle.IsEnabled = $false }
     }
     $toggle.Tag = $tw
-    $toggle.Add_Click({ Invoke-Tweak $this.Tag ([bool]$this.IsChecked) })
+    $toggle.Add_Click({
+        $t = $this.Tag; $on = [bool]$this.IsChecked
+        Invoke-Tweak $t $on
+        Show-Toast ((T $(if ($on) { 'toast.on' } else { 'toast.off' })) -f (T "tw.$($t.Key)")) @{ Tweak = $t; Before = !$on }
+    })
     $group = if ($tw.Group) { $tw.Group } else { 'gaming' }
     $tw.Row = $row.Row
     [void]$tweakLists[$group].Children.Add($row.Row)
@@ -1809,6 +1863,7 @@ $ui.TweaksReset.Add_Click({
     $auto = $dnsPanel.Children | Where-Object { $_.Tag -eq 't:dns.auto' }
     if ($auto.IsEnabled -and !$auto.IsChecked) { $auto.IsChecked = $true; Set-Dns 'auto' }
     Set-Status (T 'status.reset')
+    Set-RestartNeeded
 })
 
 # Game boost > Anti-cheat mode: Valorant (Vanguard) can ask for Memory integrity (HVCI) on, FiveM needs it
@@ -1839,6 +1894,7 @@ function Set-AntiCheat([bool]$on) {
     # A restart is needed when what runs differs; when Windows cannot tell, when the setting just changed
     $running = Test-HvciRunning
     $ask = if ($null -ne $running) { $on -ne $running } else { $changed }
+    if ($ask) { Set-RestartNeeded }
     if ($ask -and [System.Windows.MessageBox]::Show((T 'ac.restartask'), 'Akati OS Center', 'YesNo', 'Question') -eq 'Yes') { Restart-Computer -Force }
 }
 $ui.AcValorant.Add_Click({ Set-AntiCheat $true })
@@ -2837,7 +2893,7 @@ function Get-SpotlightItems {
     $items = New-Object System.Collections.ArrayList
     # Name: the title and other names of the item (both languages, keywords); Desc: its description
     $add = { param($text, $search, $sub, $glyph, $action, $data, $desc)
-             [void]$items.Add(@{ Text = $text; Name = "$text $search".ToLowerInvariant(); Desc = "$desc".ToLowerInvariant(); Sub = $sub; Glyph = [string]$glyph; Action = $action; Data = $data }) }
+             [void]$items.Add(@{ Id = $(if ($search) { [string]$search } else { [string]$text }); Text = $text; Name = "$text $search".ToLowerInvariant(); Desc = "$desc".ToLowerInvariant(); Sub = $sub; Glyph = [string]$glyph; Action = $action; Data = $data }) }
     foreach ($p in $pages) { & $add (T "nav.$p") (Get-Both "nav.$p") (T 'spot.page') ([char]0xE8A5) { param($d) $ui["Nav$(Get-PageId $d)"].IsChecked = $true } $p }
     foreach ($t in $tweaks) {
         if (!$t.Row) { continue }
@@ -2876,43 +2932,76 @@ function Test-SpotWord([string]$text, [string]$word) {
     if ($word -match '[\u0E00-\u0E7F]') { return $text.Contains($word) }
     return $text -match ('(^|[^\p{L}\p{N}])' + [regex]::Escape($word))
 }
+# A result row; the parts of the title that match the search are bold
+function Add-SpotRow($item, [string[]]$words) {
+    $row = New-Object System.Windows.Controls.Border
+    $row.CornerRadius = 7; $row.Padding = '10,7'; $row.Cursor = 'Hand'; $row.Background = [System.Windows.Media.Brushes]::Transparent
+    $dock = New-Object System.Windows.Controls.DockPanel
+    $icon = New-Object System.Windows.Controls.Border
+    $icon.Width = 26; $icon.Height = 26; $icon.CornerRadius = 6; $icon.SetResourceReference([System.Windows.Controls.Border]::BackgroundProperty, 'Fill'); $icon.Margin = '0,0,12,0'
+    $g = New-Text $item.Glyph 13; $g.Style = $window.FindResource('Glyph'); $g.HorizontalAlignment = 'Center'
+    $g.SetResourceReference([System.Windows.Controls.TextBlock]::ForegroundProperty, 'Accent2'); $icon.Child = $g
+    $sub = New-Text $item.Sub 12; $sub.Opacity = 0.7; $sub.VerticalAlignment = 'Center'
+    [System.Windows.Controls.DockPanel]::SetDock($icon, 'Left'); [System.Windows.Controls.DockPanel]::SetDock($sub, 'Right')
+    $title = New-Object System.Windows.Controls.TextBlock
+    $title.FontSize = 14; $title.VerticalAlignment = 'Center'; $title.TextWrapping = 'NoWrap'; $title.TextTrimming = 'CharacterEllipsis'
+    $text = [string]$item.Text; $lower = $text.ToLowerInvariant()
+    $marks = New-Object 'bool[]' $text.Length
+    foreach ($w in $words) {
+        $at = if ($w -match '[฀-๿]') { $lower.IndexOf($w) } else { $m = [regex]::Match($lower, '(^|[^\p{L}\p{N}])' + [regex]::Escape($w)); if ($m.Success) { $m.Index + $m.Groups[1].Length } else { -1 } }
+        if ($at -ge 0) { for ($i = $at; $i -lt [Math]::Min($text.Length, $at + $w.Length); $i++) { $marks[$i] = $true } }
+    }
+    $i = 0
+    while ($i -lt $text.Length) {
+        $j = $i; while ($j -lt $text.Length -and $marks[$j] -eq $marks[$i]) { $j++ }
+        $run = New-Object System.Windows.Documents.Run ($text.Substring($i, $j - $i))
+        if ($marks[$i]) { $run.FontWeight = 'Bold'; $run.SetResourceReference([System.Windows.Documents.TextElement]::ForegroundProperty, 'Accent2') }
+        [void]$title.Inlines.Add($run)
+        $i = $j
+    }
+    [void]$dock.Children.Add($icon); [void]$dock.Children.Add($sub); [void]$dock.Children.Add($title)
+    $row.Child = $dock
+    $row.Tag = $script:spotRows.Count
+    $row.Add_MouseEnter({ $script:spotSel = $this.Tag; Update-SpotSelection })
+    $row.Add_MouseLeftButtonUp({ Invoke-SpotlightItem $this.Tag })
+    [void]$ui.SpotlightResults.Children.Add($row)
+    $script:spotRows += $row; $script:spotList += $item
+}
 function Update-Spotlight {
     $text = $ui.SpotlightBox.Text.Trim()
     $q = $text.ToLowerInvariant()
     $ui.SpotlightHint.Visibility = if ($text) { 'Collapsed' } else { 'Visible' }
     $ui.SpotlightResults.Children.Clear()
     $script:spotRows = @(); $script:spotList = @()
-    if (!$q) { $ui.SpotlightLine.Visibility = 'Collapsed'; return }
-    $words = $q -split '\s+'
-    # Order: the title starts with the search, then every word in the names, then words found in the description
-    $ranked = for ($i = 0; $i -lt $script:spotItems.Count; $i++) {
-        $item = $script:spotItems[$i]
-        if (!($words | Where-Object { !(Test-SpotWord $item.Name $_) })) { $rank = if ($item.Text.ToLowerInvariant().StartsWith($q)) { 0 } else { 1 } }
-        elseif (!($words | Where-Object { !(Test-SpotWord "$($item.Name) $($item.Desc)" $_) })) { $rank = 2 }
-        else { continue }
-        [pscustomobject]@{ Item = $item; Rank = $rank; Index = $i }
+    $words = @(if ($q) { $q -split '\s+' })
+    $groups = [ordered]@{}
+    if (!$q) {
+        # Nothing typed: the items opened last from the search
+        $recent = @(foreach ($id in @(Get-RegValue $settingsKey 'SpotRecent')) { $script:spotItems | Where-Object { $_.Id -eq $id } | Select-Object -First 1 })
+        if (!$recent) { $ui.SpotlightLine.Visibility = 'Collapsed'; return }
+        $groups[(T 'spot.recent')] = $recent
+    } else {
+        # Order: the title starts with the search, then every word in the names, then words found in the description
+        $ranked = for ($i = 0; $i -lt $script:spotItems.Count; $i++) {
+            $item = $script:spotItems[$i]
+            if (!($words | Where-Object { !(Test-SpotWord $item.Name $_) })) { $rank = if ($item.Text.ToLowerInvariant().StartsWith($q)) { 0 } else { 1 } }
+            elseif (!($words | Where-Object { !(Test-SpotWord "$($item.Name) $($item.Desc)" $_) })) { $rank = 2 }
+            else { continue }
+            [pscustomobject]@{ Item = $item; Rank = $rank; Index = $i }
+        }
+        $found = @($ranked | Sort-Object Rank, Index | Select-Object -First 8 | ForEach-Object { $_.Item })
+        $found += @{ Text = (T 'spot.atlas') -f $text; Sub = (T 'tweaks.system'); Glyph = [string][char]0xE721; Data = $text
+                     Action = { param($d) $ui.NavTweaks.IsChecked = $true; $ui.SystemSearch.Text = $d } }
+        # Grouped by kind (Page, Setting, App...), the groups in the order of their best result
+        foreach ($item in $found) {
+            if (!$groups.Contains($item.Sub)) { $groups[$item.Sub] = New-Object System.Collections.ArrayList }
+            [void]$groups[$item.Sub].Add($item)
+        }
     }
-    $found = @($ranked | Sort-Object Rank, Index | Select-Object -First 8 | ForEach-Object { $_.Item })
-    $found += @{ Text = (T 'spot.atlas') -f $text; Sub = (T 'tweaks.system'); Glyph = [string][char]0xE721; Data = $text
-                 Action = { param($d) $ui.NavTweaks.IsChecked = $true; $ui.SystemSearch.Text = $d } }
-    foreach ($item in $found) {
-        $row = New-Object System.Windows.Controls.Border
-        $row.CornerRadius = 7; $row.Padding = '10,7'; $row.Cursor = 'Hand'; $row.Background = [System.Windows.Media.Brushes]::Transparent
-        $dock = New-Object System.Windows.Controls.DockPanel
-        $icon = New-Object System.Windows.Controls.Border
-        $icon.Width = 26; $icon.Height = 26; $icon.CornerRadius = 6; $icon.SetResourceReference([System.Windows.Controls.Border]::BackgroundProperty, 'Fill'); $icon.Margin = '0,0,12,0'
-        $g = New-Text $item.Glyph 13; $g.Style = $window.FindResource('Glyph'); $g.HorizontalAlignment = 'Center'
-        $g.SetResourceReference([System.Windows.Controls.TextBlock]::ForegroundProperty, 'Accent2'); $icon.Child = $g
-        $sub = New-Text $item.Sub 12; $sub.Opacity = 0.7; $sub.VerticalAlignment = 'Center'
-        [System.Windows.Controls.DockPanel]::SetDock($icon, 'Left'); [System.Windows.Controls.DockPanel]::SetDock($sub, 'Right')
-        $title = New-Text $item.Text 14; $title.VerticalAlignment = 'Center'; $title.TextWrapping = 'NoWrap'; $title.TextTrimming = 'CharacterEllipsis'
-        [void]$dock.Children.Add($icon); [void]$dock.Children.Add($sub); [void]$dock.Children.Add($title)
-        $row.Child = $dock
-        $row.Tag = $script:spotRows.Count
-        $row.Add_MouseEnter({ $script:spotSel = $this.Tag; Update-SpotSelection })
-        $row.Add_MouseLeftButtonUp({ Invoke-SpotlightItem $this.Tag })
-        [void]$ui.SpotlightResults.Children.Add($row)
-        $script:spotRows += $row; $script:spotList += $item
+    foreach ($key in $groups.Keys) {
+        $head = New-Text $key 11 'SemiBold'; $head.Opacity = 0.6; $head.Margin = '10,6,0,2'
+        [void]$ui.SpotlightResults.Children.Add($head)
+        foreach ($item in $groups[$key]) { Add-SpotRow $item $words }
     }
     $ui.SpotlightLine.Visibility = 'Visible'
     $script:spotSel = 0
@@ -2929,6 +3018,10 @@ function Close-Spotlight { $ui.Spotlight.Visibility = 'Collapsed' }
 function Invoke-SpotlightItem([int]$index) {
     if ($index -lt 0 -or $index -ge $script:spotList.Count) { return }
     $item = $script:spotList[$index]
+    if ($item.Id) {
+        $ids = @(@($item.Id) + @(@(Get-RegValue $settingsKey 'SpotRecent') | Where-Object { $_ -and $_ -ne $item.Id }) | Select-Object -First 5)
+        Save-Setting SpotRecent ([string[]]$ids)
+    }
     Close-Spotlight
     try { & $item.Action $item.Data } catch { Set-Status $_.Exception.Message }
 }
@@ -2956,6 +3049,23 @@ function Set-AppLanguage([string]$l) {
     Save-Setting Language $l
     Update-Language
 }
+# Narrow sidebar: icons only, the page names show as tooltips
+$navButtons = @($ui.NavDashboard, $ui.NavGaming, $ui.NavBoost, $ui.NavTweaks, $ui.NavCleaner, $ui.NavAppearance, $ui.NavAbout)
+$script:compact = $false
+function Set-Compact([bool]$on) {
+    $script:compact = $on
+    $ui.SideColumn.Width = New-Object System.Windows.GridLength ($(if ($on) { 96 } else { 248 }))
+    $vis = if ($on) { 'Collapsed' } else { 'Visible' }
+    $ui.Brand.Visibility = $vis; $ui.SpotlightButton.Visibility = $vis; $ui.SideBottom.Visibility = $vis
+    foreach ($b in $navButtons) {
+        $label = $b.Content.Children[1]
+        $label.Visibility = $vis
+        $b.ToolTip = if ($on) { $label.Text } else { $null }
+    }
+    $ui.SidebarToggle.ToolTip = T $(if ($on) { 'side.wide' } else { 'side.narrow' })
+}
+$ui.SidebarToggle.Add_Click({ Set-Compact (!$script:compact); Save-Setting Compact ([int]$script:compact) })
+Set-Compact ((Get-RegValue $settingsKey 'Compact') -eq 1 -and !$Screenshot)
 $ui.LangButton.Add_Click({ Set-AppLanguage $(if ($lang -eq 'th') { 'en' } else { 'th' }) })
 function Update-Language {
     Set-Language
@@ -2963,6 +3073,7 @@ function Update-Language {
     Update-Clock
     Update-Chips
     Update-AntiCheat
+    Set-Compact $script:compact
     if ($stats.Top) { Show-TopApps }
     foreach ($a in $apps) { if ($a.State -ne 'install') { Update-AppRow $a } }
     Update-AppsToolbar
@@ -3108,6 +3219,12 @@ if ($Screenshot) {
         $ui.Welcome.Visibility = 'Collapsed'
         Show-WhatsNew; Save-Shot "whatsnew-$l.png"; $ui.WhatsNew.Visibility = 'Collapsed'
         Open-Spotlight; $ui.SpotlightBox.Text = 'dns'; Save-Shot "spotlight-$l.png"; Close-Spotlight
+        # Narrow sidebar, restart bar, the message after a change and one "What it changes" box open
+        Set-Compact $true; $ui.RestartBar.Visibility = 'Visible'; Show-Toast ((T 'toast.on') -f (T 'tw.timer')) @{}
+        $box = @($tweaks | Where-Object { $_.Key -eq 'timer' } | ForEach-Object { $_.Sub.Parent.Children } | Where-Object { $_ -is [System.Windows.Controls.TextBox] })[0]
+        if ($box) { $box.Visibility = 'Visible' }
+        $ui.NavTweaks.IsChecked = $true; Save-Shot "extras-$l.png"
+        Set-Compact $false; $ui.RestartBar.Visibility = 'Collapsed'; $ui.Toast.Visibility = 'Collapsed'; if ($box) { $box.Visibility = 'Collapsed' }
     }
     # Accent colors recolor the window
     Set-CenterAccent $accents[1]; $ui.NavGaming.IsChecked = $true; Save-Shot 'accent-blue.png'

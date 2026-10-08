@@ -30,6 +30,20 @@
             <GradientStop Color="#6C3BC8" Offset="1"/>
         </LinearGradientBrush>
 
+        <!-- Placeholder bar that pulses while a value is loading -->
+        <Style x:Key="Shimmer" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource Fill}"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Height" Value="14"/>
+            <Setter Property="Margin" Value="0,8"/>
+            <Style.Triggers>
+                <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                    <BeginStoryboard><Storyboard>
+                        <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0.35" To="0.9" Duration="0:0:0.8" AutoReverse="True" RepeatBehavior="Forever"/>
+                    </Storyboard></BeginStoryboard>
+                </EventTrigger>
+            </Style.Triggers>
+        </Style>
         <Style x:Key="Card" TargetType="Border">
             <Setter Property="Background" Value="{DynamicResource CardBg}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource CardBorder}"/>
@@ -115,10 +129,20 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="{DynamicResource Accent}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                        <Border x:Name="Bd" RenderTransformOrigin="0.5,0.5" Background="{DynamicResource Accent}" CornerRadius="6" Padding="{TemplateBinding Padding}"><Border.RenderTransform><ScaleTransform x:Name="Press"/></Border.RenderTransform>
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Trigger.EnterActions><BeginStoryboard><Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="Press" Storyboard.TargetProperty="ScaleX" To="0.96" Duration="0:0:0.08"/>
+                                    <DoubleAnimation Storyboard.TargetName="Press" Storyboard.TargetProperty="ScaleY" To="0.96" Duration="0:0:0.08"/>
+                                </Storyboard></BeginStoryboard></Trigger.EnterActions>
+                                <Trigger.ExitActions><BeginStoryboard><Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="Press" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.15"/>
+                                    <DoubleAnimation Storyboard.TargetName="Press" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.15"/>
+                                </Storyboard></BeginStoryboard></Trigger.ExitActions>
+                            </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Bd" Property="Opacity" Value="0.88"/>
                             </Trigger>
@@ -138,10 +162,20 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="{DynamicResource Fill}" BorderBrush="{DynamicResource FillHover}" BorderThickness="0,1,0,0" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                        <Border x:Name="Bd" RenderTransformOrigin="0.5,0.5" Background="{DynamicResource Fill}" BorderBrush="{DynamicResource FillHover}" BorderThickness="0,1,0,0" CornerRadius="6" Padding="{TemplateBinding Padding}"><Border.RenderTransform><ScaleTransform x:Name="Press"/></Border.RenderTransform>
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Trigger.EnterActions><BeginStoryboard><Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="Press" Storyboard.TargetProperty="ScaleX" To="0.96" Duration="0:0:0.08"/>
+                                    <DoubleAnimation Storyboard.TargetName="Press" Storyboard.TargetProperty="ScaleY" To="0.96" Duration="0:0:0.08"/>
+                                </Storyboard></BeginStoryboard></Trigger.EnterActions>
+                                <Trigger.ExitActions><BeginStoryboard><Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="Press" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.15"/>
+                                    <DoubleAnimation Storyboard.TargetName="Press" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.15"/>
+                                </Storyboard></BeginStoryboard></Trigger.ExitActions>
+                            </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Bd" Property="Background" Value="{DynamicResource FillHover}"/>
                             </Trigger>
@@ -164,10 +198,20 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="{DynamicResource Fill}" CornerRadius="14" Padding="{TemplateBinding Padding}">
+                        <Border x:Name="Bd" RenderTransformOrigin="0.5,0.5" Background="{DynamicResource Fill}" CornerRadius="14" Padding="{TemplateBinding Padding}"><Border.RenderTransform><ScaleTransform x:Name="Press"/></Border.RenderTransform>
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Trigger.EnterActions><BeginStoryboard><Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="Press" Storyboard.TargetProperty="ScaleX" To="0.96" Duration="0:0:0.08"/>
+                                    <DoubleAnimation Storyboard.TargetName="Press" Storyboard.TargetProperty="ScaleY" To="0.96" Duration="0:0:0.08"/>
+                                </Storyboard></BeginStoryboard></Trigger.EnterActions>
+                                <Trigger.ExitActions><BeginStoryboard><Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="Press" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.15"/>
+                                    <DoubleAnimation Storyboard.TargetName="Press" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.15"/>
+                                </Storyboard></BeginStoryboard></Trigger.ExitActions>
+                            </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Bd" Property="Background" Value="{DynamicResource FillHover}"/>
                             </Trigger>
@@ -184,10 +228,20 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="{DynamicResource Accent}" CornerRadius="14" Padding="{TemplateBinding Padding}">
+                        <Border x:Name="Bd" RenderTransformOrigin="0.5,0.5" Background="{DynamicResource Accent}" CornerRadius="14" Padding="{TemplateBinding Padding}"><Border.RenderTransform><ScaleTransform x:Name="Press"/></Border.RenderTransform>
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Trigger.EnterActions><BeginStoryboard><Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="Press" Storyboard.TargetProperty="ScaleX" To="0.96" Duration="0:0:0.08"/>
+                                    <DoubleAnimation Storyboard.TargetName="Press" Storyboard.TargetProperty="ScaleY" To="0.96" Duration="0:0:0.08"/>
+                                </Storyboard></BeginStoryboard></Trigger.EnterActions>
+                                <Trigger.ExitActions><BeginStoryboard><Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="Press" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.15"/>
+                                    <DoubleAnimation Storyboard.TargetName="Press" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.15"/>
+                                </Storyboard></BeginStoryboard></Trigger.ExitActions>
+                            </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Bd" Property="Opacity" Value="0.88"/>
                             </Trigger>
@@ -315,10 +369,20 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="{DynamicResource Field}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="10" Padding="14,12">
+                        <Border x:Name="Bd" RenderTransformOrigin="0.5,0.5" Background="{DynamicResource Field}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="10" Padding="14,12"><Border.RenderTransform><ScaleTransform x:Name="Press"/></Border.RenderTransform>
                             <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Trigger.EnterActions><BeginStoryboard><Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="Press" Storyboard.TargetProperty="ScaleX" To="0.96" Duration="0:0:0.08"/>
+                                    <DoubleAnimation Storyboard.TargetName="Press" Storyboard.TargetProperty="ScaleY" To="0.96" Duration="0:0:0.08"/>
+                                </Storyboard></BeginStoryboard></Trigger.EnterActions>
+                                <Trigger.ExitActions><BeginStoryboard><Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="Press" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.15"/>
+                                    <DoubleAnimation Storyboard.TargetName="Press" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.15"/>
+                                </Storyboard></BeginStoryboard></Trigger.ExitActions>
+                            </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource Accent}"/>
                                 <Setter TargetName="Bd" Property="Background" Value="{DynamicResource Fill}"/>
@@ -515,7 +579,7 @@
     <Border x:Name="RootBorder" CornerRadius="14" Background="{DynamicResource RootBg}" BorderBrush="{DynamicResource Line}" BorderThickness="1">
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="248"/>
+                <ColumnDefinition x:Name="SideColumn" Width="248"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
@@ -547,7 +611,7 @@
                         </Grid>
                     </Border>
 
-                    <StackPanel DockPanel.Dock="Bottom">
+                    <StackPanel x:Name="SideBottom" DockPanel.Dock="Bottom">
                         <Button x:Name="LangButton" Style="{StaticResource Secondary}" Margin="0,0,0,8">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Style="{StaticResource Glyph}" Text="&#xE774;" FontSize="14" Margin="0,0,8,0"/>
@@ -615,9 +679,21 @@
                 </Grid.RowDefinitions>
 
                 <Grid x:Name="TitleBar" Grid.Row="0" Background="Transparent">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="28,0,0,0">
-                        <TextBlock x:Name="PageTitle" Text="Dashboard" FontSize="15" FontWeight="Bold"/>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
+                        <Button x:Name="SidebarToggle" Style="{StaticResource Bare}" Margin="0,0,10,0" Padding="6,4" VerticalAlignment="Center">
+                            <TextBlock Style="{StaticResource Glyph}" Text="&#xE700;" FontSize="14" Foreground="{DynamicResource MutedBrush}"/>
+                        </Button>
+                        <TextBlock x:Name="PageTitle" Text="Dashboard" FontSize="15" FontWeight="Bold" VerticalAlignment="Center"/>
                     </StackPanel>
+                    <!-- Shown when a change needs a restart -->
+                    <Border x:Name="RestartBar" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,20,0" Visibility="Collapsed"
+                            Background="{DynamicResource Field}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="16" Padding="12,4,4,4">
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Width="7" Height="7" Fill="#FF9F0A" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Tag="t:restart.bar" Text="Restart to finish the changes" FontSize="12" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <Button x:Name="RestartNow" Style="{StaticResource PillAccent}" Padding="12,4" Tag="t:restart.now" Content="Restart now"/>
+                        </StackPanel>
+                    </Border>
                 </Grid>
 
                 <Grid Grid.Row="1" Margin="28,0,28,0">
@@ -748,7 +824,11 @@
                                 <TextBlock Tag="t:top.title" Text="Busiest apps" Style="{StaticResource Section}" Margin="4,0,0,0" VerticalAlignment="Center"/>
                             </DockPanel>
                             <Border Style="{StaticResource Card}" Padding="0" Margin="0,0,0,16">
-                                <StackPanel x:Name="TopList"/>
+                                <StackPanel x:Name="TopList">
+                                    <Border Style="{StaticResource Shimmer}" Width="420" HorizontalAlignment="Left"/>
+                                    <Border Style="{StaticResource Shimmer}" Width="360" HorizontalAlignment="Left"/>
+                                    <Border Style="{StaticResource Shimmer}" Width="300" HorizontalAlignment="Left"/>
+                                </StackPanel>
                             </Border>
 
                             <Border Style="{StaticResource Card}" Margin="0,0,0,16">
@@ -1105,6 +1185,15 @@
                             </Border>
                         </StackPanel>
                     </ScrollViewer>
+                    <!-- Message after a change, with Undo -->
+                    <Border x:Name="Toast" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,16" Visibility="Collapsed"
+                            Background="{DynamicResource Popup}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="12" Padding="16,8,8,8">
+                        <Border.Effect><DropShadowEffect BlurRadius="18" ShadowDepth="4" Opacity="0.35"/></Border.Effect>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock x:Name="ToastText" VerticalAlignment="Center" FontSize="13" MaxWidth="460" TextTrimming="CharacterEllipsis"/>
+                            <Button x:Name="ToastUndo" Style="{StaticResource Pill}" Margin="14,0,0,0" Padding="12,4" Tag="t:toast.undo" Content="Undo"/>
+                        </StackPanel>
+                    </Border>
                 </Grid>
 
                 <Border Grid.Row="2" BorderBrush="{DynamicResource Popup}" BorderThickness="0,1,0,0">

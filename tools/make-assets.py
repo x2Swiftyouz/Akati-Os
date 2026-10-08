@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""Akati OS: generates the extra wallpapers, the Akati OS cursors and the Akati OS sounds.
+"""Akati OS: generates the extra wallpapers, the Akati OS cursors, the Akati OS sounds and the logo.
 
 Everything is drawn from code (no third-party art), so it is covered by the GPL-3.0 license of this
 repository. Needs numpy and Pillow. Run from the repository root:
 
     python3 tools/make-assets.py
 
-Writes to src/ and src-win10/ (Executables/AtlasModules/Wallpapers and .../Other/AkatiOS).
+Writes to src/ and src-win10/ (Executables/AtlasModules/Wallpapers, .../Other/AkatiOS, the logo files).
+One part only: python3 tools/make-assets.py logos
 """
 import math
 import os
@@ -266,7 +267,67 @@ def make_sounds():
     print('sounds', ', '.join(sounds))
 
 
+# ---------------------------------------------------------------------------------------------
+# Logo: a white peak (an "A" without crossbar) with a play arrow, on a purple to pink tile
+# ---------------------------------------------------------------------------------------------
+LOGO = 1024  # drawn at this size, scaled down for each file
+
+
+def logo_gradient(size):
+    """Purple (top left) to pink (bottom right)."""
+    y, x = np.mgrid[0:size, 0:size].astype(np.float32) / size
+    t = np.clip((x + y) / 2, 0, 1)[..., None]
+    c = np.array((91, 33, 182), np.float32) * (1 - t) + np.array((236, 72, 153), np.float32) * t
+    return Image.fromarray(c.astype(np.uint8), 'RGB').convert('RGBA')
+
+
+def logo_mark(draw, s):
+    """The peak and the play arrow, for a square of size s."""
+    cx, cy, h, w, stroke = s * 0.5, s * 0.52, s * 0.52, s * 0.6, s * 0.112
+    k = stroke / math.sin(math.atan2(h, w / 2))
+    draw.polygon([(cx, cy - h / 2), (cx + w / 2, cy + h / 2), (cx + w / 2 - k * 1.05, cy + h / 2),
+                  (cx, cy - h / 2 + k * 1.15), (cx - w / 2 + k * 1.05, cy + h / 2), (cx - w / 2, cy + h / 2)],
+                 fill=(255, 255, 255, 255))
+    # Play arrow inside the peak, touching nothing
+    px, py, ph = cx - s * 0.045, cy + h * 0.2, s * 0.12
+    draw.polygon([(px, py - ph / 2), (px + ph * 0.9, py), (px, py + ph / 2)], fill=(255, 255, 255, 240))
+
+
+def logo_image(size, tile=True):
+    """tile: rounded square with a small margin (icons); else the whole square (account picture)."""
+    s = LOGO
+    img = Image.new('RGBA', (s, s), (0, 0, 0, 0))
+    if tile:
+        pad = s * 0.04
+        mask = Image.new('L', (s, s), 0)
+        ImageDraw.Draw(mask).rounded_rectangle([pad, pad, s - pad, s - pad], s * 0.22, fill=255)
+        img.paste(logo_gradient(s), (0, 0), mask)
+    else:
+        img = logo_gradient(s)
+    logo_mark(ImageDraw.Draw(img), s)
+    return img.resize((size, size), Image.LANCZOS)
+
+
+def make_logos():
+    for tree in TREES:
+        logo_image(256).save(os.path.join(tree, 'playbook.png'), optimize=True)
+        logo_image(256).save(os.path.join(tree, 'Executables', 'AtlasModules', 'AkatiCenter', 'logo.png'), optimize=True)
+        logo_image(1024, tile=False).convert('RGB').save(os.path.join(tree, 'Executables', 'user.png'), optimize=True)
+        sizes = [16, 24, 32, 48, 64, 128, 256]
+        logo_image(256).save(os.path.join(tree, 'Executables', 'AtlasModules', 'Other', 'akatios-folder.ico'),
+                             sizes=[(z, z) for z in sizes], append_images=[logo_image(z) for z in sizes])
+    print('logos: playbook.png, logo.png, user.png, akatios-folder.ico')
+
+
 if __name__ == '__main__':
-    make_wallpapers()
-    make_cursors()
-    make_sounds()
+    # python3 tools/make-assets.py [wallpapers] [cursors] [sounds] [logos]  (nothing: all)
+    import sys
+    parts = sys.argv[1:] or ['wallpapers', 'cursors', 'sounds', 'logos']
+    if 'wallpapers' in parts:
+        make_wallpapers()
+    if 'cursors' in parts:
+        make_cursors()
+    if 'sounds' in parts:
+        make_sounds()
+    if 'logos' in parts:
+        make_logos()

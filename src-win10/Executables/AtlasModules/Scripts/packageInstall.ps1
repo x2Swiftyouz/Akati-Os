@@ -127,7 +127,7 @@ $seperator
 		}
 
 		if ($safeModeStatus) {
-			Write-Host "Please report this to the Atlas team, as there's no automatic fallbacks past Safe Mode." -ForegroundColor Magenta
+			Write-Host "Please report this on the Akati OS GitHub page, as there's no automatic fallbacks past Safe Mode." -ForegroundColor Magenta
 			choice /c yn /n /m "Would you like to restart out of Safe Mode? [Y/N] "
 			if ($lastexitcode -eq 1) {
 				Restart
@@ -239,13 +239,13 @@ if ($SafeMode) {
 	$matchedPackages = Get-Content $safeModePackageList
 
 	if ($matchedPackages.Count -le 0) {
-		Write-Host "[ERROR] Safe Mode package list not found! Please report this to Atlas." -ForegroundColor Red
+		Write-Host "[ERROR] Safe Mode package list not found! Please report this on the Akati OS GitHub page." -ForegroundColor Red
 		ExitSafeModePrompt
 	}
 
 	$packagesThatDontExist = $matchedPackages | ForEach-Object { if (!(Test-Path $_ -PathType Leaf)) { $_ } }
 	if ($packagesThatDontExist) {
-		Write-Host "[ERROR] Some Safe Mode packages weren't found. Please report this to Atlas." -ForegroundColor Red
+		Write-Host "[ERROR] Some Safe Mode packages weren't found. Please report this on the Akati OS GitHub page." -ForegroundColor Red
 		Write-BulletPoint $packagesThatDontExist
 		ExitSafeModePrompt
 	}

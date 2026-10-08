@@ -15,7 +15,7 @@ call serviceWarning.cmd [optional:specific comment for service breakage, use quo
 echo ------------------------------------------------------
 echo WARNING: This script will modify system services.
 echo Modifying services can lead to potential breakage of features and bugs.
-echo Proceed with caution, and refer to Atlas docs for more information!
+echo Proceed with caution, and refer to the Akati OS GitHub page for more information!
 if not "%~1"=="" echo Specific Note: %~1
 echo ------------------------------------------------------
 pause

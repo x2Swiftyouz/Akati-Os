@@ -6,13 +6,21 @@
     (Windows 10 and 11) and needs administrator rights for installs and tweaks.
     -Screenshot <folder> renders every page to PNG and exits (used by CI). -Root points to a source
     "Executables" folder instead of the installed %windir% layout.
+    -Page <name> opens that page (desktop menu), -Ping also starts the ping test on the Game boost page.
+    -Boost toggle|on|off starts or stops Game boost without a window (desktop menu and tray, through the elevated task).
 #>
 param (
     [string]$Screenshot,
-    [string]$Root
+    [string]$Root,
+    [string]$Page,
+    [switch]$Ping,
+    [ValidateSet('', 'toggle', 'on', 'off')][string]$Boost
 )
 
 $ErrorActionPreference = 'Stop'
+# Startup timing: printed in screenshot mode (CI), to see which part makes the window slow to open
+$script:clock = [Diagnostics.Stopwatch]::StartNew(); $script:marks = New-Object System.Collections.ArrayList
+function Add-Mark([string]$name) { [void]$script:marks.Add(('{0,6} ms  {1}' -f $script:clock.ElapsedMilliseconds, $name)) }
 Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase
 
 # ---------------------------------------------------------------------------------------------
@@ -40,280 +48,54 @@ $repo       = 'x2Swiftyouz/Akati-Os'
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 if (!$Screenshot -and !$isAdmin) {
     try {
-        Start-Process powershell.exe -Verb RunAs -WindowStyle Hidden -ArgumentList "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$PSCommandPath`""
+        $forward = if ($Page -match '^\w+$') { " -Page $Page" + $(if ($Ping) { ' -Ping' } else { '' }) } else { '' }
+        Start-Process powershell.exe -Verb RunAs -WindowStyle Hidden -ArgumentList "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$PSCommandPath`"$forward"
     } catch { }
     exit
 }
 
 # ---------------------------------------------------------------------------------------------
+# Splash: a small window on its own thread, shown at once while the main window is built
+# ---------------------------------------------------------------------------------------------
+$splash = [hashtable]::Synchronized(@{})
+if (!$Screenshot -and !$Boost) {
+    $splashRs = [runspacefactory]::CreateRunspace(); $splashRs.ApartmentState = 'STA'; $splashRs.ThreadOptions = 'ReuseThread'; $splashRs.Open()
+    $splashPs = [PowerShell]::Create(); $splashPs.Runspace = $splashRs
+    [void]$splashPs.AddScript({
+        param($state, $logo)
+        Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase
+        $w = New-Object System.Windows.Window
+        $w.WindowStyle = 'None'; $w.AllowsTransparency = $true; $w.Background = 'Transparent'; $w.ResizeMode = 'NoResize'
+        $w.Width = 300; $w.Height = 190; $w.WindowStartupLocation = 'CenterScreen'; $w.ShowInTaskbar = $false; $w.Topmost = $true
+        $card = New-Object System.Windows.Controls.Border
+        $card.Background = '#1C1C1E'; $card.BorderBrush = '#38383A'; $card.BorderThickness = '1'; $card.CornerRadius = 16; $card.Padding = '24'
+        $stack = New-Object System.Windows.Controls.StackPanel; $stack.VerticalAlignment = 'Center'
+        try {
+            $img = New-Object System.Windows.Controls.Image; $img.Width = 56; $img.Height = 56; $img.Margin = '0,0,0,12'
+            $img.Source = New-Object System.Windows.Media.Imaging.BitmapImage (New-Object Uri $logo)
+            [void]$stack.Children.Add($img)
+        } catch { }
+        $title = New-Object System.Windows.Controls.TextBlock
+        $title.Text = 'Akati OS Center'; $title.Foreground = 'White'; $title.FontSize = 16; $title.FontWeight = 'SemiBold'; $title.HorizontalAlignment = 'Center'
+        $bar = New-Object System.Windows.Controls.ProgressBar
+        $bar.IsIndeterminate = $true; $bar.Height = 3; $bar.Margin = '30,16,30,0'; $bar.Foreground = '#A35CF0'; $bar.Background = '#38383A'; $bar.BorderThickness = '0'
+        [void]$stack.Children.Add($title); [void]$stack.Children.Add($bar)
+        $card.Child = $stack; $w.Content = $card
+        $state.Dispatcher = [System.Windows.Threading.Dispatcher]::CurrentDispatcher
+        $w.Show()
+        [System.Windows.Threading.Dispatcher]::Run()
+    }).AddArgument($splash).AddArgument((Join-Path $PSScriptRoot 'logo.png'))
+    $splashHandle = $splashPs.BeginInvoke()
+}
+function Close-Splash { if ($splash.Dispatcher) { try { $splash.Dispatcher.InvokeShutdown() } catch { }; $splash.Dispatcher = $null } }
+# An error while the window is built must not leave the splash on screen
+trap { Close-Splash; break }
+
+# ---------------------------------------------------------------------------------------------
 # Strings (English and Thai)
 # ---------------------------------------------------------------------------------------------
-$strings = @{
-    en = @{
-        'admin' = 'Administrator mode'; 'menu' = 'MENU'
-        'nav.dashboard' = 'Dashboard'; 'nav.gaming' = 'Gaming apps'; 'nav.tweaks' = 'Tweaks'
-        'nav.cleaner' = 'Cleaner'; 'nav.appearance' = 'Appearance'; 'nav.about' = 'About'
-        'welcome' = 'Welcome back'; 'version' = 'AKATI OS VERSION'
-        'cpu' = 'CPU USAGE'; 'ram' = 'RAM USAGE'; 'gpu' = 'GPU USAGE'
-        'quick' = 'Quick actions'
-        'greet.morning' = 'Good morning'; 'greet.afternoon' = 'Good afternoon'; 'greet.evening' = 'Good evening'; 'greet.night' = 'Good night'
-        'update.checking' = 'Checking for updates...'
-        'chip.boost.on' = 'Game boost on'; 'chip.boost.off' = 'Game boost off'; 'chip.power' = 'Power: {0}'; 'chip.days' = '{0}d {1}h'; 'chip.hours' = '{0}h {1}m'
-        'chip.defender.on' = 'Defender on'; 'chip.defender.off' = 'Defender off'; 'chip.uptime' = 'Up {0}'
-        'disk.title' = 'Storage'; 'disk.free' = '{0} free of {1}'; 'disk.local' = 'Local Disk'
-        'net.title' = 'Network'; 'net.down' = 'DOWNLOAD'; 'net.up' = 'UPLOAD'; 'net.ping' = 'PING (SG)'
-        'top.title' = 'Using the most CPU'; 'top.end' = 'Quit'; 'top.confirm' = 'Quit {0}? Unsaved work in it is lost.'
-        'status.ended' = '{0} was closed'
-        'quick.boost' = 'Game boost'; 'quick.boost.d' = 'Start or stop it here'
-        'quick.clean' = 'Clean temp files'; 'quick.clean.d' = 'Free up disk space'
-        'quick.update' = 'Check for updates'; 'quick.update.d' = 'Compare with GitHub'
-        'quick.system' = 'Tweaks'; 'quick.system.d' = 'Gaming and AtlasOS settings'
-        'tweaks.gaming' = 'Gaming'; 'tweaks.system' = 'System (AtlasOS)'
-        'nav.system' = 'System settings'; 'system.title' = 'System settings'
-        'system.sub' = 'All AtlasOS settings. A button applies that option; scripts open in a window that explains what they change. The default badge marks the Akati OS default.'
-        'system.search' = 'Search settings'; 'system.links' = 'Links and tools'
-        'system.cat.Software' = 'Software'; 'system.cat.Drivers' = 'Drivers'; 'system.cat.General Configuration' = 'General'
-        'system.cat.Interface Tweaks' = 'Interface'; 'system.cat.Windows Settings' = 'Windows Settings'
-        'system.cat.Advanced Configuration' = 'Advanced'; 'system.cat.Security' = 'Security'
-        'system.cat.Additional Tools' = 'Additional tools'; 'system.cat.Troubleshooting' = 'Troubleshooting'; 'system.cat.AtlasOS' = 'AtlasOS'
-        'status.applied' = 'Applied: {0}'; 'status.opened' = 'Opened: {0}'
-        'gaming.title' = 'Gaming apps'
-        'gaming.sub' = 'Akati OS does not install apps during setup. Install them here, from official sources (WinGet, or the official installer for Steam and Discord).'
-        'gpu.title' = 'GPU drivers'; 'gpu.sub' = 'Opens the official driver download page.'
-        'tweaks.title' = 'Tweaks'
-        'tweaks.sub' = 'Gaming switches show the current state of your PC; turn one off again if games run worse. Below are all AtlasOS settings.'
-        'cleaner.title' = 'Cleaner'; 'cleaner.sub' = 'Deletes temporary files. Files that are in use are skipped.'
-        'cleaner.total' = 'SELECTED'; 'cleaner.scan' = 'Scan'; 'cleaner.clean' = 'Clean now'
-        'appearance.title' = 'Appearance'; 'appearance.sub' = 'Pick an Akati OS theme. Windows applies it right away.'
-        'links' = 'Links'; 'link.options' = 'Options guide'; 'credits' = 'Credits'
-        'credits.text' = 'Akati OS is based on AtlasOS by the Atlas team and is licensed under GPL-3.0. It is not an official AtlasOS project. AME Wizard by Ameliorated.'
-        'ready' = 'Ready'
-        'installed' = 'Installed'; 'notinstalled' = 'Not installed'; 'install' = 'Install'; 'installing' = 'Installing...'
-        'apply' = 'Apply'; 'active' = 'Active'
-        'restart' = 'Restart to apply'
-        'status.installing' = 'Installing {0}...'; 'status.installed' = '{0} installed'; 'status.notinstalled' = '{0} was not installed. Get it from its official website.'
-        'status.tweak' = 'Applying: {0}...'; 'status.tweakdone' = '{0}: done'
-        'status.scanning' = 'Scanning...'; 'status.cleaning' = 'Cleaning...'; 'status.cleaned' = 'Freed {0}'
-        'status.theme' = 'Theme applied: {0}'
-        'status.checking' = 'Checking for updates...'
-        'update.latest' = 'You have the latest version ({0}).'
-        'update.ahead' = 'Your version is newer than the latest release ({0}): test build.'
-        'update.new' = 'New version available: {0}. A new version needs a fresh Windows install.'
-        'update.error' = 'Could not reach GitHub.'
-        'update.open' = 'Open release page'
-        'clean.temp' = 'Temporary files (your account)'; 'clean.wintemp' = 'Windows temporary files'
-        'clean.dumps' = 'Crash dumps and error reports'; 'clean.recycle' = 'Recycle Bin'
-        'clean.update' = 'Windows Update downloads'; 'clean.logs' = 'Windows setup logs'; 'clean.thumbs' = 'Thumbnail cache'
-        'clean.apps' = 'Discord, Steam and Epic caches'; 'clean.browser' = 'Browser caches'; 'clean.shaders' = 'GPU shader caches'
-        'clean.temp.d' = 'Files apps leave in your Temp folder'; 'clean.wintemp.d' = 'C:\Windows\Temp'
-        'clean.update.d' = 'Update files that are already installed (Windows downloads them again if needed)'
-        'clean.dumps.d' = 'Crash dumps and Windows Error Reporting files'; 'clean.logs.d' = 'CBS, DISM and setup logs'
-        'clean.thumbs.d' = 'Picture previews in File Explorer, made again when needed'
-        'clean.apps.d' = 'Web caches only; your logins and settings stay'
-        'clean.browser.d' = 'Brave, Edge, Chrome and Firefox. No cookies or passwords. Pages load slower once'
-        'clean.shaders.d' = 'NVIDIA, AMD, Intel and DirectX. Games stutter once while they build them again'
-        'clean.recycle.d' = 'Deleted files in the Recycle Bin'
-        'tw.hags' = 'Hardware-accelerated GPU scheduling'; 'tw.hags.d' = 'Lets the GPU manage its own memory. Needs a supported GPU and driver.'
-        'tw.windowed' = 'Optimizations for windowed games'; 'tw.windowed.d' = 'Lower latency for DirectX 10/11 games in windowed and borderless mode.'
-        'tw.gamemode' = 'Game Mode'; 'tw.gamemode.d' = 'Windows gives games priority and pauses some background work while you play.'
-        'tw.maxperf' = 'Maximum Performance power plan'; 'tw.maxperf.d' = 'Atlas Power Scheme with power saving off. Best for desktops, uses more battery on laptops.'
-        'tw.hibernation' = 'Hibernation'; 'tw.hibernation.d' = 'Off saves disk space. Shut down and restart work normally.'
-        'tw.store' = 'Microsoft Store'; 'tw.store.d' = 'Needed by the Xbox app and Game Pass. Installing it again can take a minute.'
-        'theme.dark' = 'Akati OS Dark'; 'theme.light' = 'Akati OS Light'; 'theme.slideshow' = 'Akati OS Slideshow'
-        'theme.slideshow.d' = 'Wallpaper changes every 30 minutes'
-        'nav.boost' = 'Game boost'
-        'cancel' = 'Cancel'; 'cancelling' = 'Cancelling...'; 'queued' = 'Waiting in the queue'; 'preparing' = 'Starting...'
-        'update' = 'Update'; 'updating' = 'Updating...'; 'updateavailable' = 'Update available'; 'selfupdate' = 'updates itself'
-        'apps.check' = 'Check for updates'; 'apps.updateall' = 'Update all'; 'apps.installselected' = 'Install selected'
-        'apps.hint' = 'Tick apps to install several at once. They install one after another.'
-        'stage.winget' = 'Installing with WinGet...'; 'stage.download' = 'Downloading'; 'stage.install' = 'Installing...'
-        'stage.user' = 'Installing for your account...'; 'stage.finish' = 'Finishing...'
-        'status.cancelled' = '{0}: cancelled'; 'status.updating' = 'Updating {0}...'; 'status.updated' = '{0} updated'
-        'status.updatefailed' = '{0} could not be updated'; 'status.checkingapps' = 'Checking WinGet for app updates...'
-        'status.updatesfound' = '{0} update(s) available'; 'status.noupdates' = 'All apps are up to date'
-        'status.nowinget' = 'WinGet is not installed'
-        'gpu.detected' = 'Found in this PC: {0}'; 'gpu.none' = 'No NVIDIA, AMD or Intel graphics card found (virtual machine?).'
-        'boost.title' = 'Game boost'
-        'boost.sub' = 'One click before you play. Stop puts everything back the way it was, also after a restart.'
-        'boost.mode' = 'Game Mode'; 'boost.off' = 'Off'; 'boost.on' = 'On since {0}'; 'boost.start' = 'Start'; 'boost.stop' = 'Stop'
-        'boost.power' = 'Switch to the highest performance power plan'
-        'boost.apps' = 'Close background apps'; 'boost.noapps' = 'none running now'
-        'boost.notify' = 'Turn off notifications'
-        'status.booston' = 'Game boost is on. Have fun!'; 'status.boostoff' = 'Game boost is off, your settings are back'
-        'ping.title' = 'Ping to game servers'
-        'ping.sub' = 'Connection time to the cloud data centers where many games run their Asian servers. Lower is better: under 60 ms is great.'
-        'ping.start' = 'Start test'; 'ping.stop' = 'Stop'; 'ping.timeout' = 'no reply'
-        'ping.bkk' = 'Thailand (Bangkok)'; 'ping.sin' = 'Singapore'; 'ping.hkg' = 'Hong Kong'; 'ping.tyo' = 'Japan (Tokyo)'
-        'startup.title' = 'Startup apps'
-        'startup.sub' = 'Apps that start when you sign in. Fewer apps means a faster start and more free RAM for games.'
-        'startup.empty' = 'No startup apps.'
-        'status.startupon' = '{0} starts with Windows'; 'status.startupoff' = '{0} no longer starts with Windows'
-        'system.default' = 'default'
-        'restore.title' = 'Create a restore point first'; 'restore.open' = 'System Restore'
-        'restore.sub' = 'Once, before the first change you make here. Needs System Restore to be on.'
-        'status.restoring' = 'Creating a restore point...'
-        'status.restore.made' = 'Restore point created'
-        'status.restore.recent' = 'No new restore point: Windows made one less than 24 hours ago'
-        'status.restore.off' = 'No restore point: System Restore is off. Turn it on with the System Restore button (Configure > Turn on system protection).'
-        'status.boostpartial' = 'Game boost is on, but these steps failed: {0}'
-        'status.sound.play' = 'Playing: {0}'
-        'report.title' = 'Report a problem'
-        'report.sub' = 'Saves one .zip on your desktop with the Akati OS logs and PC details. No personal files; your user name and PC name are removed. Attach it to a GitHub issue.'
-        'report.button' = 'Create problem report'; 'report.issues' = 'GitHub issues'
-        'status.report' = 'Creating the problem report...'; 'status.reportdone' = 'Saved on your desktop: {0}'; 'status.reportfailed' = 'Could not create the report'
-        'accent.title' = 'Accent color'
-        'accent.sub' = 'Used by Akati OS Center, the Windows accent color (highlights, buttons and links; Start and taskbar only when "Show accent color" is on in Settings) and the Akati OS Terminal colors.'
-        'accent.purple' = 'Purple'; 'accent.blue' = 'Blue'; 'accent.cyan' = 'Cyan'; 'accent.green' = 'Green'
-        'accent.pink' = 'Pink'; 'accent.red' = 'Red'; 'accent.orange' = 'Orange'
-        'status.accent' = 'Accent color: {0}. Some parts of Windows change after you sign in again.'
-        'wall.title' = 'Wallpapers'; 'wall.sub' = 'Click a picture to use it as your desktop background.'
-        'status.wallpaper' = 'Wallpaper: {0}'
-        'style.title' = 'Cursor and sounds'
-        'style.sub' = 'The Akati OS pointer and system sounds. You can go back to the Windows ones at any time.'
-        'style.cursor' = 'Cursor'; 'style.sounds' = 'Sounds'; 'style.akati' = 'Akati OS'; 'style.windows' = 'Windows'
-        'style.nosound' = 'No sounds'; 'style.preview' = 'Play'
-        'status.cursor.akati' = 'Akati OS cursor is on'; 'status.cursor.windows' = 'Windows cursor is back'
-        'status.sound.akati' = 'Akati OS sounds are on'; 'status.sound.windows' = 'Windows sounds are on'; 'status.sound.none' = 'Sounds are off'
-        'welcome.title' = 'Welcome to Akati OS'; 'welcome.sub' = 'Three quick steps. You can change everything later.'
-        'welcome.lang' = 'Language'; 'welcome.apps' = 'Install your gaming apps'; 'welcome.apps.d' = 'Steam, Discord, Epic and more'
-        'welcome.look' = 'Pick a theme and accent color'; 'welcome.look.d' = 'Dark, light, slideshow and 7 colors'
-        'welcome.open' = 'Open'; 'welcome.done' = 'Get started'
-        'welcome.keys' = 'Tip: Ctrl+1 to Ctrl+7 switch pages, Ctrl+F searches the settings.'
-        'lang' = 'ภาษาไทย'
-    }
-    th = @{
-        'admin' = 'โหมดผู้ดูแลระบบ'; 'menu' = 'เมนู'
-        'nav.dashboard' = 'แดชบอร์ด'; 'nav.gaming' = 'แอปเกม'; 'nav.tweaks' = 'ปรับแต่ง'
-        'nav.cleaner' = 'ล้างไฟล์ขยะ'; 'nav.appearance' = 'ธีม'; 'nav.about' = 'เกี่ยวกับ'
-        'welcome' = 'ยินดีต้อนรับ'; 'version' = 'เวอร์ชัน AKATI OS'
-        'cpu' = 'การใช้ CPU'; 'ram' = 'การใช้ RAM'; 'gpu' = 'การใช้ GPU'
-        'quick' = 'ทางลัด'
-        'greet.morning' = 'สวัสดีตอนเช้า'; 'greet.afternoon' = 'สวัสดีตอนบ่าย'; 'greet.evening' = 'สวัสดีตอนเย็น'; 'greet.night' = 'สวัสดีตอนค่ำ'
-        'update.checking' = 'กำลังตรวจอัปเดต...'
-        'chip.boost.on' = 'บูสต์เกมเปิดอยู่'; 'chip.boost.off' = 'บูสต์เกมปิดอยู่'; 'chip.power' = 'แผนพลังงาน: {0}'; 'chip.days' = '{0} วัน {1} ชม.'; 'chip.hours' = '{0} ชม. {1} นาที'
-        'chip.defender.on' = 'Defender เปิดอยู่'; 'chip.defender.off' = 'Defender ปิดอยู่'; 'chip.uptime' = 'เปิดเครื่องมา {0}'
-        'disk.title' = 'พื้นที่เก็บข้อมูล'; 'disk.free' = 'ว่าง {0} จาก {1}'; 'disk.local' = 'ดิสก์ในเครื่อง'
-        'net.title' = 'เครือข่าย'; 'net.down' = 'ดาวน์โหลด'; 'net.up' = 'อัปโหลด'; 'net.ping' = 'ปิง (สิงคโปร์)'
-        'top.title' = 'แอปที่ใช้ CPU มากที่สุด'; 'top.end' = 'ปิด'; 'top.confirm' = 'ปิด {0} ใช่ไหม งานที่ยังไม่ได้บันทึกในแอปนี้จะหายไป'
-        'status.ended' = 'ปิด {0} แล้ว'
-        'quick.boost' = 'บูสต์เกม'; 'quick.boost.d' = 'เปิดหรือปิดได้ที่นี่'
-        'quick.clean' = 'ล้างไฟล์ชั่วคราว'; 'quick.clean.d' = 'เพิ่มพื้นที่ดิสก์'
-        'quick.update' = 'ตรวจอัปเดต'; 'quick.update.d' = 'เทียบกับ GitHub'
-        'quick.system' = 'ปรับแต่ง'; 'quick.system.d' = 'เกมและการตั้งค่า AtlasOS'
-        'tweaks.gaming' = 'เกม'; 'tweaks.system' = 'ระบบ (AtlasOS)'
-        'nav.system' = 'ตั้งค่าระบบ'; 'system.title' = 'ตั้งค่าระบบ'
-        'system.sub' = 'การตั้งค่าทั้งหมดของ AtlasOS กดปุ่มเพื่อใช้ตัวเลือกนั้น สคริปต์จะเปิดในหน้าต่างที่อธิบายว่าเปลี่ยนอะไร ป้าย ค่าเริ่มต้น คือค่าที่ Akati OS ใช้ หน้าต่างของสคริปต์เป็นภาษาอังกฤษตาม AtlasOS'
-        'system.search' = 'ค้นหาการตั้งค่า'; 'system.links' = 'ลิงก์และเครื่องมือ'
-        'system.cat.Software' = 'ซอฟต์แวร์'; 'system.cat.Drivers' = 'ไดรเวอร์'; 'system.cat.General Configuration' = 'ทั่วไป'
-        'system.cat.Interface Tweaks' = 'หน้าตา'; 'system.cat.Windows Settings' = 'การตั้งค่า Windows'
-        'system.cat.Advanced Configuration' = 'ขั้นสูง'; 'system.cat.Security' = 'ความปลอดภัย'
-        'system.cat.Additional Tools' = 'เครื่องมือเพิ่มเติม'; 'system.cat.Troubleshooting' = 'แก้ปัญหา'; 'system.cat.AtlasOS' = 'AtlasOS'
-        'status.applied' = 'ใช้แล้ว: {0}'; 'status.opened' = 'เปิดแล้ว: {0}'
-        'gaming.title' = 'แอปเกม'
-        'gaming.sub' = 'Akati OS ไม่ได้ติดตั้งแอปให้ตอนลง กดติดตั้งได้ที่นี่ โหลดจากแหล่งทางการ (WinGet หรือตัวติดตั้งทางการของ Steam และ Discord)'
-        'gpu.title' = 'ไดรเวอร์การ์ดจอ'; 'gpu.sub' = 'เปิดหน้าดาวน์โหลดไดรเวอร์ทางการ'
-        'tweaks.title' = 'ปรับแต่ง'
-        'tweaks.sub' = 'สวิตช์เกมแสดงสถานะจริงของเครื่อง ถ้าเปิดแล้วเกมแย่ลงให้ปิดกลับ ด้านล่างคือการตั้งค่าทั้งหมดของ AtlasOS'
-        'cleaner.title' = 'ล้างไฟล์ขยะ'; 'cleaner.sub' = 'ลบไฟล์ชั่วคราว ไฟล์ที่กำลังใช้งานอยู่จะถูกข้าม'
-        'cleaner.total' = 'ที่เลือกไว้'; 'cleaner.scan' = 'สแกน'; 'cleaner.clean' = 'ล้างเลย'
-        'appearance.title' = 'ธีม'; 'appearance.sub' = 'เลือกธีมของ Akati OS แล้ว Windows จะเปลี่ยนให้ทันที'
-        'links' = 'ลิงก์'; 'link.options' = 'คู่มือตัวเลือก'; 'credits' = 'เครดิต'
-        'credits.text' = 'Akati OS ดัดแปลงจาก AtlasOS ของทีม Atlas ใช้สัญญาอนุญาต GPL-3.0 ไม่ใช่โปรเจกต์ทางการของ AtlasOS ใช้งานผ่าน AME Wizard ของ Ameliorated'
-        'ready' = 'พร้อมใช้งาน'
-        'installed' = 'ติดตั้งแล้ว'; 'notinstalled' = 'ยังไม่ได้ติดตั้ง'; 'install' = 'ติดตั้ง'; 'installing' = 'กำลังติดตั้ง...'
-        'apply' = 'ใช้ธีมนี้'; 'active' = 'ใช้อยู่'
-        'restart' = 'รีสตาร์ตเพื่อให้มีผล'
-        'status.installing' = 'กำลังติดตั้ง {0}...'; 'status.installed' = 'ติดตั้ง {0} แล้ว'; 'status.notinstalled' = 'ติดตั้ง {0} ไม่สำเร็จ ให้ติดตั้งจากเว็บไซต์ทางการ'
-        'status.tweak' = 'กำลังปรับ: {0}...'; 'status.tweakdone' = '{0}: เรียบร้อย'
-        'status.scanning' = 'กำลังสแกน...'; 'status.cleaning' = 'กำลังล้าง...'; 'status.cleaned' = 'ล้างได้ {0}'
-        'status.theme' = 'เปลี่ยนธีมเป็น {0} แล้ว'
-        'status.checking' = 'กำลังตรวจอัปเดต...'
-        'update.latest' = 'ใช้เวอร์ชันล่าสุดอยู่แล้ว ({0})'
-        'update.ahead' = 'เวอร์ชันในเครื่องใหม่กว่า release ล่าสุด ({0}) เป็นตัวทดสอบ'
-        'update.new' = 'มีเวอร์ชันใหม่: {0} ต้องลง Windows ใหม่พร้อมไฟล์ .apbx ตัวใหม่'
-        'update.error' = 'เชื่อมต่อ GitHub ไม่ได้'
-        'update.open' = 'เปิดหน้า release'
-        'clean.temp' = 'ไฟล์ชั่วคราว (บัญชีของคุณ)'; 'clean.wintemp' = 'ไฟล์ชั่วคราวของ Windows'
-        'clean.dumps' = 'Crash dump และรายงานข้อผิดพลาด'; 'clean.recycle' = 'ถังขยะ'
-        'clean.update' = 'ไฟล์ดาวน์โหลดของ Windows Update'; 'clean.logs' = 'Log การติดตั้งของ Windows'; 'clean.thumbs' = 'แคชภาพย่อ'
-        'clean.apps' = 'แคชของ Discord, Steam และ Epic'; 'clean.browser' = 'แคชเบราว์เซอร์'; 'clean.shaders' = 'แคช shader ของการ์ดจอ'
-        'clean.temp.d' = 'ไฟล์ที่แอปทิ้งไว้ในโฟลเดอร์ Temp'; 'clean.wintemp.d' = 'C:\Windows\Temp'
-        'clean.update.d' = 'ไฟล์อัปเดตที่ติดตั้งไปแล้ว (Windows โหลดใหม่เองถ้าต้องใช้)'
-        'clean.dumps.d' = 'Crash dump และไฟล์ Windows Error Reporting'; 'clean.logs.d' = 'Log ของ CBS, DISM และการติดตั้ง'
-        'clean.thumbs.d' = 'ภาพตัวอย่างใน File Explorer สร้างใหม่เองเมื่อเปิดดู'
-        'clean.apps.d' = 'เฉพาะแคชเว็บ การล็อกอินและการตั้งค่ายังอยู่'
-        'clean.browser.d' = 'Brave, Edge, Chrome และ Firefox ไม่ลบคุกกี้หรือรหัสผ่าน หน้าเว็บโหลดช้าลงครั้งแรก'
-        'clean.shaders.d' = 'NVIDIA, AMD, Intel และ DirectX เกมจะกระตุกครั้งแรกระหว่างสร้างใหม่'
-        'clean.recycle.d' = 'ไฟล์ที่ลบไว้ในถังขยะ'
-        'tw.hags' = 'Hardware-accelerated GPU scheduling'; 'tw.hags.d' = 'ให้การ์ดจอจัดการหน่วยความจำเอง ต้องใช้การ์ดจอและไดรเวอร์ที่รองรับ'
-        'tw.windowed' = 'Optimizations for windowed games'; 'tw.windowed.d' = 'ลด latency ของเกม DirectX 10/11 ที่เล่นแบบหน้าต่างหรือ borderless'
-        'tw.gamemode' = 'Game Mode'; 'tw.gamemode.d' = 'Windows ให้ความสำคัญกับเกมและพักงานเบื้องหลังบางอย่างระหว่างเล่น'
-        'tw.maxperf' = 'Power plan ประสิทธิภาพสูงสุด'; 'tw.maxperf.d' = 'Atlas Power Scheme และปิดการประหยัดพลังงาน เหมาะกับคอมตั้งโต๊ะ โน้ตบุ๊กจะเปลืองแบต'
-        'tw.hibernation' = 'Hibernation'; 'tw.hibernation.d' = 'ปิดไว้ช่วยประหยัดพื้นที่ดิสก์ ปิดเครื่องและรีสตาร์ตได้ตามปกติ'
-        'tw.store' = 'Microsoft Store'; 'tw.store.d' = 'แอป Xbox และ Game Pass ต้องใช้ การติดตั้งกลับอาจใช้เวลาประมาณ 1 นาที'
-        'theme.dark' = 'Akati OS Dark'; 'theme.light' = 'Akati OS Light'; 'theme.slideshow' = 'Akati OS Slideshow'
-        'theme.slideshow.d' = 'เปลี่ยน wallpaper ทุก 30 นาที'
-        'nav.boost' = 'บูสต์เกม'
-        'cancel' = 'ยกเลิก'; 'cancelling' = 'กำลังยกเลิก...'; 'queued' = 'รอคิว'; 'preparing' = 'กำลังเริ่ม...'
-        'update' = 'อัปเดต'; 'updating' = 'กำลังอัปเดต...'; 'updateavailable' = 'มีอัปเดต'; 'selfupdate' = 'อัปเดตตัวเอง'
-        'apps.check' = 'ตรวจอัปเดต'; 'apps.updateall' = 'อัปเดตทั้งหมด'; 'apps.installselected' = 'ติดตั้งที่เลือก'
-        'apps.hint' = 'ติ๊กหลายแอปเพื่อติดตั้งทีเดียว ระบบจะติดตั้งให้ทีละตัว'
-        'stage.winget' = 'กำลังติดตั้งด้วย WinGet...'; 'stage.download' = 'กำลังดาวน์โหลด'; 'stage.install' = 'กำลังติดตั้ง...'
-        'stage.user' = 'กำลังติดตั้งให้บัญชีของคุณ...'; 'stage.finish' = 'กำลังจบการติดตั้ง...'
-        'status.cancelled' = '{0}: ยกเลิกแล้ว'; 'status.updating' = 'กำลังอัปเดต {0}...'; 'status.updated' = 'อัปเดต {0} แล้ว'
-        'status.updatefailed' = 'อัปเดต {0} ไม่สำเร็จ'; 'status.checkingapps' = 'กำลังตรวจอัปเดตแอปจาก WinGet...'
-        'status.updatesfound' = 'มีอัปเดต {0} รายการ'; 'status.noupdates' = 'แอปทั้งหมดเป็นเวอร์ชันล่าสุด'
-        'status.nowinget' = 'ไม่มี WinGet ในเครื่อง'
-        'gpu.detected' = 'ตรวจพบในเครื่อง: {0}'; 'gpu.none' = 'ไม่พบการ์ดจอ NVIDIA, AMD หรือ Intel (อาจเป็น VM)'
-        'boost.title' = 'บูสต์เกม'
-        'boost.sub' = 'กดครั้งเดียวก่อนเล่นเกม กดหยุดแล้วทุกอย่างจะกลับเป็นเหมือนเดิม แม้รีสตาร์ตเครื่องไปแล้ว'
-        'boost.mode' = 'โหมดเกม'; 'boost.off' = 'ปิดอยู่'; 'boost.on' = 'เปิดตั้งแต่ {0}'; 'boost.start' = 'เริ่ม'; 'boost.stop' = 'หยุด'
-        'boost.power' = 'เปลี่ยนเป็น power plan ประสิทธิภาพสูงสุด'
-        'boost.apps' = 'ปิดแอปเบื้องหลัง'; 'boost.noapps' = 'ตอนนี้ไม่มีที่เปิดอยู่'
-        'boost.notify' = 'ปิดการแจ้งเตือน'
-        'status.booston' = 'เปิดบูสต์เกมแล้ว ขอให้สนุก!'; 'status.boostoff' = 'ปิดบูสต์เกมแล้ว การตั้งค่ากลับเป็นเหมือนเดิม'
-        'ping.title' = 'ปิงไปเซิร์ฟเวอร์เกม'
-        'ping.sub' = 'เวลาเชื่อมต่อไปศูนย์ข้อมูลคลาวด์ที่เกมออนไลน์หลายเกมใช้วางเซิร์ฟเวอร์เอเชีย ยิ่งต่ำยิ่งดี ต่ำกว่า 60 ms ถือว่าดีมาก'
-        'ping.start' = 'เริ่มทดสอบ'; 'ping.stop' = 'หยุด'; 'ping.timeout' = 'ไม่ตอบ'
-        'ping.bkk' = 'ไทย (กรุงเทพฯ)'; 'ping.sin' = 'สิงคโปร์'; 'ping.hkg' = 'ฮ่องกง'; 'ping.tyo' = 'ญี่ปุ่น (โตเกียว)'
-        'startup.title' = 'แอปที่เปิดตอนบูต'
-        'startup.sub' = 'แอปที่เปิดเองตอนเข้าสู่ระบบ ยิ่งน้อยเครื่องยิ่งเปิดเร็ว และเหลือ RAM ให้เกมมากขึ้น'
-        'startup.empty' = 'ไม่มีแอปที่เปิดตอนบูต'
-        'status.startupon' = '{0} จะเปิดพร้อม Windows'; 'status.startupoff' = '{0} จะไม่เปิดพร้อม Windows แล้ว'
-        'system.default' = 'ค่าเริ่มต้น'
-        'restore.title' = 'สร้างจุดคืนค่าก่อนเปลี่ยน'; 'restore.open' = 'System Restore'
-        'restore.sub' = 'สร้างครั้งเดียวก่อนการเปลี่ยนแปลงแรกในหน้านี้ ต้องเปิด System Restore ไว้'
-        'status.restoring' = 'กำลังสร้างจุดคืนค่า...'
-        'status.restore.made' = 'สร้างจุดคืนค่าแล้ว'
-        'status.restore.recent' = 'ไม่ได้สร้างจุดคืนค่าใหม่ เพราะ Windows สร้างไว้แล้วในช่วง 24 ชั่วโมง'
-        'status.restore.off' = 'สร้างจุดคืนค่าไม่ได้ เพราะ System Restore ปิดอยู่ เปิดได้ที่ปุ่ม System Restore (Configure > Turn on system protection)'
-        'status.boostpartial' = 'เปิดบูสต์เกมแล้ว แต่ขั้นเหล่านี้ไม่สำเร็จ: {0}'
-        'status.sound.play' = 'กำลังเล่น: {0}'
-        'report.title' = 'แจ้งปัญหา'
-        'report.sub' = 'บันทึกไฟล์ .zip ไฟล์เดียวไว้บนเดสก์ท็อป มี log ของ Akati OS และข้อมูลเครื่อง ไม่มีไฟล์ส่วนตัว และลบชื่อผู้ใช้กับชื่อเครื่องออกแล้ว แนบไฟล์นี้ใน GitHub issue'
-        'report.button' = 'สร้างรายงานปัญหา'; 'report.issues' = 'GitHub issues'
-        'status.report' = 'กำลังสร้างรายงานปัญหา...'; 'status.reportdone' = 'บันทึกไว้บนเดสก์ท็อปแล้ว: {0}'; 'status.reportfailed' = 'สร้างรายงานไม่สำเร็จ'
-        'accent.title' = 'สีหลัก'
-        'accent.sub' = 'ใช้กับ Akati OS Center, สีเน้นของ Windows (ไฮไลต์ ปุ่ม และลิงก์ ส่วน Start และ taskbar จะเปลี่ยนเมื่อเปิด "แสดงสีเน้น" ใน Settings) และสีของ Terminal แบบ Akati OS'
-        'accent.purple' = 'ม่วง'; 'accent.blue' = 'น้ำเงิน'; 'accent.cyan' = 'ฟ้า'; 'accent.green' = 'เขียว'
-        'accent.pink' = 'ชมพู'; 'accent.red' = 'แดง'; 'accent.orange' = 'ส้ม'
-        'status.accent' = 'สีหลัก: {0} บางส่วนของ Windows จะเปลี่ยนหลังออกจากระบบแล้วเข้าใหม่'
-        'wall.title' = 'วอลเปเปอร์'; 'wall.sub' = 'คลิกรูปเพื่อใช้เป็นพื้นหลังเดสก์ท็อป'
-        'status.wallpaper' = 'เปลี่ยนวอลเปเปอร์เป็น {0} แล้ว'
-        'style.title' = 'เคอร์เซอร์และเสียง'
-        'style.sub' = 'เคอร์เซอร์และเสียงระบบของ Akati OS เปลี่ยนกลับเป็นของ Windows ได้ทุกเมื่อ'
-        'style.cursor' = 'เคอร์เซอร์'; 'style.sounds' = 'เสียง'; 'style.akati' = 'Akati OS'; 'style.windows' = 'Windows'
-        'style.nosound' = 'ไม่มีเสียง'; 'style.preview' = 'ลองฟัง'
-        'status.cursor.akati' = 'ใช้เคอร์เซอร์ Akati OS แล้ว'; 'status.cursor.windows' = 'กลับไปใช้เคอร์เซอร์ Windows แล้ว'
-        'status.sound.akati' = 'ใช้เสียง Akati OS แล้ว'; 'status.sound.windows' = 'ใช้เสียง Windows แล้ว'; 'status.sound.none' = 'ปิดเสียงระบบแล้ว'
-        'welcome.title' = 'ยินดีต้อนรับสู่ Akati OS'; 'welcome.sub' = '3 ขั้นสั้น ๆ เปลี่ยนทีหลังได้ทุกอย่าง'
-        'welcome.lang' = 'ภาษา'; 'welcome.apps' = 'ติดตั้งแอปเกม'; 'welcome.apps.d' = 'Steam, Discord, Epic และอื่น ๆ'
-        'welcome.look' = 'เลือกธีมและสีหลัก'; 'welcome.look.d' = 'ธีมมืด สว่าง สไลด์โชว์ และ 7 สี'
-        'welcome.open' = 'เปิด'; 'welcome.done' = 'เริ่มใช้งาน'
-        'welcome.keys' = 'ทิป: Ctrl+1 ถึง Ctrl+7 สลับหน้า, Ctrl+F ค้นหาการตั้งค่า'
-        'lang' = 'English'
-    }
-}
+# Texts in English and Thai (a separate file, so this one stays readable)
+. (Join-Path $appDir 'AkatiCenter.strings.ps1')
 
 $settingsKey = 'HKCU:\Software\AkatiOS\Center'
 $lang = (Get-ItemProperty -Path $settingsKey -Name Language -ErrorAction SilentlyContinue).Language
@@ -328,6 +110,7 @@ function T([string]$key) {
 # ---------------------------------------------------------------------------------------------
 # Window
 # ---------------------------------------------------------------------------------------------
+Add-Mark 'Window'
 [xml]$xaml = Get-Content -LiteralPath (Join-Path $appDir 'AkatiCenter.xaml') -Raw -Encoding UTF8
 $window = [Windows.Markup.XamlReader]::Load((New-Object System.Xml.XmlNodeReader $xaml))
 $ui = @{}
@@ -377,13 +160,53 @@ function Set-Language {
 }
 
 function Set-Status([string]$text, [bool]$busy = $false) {
+    $script:statusBusy = $busy
     $ui.StatusText.Text = $text
     $ui.StatusDot.Fill = if ($busy) { $window.FindResource('Accent2') } else { $window.FindResource('Good') }
 }
 
 # ---------------------------------------------------------------------------------------------
+# Look: dark or light. The XAML uses these brushes as DynamicResource; their colors are changed in place,
+# so elements that hold a brush from code change too. Mica: see-through versions of the two backgrounds.
+# ---------------------------------------------------------------------------------------------
+$looks = @{
+    dark  = @{ Text = '#F5F5F7'; Text2 = '#EBEBF0'; Text3 = '#D1D1D6'; RootBg = '#1C1C1E'; SidebarBg = '#232325'; CardBg = '#2A2A2C'; CardBorder = '#38383A'
+               Line = '#38383A'; Fill = '#3A3A3C'; FillHover = '#48484A'; Field = '#2E2E30'; Popup = '#2C2C2E'; Handle = '#5A5A5E'; SegmentOn = '#4A4A4D'
+               MutedBrush = '#98989D'; Good = '#5FD38D'; MicaRoot = '#D01C1C1E'; MicaSidebar = '#90232325' }
+    light = @{ Text = '#1D1D1F'; Text2 = '#1D1D1F'; Text3 = '#3C3C43'; RootBg = '#F5F5F7'; SidebarBg = '#E9E9EE'; CardBg = '#FFFFFF'; CardBorder = '#DEDEE3'
+               Line = '#E1E1E6'; Fill = '#EDEDF1'; FillHover = '#E0E0E5'; Field = '#E2E2E7'; Popup = '#FFFFFF'; Handle = '#B8B8BE'; SegmentOn = '#FFFFFF'
+               MutedBrush = '#6E6E73'; Good = '#1F9D57'; MicaRoot = '#D0F5F5F7'; MicaSidebar = '#90E9E9EE' }
+}
+function Set-ThemeBrush([string]$key, [string]$hex) {
+    $color = [System.Windows.Media.ColorConverter]::ConvertFromString($hex)
+    $brush = $window.Resources[$key]
+    if ($brush -is [System.Windows.Media.SolidColorBrush] -and !$brush.IsFrozen) { $brush.Color = $color }
+    else { $window.Resources[$key] = [System.Windows.Media.SolidColorBrush]::new($color) }
+}
+# Auto: the Windows app mode (Settings > Personalization > Colors)
+function Get-LookName {
+    $choice = Get-RegValue $settingsKey 'CenterLook'
+    if ($choice -in 'dark', 'light') { return $choice }
+    if ((Get-RegValue 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize' 'AppsUseLightTheme') -eq 1) { 'light' } else { 'dark' }
+}
+function Set-CenterLook([string]$name) {
+    $script:look = $name
+    $palette = $looks[$name]
+    foreach ($key in $palette.Keys) { if ($key -notlike 'Mica*') { Set-ThemeBrush $key $palette[$key] } }
+    if ($script:micaHwnd) {
+        Set-ThemeBrush 'RootBg' $palette.MicaRoot; Set-ThemeBrush 'SidebarBg' $palette.MicaSidebar
+        $dark = if ($name -eq 'dark') { 1 } else { 0 }
+        [void][AkatiOS.Native]::DwmSetWindowAttribute($script:micaHwnd, 20, [ref]$dark, 4)
+    }
+}
+function Get-RegValue($path, $name) { (Get-ItemProperty -Path $path -Name $name -ErrorAction SilentlyContinue).$name }
+# Screenshot mode: dark, whatever the CI machine uses (the light look has its own screenshots)
+Set-CenterLook $(if ($Screenshot) { 'dark' } else { Get-LookName })
+
+# ---------------------------------------------------------------------------------------------
 # Background work: runs a script block in another runspace, then calls back on the UI thread
 # ---------------------------------------------------------------------------------------------
+Add-Mark 'Background work'
 $script:jobs = New-Object System.Collections.ArrayList
 # $done is called as: & $done <output of $work> <$context>
 function Start-Work([scriptblock]$work, [object[]]$arguments, [scriptblock]$done, $context) {
@@ -416,6 +239,7 @@ function Receive-Work {
 # ---------------------------------------------------------------------------------------------
 # Dashboard: system info and live usage
 # ---------------------------------------------------------------------------------------------
+Add-Mark 'Dashboard'
 function Format-Size([double]$bytes) {
     if ($bytes -ge 1GB) { return '{0:N1} GB' -f ($bytes / 1GB) }
     if ($bytes -ge 1MB) { return '{0:N0} MB' -f ($bytes / 1MB) }
@@ -423,7 +247,6 @@ function Format-Size([double]$bytes) {
     return '0 KB'
 }
 
-function Get-RegValue($path, $name) { (Get-ItemProperty -Path $path -Name $name -ErrorAction SilentlyContinue).$name }
 
 $akati = Get-ItemProperty -Path 'HKLM:\SOFTWARE\AkatiOS' -ErrorAction SilentlyContinue
 $version = if ($akati.Version) { $akati.Version } else { 'v1.4.1' }
@@ -448,20 +271,28 @@ try {
 # Storage: every local drive with a bar
 function Show-Disks {
     $ui.DisksPanel.Children.Clear()
-    foreach ($d in @(Get-CimInstance Win32_LogicalDisk -Filter 'DriveType=3' -ErrorAction SilentlyContinue | Sort-Object DeviceID)) {
-        if (!$d.Size) { continue }
-        $used = 100 * ($d.Size - $d.FreeSpace) / $d.Size
+    # .NET instead of Win32_LogicalDisk: on some trimmed Windows builds (imOS) WMI returns drives without a size
+    foreach ($d in @([IO.DriveInfo]::GetDrives() | Where-Object { $_.DriveType -eq 'Fixed' -and $_.IsReady } | Sort-Object Name)) {
+        if (!$d.TotalSize) { continue }
+        $used = 100 * ($d.TotalSize - $d.TotalFreeSpace) / $d.TotalSize
         $row = New-Object System.Windows.Controls.StackPanel
         $row.Margin = '0,0,0,10'
         $top = New-Object System.Windows.Controls.Grid
-        $name = New-Text ("$($d.DeviceID)  " + $(if ($d.VolumeName) { $d.VolumeName } else { T 'disk.local' })) 13 'SemiBold'
-        $free = New-Text ((T 'disk.free') -f (Format-Size $d.FreeSpace), (Format-Size $d.Size)) 12
+        $name = New-Text ("$($d.Name.TrimEnd('\'))  " + $(if ($d.VolumeLabel) { $d.VolumeLabel } else { T 'disk.local' })) 13 'SemiBold'
+        $free = New-Text ((T 'disk.free') -f (Format-Size $d.TotalFreeSpace), (Format-Size $d.TotalSize)) 12
         $free.Foreground = $window.FindResource('MutedBrush'); $free.HorizontalAlignment = 'Right'
         [void]$top.Children.Add($name); [void]$top.Children.Add($free)
         $bar = New-Object System.Windows.Controls.ProgressBar
         $bar.Style = $window.FindResource('Meter'); $bar.Margin = '0,6,0,0'; $bar.Value = $used
         if ($used -ge 90) { $bar.Foreground = '#FF453A' }
         [void]$row.Children.Add($top); [void]$row.Children.Add($bar)
+        # Less than 15% free: a shortcut to the Cleaner
+        if ($d.TotalFreeSpace / $d.TotalSize -lt 0.15) {
+            $clean = New-Object System.Windows.Controls.Button
+            $clean.Style = $window.FindResource('Pill'); $clean.Content = T 'disk.clean'; $clean.HorizontalAlignment = 'Left'; $clean.Margin = '0,8,0,0'
+            $clean.Add_Click({ $ui.NavCleaner.IsChecked = $true })
+            [void]$row.Children.Add($clean)
+        }
         [void]$ui.DisksPanel.Children.Add($row)
     }
 }
@@ -503,11 +334,15 @@ $statsSample = {
                            Cpu = [double]($_.Group | Measure-Object -Property PercentProcessorTime -Sum).Sum
                            Ram = [double]($_.Group | Measure-Object -Property WorkingSetPrivate -Sum).Sum }
                     }
-                $stats.Top = @($groups | Sort-Object { $_.Cpu }, { $_.Ram } -Descending | Select-Object -First 5 | ForEach-Object {
-                    $_.Cpu = [Math]::Round($_.Cpu / $cores, 1)
-                    $_.Path = try { (Get-Process -Id $_.Pids[0] -ErrorAction Stop).Path } catch { $null }
-                    $_
-                })
+                foreach ($g in $groups) { $g.Cpu = [Math]::Round($g.Cpu / $cores, 1) }
+                # Two lists: by CPU and by memory (the page shows one of them)
+                $byCpu = @($groups | Sort-Object { $_.Cpu }, { $_.Ram } -Descending | Select-Object -First 5)
+                $byRam = @($groups | Sort-Object { $_.Ram } -Descending | Select-Object -First 5)
+                foreach ($g in @($byCpu + $byRam)) {
+                    if (!$g.ContainsKey('Path')) { $g.Path = try { (Get-Process -Id $g.Pids[0] -ErrorAction Stop).Path } catch { $null } }
+                }
+                $stats.TopRam = $byRam
+                $stats.Top = $byCpu
                 $stats.TopSeq++
             } catch { }
         }
@@ -558,6 +393,13 @@ function Update-Stats {
     $ui.RamValue.Text = "$($stats.Ram)%"; $ui.RamBar.Value = $stats.Ram
     if ($stats.RamTotal) { $ui.RamDetail.Text = '{0} / {1}' -f (Format-Size $stats.RamUsed), (Format-Size $stats.RamTotal) }
     if ($stats.Gpu -ge 0) { $ui.GpuValue.Text = "$($stats.Gpu)%"; $ui.GpuBar.Value = $stats.Gpu } else { $ui.GpuValue.Text = '-'; $ui.GpuBar.Value = 0 }
+    Set-Level $ui.CpuValue $ui.CpuBar $stats.Cpu
+    Set-Level $ui.RamValue $ui.RamBar $stats.Ram
+    Set-Level $ui.GpuValue $ui.GpuBar ([Math]::Max(0, $stats.Gpu))
+    # No graphics card that Windows reports usage for (virtual machines): CPU and RAM share the row
+    $gpuShown = $stats.Gpu -ge 0 -and @($gpuNames).Count -gt 0
+    $ui.GpuCard.Visibility = if ($gpuShown) { 'Visible' } else { 'Collapsed' }
+    $ui.UsageGrid.Columns = if ($gpuShown) { 3 } else { 2 }
     if ($stats.Seq -ne $script:lastSeq) {
         $script:lastSeq = $stats.Seq
         Update-Spark 'Cpu' $stats.Cpu; Update-Spark 'Ram' $stats.Ram; Update-Spark 'Gpu' ([Math]::Max(0, $stats.Gpu))
@@ -571,6 +413,14 @@ function Update-Stats {
     if ($stats.TopSeq -ne $script:lastTopSeq -and $stats.Top) { $script:lastTopSeq = $stats.TopSeq; Show-TopApps }
     Update-Clock
     if ((Get-Date) -gt $script:chipsAt) { $script:chipsAt = (Get-Date).AddSeconds(10); Update-Chips }
+    if ((Get-Date) -gt $script:netInfoAt) { $script:netInfoAt = (Get-Date).AddSeconds(60); Start-NetInfo }
+}
+
+# Orange from 85%, red from 95% (the number and the bar)
+function Set-Level($text, $bar, [double]$value) {
+    $color = if ($value -ge 95) { '#FF453A' } elseif ($value -ge 85) { '#FF9F0A' } else { $null }
+    if ($color) { $text.Foreground = $color; $bar.Foreground = $color }
+    else { $text.ClearValue([System.Windows.Controls.TextBlock]::ForegroundProperty); $bar.ClearValue([System.Windows.Controls.Control]::ForegroundProperty) }
 }
 
 # Greeting and clock like macOS
@@ -583,10 +433,21 @@ function Update-Clock {
     $ui.ClockDate.Text = $now.ToString('ddd d MMMM', $culture)
 }
 
+# Network card: the connected adapter (Wi-Fi or Ethernet), its link speed and IP address, read in the background
+function Start-NetInfo {
+    Start-Work {
+        $a = Get-NetAdapter -Physical -ErrorAction SilentlyContinue | Where-Object Status -eq 'Up' | Sort-Object { $_.NdisPhysicalMedium -ne 9 } | Select-Object -First 1
+        if (!$a) { return '' }
+        $kind = if ($a.NdisPhysicalMedium -eq 9 -or $a.PhysicalMediaType -match '802\.11') { 'Wi-Fi' } else { 'Ethernet' }
+        $ip = (Get-NetIPAddress -InterfaceIndex $a.ifIndex -AddressFamily IPv4 -ErrorAction SilentlyContinue | Select-Object -First 1).IPAddress
+        (@($kind, $a.LinkSpeed, $ip) | Where-Object { $_ }) -join ' · '
+    } @() { param($r, $c) $ui.NetInfo.Text = [string](Get-LastOutput $r) } $null
+}
+
 # Status chips: Game boost, power plan, Defender, time since start
 function New-Chip([string]$text, $dot) {
     $b = New-Object System.Windows.Controls.Border
-    $b.CornerRadius = 12; $b.Background = '#2E2E30'; $b.Padding = '10,4'; $b.Margin = '0,0,8,6'
+    $b.CornerRadius = 12; $b.SetResourceReference([System.Windows.Controls.Border]::BackgroundProperty, 'Field'); $b.Padding = '10,4'; $b.Margin = '0,0,8,6'
     $sp = New-Object System.Windows.Controls.StackPanel; $sp.Orientation = 'Horizontal'
     $e = New-Object System.Windows.Shapes.Ellipse; $e.Width = 7; $e.Height = 7; $e.Margin = '0,0,7,0'; $e.VerticalAlignment = 'Center'; $e.Fill = $dot
     $t = New-Text $text 12
@@ -601,6 +462,11 @@ function Update-Chips {
     [void]$ui.StatusChips.Children.Add((New-Chip (T $(if ($boost) { 'chip.boost.on' } else { 'chip.boost.off' })) $(if ($boost) { $good } else { $muted })))
     $plan = if ([string](powercfg /getactivescheme) -match '\((.+)\)\s*$') { $Matches[1] } else { '-' }
     [void]$ui.StatusChips.Children.Add((New-Chip ((T 'chip.power') -f $plan) $window.FindResource('Accent2')))
+    # Screen refresh rate, orange when the screen can do more
+    if ($script:screenNow -gt 1) {
+        if ($script:screenMax -gt $script:screenNow) { [void]$ui.StatusChips.Children.Add((New-Chip ((T 'chip.hzlow') -f $script:screenNow, $script:screenMax) '#FF9F0A')) }
+        else { [void]$ui.StatusChips.Children.Add((New-Chip ((T 'chip.hz') -f $script:screenNow) $muted)) }
+    }
     if ($stats.Defender -ge 0) {
         [void]$ui.StatusChips.Children.Add((New-Chip (T $(if ($stats.Defender -eq 1) { 'chip.defender.on' } else { 'chip.defender.off' })) $(if ($stats.Defender -eq 1) { $good } else { '#FF9F0A' })))
     }
@@ -616,7 +482,8 @@ $protected = 'csrss', 'wininit', 'winlogon', 'services', 'lsass', 'smss', 'svcho
 $script:iconCache = @{}
 function Show-TopApps {
     $ui.TopList.Children.Clear()
-    foreach ($p in @($stats.Top)) {
+    $list = if ($ui.TopByRam.IsChecked) { $stats.TopRam } else { $stats.Top }
+    foreach ($p in @($list)) {
         if (!$p) { continue }
         $right = New-Object System.Windows.Controls.StackPanel; $right.Orientation = 'Horizontal'
         $cpu = New-Text ('{0:N1}%' -f $p.Cpu) 13 'SemiBold'; $cpu.MinWidth = 60; $cpu.TextAlignment = 'Right'; $cpu.VerticalAlignment = 'Center'
@@ -637,10 +504,15 @@ function Show-TopApps {
             $spacer = New-Object System.Windows.Controls.Border; $spacer.Width = 76
             [void]$right.Children.Add($spacer)
         }
-        $label = if ($p.Pids.Count -gt 1) { '{0} ({1})' -f $p.Name, $p.Pids.Count } else { $p.Name }
+        # This window runs in powershell.exe: show it by its own name and logo
+        $self = $p.Pids -contains $stats.Self
+        $label = if ($self) { T 'top.self' } elseif ($p.Pids.Count -gt 1) { '{0} ({1})' -f $p.Name, $p.Pids.Count } else { $p.Name }
         $row = New-Row ([string][char]0xE7C4) $label $null $right $null
         $row.Sub.Visibility = 'Collapsed'
-        if ($p.Path) {
+        if ($self) {
+            if (!$script:selfIcon) { $script:selfIcon = Get-Image $logoPath 64 }
+            Set-RowIcon $row $script:selfIcon
+        } elseif ($p.Path) {
             if (!$script:iconCache.ContainsKey($p.Path)) { $script:iconCache[$p.Path] = Get-FileIcon @($p.Path) }
             Set-RowIcon $row $script:iconCache[$p.Path]
         }
@@ -649,26 +521,67 @@ function Show-TopApps {
     Update-Separators $ui.TopList
 }
 
+$ui.TopByCpu.Add_Checked({ Show-TopApps })
+$ui.TopByRam.Add_Checked({ Show-TopApps })
+
+# Desktop right-click menu (AkatiMenu.ps1): rebuilt shortly after something it shows changed
+$menuScript = Join-Path $appDir 'AkatiMenu.ps1'
+$menuKey = 'HKLM:\SOFTWARE\Classes\DesktopBackground\Shell\AkatiOS'
+function Request-MenuUpdate { $script:menuAt = (Get-Date).AddSeconds(1) }
+function Update-DesktopMenu {
+    $script:menuAt = $null
+    if ($Screenshot -or !(Test-Path $menuKey) -or !(Test-Path $menuScript)) { return }
+    # "My apps": installed gaming apps as "name|command|icon"
+    $list = @(foreach ($a in $apps) {
+        if (!(Test-App $a)) { continue }
+        $exe = Get-AppExe $a
+        if (!$exe) { continue }
+        # Discord moves to a new app-<version> folder with each update; its own launcher always works
+        $command = if ($a.Key -eq 'Discord') { "`"$env:LOCALAPPDATA\Discord\Update.exe`" --processStart Discord.exe" } else { "`"$exe`"" }
+        '{0}|{1}|{2}' -f $a.Name, $command, $exe
+    })
+    $centerKey = 'HKCU:\Software\AkatiOS\Center'
+    if (!(Test-Path $centerKey)) { New-Item -Path $centerKey -Force | Out-Null }
+    Set-ItemProperty -Path $centerKey -Name MenuApps -Value ([string[]]$list) -Type MultiString
+    Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$menuScript`" -Install" -WindowStyle Hidden
+}
+
 # ---------------------------------------------------------------------------------------------
 # Gaming apps
 # ---------------------------------------------------------------------------------------------
+Add-Mark 'Gaming apps'
 # Id: WinGet package (used for updates). SelfUpdate: the app updates itself. Exe: where its icon comes from.
+# Cat: section on the page (an installed app moves to "Installed" at the top). Source: where the installer
+# comes from (WinGet, or the official site for Discord and Riot). Mono and Color: the tile shown until the app is installed (then its own icon).
+# Arp: the DisplayName of its entry in Apps & features, for Uninstall.
 $apps = @(
-    @{ Key = 'Steam';     Name = 'Steam';               Glyph = [char]0xE7FC; Path = "${env:ProgramFiles(x86)}\Steam\steam.exe"; SelfUpdate = $true
-       Exe = @("${env:ProgramFiles(x86)}\Steam\steam.exe") }
-    @{ Key = 'Discord';   Name = 'Discord';             Glyph = [char]0xE8BD; Path = "$env:LOCALAPPDATA\Discord\packages\RELEASES"; SelfUpdate = $true
-       Exe = @("$env:LOCALAPPDATA\Discord\app-*\Discord.exe") }
-    @{ Key = 'Epic';      Name = 'Epic Games Launcher'; Glyph = [char]0xE7FC; Path = "${env:ProgramFiles(x86)}\Epic Games\Launcher"; Id = 'EpicGames.EpicGamesLauncher'
+    @{ Key = 'Steam';      Cat = 'launchers'; Name = 'Steam';                   Mono = 'S';  Color = '#2A475E'; Arp = 'Steam'; SelfUpdate = $true
+       Path = "${env:ProgramFiles(x86)}\Steam\steam.exe"; Exe = @("${env:ProgramFiles(x86)}\Steam\steam.exe") }
+    @{ Key = 'Epic';       Cat = 'launchers'; Name = 'Epic Games Launcher';     Mono = 'E';  Color = '#4A4A4F'; Arp = 'Epic Games Launcher'; Id = 'EpicGames.EpicGamesLauncher'
+       Path = "${env:ProgramFiles(x86)}\Epic Games\Launcher"
        Exe = @("${env:ProgramFiles(x86)}\Epic Games\Launcher\Portal\Binaries\Win64\EpicGamesLauncher.exe", "${env:ProgramFiles(x86)}\Epic Games\Launcher\Portal\Binaries\Win32\EpicGamesLauncher.exe") }
-    @{ Key = 'EA';        Name = 'EA app';              Glyph = [char]0xE7FC; Path = "$env:ProgramFiles\Electronic Arts\EA Desktop"; Id = 'ElectronicArts.EADesktop'
-       Exe = @("$env:ProgramFiles\Electronic Arts\EA Desktop\EA Desktop\EADesktop.exe") }
-    @{ Key = 'Ubisoft';   Name = 'Ubisoft Connect';     Glyph = [char]0xE7FC; Path = "${env:ProgramFiles(x86)}\Ubisoft\Ubisoft Game Launcher"; Id = 'Ubisoft.Connect'
+    @{ Key = 'EA';         Cat = 'launchers'; Name = 'EA app';                  Mono = 'EA'; Color = '#E5383B'; Arp = 'EA app'; Id = 'ElectronicArts.EADesktop'
+       Path = "$env:ProgramFiles\Electronic Arts\EA Desktop"; Exe = @("$env:ProgramFiles\Electronic Arts\EA Desktop\EA Desktop\EADesktop.exe") }
+    @{ Key = 'Ubisoft';    Cat = 'launchers'; Name = 'Ubisoft Connect';         Mono = 'U';  Color = '#0A6CD6'; Arp = 'Ubisoft Connect'; Id = 'Ubisoft.Connect'
+       Path = "${env:ProgramFiles(x86)}\Ubisoft\Ubisoft Game Launcher"
        Exe = @("${env:ProgramFiles(x86)}\Ubisoft\Ubisoft Game Launcher\UbisoftConnect.exe", "${env:ProgramFiles(x86)}\Ubisoft\Ubisoft Game Launcher\upc.exe") }
-    @{ Key = 'BattleNet'; Name = 'Battle.net';          Glyph = [char]0xE7FC; Path = "$env:ProgramFiles\Battle.net"; Path2 = "${env:ProgramFiles(x86)}\Battle.net"; Id = 'Blizzard.BattleNet'
+    @{ Key = 'BattleNet';  Cat = 'launchers'; Name = 'Battle.net';              Mono = 'B';  Color = '#148EFF'; Arp = 'Battle.net'; Id = 'Blizzard.BattleNet'
+       Path = "$env:ProgramFiles\Battle.net"; Path2 = "${env:ProgramFiles(x86)}\Battle.net"
        Exe = @("$env:ProgramFiles\Battle.net\Battle.net Launcher.exe", "${env:ProgramFiles(x86)}\Battle.net\Battle.net Launcher.exe", "$env:ProgramFiles\Battle.net\Battle.net.exe") }
-    @{ Key = 'OBS';       Name = 'OBS Studio';          Glyph = [char]0xE714; Path = "$env:ProgramFiles\obs-studio"; Id = 'OBSProject.OBSStudio'
-       Exe = @("$env:ProgramFiles\obs-studio\bin\64bit\obs64.exe") }
+    @{ Key = 'Riot';       Cat = 'launchers'; Name = 'Riot Client (VALORANT)';  Mono = 'R';  Color = '#D13639'; Arp = 'VALORANT'; SelfUpdate = $true; Source = 'official'
+       Path = "$env:SystemDrive\Riot Games\Riot Client\RiotClientServices.exe"; Exe = @("$env:SystemDrive\Riot Games\Riot Client\RiotClientServices.exe") }
+    @{ Key = 'GOG';        Cat = 'launchers'; Name = 'GOG GALAXY';              Mono = 'G';  Color = '#86328A'; Arp = 'GOG GALAXY*'; Id = 'GOG.Galaxy'
+       Path = "${env:ProgramFiles(x86)}\GOG Galaxy\GalaxyClient.exe"; Exe = @("${env:ProgramFiles(x86)}\GOG Galaxy\GalaxyClient.exe") }
+    @{ Key = 'Rockstar';   Cat = 'launchers'; Name = 'Rockstar Games Launcher'; Mono = 'RS'; Color = '#C98A0B'; Arp = 'Rockstar Games Launcher'; Id = 'RockstarGames.Launcher'
+       Path = "$env:ProgramFiles\Rockstar Games\Launcher\Launcher.exe"; Exe = @("$env:ProgramFiles\Rockstar Games\Launcher\Launcher.exe") }
+    @{ Key = 'Discord';    Cat = 'social';    Name = 'Discord';                 Mono = 'D';  Color = '#5865F2'; Arp = 'Discord'; SelfUpdate = $true; Source = 'official'
+       Path = "$env:LOCALAPPDATA\Discord\packages\RELEASES"; Exe = @("$env:LOCALAPPDATA\Discord\app-*\Discord.exe") }
+    @{ Key = 'OBS';        Cat = 'social';    Name = 'OBS Studio';              Mono = 'O';  Color = '#5C5C66'; Arp = 'OBS Studio*'; Id = 'OBSProject.OBSStudio'
+       Path = "$env:ProgramFiles\obs-studio"; Exe = @("$env:ProgramFiles\obs-studio\bin\64bit\obs64.exe") }
+    @{ Key = 'Afterburner'; Cat = 'tools';    Name = 'MSI Afterburner';         Mono = 'A';  Color = '#B3202A'; Arp = 'MSI Afterburner*'; Id = 'Guru3D.Afterburner'
+       Path = "${env:ProgramFiles(x86)}\MSI Afterburner\MSIAfterburner.exe"; Exe = @("${env:ProgramFiles(x86)}\MSI Afterburner\MSIAfterburner.exe") }
 )
+$appCats = 'installed', 'launchers', 'social', 'tools'
 
 function New-Text([string]$text, [double]$size = 13, [string]$weight = 'Normal', [string]$tag = $null) {
     $tb = New-Object System.Windows.Controls.TextBlock
@@ -703,7 +616,7 @@ function New-Row([string]$glyph, [string]$title, [string]$titleTag, [System.Wind
     foreach ($w in 'Auto', 'Auto', '*', 'Auto') { $c = New-Object System.Windows.Controls.ColumnDefinition; $c.Width = $w; $grid.ColumnDefinitions.Add($c) }
     if ($left) { $left.Margin = '0,0,14,0'; $left.VerticalAlignment = 'Center'; [void]$grid.Children.Add($left) }
     $icon = New-Object System.Windows.Controls.Border
-    $icon.Width = 30; $icon.Height = 30; $icon.CornerRadius = 7; $icon.Background = '#3A3A3C'; $icon.Margin = '0,0,12,0'
+    $icon.Width = 30; $icon.Height = 30; $icon.CornerRadius = 7; $icon.SetResourceReference([System.Windows.Controls.Border]::BackgroundProperty, 'Fill'); $icon.Margin = '0,0,12,0'
     $g = New-Text $glyph 16; $g.Style = $window.FindResource('Glyph'); $g.HorizontalAlignment = 'Center'; $g.SetResourceReference([System.Windows.Controls.TextBlock]::ForegroundProperty, 'Accent2')
     $icon.Child = $g
     [System.Windows.Controls.Grid]::SetColumn($icon, 1)
@@ -727,7 +640,7 @@ function Update-Separators($panel) {
     $first = $true
     foreach ($child in $panel.Children) {
         if ($child -isnot [System.Windows.Controls.Border] -or $child.Visibility -ne 'Visible') { continue }
-        $child.BorderBrush = '#38383A'
+        $child.SetResourceReference([System.Windows.Controls.Border]::BorderBrushProperty, 'Line')
         $child.BorderThickness = if ($first) { '0' } else { '0,1,0,0' }
         $first = $false
     }
@@ -747,44 +660,194 @@ function Test-App($app) {
     return $false
 }
 
+# App Store style progress ring on the button: the arc shows the percentage, the square means Stop.
+# Unknown percentage: a short arc that turns. Waiting in the queue: the ring without an arc.
+function New-Ring {
+    $grid = New-Object System.Windows.Controls.Grid
+    $grid.Width = 28; $grid.Height = 28
+    $track = New-Object System.Windows.Shapes.Ellipse
+    $track.SetResourceReference([System.Windows.Shapes.Shape]::StrokeProperty, 'FillHover'); $track.StrokeThickness = 2.5
+    $arc = New-Object System.Windows.Shapes.Path
+    $arc.StrokeThickness = 2.5; $arc.StrokeStartLineCap = 'Round'; $arc.StrokeEndLineCap = 'Round'
+    $arc.SetResourceReference([System.Windows.Shapes.Shape]::StrokeProperty, 'Accent2')
+    $spin = New-Object System.Windows.Media.RotateTransform
+    $arc.RenderTransformOrigin = '0.5,0.5'; $arc.RenderTransform = $spin
+    $stop = New-Object System.Windows.Shapes.Rectangle
+    $stop.Width = 8; $stop.Height = 8; $stop.RadiusX = 1.5; $stop.RadiusY = 1.5
+    $stop.SetResourceReference([System.Windows.Shapes.Shape]::FillProperty, 'Accent2')
+    [void]$grid.Children.Add($track); [void]$grid.Children.Add($arc); [void]$grid.Children.Add($stop)
+    return @{ Root = $grid; Arc = $arc; Spin = $spin; Spinning = $false }
+}
+# $percent: 0-100, -1 unknown (turning), -2 waiting (no arc)
+function Set-Ring($ring, [int]$percent) {
+    $turn = $percent -eq -1
+    if ($turn -ne $ring.Spinning) {
+        if ($turn) {
+            $anim = New-Object System.Windows.Media.Animation.DoubleAnimation 0, 360, (New-Object System.Windows.Duration ([TimeSpan]::FromSeconds(1)))
+            $anim.RepeatBehavior = [System.Windows.Media.Animation.RepeatBehavior]::Forever
+            $ring.Spin.BeginAnimation([System.Windows.Media.RotateTransform]::AngleProperty, $anim)
+        } else { $ring.Spin.BeginAnimation([System.Windows.Media.RotateTransform]::AngleProperty, $null); $ring.Spin.Angle = 0 }
+        $ring.Spinning = $turn
+    }
+    if ($percent -eq -2) { $ring.Arc.Data = $null; return }
+    $value = if ($turn) { 25 } else { [Math]::Max(2, [Math]::Min(100, $percent)) }
+    $r = 12.75; $c = 14
+    if ($value -ge 100) { $ring.Arc.Data = New-Object System.Windows.Media.EllipseGeometry (New-Object System.Windows.Point $c, $c), $r, $r; return }
+    $a = [Math]::PI * 2 * $value / 100
+    $end = New-Object System.Windows.Point ($c + $r * [Math]::Sin($a)), ($c - $r * [Math]::Cos($a))
+    $seg = New-Object System.Windows.Media.ArcSegment $end, (New-Object System.Windows.Size $r, $r), 0, ($value -gt 50), ([System.Windows.Media.SweepDirection]::Clockwise), $true
+    $fig = New-Object System.Windows.Media.PathFigure
+    $fig.StartPoint = New-Object System.Windows.Point $c, ($c - $r)
+    $fig.Segments.Add($seg)
+    $geo = New-Object System.Windows.Media.PathGeometry
+    $geo.Figures.Add($fig)
+    $ring.Arc.Data = $geo
+}
+
 # State of a row: idle, queued, install, update. Only one install or update runs at a time
 # (installers and WinGet do not like to run side by side), the others wait in the queue.
 $progressDir = Join-Path $env:LOCALAPPDATA 'AkatiOS\Logs'
 function Update-AppRow($app) {
     $installed = Test-App $app
     $btn = $app.Button
-    # No tick box for apps that are installed, installing or waiting in the queue
     $busy = $app.State -ne 'idle'
-    $app.Check.Visibility = if ($installed -or $busy) { 'Hidden' } else { 'Visible' }
-    if ($installed -or $busy) { $app.Check.IsChecked = $false }
-    switch ($app.State) {
-        'install' { $btn.Content = T 'cancel'; $btn.Style = $window.FindResource('Secondary'); $btn.IsEnabled = $true; $app.Bar.Visibility = 'Visible'; return }
-        'update'  { $btn.Content = T 'cancel'; $btn.Style = $window.FindResource('Secondary'); $btn.IsEnabled = $true; $app.Bar.Visibility = 'Visible'; $app.Bar.IsIndeterminate = $true; $app.Sub.Text = T 'updating'; return }
-        'queued'  { $btn.Content = T 'cancel'; $btn.Style = $window.FindResource('Secondary'); $btn.IsEnabled = $true; $app.Bar.Visibility = 'Collapsed'; $app.Sub.Text = T 'queued'; $app.Sub.Foreground = $window.FindResource('MutedBrush'); return }
-    }
+    # Version and size are read again after an install or uninstall
+    if ($installed -ne $app.WasInstalled) { $app.Details = $null; $app.WasInstalled = $installed }
+    # An app being installed stays in its section until it is done
+    $app.IsInstalled = $installed -and $app.State -notin 'install', 'queued'
+    Update-AppGroups
+    $app.More.Visibility = if ($installed -and !$busy -and !$app.Uninstalling) { 'Visible' } else { 'Collapsed' }
     $app.Bar.Visibility = 'Collapsed'
-    $btn.Style = $window.FindResource('Primary')
-    if ($installed -and $app.HasUpdate) {
+    if ($busy) {
+        $btn.Style = $window.FindResource('Bare'); $btn.Padding = '4'; $btn.MinWidth = 0; $btn.Content = $app.Ring.Root; $btn.IsEnabled = $true
+        $btn.ToolTip = T 'cancel'
+        switch ($app.State) {
+            'update' { Set-Ring $app.Ring -1; $app.Sub.Text = T 'updating'; $app.Sub.Foreground = $window.FindResource('Accent2') }
+            'queued' { Set-Ring $app.Ring -2; $app.Sub.Text = T 'queued'; $app.Sub.Foreground = $window.FindResource('MutedBrush') }
+        }
+        return
+    }
+    Set-Ring $app.Ring -2
+    $btn.ToolTip = $null; $btn.ClearValue([System.Windows.Controls.Control]::PaddingProperty); $btn.ClearValue([System.Windows.FrameworkElement]::MinWidthProperty)
+    $btn.IsEnabled = !$app.Uninstalling
+    if ($app.Uninstalling) {
+        $app.Sub.Text = T 'uninstalling'; $app.Sub.Foreground = $window.FindResource('Accent2')
+        $btn.Style = $window.FindResource('Pill'); $btn.Content = T 'open'
+    } elseif ($installed -and $app.HasUpdate) {
         $app.Sub.Text = T 'updateavailable'; $app.Sub.Foreground = $window.FindResource('Accent2')
-        $btn.Content = T 'update'; $btn.IsEnabled = $true
+        $btn.Style = $window.FindResource('PillAccent'); $btn.Content = T 'update'
     } elseif ($installed) {
-        $app.Sub.Text = if ($app.SelfUpdate) { (T 'installed') + ' · ' + (T 'selfupdate') } else { T 'installed' }
+        $parts = @(T 'installed')
+        $details = Get-AppDetails $app
+        if ($details) { $parts += $details }
+        if ($app.SelfUpdate) { $parts += T 'selfupdate' }
+        $app.Sub.Text = $parts -join ' · '
         $app.Sub.Foreground = $window.FindResource('Good')
-        $btn.Content = T 'installed'; $btn.IsEnabled = $false
+        $btn.Style = $window.FindResource('Pill'); $btn.Content = T 'open'
     } else {
-        $app.Sub.Text = T 'notinstalled'; $app.Sub.Foreground = $window.FindResource('MutedBrush')
-        $btn.Content = T 'install'; $btn.IsEnabled = $true
+        $app.Sub.Text = T "app.desc.$($app.Key)"; $app.Sub.Foreground = $window.FindResource('MutedBrush')
+        $btn.Style = $window.FindResource('Pill'); $btn.Content = T 'get'
     }
     if ($installed -and !$app.HasIcon) {
         $image = Get-FileIcon $app.Exe
-        if ($image) { Set-RowIcon $app.RowParts $image; $app.HasIcon = $true }
+        if ($image) { $app.RowParts.Icon.SetResourceReference([System.Windows.Controls.Border]::BackgroundProperty, 'Fill'); Set-RowIcon $app.RowParts $image; $app.HasIcon = $true }
+    } elseif (!$installed -and $app.HasIcon) {
+        # Uninstalled: back to the letter tile
+        $app.RowParts.Icon.Background = $app.Color; $app.RowParts.Icon.Child = $app.Tile; $app.HasIcon = $false
     }
 }
 
+# Opens an installed app as the signed-in user (through Explorer), not as administrator like this window
+function Get-AppExe($app) {
+    foreach ($pattern in $app.Exe) {
+        $file = Get-Item -Path $pattern -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+        if ($file) { return $file.FullName }
+    }
+    return $null
+}
+function Open-App($app) {
+    $exe = Get-AppExe $app
+    if (!$exe) { return }
+    Start-Process explorer.exe -ArgumentList "`"$exe`""
+    Set-Status ((T 'status.opening') -f $app.Name)
+}
+function Open-AppFolder($app) {
+    $exe = Get-AppExe $app
+    $folder = if ($exe) { Split-Path $exe -Parent } elseif (Test-Path -LiteralPath $app.Path -PathType Container) { $app.Path } else { $null }
+    if ($folder) { Start-Process explorer.exe -ArgumentList "`"$folder`"" }
+}
+# The app's entry in Apps & features: its uninstaller, version and size
+function Get-ArpEntry($app) {
+    foreach ($root in 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall', 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall', 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall') {
+        foreach ($key in @(Get-ChildItem -Path $root -ErrorAction SilentlyContinue)) {
+            $entry = Get-ItemProperty -LiteralPath $key.PSPath -ErrorAction SilentlyContinue
+            if ($entry.DisplayName -like $app.Arp -and $entry.UninstallString) { return $entry }
+        }
+    }
+    return $null
+}
+# Uninstall runs the app's own uninstaller (it shows its own window)
+function Find-Uninstaller($app) {
+    $entry = Get-ArpEntry $app
+    if ($entry) { return [string]$entry.UninstallString }
+    return $null
+}
+# "1.0.9218 · 450 MB" for an installed app, read once (again after an install, update or uninstall)
+function Get-AppDetails($app) {
+    if ($null -eq $app.Details) {
+        $entry = Get-ArpEntry $app
+        $parts = @()
+        if ($entry.DisplayVersion) { $parts += [string]$entry.DisplayVersion }
+        if ($entry.EstimatedSize -gt 0) { $parts += Format-Size ([double]$entry.EstimatedSize * 1KB) }
+        $app.Details = $parts -join ' · '
+    }
+    return $app.Details
+}
+function Start-Uninstall($app) {
+    $answer = [System.Windows.MessageBox]::Show(((T 'uninstall.confirm') -f $app.Name), 'Akati OS Center', 'YesNo', 'Question')
+    if ($answer -ne 'Yes') { return }
+    $command = Find-Uninstaller $app
+    if (!$command) { Set-Status ((T 'status.nouninstaller') -f $app.Name); Start-Process 'ms-settings:appsfeatures'; return }
+    $app.Uninstalling = $true
+    Update-AppRow $app
+    Set-Status ((T 'uninstalling')) $true
+    Start-Work {
+        param($command)
+        # cmd.exe runs the command line exactly as Apps & features would (quotes and switches included)
+        $p = Start-Process cmd.exe -ArgumentList "/c `"$command`"" -WindowStyle Hidden -PassThru
+        $p.WaitForExit()
+    } @($command) {
+        param($r, $app)
+        $app.Uninstalling = $false
+        if (Test-App $app) { Set-Status (T 'ready') } else { Set-Status ((T 'status.uninstalled') -f $app.Name) }
+        Update-AppRow $app; Update-AppsToolbar
+    } $app
+}
+
 function Update-AppsToolbar {
-    $selected = @($apps | Where-Object { $_.Check.IsChecked -and $_.State -eq 'idle' })
-    $ui.InstallSelectedButton.IsEnabled = $selected.Count -gt 0
-    $ui.UpdateAllButton.IsEnabled = [bool]@($apps | Where-Object { $_.HasUpdate -and $_.State -eq 'idle' }).Count
+    $count = @($apps | Where-Object { $_.HasUpdate -and $_.State -eq 'idle' }).Count
+    $ui.UpdateAllButton.IsEnabled = $count -gt 0
+    $ui.UpdateAllText.Text = if ($count) { (T 'apps.updatecount') -f $count } else { T 'apps.updateall' }
+    $ui.StarterButton.IsEnabled = [bool]@($apps | Where-Object { $_.Key -in 'Steam', 'Discord' -and $_.State -eq 'idle' -and !(Test-App $_) }).Count
+}
+
+# Moves the rows: installed apps to "Installed" at the top, the others to their section, in the order of $apps
+function Update-AppGroups {
+    if (!$script:appsReady) { return }
+    $key = ($apps | ForEach-Object { [int][bool]$_.IsInstalled }) -join ''
+    if ($key -eq $script:appGroupsKey) { return }
+    $script:appGroupsKey = $key
+    Request-MenuUpdate
+    foreach ($g in $appGroups.Values) { $g.List.Children.Clear() }
+    foreach ($a in $apps) {
+        $target = if ($a.IsInstalled) { 'installed' } else { $a.Cat }
+        [void]$appGroups[$target].List.Children.Add($a.RowParts.Row)
+    }
+    foreach ($g in $appGroups.Values) {
+        $shown = if ($g.List.Children.Count) { 'Visible' } else { 'Collapsed' }
+        $g.Head.Visibility = $shown; $g.Card.Visibility = $shown
+        Update-Separators $g.List
+    }
 }
 
 function Start-NextApp {
@@ -797,7 +860,7 @@ function Start-NextApp {
     $next.Shared = [hashtable]::Synchronized(@{ Pid = 0 })
     $progressFile = Join-Path $progressDir "GAMEAPPS-$($next.Key).progress"
     Remove-Item -LiteralPath $progressFile -Force -ErrorAction SilentlyContinue
-    $next.Bar.IsIndeterminate = $true; $next.Bar.Value = 0
+    Set-Ring $next.Ring -1
     $next.Sub.Text = if ($mode -eq 'update') { T 'updating' } else { T 'preparing' }
     $next.Sub.Foreground = $window.FindResource('Accent2')
     Update-AppRow $next
@@ -814,7 +877,7 @@ function Start-NextApp {
             param($r, $app)
             $app.State = 'idle'
             if ($app.Cancelled) { $app.Cancelled = $false; Set-Status ((T 'status.cancelled') -f $app.Name) }
-            elseif ((Get-LastOutput $r) -eq 0) { $app.HasUpdate = $false; Set-Status ((T 'status.updated') -f $app.Name) }
+            elseif ((Get-LastOutput $r) -eq 0) { $app.HasUpdate = $false; $app.Details = $null; Set-Status ((T 'status.updated') -f $app.Name) }
             else { Set-Status ((T 'status.updatefailed') -f $app.Name) }
             Update-AppRow $app; Update-AppsToolbar; Start-NextApp
         } $next
@@ -854,12 +917,17 @@ function Stop-AppJob($app) {
         # Discord installs through a scheduled task as the signed-in user
         Stop-ScheduledTask -TaskName 'AkatiOS Install Discord' -ErrorAction SilentlyContinue
         Unregister-ScheduledTask -TaskName 'AkatiOS Install Discord' -Confirm:$false -ErrorAction SilentlyContinue
-        Get-Process -Name 'DiscordSetup' -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+        Get-Process -Name 'DiscordSetup', 'Discord-Setup' -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
     }
 }
 
 # Progress written by GAMEAPPS.ps1: "<stage>|<percent>", percent is -1 when unknown
 function Update-AppProgress {
+    # While an app installs or updates, the status bar says so (another message may have replaced it)
+    $running = $apps | Where-Object { $_.State -in 'install', 'update' -and !$_.Cancelled } | Select-Object -First 1
+    if ($running -and !$script:statusBusy) {
+        Set-Status ((T $(if ($running.State -eq 'update') { 'status.updating' } else { 'status.installing' })) -f $running.Name) $true
+    }
     foreach ($app in $apps) {
         if ($app.State -ne 'install' -or $app.Cancelled) { continue }
         $line = $null
@@ -872,38 +940,89 @@ function Update-AppProgress {
             if ($stage -eq 'finish') { Start-NextApp }
         }
         if ($stage -eq 'download' -and $percent -ge 0) {
-            $app.Bar.IsIndeterminate = $false; $app.Bar.Value = $percent
+            Set-Ring $app.Ring $percent
             $app.Sub.Text = (T 'stage.download') + " $percent%"
         } else {
-            $app.Bar.IsIndeterminate = $true
+            Set-Ring $app.Ring -1
             $app.Sub.Text = T "stage.$stage"
         }
     }
 }
 
+# The "..." menu of an installed app
+function New-AppMenu($app) {
+    $menu = New-Object System.Windows.Controls.ContextMenu
+    $menu.Style = $window.FindResource('MacMenu')
+    foreach ($item in @(@{ Text = T 'openfolder'; Action = 'folder' }, @{ Text = T 'uninstall'; Action = 'uninstall' })) {
+        $mi = New-Object System.Windows.Controls.MenuItem
+        # Uninstall in red, like a destructive action in macOS
+        $mi.Style = $window.FindResource($(if ($item.Action -eq 'uninstall') { 'MacMenuDanger' } else { 'MacMenuItem' }))
+        $mi.Header = $item.Text; $mi.Tag = @{ App = $app; Action = $item.Action }
+        $mi.Add_Click({ if ($this.Tag.Action -eq 'folder') { Open-AppFolder $this.Tag.App } else { Start-Uninstall $this.Tag.App } })
+        [void]$menu.Items.Add($mi)
+    }
+    return $menu
+}
+
+# One gray heading and one grouped list per category
+$appGroups = @{}
+foreach ($cat in $appCats) {
+    $head = New-Text (T "apps.cat.$cat") 13 'SemiBold' "t:apps.cat.$cat"
+    $head.Style = $window.FindResource('Section')
+    $card = New-Object System.Windows.Controls.Border
+    $card.Style = $window.FindResource('Card'); $card.Padding = '0'; $card.Margin = '0,0,0,20'
+    $list = New-Object System.Windows.Controls.StackPanel
+    $card.Child = $list
+    [void]$ui.AppsGroups.Children.Add($head); [void]$ui.AppsGroups.Children.Add($card)
+    $appGroups[$cat] = @{ Head = $head; Card = $card; List = $list }
+}
 foreach ($app in $apps) {
     $btn = New-Object System.Windows.Controls.Button
-    $btn.Style = $window.FindResource('Primary'); $btn.MinWidth = 120
-    $check = New-Object System.Windows.Controls.CheckBox
-    $check.Style = $window.FindResource('Tick')
-    $check.Add_Click({ Update-AppsToolbar })
-    $row = New-Row ([string]$app.Glyph) $app.Name $null $btn $null $check
-    $app.Sub = $row.Sub; $app.Button = $btn; $app.Check = $check; $app.Bar = $row.Bar; $app.RowParts = $row
-    $app.State = 'idle'; $app.HasUpdate = $false
-    $btn.Tag = $app
+    $btn.Style = $window.FindResource('Pill')
+    $more = New-Object System.Windows.Controls.Button
+    $more.Style = $window.FindResource('Bare'); $more.Padding = '7'; $more.Margin = '0,0,8,0'; $more.ToolTip = T 'more'
+    $dots = New-Text ([string][char]0xE712) 14; $dots.Style = $window.FindResource('Glyph'); $more.Content = $dots
+    $right = New-Object System.Windows.Controls.StackPanel; $right.Orientation = 'Horizontal'
+    [void]$right.Children.Add($more); [void]$right.Children.Add($btn)
+    $row = New-Row ([string][char]0xE7FC) $app.Name $null $right $null
+    # Small badge after the name: where the installer comes from
+    $source = if ($app.Source) { $app.Source } else { 'winget' }
+    $badge = New-Object System.Windows.Controls.Border
+    $badge.CornerRadius = 4; $badge.SetResourceReference([System.Windows.Controls.Border]::BackgroundProperty, 'Fill'); $badge.Padding = '5,1'; $badge.Margin = '8,0,0,0'; $badge.VerticalAlignment = 'Center'
+    $badgeText = New-Text (T "src.$source") 10 'SemiBold' "t:src.$source"; $badgeText.Foreground = $window.FindResource('MutedBrush')
+    $badge.Child = $badgeText
+    $titleLine = New-Object System.Windows.Controls.StackPanel; $titleLine.Orientation = 'Horizontal'
+    $textPanel = $row.Title.Parent
+    $textPanel.Children.Remove($row.Title)
+    [void]$titleLine.Children.Add($row.Title); [void]$titleLine.Children.Add($badge)
+    $textPanel.Children.Insert(0, $titleLine)
+    # Letter tile until the app is installed (no logos)
+    $tile = New-Text $app.Mono $(if ($app.Mono.Length -gt 1) { 11 } else { 14 }) 'Bold'
+    $tile.Foreground = 'White'; $tile.HorizontalAlignment = 'Center'; $tile.VerticalAlignment = 'Center'
+    $row.Icon.Background = $app.Color; $row.Icon.Child = $tile
+    $app.Tile = $tile; $app.Ring = New-Ring
+    $app.Sub = $row.Sub; $app.Button = $btn; $app.More = $more; $app.Bar = $row.Bar; $app.RowParts = $row
+    $app.State = 'idle'; $app.HasUpdate = $false; $app.Uninstalling = $false
+    $btn.Tag = $app; $more.Tag = $app
     $btn.Add_Click({
         $a = $this.Tag
         if ($a.State -ne 'idle') { Stop-AppJob $a; return }
-        if ((Test-App $a) -and $a.HasUpdate) { Add-AppToQueue $a 'update' } else { Add-AppToQueue $a 'install' }
+        if (Test-App $a) { if ($a.HasUpdate) { Add-AppToQueue $a 'update' } else { Open-App $a } } else { Add-AppToQueue $a 'install' }
     })
-    [void]$ui.AppsList.Children.Add($row.Row)
+    $more.Add_Click({
+        $menu = New-AppMenu $this.Tag
+        $menu.PlacementTarget = $this; $menu.Placement = 'Bottom'; $menu.IsOpen = $true
+    })
     Update-AppRow $app
 }
+$script:appsReady = $true
+Update-AppGroups
 Update-AppsToolbar
-Update-Separators $ui.AppsList
+# Installed or uninstalled outside this window: look again when the window comes back to the front
+$window.Add_Activated({ foreach ($a in $apps) { if ($a.State -eq 'idle' -and !$a.Uninstalling) { Update-AppRow $a } }; Update-AppsToolbar })
 
-$ui.InstallSelectedButton.Add_Click({
-    foreach ($a in $apps) { if ($a.Check.IsChecked -and $a.State -eq 'idle') { $a.Check.IsChecked = $false; Add-AppToQueue $a 'install' } }
+$ui.StarterButton.Add_Click({
+    foreach ($a in $apps) { if ($a.Key -in 'Steam', 'Discord' -and $a.State -eq 'idle' -and !(Test-App $a)) { Add-AppToQueue $a 'install' } }
     Update-AppsToolbar
 })
 $ui.UpdateAllButton.Add_Click({
@@ -912,13 +1031,15 @@ $ui.UpdateAllButton.Add_Click({
 })
 
 # Which installed apps have a newer version in WinGet (Steam and Discord update themselves)
-$ui.CheckUpdatesButton.Add_Click({
-    if (!(Get-Command winget -ErrorAction SilentlyContinue)) { Set-Status (T 'status.nowinget'); return }
-    $this.IsEnabled = $false
+# $quiet: the automatic check when the page opens; it says nothing when there is nothing to update
+function Start-AppUpdateCheck([bool]$quiet = $false) {
+    if (!(Get-Command winget -ErrorAction SilentlyContinue)) { if (!$quiet) { Set-Status (T 'status.nowinget') }; return }
+    $ids = @($apps | Where-Object { $_.Id -and (Test-App $_) } | ForEach-Object { $_.Id })
+    if ($quiet -and !$ids.Count) { return }
+    $ui.CheckUpdatesButton.IsEnabled = $false
     Set-Status (T 'status.checkingapps') $true
     # One WinGet query per app: "list --upgrade-available" finds the app only when a newer version exists
     # (the table of "winget upgrade" cuts long names, so it is not parsed)
-    $ids = @($apps | Where-Object { $_.Id -and (Test-App $_) } | ForEach-Object { $_.Id })
     Start-Work {
         param($ids)
         $found = @{}
@@ -938,37 +1059,127 @@ $ui.CheckUpdatesButton.Add_Click({
             if ($a.State -eq 'idle') { Update-AppRow $a }
         }
         Update-AppsToolbar
-        if ($count) { Set-Status ((T 'status.updatesfound') -f $count) } else { Set-Status (T 'status.noupdates') }
-    }
-})
+        if ($count) { Set-Status ((T 'status.updatesfound') -f $count) } elseif ($ctx) { Set-Status (T 'ready') } else { Set-Status (T 'status.noupdates') }
+    } $quiet
+}
+$ui.CheckUpdatesButton.Add_Click({ Start-AppUpdateCheck })
 
 # GPU drivers: highlight the vendor of the graphics card in this PC
-$gpuNames = @(try { Get-CimInstance Win32_VideoController | Where-Object { $_.Name -notmatch 'Basic Display|Remote|Virtual|VMware|Hyper-V|Parsec' } | ForEach-Object { $_.Name } } catch { })
+$gpus = @(try { Get-CimInstance Win32_VideoController | Where-Object { $_.Name -notmatch 'Basic Display|Remote|Virtual|VMware|Hyper-V|Parsec' } } catch { })
+$gpuNames = @($gpus | ForEach-Object { $_.Name })
 $gpuVendors = @{ GpuNvidia = 'NVIDIA|GeForce|Quadro|RTX|GTX'; GpuAmd = 'AMD|Radeon|ATI '; GpuIntel = 'Intel|Arc ' }
 $script:gpuFound = @()
 foreach ($k in $gpuVendors.Keys) {
     if (@($gpuNames | Where-Object { $_ -match $gpuVendors[$k] }).Count) {
-        $ui[$k].Style = $window.FindResource('Primary'); $script:gpuFound += $k
+        $ui[$k].Style = $window.FindResource('PillAccent'); $script:gpuFound += $k
     }
 }
 function Update-GpuText {
     $ui.GpuDetected.Text = if ($gpuNames.Count) { (T 'gpu.detected') -f ($gpuNames -join ', ') } else { T 'gpu.none' }
+    # Installed driver version and date; older than about 6 months: a hint to look for a newer one
+    $culture = [Globalization.CultureInfo]::GetCultureInfo($(if ($lang -eq 'th') { 'th-TH' } else { 'en-US' }))
+    $lines = @(); $old = $false
+    foreach ($g in $gpus) {
+        if (!$g.DriverVersion -or !$g.DriverDate) { continue }
+        $lines += (T 'gpu.driver') -f $g.Name, $g.DriverVersion, $g.DriverDate.ToString('d MMMM yyyy', $culture)
+        if (((Get-Date) - $g.DriverDate).TotalDays -gt 180) { $old = $true }
+    }
+    if ($old) { $lines += T 'gpu.old' }
+    $ui.GpuDriver.Text = $lines -join "`n"
+    $ui.GpuDriver.Visibility = if ($lines.Count) { 'Visible' } else { 'Collapsed' }
+    if ($old) { $ui.GpuDriver.Foreground = '#FF9F0A' } else { $ui.GpuDriver.Foreground = $window.FindResource('MutedBrush') }
 }
 Update-GpuText
 $ui.GpuNvidia.Add_Click({ Start-Process 'https://www.nvidia.com/en-us/drivers/' })
 $ui.GpuAmd.Add_Click({ Start-Process 'https://www.amd.com/en/support/download/drivers.html' })
 $ui.GpuIntel.Add_Click({ Start-Process 'https://www.intel.com/content/www/us/en/download-center/home.html' })
 
+# Screen refresh rate and the standby memory list (Windows API)
+Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+namespace AkatiOS {
+    // Display refresh rate (primary screen) and the standby memory list
+    public static class Perf {
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        public struct DEVMODE {
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public string dmDeviceName;
+            public short dmSpecVersion, dmDriverVersion, dmSize, dmDriverExtra;
+            public int dmFields, dmPositionX, dmPositionY, dmDisplayOrientation, dmDisplayFixedOutput;
+            public short dmColor, dmDuplex, dmYResolution, dmTTOption, dmCollate;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public string dmFormName;
+            public short dmLogPixels;
+            public int dmBitsPerPel, dmPelsWidth, dmPelsHeight, dmDisplayFlags, dmDisplayFrequency;
+            public int dmICMMethod, dmICMIntent, dmMediaType, dmDitherType, dmReserved1, dmReserved2, dmPanningWidth, dmPanningHeight;
+        }
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern bool EnumDisplaySettings(string device, int mode, ref DEVMODE dm);
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int ChangeDisplaySettingsEx(string device, ref DEVMODE dm, IntPtr hwnd, int flags, IntPtr param);
+
+        static DEVMODE NewMode() { DEVMODE dm = new DEVMODE(); dm.dmSize = (short)Marshal.SizeOf(typeof(DEVMODE)); return dm; }
+        // Width, height and refresh rate now (0 when unknown)
+        public static int[] Current() {
+            DEVMODE dm = NewMode();
+            if (!EnumDisplaySettings(null, -1, ref dm)) return new int[] { 0, 0, 0 };
+            return new int[] { dm.dmPelsWidth, dm.dmPelsHeight, dm.dmDisplayFrequency };
+        }
+        // Highest refresh rate at the current resolution and color depth
+        public static int MaxHz() {
+            DEVMODE cur = NewMode();
+            if (!EnumDisplaySettings(null, -1, ref cur)) return 0;
+            int max = 0;
+            DEVMODE dm = NewMode();
+            for (int i = 0; EnumDisplaySettings(null, i, ref dm); i++) {
+                if (dm.dmPelsWidth == cur.dmPelsWidth && dm.dmPelsHeight == cur.dmPelsHeight && dm.dmBitsPerPel == cur.dmBitsPerPel && dm.dmDisplayFrequency > max) max = dm.dmDisplayFrequency;
+                dm = NewMode();
+            }
+            return max;
+        }
+        // 0 = done (DISP_CHANGE_SUCCESSFUL); saved for the next start too
+        public static int SetHz(int hz) {
+            DEVMODE dm = NewMode();
+            if (!EnumDisplaySettings(null, -1, ref dm)) return -1;
+            dm.dmDisplayFrequency = hz;
+            dm.dmFields = 0x400000; // DM_DISPLAYFREQUENCY
+            return ChangeDisplaySettingsEx(null, ref dm, IntPtr.Zero, 1, IntPtr.Zero); // CDS_UPDATEREGISTRY
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 4)]
+        struct TOKEN_PRIVILEGES { public int Count; public long Luid; public int Attributes; }
+        [DllImport("advapi32.dll", SetLastError = true)] static extern bool OpenProcessToken(IntPtr process, int access, out IntPtr token);
+        [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Unicode)] static extern bool LookupPrivilegeValue(string system, string name, out long luid);
+        [DllImport("advapi32.dll", SetLastError = true)] static extern bool AdjustTokenPrivileges(IntPtr token, bool disableAll, ref TOKEN_PRIVILEGES state, int length, IntPtr previous, IntPtr returnLength);
+        [DllImport("kernel32.dll")] static extern IntPtr GetCurrentProcess();
+        [DllImport("kernel32.dll")] static extern bool CloseHandle(IntPtr handle);
+        [DllImport("ntdll.dll")] static extern int NtSetSystemInformation(int infoClass, ref int info, int length);
+        // Empties the standby list (file cache Windows keeps in RAM), like RAMMap "Empty Standby List".
+        // Needs administrator rights. Returns the NTSTATUS, 0 = done.
+        public static int PurgeStandbyList() {
+            IntPtr token;
+            if (!OpenProcessToken(GetCurrentProcess(), 0x28, out token)) return -1; // TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY
+            try {
+                TOKEN_PRIVILEGES tp = new TOKEN_PRIVILEGES();
+                tp.Count = 1; tp.Attributes = 2; // SE_PRIVILEGE_ENABLED
+                if (!LookupPrivilegeValue(null, "SeProfileSingleProcessPrivilege", out tp.Luid)) return -2;
+                if (!AdjustTokenPrivileges(token, false, ref tp, 0, IntPtr.Zero, IntPtr.Zero)) return -3;
+            } finally { CloseHandle(token); }
+            int command = 4; // MemoryPurgeStandbyList
+            return NtSetSystemInformation(80, ref command, 4); // SystemMemoryListInformation
+        }
+    }
+}
+'@
+
 # ---------------------------------------------------------------------------------------------
 # Game boost: one click before playing, and back again afterwards. What was changed is saved in the
 # registry, so Stop still works after Akati OS Center or Windows was restarted.
 # ---------------------------------------------------------------------------------------------
+Add-Mark 'Game boost'
 $boostKey = 'HKCU:\Software\AkatiOS\Center\Boost'
 $toastKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\PushNotifications'
 # Background apps that are safe to close while playing (never game launchers or browsers)
 $boostCandidates = 'OneDrive', 'Teams', 'ms-teams', 'Spotify', 'PhoneExperienceHost', 'Dropbox', 'GoogleDriveFS', 'Skype'
 $powerSchemes = @(
-    '11111111-1111-1111-1111-111111111111'   # Atlas Power Scheme (Maximum Performance)
+    '11111111-1111-1111-1111-111111111111'   # Akati OS Power Scheme (Maximum Performance)
     'e9a42b02-d5df-448d-aa00-03f14749eb61'   # Ultimate Performance
     '8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c'   # High performance
 )
@@ -992,7 +1203,7 @@ function Update-BoostCard {
         $ui.BoostState.Foreground = $window.FindResource('MutedBrush')
         $ui.BoostButton.Content = T 'boost.start'
         $ui.BoostButton.Style = $window.FindResource('Primary')
-        $ui.BoostIcon.Background = '#3A3A3C'
+        $ui.BoostIcon.SetResourceReference([System.Windows.Controls.Border]::BackgroundProperty, 'Fill')
         foreach ($c in 'BoostPower', 'BoostApps', 'BoostNotify') { $ui[$c].IsEnabled = $true }
     }
 }
@@ -1040,6 +1251,10 @@ function Start-Boost {
             $key.Close()
         } catch { $failed += 'notify' }
     }
+    if ($ui.BoostMemory.IsChecked) {
+        # The standby list fills up again by itself, so there is nothing to undo at Stop
+        try { if ([AkatiOS.Perf]::PurgeStandbyList() -ne 0) { $failed += 'memory' } } catch { $failed += 'memory' }
+    }
     if ($failed.Count) { throw ((T 'status.boostpartial') -f ($failed -join ', ')) }
 }
 
@@ -1078,7 +1293,24 @@ $ui.BoostButton.Add_Click({
         if (Test-Boost) { Stop-Boost; Set-Status (T 'status.boostoff') } else { Start-Boost; Set-Status (T 'status.booston') }
     } catch { Set-Status $_.Exception.Message }
     Update-BoostCard
+    Request-MenuUpdate
 })
+# Automatic Game boost: the tray app (AkatiTray.ps1) watches for the games in My games
+$ui.BoostAuto.IsChecked = (Get-RegValue 'HKCU:\Software\AkatiOS\Center' 'AutoBoost') -eq 1
+$ui.BoostAuto.Add_Click({ Save-Setting AutoBoost $(if ($this.IsChecked) { 1 } else { 0 }) })
+
+# Desktop menu > Game boost: start or stop it without the window; the menu shows the message
+if ($Boost) {
+    $message = try {
+        $active = Test-Boost
+        if ($Boost -eq 'off' -or ($Boost -eq 'toggle' -and $active)) { if ($active) { Stop-Boost }; T 'status.boostoff' }
+        else { if (!$active) { Start-Boost }; T 'status.booston' }
+    } catch { $_.Exception.Message }
+    $centerKey = 'HKCU:\Software\AkatiOS\Center'
+    if (!(Test-Path $centerKey)) { New-Item -Path $centerKey -Force | Out-Null }
+    Set-ItemProperty -Path $centerKey -Name MenuResult -Value $message
+    exit
+}
 
 # Ping: TCP connect time (more reliable than ICMP, which many servers block) to cloud regions near
 # Thailand. Many online games run their Asian servers in these data centers.
@@ -1222,6 +1454,7 @@ Update-Separators $ui.PingList
 # ---------------------------------------------------------------------------------------------
 # Tweaks (each one reads the real state of the PC)
 # ---------------------------------------------------------------------------------------------
+Add-Mark 'Tweaks'
 function Invoke-AtlasScript([string]$relative, [string]$pattern) {
     $file = Get-ChildItem -Path (Join-Path $desktop $relative) -Filter $pattern -ErrorAction SilentlyContinue | Select-Object -First 1
     if ($file) { Start-Process cmd.exe -ArgumentList "/c `"`"$($file.FullName)`" /silent`"" -WindowStyle Hidden -Wait }
@@ -1229,6 +1462,20 @@ function Invoke-AtlasScript([string]$relative, [string]$pattern) {
 
 $gpuKey = 'HKLM:\SYSTEM\CurrentControlSet\Control\GraphicsDrivers'
 $dxKey = 'HKCU:\Software\Microsoft\DirectX\UserGpuPreferences'
+$tcpipKey = 'HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces'
+$dwmKey = 'HKLM:\SOFTWARE\Microsoft\Windows\Dwm'
+$serializeKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Serialize'
+$deviceGuardKey = 'HKLM:\SYSTEM\CurrentControlSet\Control\DeviceGuard'
+$hvciKey = "$deviceGuardKey\Scenarios\HypervisorEnforcedCodeIntegrity"
+# Flags bit 4 = the keyboard shortcut of Sticky Keys, Filter Keys (Keyboard Response) and Toggle Keys
+$accessKeys = 'HKCU:\Control Panel\Accessibility\StickyKeys', 'HKCU:\Control Panel\Accessibility\Keyboard Response', 'HKCU:\Control Panel\Accessibility\ToggleKeys'
+# Registry keys of the MSI setting of each real graphics card (PCI)
+function Get-GpuMsiKeys {
+    @($gpus | Where-Object { $_.PNPDeviceID -like 'PCI\*' } | ForEach-Object {
+        "HKLM:\SYSTEM\CurrentControlSet\Enum\$($_.PNPDeviceID)\Device Parameters\Interrupt Management\MessageSignaledInterruptProperties" })
+}
+# Group: the section on the Tweaks page (none = Gaming). Script: an unchanged AtlasOS script in AtlasDesktop,
+# run with /silent in the background. Work: a script block run in the background, param($on).
 $tweaks = @(
     @{ Key = 'hags'; Glyph = [char]0xE7F4; Restart = $true
        Get = { (Get-RegValue $gpuKey 'HwSchMode') -eq 2 }
@@ -1240,20 +1487,169 @@ $tweaks = @(
                $parts = @((Get-RegValue $dxKey 'DirectXUserGlobalSettings') -split ';' | Where-Object { $_ -and $_ -notlike 'SwapEffectUpgradeEnable=*' })
                $parts += "SwapEffectUpgradeEnable=$(if ($on) { 1 } else { 0 })"
                Set-ItemProperty -Path $dxKey -Name DirectXUserGlobalSettings -Value (($parts -join ';') + ';') -Type String -Force } }
-    @{ Key = 'gamemode'; Glyph = [char]0xE7FC
+    @{ Key = 'gamemode'; Glyph = [char]0xE7FC; Default = $true
        Get = { (Get-RegValue 'HKCU:\Software\Microsoft\GameBar' 'AutoGameModeEnabled') -ne 0 }
        Set = { param($on)
                if (!(Test-Path 'HKCU:\Software\Microsoft\GameBar')) { New-Item -Path 'HKCU:\Software\Microsoft\GameBar' -Force | Out-Null }
                Set-ItemProperty -Path 'HKCU:\Software\Microsoft\GameBar' -Name AutoGameModeEnabled -Value $(if ($on) { 1 } else { 0 }) -Type DWord -Force } }
-    @{ Key = 'maxperf'; Glyph = [char]0xE945; Slow = $true
-       Get = { [string](powercfg /getactivescheme) -match '11111111-1111-1111-1111-111111111111' }
-       Set = { param($on) if ($on) { Invoke-AtlasScript '3. General Configuration\Power-saving' 'Disable Power-saving*.cmd' } else { Invoke-AtlasScript '3. General Configuration\Power-saving' 'Default Power-saving*.cmd' } } }
-    @{ Key = 'store'; Glyph = [char]0xE719; Slow = $true
+    @{ Key = 'maxperf'; Glyph = [char]0xE945
+       Script = @{ Folder = '3. General Configuration\Power-saving'; On = 'Disable Power-saving*.cmd'; Off = 'Default Power-saving*.cmd' }
+       Get = { [string](powercfg /getactivescheme) -match '11111111-1111-1111-1111-111111111111' } }
+    @{ Key = 'store'; Glyph = [char]0xE719; Slow = $true; Async = $true
        Get = { [bool](Get-AppxPackage -Name 'Microsoft.WindowsStore' -ErrorAction SilentlyContinue) } }
-    @{ Key = 'hibernation'; Glyph = [char]0xE708; Slow = $true
-       Get = { (Get-RegValue 'HKLM:\SYSTEM\CurrentControlSet\Control\Power' 'HibernateEnabled') -eq 1 }
-       Set = { param($on) if ($on) { Invoke-AtlasScript '3. General Configuration\Hibernation' 'Enable Hibernation*.cmd' } else { Invoke-AtlasScript '3. General Configuration\Hibernation' 'Disable Hibernation*.cmd' } } }
+    @{ Key = 'hibernation'; Glyph = [char]0xE708
+       Script = @{ Folder = '3. General Configuration\Hibernation'; On = 'Enable Hibernation*.cmd'; Off = 'Disable Hibernation*.cmd' }
+       Get = { (Get-RegValue 'HKLM:\SYSTEM\CurrentControlSet\Control\Power' 'HibernateEnabled') -eq 1 } }
+
+    # Input and latency
+    @{ Key = 'timer'; Group = 'latency'; Glyph = [char]0xE916; Restart = $true; Async = $true; Default = $false
+       Script = @{ Folder = '3. General Configuration\Timer Resolution'; On = 'Enable timer resolution*.cmd'; Off = 'Disable timer resolution*.cmd' }
+       Get = { [bool](Get-ScheduledTask -TaskName 'Force Timer Resolution' -ErrorAction SilentlyContinue) } }
+    @{ Key = 'access'; Group = 'latency'; Glyph = [char]0xE765; Restart = $true; Default = $true
+       Get = { ([int](Get-RegValue $accessKeys[0] 'Flags') -band 4) -ne 0 }
+       Set = { param($on)
+               foreach ($k in $accessKeys) {
+                   if (!(Test-Path $k)) { continue }
+                   $flags = [int](Get-RegValue $k 'Flags')
+                   $flags = if ($on) { $flags -bor 4 } else { $flags -band (-bnot 4) }
+                   Set-ItemProperty -Path $k -Name Flags -Value ([string]$flags) -Type String -Force
+               } } }
+
+    # Network (the DNS row is added below)
+    @{ Key = 'nagle'; Group = 'network'; Glyph = [char]0xE968; Restart = $true; Default = $true
+       Get = { !@(Get-ChildItem -Path $tcpipKey -ErrorAction SilentlyContinue | Where-Object { (Get-ItemProperty -LiteralPath $_.PSPath -ErrorAction SilentlyContinue).TcpAckFrequency -eq 1 }).Count }
+       Set = { param($on)
+               foreach ($i in @(Get-ChildItem -Path $tcpipKey -ErrorAction SilentlyContinue)) {
+                   if ($on) { Remove-ItemProperty -LiteralPath $i.PSPath -Name TcpAckFrequency, TCPNoDelay -ErrorAction SilentlyContinue }
+                   else {
+                       Set-ItemProperty -LiteralPath $i.PSPath -Name TcpAckFrequency -Value 1 -Type DWord -Force
+                       Set-ItemProperty -LiteralPath $i.PSPath -Name TCPNoDelay -Value 1 -Type DWord -Force
+                   }
+               } } }
+    @{ Key = 'nic'; Group = 'network'; Glyph = [char]0xE839; Async = $true; Default = $true
+       Get = { $names = @(Get-NetAdapter -Physical -ErrorAction Stop | ForEach-Object { $_.Name })
+               $props = @(Get-NetAdapterAdvancedProperty -Name $names -AllProperties -ErrorAction Stop | Where-Object { $_.RegistryKeyword -in '*InterruptModeration', '*EEE' })
+               if (!$props.Count) { throw 'not supported' }
+               [bool]@($props | Where-Object { [string]$_.RegistryValue -eq '1' }).Count }
+       Work = { param($on)
+                foreach ($a in @(Get-NetAdapter -Physical)) {
+                    foreach ($kw in '*InterruptModeration', '*EEE') {
+                        Set-NetAdapterAdvancedProperty -Name $a.Name -RegistryKeyword $kw -RegistryValue $(if ($on) { 1 } else { 0 }) -ErrorAction SilentlyContinue
+                    }
+                } } }
+
+    # Display and graphics (the refresh rate row is added below)
+    @{ Key = 'mpo'; Group = 'graphics'; Glyph = [char]0xE7F4; Restart = $true; Default = $true
+       Get = { (Get-RegValue $dwmKey 'OverlayTestMode') -ne 5 }
+       Set = { param($on)
+               if ($on) { Remove-ItemProperty -Path $dwmKey -Name OverlayTestMode -ErrorAction SilentlyContinue }
+               else { Set-ItemProperty -Path $dwmKey -Name OverlayTestMode -Value 5 -Type DWord -Force } } }
+    @{ Key = 'msi'; Group = 'graphics'; Glyph = [char]0xE964; Restart = $true
+       Get = { $keys = @(Get-GpuMsiKeys); if (!$keys.Count) { throw 'no graphics card' }
+               !@($keys | Where-Object { (Get-RegValue $_ 'MSISupported') -ne 1 }).Count }
+       Set = { param($on)
+               foreach ($k in @(Get-GpuMsiKeys)) {
+                   if (!(Test-Path $k)) { New-Item -Path $k -Force | Out-Null }
+                   Set-ItemProperty -Path $k -Name MSISupported -Value $(if ($on) { 1 } else { 0 }) -Type DWord -Force
+               } } }
+
+    # Memory and system
+    @{ Key = 'memcomp'; Group = 'system'; Glyph = [char]0xE964; Restart = $true; Async = $true; Default = $true
+       Get = { if ((Get-Service SysMain -ErrorAction Stop).StartType -eq 'Disabled') { throw 'SysMain is off' }
+               [bool](Get-MMAgent -ErrorAction Stop).MemoryCompression }
+       Work = { param($on)
+                try { if ($on) { Enable-MMAgent -MemoryCompression -ErrorAction Stop } else { Disable-MMAgent -MemoryCompression -ErrorAction Stop } }
+                catch { $_.Exception.Message } } }
+    # The same two values as the AtlasOS scripts "Enable VBS" / "Disable VBS" (AtlasOS 0.4.1 for Windows 10 has no such scripts)
+    @{ Key = 'vbs'; Group = 'system'; Glyph = [char]0xE72E; Restart = $true
+       Get = { (Get-RegValue $hvciKey 'Enabled') -eq 1 }
+       Set = { param($on)
+               foreach ($k in $hvciKey, $deviceGuardKey) { if (!(Test-Path $k)) { New-Item -Path $k -Force | Out-Null } }
+               Set-ItemProperty -Path $hvciKey -Name Enabled -Value $(if ($on) { 1 } else { 0 }) -Type DWord -Force
+               Set-ItemProperty -Path $deviceGuardKey -Name EnableVirtualizationBasedSecurity -Value $(if ($on) { 1 } else { 0 }) -Type DWord -Force } }
+    @{ Key = 'desktopmenu'; Group = 'system'; Glyph = [char]0xE700
+       Get = { Test-Path $menuKey }
+       Work = { param($on, $script) & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $script $(if ($on) { '-Install' } else { '-Remove' }) } }
+    @{ Key = 'tray'; Group = 'system'; Glyph = [char]0xE7C4; Async = $true
+       Get = { [bool](Get-ScheduledTask -TaskPath '\AkatiOS\' -TaskName 'Akati OS tray' -ErrorAction SilentlyContinue) }
+       Work = { param($on, $script) & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path (Split-Path $script) 'AkatiTray.ps1') $(if ($on) { '-Install' } else { '-Remove' }) } }
+    @{ Key = 'startdelay'; Group = 'system'; Glyph = [char]0xE823; Default = $true
+       Get = { (Get-RegValue $serializeKey 'StartupDelayInMSec') -ne 0 }
+       Set = { param($on)
+               if ($on) { Remove-ItemProperty -Path $serializeKey -Name StartupDelayInMSec, WaitForIdleState -ErrorAction SilentlyContinue }
+               else {
+                   if (!(Test-Path $serializeKey)) { New-Item -Path $serializeKey -Force | Out-Null }
+                   Set-ItemProperty -Path $serializeKey -Name StartupDelayInMSec -Value 0 -Type DWord -Force
+                   Set-ItemProperty -Path $serializeKey -Name WaitForIdleState -Value 0 -Type DWord -Force
+               } } }
 )
+
+# One gray heading and one grouped list per section (Gaming is in the XAML)
+$tweakLists = @{ gaming = $ui.TweaksList }
+foreach ($g in 'latency', 'network', 'graphics', 'system') {
+    $head = New-Text (T "tw.group.$g") 13 'SemiBold' "t:tw.group.$g"
+    $head.Style = $window.FindResource('Section')
+    $card = New-Object System.Windows.Controls.Border
+    $card.Style = $window.FindResource('Card'); $card.Padding = '0'; $card.Margin = '0,0,0,22'
+    $list = New-Object System.Windows.Controls.StackPanel
+    $card.Child = $list
+    [void]$ui.TweakGroups.Children.Add($head); [void]$ui.TweakGroups.Children.Add($card)
+    $tweakLists[$g] = $list
+}
+
+# Turns one tweak on or off (switch click, and Reset to Windows defaults)
+function Invoke-Tweak($t, [bool]$on) {
+    $name = T "tw.$($t.Key)"
+    Set-Status ((T 'status.tweak') -f $name) $true
+    $t.Toggle.IsEnabled = $false
+    $context = @{ Tweak = $t; Name = $name }
+    $finish = {
+        param($r, $ctx)
+        $tg = $ctx.Tweak.Toggle
+        try { $tg.IsChecked = [bool](& $ctx.Tweak.Get) } catch { }
+        $tg.IsEnabled = $true
+        # A Work block returns an error message when it failed
+        $err = Get-LastOutput $r
+        if ($err -is [string] -and $err) { Set-Status "$($ctx.Name): $err"; return }
+        $msg = (T 'status.tweakdone') -f $ctx.Name
+        if ($ctx.Tweak.Restart) { $msg += ' · ' + (T 'restart') }
+        Set-Status $msg
+    }
+    if ($t.Script) {
+        # AtlasOS script, in the background; some end with "pause" even when silent, so input comes from nul
+        Start-Work {
+            param($desktop, $folder, $pattern)
+            $file = Get-ChildItem -Path (Join-Path $desktop $folder) -Filter $pattern -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($file) { Start-Process cmd.exe -ArgumentList "/c `"`"$($file.FullName)`" /silent < nul`"" -WindowStyle Hidden -Wait }
+            else { "Script not found: $folder\$pattern" }
+        } @($desktop, $t.Script.Folder, $(if ($on) { $t.Script.On } else { $t.Script.Off })) $finish $context
+        return
+    }
+    if ($t.Work) {
+        Start-Work $t.Work @($on, $menuScript) $finish $context
+        if ($t.Key -eq 'desktopmenu' -and $on) { Request-MenuUpdate }
+        return
+    }
+    if ($t.Key -eq 'store') {
+        Start-Work {
+            param($on)
+            if ($on) {
+                # wsreset -i installs the Microsoft Store again in the background
+                Start-Process wsreset.exe -ArgumentList '-i' -WindowStyle Hidden -Wait
+                $deadline = (Get-Date).AddSeconds(90)
+                while (!(Get-AppxPackage -Name 'Microsoft.WindowsStore') -and (Get-Date) -lt $deadline) { Start-Sleep -Seconds 3 }
+            } else {
+                Get-Process -Name 'WinStore.App' -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+                Get-AppxPackage -AllUsers -Name 'Microsoft.WindowsStore' | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue
+                Get-AppxProvisionedPackage -Online | Where-Object DisplayName -eq 'Microsoft.WindowsStore' |
+                    Remove-AppxProvisionedPackage -Online -ErrorAction SilentlyContinue | Out-Null
+            }
+        } @($on) $finish $context
+    } else {
+        try { & $t.Set $on } catch { }
+        & $finish $null $context
+    }
+}
 
 foreach ($tw in $tweaks) {
     if ($tw.Win11 -and $build -lt 22000) { continue }
@@ -1262,63 +1658,210 @@ foreach ($tw in $tweaks) {
     $row = New-Row ([string]$tw.Glyph) (T "tw.$($tw.Key)") "t:tw.$($tw.Key)" $toggle "t:tw.$($tw.Key).d"
     $row.Sub.Text = T "tw.$($tw.Key).d"
     $tw.Toggle = $toggle; $tw.Sub = $row.Sub
-    try { $toggle.IsChecked = [bool](& $tw.Get) } catch { $toggle.IsEnabled = $false }
+    if ($tw.Async -and !$Screenshot) {
+        # Slow to read (modules, Store, network): read in the background, the switch is filled in when done.
+        # These Get blocks use only cmdlets, no variables of this script.
+        $toggle.IsEnabled = $false
+        Start-Work $tw.Get @() {
+            param($r, $t)
+            $value = Get-LastOutput $r
+            if ($value -is [bool]) { $t.Toggle.IsChecked = $value; $t.Toggle.IsEnabled = $true }
+            Update-TweakHints
+        } $tw
+    } else {
+        try { $toggle.IsChecked = [bool](& $tw.Get) } catch { $toggle.IsEnabled = $false }
+    }
     $toggle.Tag = $tw
-    $toggle.Add_Click({
-        $t = $this.Tag
-        $on = [bool]$this.IsChecked
-        $name = T "tw.$($t.Key)"
-        Set-Status ((T 'status.tweak') -f $name) $true
-        $this.IsEnabled = $false
-        $context = @{ Tweak = $t; Name = $name }
-        $finish = {
-            param($r, $ctx)
-            $tg = $ctx.Tweak.Toggle
-            try { $tg.IsChecked = [bool](& $ctx.Tweak.Get) } catch { }
-            $tg.IsEnabled = $true
-            $msg = (T 'status.tweakdone') -f $ctx.Name
-            if ($ctx.Tweak.Restart) { $msg += ' · ' + (T 'restart') }
-            Set-Status $msg
-        }
-        if ($t.Slow) {
-            # Atlas scripts take a few seconds: run them in the background
-            if ($t.Key -eq 'store') {
-                Start-Work {
-                    param($on)
-                    if ($on) {
-                        # wsreset -i installs the Microsoft Store again in the background
-                        Start-Process wsreset.exe -ArgumentList '-i' -WindowStyle Hidden -Wait
-                        $deadline = (Get-Date).AddSeconds(90)
-                        while (!(Get-AppxPackage -Name 'Microsoft.WindowsStore') -and (Get-Date) -lt $deadline) { Start-Sleep -Seconds 3 }
-                    } else {
-                        Get-Process -Name 'WinStore.App' -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
-                        Get-AppxPackage -AllUsers -Name 'Microsoft.WindowsStore' | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue
-                        Get-AppxProvisionedPackage -Online | Where-Object DisplayName -eq 'Microsoft.WindowsStore' |
-                            Remove-AppxProvisionedPackage -Online -ErrorAction SilentlyContinue | Out-Null
-                    }
-                } @($on) $finish $context
-                return
-            }
-            Start-Work {
-                param($desktop, $relative, $pattern)
-                $file = Get-ChildItem -Path (Join-Path $desktop $relative) -Filter $pattern -ErrorAction SilentlyContinue | Select-Object -First 1
-                if ($file) { Start-Process cmd.exe -ArgumentList "/c `"`"$($file.FullName)`" /silent`"" -WindowStyle Hidden -Wait }
-            } $(
-                if ($t.Key -eq 'maxperf') { @($desktop, '3. General Configuration\Power-saving', $(if ($on) { 'Disable Power-saving*.cmd' } else { 'Default Power-saving*.cmd' })) }
-                else { @($desktop, '3. General Configuration\Hibernation', $(if ($on) { 'Enable Hibernation*.cmd' } else { 'Disable Hibernation*.cmd' })) }
-            ) $finish $context
-        } else {
-            try { & $t.Set $on } catch { }
-            & $finish $null $context
-        }
-    })
-    [void]$ui.TweaksList.Children.Add($row.Row)
+    $toggle.Add_Click({ Invoke-Tweak $this.Tag ([bool]$this.IsChecked) })
+    $group = if ($tw.Group) { $tw.Group } else { 'gaming' }
+    $tw.Row = $row.Row
+    [void]$tweakLists[$group].Children.Add($row.Row)
 }
-Update-Separators $ui.TweaksList
+
+# DNS: Automatic / Cloudflare / Google on the connected network adapters (IPv4 and IPv6)
+$dnsServers = @{
+    cloudflare = '1.1.1.1', '1.0.0.1', '2606:4700:4700::1111', '2606:4700:4700::1001'
+    google     = '8.8.8.8', '8.8.4.4', '2001:4860:4860::8888', '2001:4860:4860::8844'
+}
+function Set-Dns([string]$choice) {
+    Set-Status ((T 'status.tweak') -f (T 'tw.dns')) $true
+    Start-Work {
+        param($choice, $servers)
+        foreach ($i in @(Get-NetAdapter -Physical | Where-Object Status -eq 'Up')) {
+            if ($choice -eq 'auto') { Set-DnsClientServerAddress -InterfaceIndex $i.ifIndex -ResetServerAddresses }
+            else { Set-DnsClientServerAddress -InterfaceIndex $i.ifIndex -ServerAddresses $servers }
+        }
+        Clear-DnsClientCache
+    } @($choice, $dnsServers[$choice]) { param($r, $c) Set-Status ((T 'status.dns') -f (T "dns.$c")) } $choice
+}
+function Get-DnsChoice {
+    $idx = @(Get-NetAdapter -Physical -ErrorAction SilentlyContinue | Where-Object Status -eq 'Up' | ForEach-Object { $_.ifIndex })
+    if (!$idx.Count) { return $null }
+    $servers = @(Get-DnsClientServerAddress -InterfaceIndex $idx -AddressFamily IPv4 -ErrorAction SilentlyContinue | ForEach-Object { $_.ServerAddresses })
+    if ($servers -contains '1.1.1.1') { 'cloudflare' } elseif ($servers -contains '8.8.8.8') { 'google' } else { 'auto' }
+}
+$dnsSegments = New-Object System.Windows.Controls.Border
+$dnsSegments.SetResourceReference([System.Windows.Controls.Border]::BackgroundProperty, 'Field'); $dnsSegments.SetResourceReference([System.Windows.Controls.Border]::BorderBrushProperty, 'Line'); $dnsSegments.BorderThickness = '1'; $dnsSegments.CornerRadius = 7; $dnsSegments.Padding = '2'
+$dnsPanel = New-Object System.Windows.Controls.StackPanel; $dnsPanel.Orientation = 'Horizontal'
+$dnsSegments.Child = $dnsPanel
+foreach ($choice in 'auto', 'cloudflare', 'google') {
+    $seg = New-Object System.Windows.Controls.RadioButton
+    $seg.Style = $window.FindResource('Segment'); $seg.GroupName = 'Dns'; $seg.Content = T "dns.$choice"; $seg.Tag = "t:dns.$choice"
+    $seg.IsEnabled = $false
+    $seg.Add_Click({ Set-Dns $this.Tag.Substring(6) })
+    [void]$dnsPanel.Children.Add($seg)
+}
+# The adapters and their DNS servers are read in the background (the network modules load slowly)
+function Set-DnsSegments($choice) {
+    foreach ($seg in $dnsPanel.Children) { $seg.IsChecked = $seg.Tag -eq "t:dns.$choice"; $seg.IsEnabled = [bool]$choice }
+}
+if ($Screenshot) { Set-DnsSegments (Get-DnsChoice) }
+else { Start-Work ([scriptblock]::Create("function Get-DnsChoice {$((Get-Item function:Get-DnsChoice).Definition)}; Get-DnsChoice")) @() { param($r, $c) Set-DnsSegments (Get-LastOutput $r) } $null }
+$dnsRow = New-Row ([string][char]0xE774) (T 'tw.dns') 't:tw.dns' $dnsSegments 't:tw.dns.d'
+$dnsRow.Sub.Text = T 'tw.dns.d'
+$tweakLists['network'].Children.Insert(0, $dnsRow.Row)
+
+# Screen refresh rate: the highest the primary screen can do at its resolution
+$refreshButton = New-Object System.Windows.Controls.Button
+$refreshButton.Style = $window.FindResource('PillAccent')
+$refreshRow = New-Row ([string][char]0xE7F8) (T 'tw.refresh') 't:tw.refresh' $refreshButton $null
+function Update-RefreshRow {
+    try { $script:screenNow = [AkatiOS.Perf]::Current()[2]; $script:screenMax = [AkatiOS.Perf]::MaxHz() } catch { $script:screenNow = 0; $script:screenMax = 0 }
+    $refreshRow.Row.Visibility = if ($script:screenMax -gt 1) { 'Visible' } else { 'Collapsed' }
+    if ($script:screenMax -gt $script:screenNow) {
+        $refreshRow.Sub.Text = (T 'tw.refresh.now') -f $script:screenNow, $script:screenMax
+        $refreshButton.Content = (T 'tw.refresh.use') -f $script:screenMax; $refreshButton.Visibility = 'Visible'
+    } else {
+        $refreshRow.Sub.Text = (T 'tw.refresh.max') -f $script:screenNow
+        $refreshButton.Visibility = 'Collapsed'
+    }
+}
+$refreshButton.Add_Click({
+    $result = [AkatiOS.Perf]::SetHz($script:screenMax)
+    if ($result -eq 0) { Set-Status ((T 'status.refresh') -f $script:screenMax) } else { Set-Status ((T 'status.refreshfail') -f $result) }
+    Update-RefreshRow; Update-Chips
+})
+$tweakLists['graphics'].Children.Insert(0, $refreshRow.Row)
+Update-RefreshRow
+
+# Memory compression: the advice depends on the RAM of this PC
+$ramGb = try { [Math]::Round((Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory / 1GB) } catch { 0 }
+function Update-TweakHints {
+    $mc = $tweaks | Where-Object { $_.Key -eq 'memcomp' }
+    if (!$mc.Sub) { return }
+    $hint = if (!$mc.Toggle.IsEnabled) { T 'tw.memcomp.nosysmain' } elseif ($ramGb -ge 16) { (T 'tw.memcomp.off') -f $ramGb } else { (T 'tw.memcomp.on') -f $ramGb }
+    $mc.Sub.Text = (T 'tw.memcomp.d') + ' ' + $hint
+}
+Update-TweakHints
+foreach ($list in $tweakLists.Values) { Update-Separators $list }
+
+# Reset: every tweak that has a Windows default (Default) goes back to it, and DNS to Automatic
+$ui.TweaksReset.Add_Click({
+    if ([System.Windows.MessageBox]::Show((T 'tweaks.resetask'), 'Akati OS Center', 'YesNo', 'Question') -ne 'Yes') { return }
+    foreach ($t in $tweaks) {
+        if (!$t.ContainsKey('Default') -or !$t.Toggle -or !$t.Toggle.IsEnabled) { continue }
+        if ([bool]$t.Toggle.IsChecked -ne $t.Default) { $t.Toggle.IsChecked = $t.Default; Invoke-Tweak $t $t.Default }
+    }
+    $auto = $dnsPanel.Children | Where-Object { $_.Tag -eq 't:dns.auto' }
+    if ($auto.IsEnabled -and !$auto.IsChecked) { $auto.IsChecked = $true; Set-Dns 'auto' }
+    Set-Status (T 'status.reset')
+})
+
+# ---------------------------------------------------------------------------------------------
+# Game boost > My games: settings for each game the user adds (its .exe)
+#   High priority: Image File Execution Options\<exe>\PerfOptions CpuPriorityClass = 3
+#   Dedicated GPU: DirectX\UserGpuPreferences <path> = GpuPreference=2;
+#   Skip Defender: Defender exclusion for the game folder
+# The list itself is kept in HKCU\Software\AkatiOS\Center\Games. Removing a game undoes all three.
+# ---------------------------------------------------------------------------------------------
+Add-Mark 'Game boost > My games'
+$gamesKey = 'HKCU:\Software\AkatiOS\Center\Games'
+$ifeoKey = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options'
+function Get-GameOption([string]$path, [string]$kind, $exclusions) {
+    switch ($kind) {
+        'cpu' { return (Get-RegValue "$ifeoKey\$(Split-Path $path -Leaf)\PerfOptions" 'CpuPriorityClass') -eq 3 }
+        'gpu' { return (Get-RegValue $dxKey $path) -match 'GpuPreference=2' }
+        'defender' { return @($exclusions) -contains (Split-Path $path -Parent) }
+    }
+}
+function Set-GameOption([string]$path, [string]$kind, [bool]$on) {
+    switch ($kind) {
+        'cpu' {
+            $k = "$ifeoKey\$(Split-Path $path -Leaf)\PerfOptions"
+            if ($on) { if (!(Test-Path $k)) { New-Item -Path $k -Force | Out-Null }; Set-ItemProperty -Path $k -Name CpuPriorityClass -Value 3 -Type DWord -Force }
+            else { Remove-ItemProperty -Path $k -Name CpuPriorityClass -ErrorAction SilentlyContinue }
+        }
+        'gpu' {
+            if ($on) { if (!(Test-Path $dxKey)) { New-Item -Path $dxKey -Force | Out-Null }; Set-ItemProperty -Path $dxKey -Name $path -Value 'GpuPreference=2;' -Type String -Force }
+            else { Remove-ItemProperty -Path $dxKey -Name $path -ErrorAction SilentlyContinue }
+        }
+        'defender' {
+            if ($on) { Add-MpPreference -ExclusionPath (Split-Path $path -Parent) -ErrorAction Stop }
+            else { Remove-MpPreference -ExclusionPath (Split-Path $path -Parent) -ErrorAction SilentlyContinue }
+        }
+    }
+}
+function Show-Games {
+    $ui.GamesList.Children.Clear()
+    $paths = @(if (Test-Path $gamesKey) { (Get-Item $gamesKey).Property })
+    # Defender exclusions are read once per refresh (null when Defender is off)
+    $exclusions = try { @((Get-MpPreference -ErrorAction Stop).ExclusionPath) } catch { $null }
+    foreach ($path in $paths) {
+        $right = New-Object System.Windows.Controls.StackPanel; $right.Orientation = 'Horizontal'
+        foreach ($kind in 'cpu', 'gpu', 'defender') {
+            $chip = New-Object System.Windows.Controls.CheckBox
+            $chip.Style = $window.FindResource('Chip'); $chip.Content = T "games.$kind"; $chip.Margin = '0,0,6,0'; $chip.VerticalAlignment = 'Center'
+            $chip.Tag = @{ Path = $path; Kind = $kind }
+            $chip.IsChecked = Get-GameOption $path $kind $exclusions
+            if ($kind -eq 'defender' -and $null -eq $exclusions) { $chip.IsEnabled = $false; $chip.ToolTip = T 'games.nodefender' }
+            $chip.Add_Click({
+                $t = $this.Tag
+                try { Set-GameOption $t.Path $t.Kind ([bool]$this.IsChecked) } catch { $this.IsChecked = !$this.IsChecked; Set-Status $_.Exception.Message }
+            })
+            [void]$right.Children.Add($chip)
+        }
+        $remove = New-Object System.Windows.Controls.Button
+        $remove.Style = $window.FindResource('Bare'); $remove.Padding = '7'; $remove.Margin = '4,0,0,0'; $remove.ToolTip = T 'games.remove'; $remove.Tag = $path
+        $x = New-Text ([string][char]0xE711) 12; $x.Style = $window.FindResource('Glyph'); $remove.Content = $x
+        $remove.Add_Click({
+            $path = $this.Tag
+            foreach ($kind in 'cpu', 'gpu', 'defender') { try { Set-GameOption $path $kind $false } catch { } }
+            Remove-ItemProperty -Path $gamesKey -Name $path -ErrorAction SilentlyContinue
+            Set-Status ((T 'status.gameremoved') -f [IO.Path]::GetFileNameWithoutExtension($path))
+            Show-Games
+            Request-MenuUpdate
+        })
+        [void]$right.Children.Add($remove)
+        $name = try { (Get-Item -LiteralPath $path -ErrorAction Stop).VersionInfo.FileDescription } catch { $null }
+        if (!$name) { $name = [IO.Path]::GetFileNameWithoutExtension($path) }
+        $row = New-Row ([string][char]0xE7FC) $name $null $right $null
+        $row.Sub.Text = Split-Path $path -Parent
+        $icon = Get-FileIcon @($path)
+        if ($icon) { Set-RowIcon $row $icon }
+        [void]$ui.GamesList.Children.Add($row.Row)
+    }
+    $ui.GamesEmpty.Visibility = if ($paths.Count) { 'Collapsed' } else { 'Visible' }
+    Update-Separators $ui.GamesList
+}
+$ui.GameAddButton.Add_Click({
+    $dialog = New-Object Microsoft.Win32.OpenFileDialog
+    $dialog.Title = T 'games.pick'; $dialog.Filter = 'Games (*.exe)|*.exe'
+    if (!$dialog.ShowDialog($window)) { return }
+    $path = $dialog.FileName
+    if (!(Test-Path $gamesKey)) { New-Item -Path $gamesKey -Force | Out-Null }
+    Set-ItemProperty -Path $gamesKey -Name $path -Value 1 -Type DWord -Force
+    # High priority and the dedicated GPU at once; skipping Defender is the user's choice
+    foreach ($kind in 'cpu', 'gpu') { try { Set-GameOption $path $kind $true } catch { } }
+    Set-Status ((T 'status.gameadded') -f [IO.Path]::GetFileNameWithoutExtension($path))
+    Show-Games
+    Request-MenuUpdate
+})
+Show-Games
 
 # ---------------------------------------------------------------------------------------------
 # Cleaner
 # ---------------------------------------------------------------------------------------------
+Add-Mark 'Cleaner'
 # Folders: their contents are deleted (wildcards allowed). Files: these files are deleted.
 # Only caches, logs and temporary files: nothing that holds settings, saves, passwords or cookies.
 # Off = not ticked at first (cleaning them makes the next start of a game or browser slower).
@@ -1436,6 +1979,7 @@ $ui.QuickClean.Add_Click({ $ui.NavCleaner.IsChecked = $true; Start-Scan { Start-
 # ---------------------------------------------------------------------------------------------
 # Appearance
 # ---------------------------------------------------------------------------------------------
+Add-Mark 'Appearance'
 $themes = @(
     @{ Key = 'dark';      File = 'akatios-dark.theme';      Image = 'akatios-dark.png' }
     @{ Key = 'light';     File = 'akatios-light.theme';     Image = 'akatios-light.png' }
@@ -1456,7 +2000,7 @@ foreach ($th in $themes) {
     $card.Style = $window.FindResource('Card'); $card.Margin = '8,0'; $card.Padding = '12'; $card.BorderThickness = 2
     $stack = New-Object System.Windows.Controls.StackPanel
     $preview = New-Object System.Windows.Controls.Border
-    $preview.CornerRadius = 8; $preview.Height = 130; $preview.ClipToBounds = $true; $preview.Background = '#3A3A3C'
+    $preview.CornerRadius = 8; $preview.Height = 130; $preview.ClipToBounds = $true; $preview.SetResourceReference([System.Windows.Controls.Border]::BackgroundProperty, 'Fill')
     $img = New-Object System.Windows.Controls.Image
     $img.Stretch = 'UniformToFill'; $img.Source = Get-Image (Join-Path $wallpapers $th.Image) 480
     $preview.Child = $img
@@ -1508,6 +2052,14 @@ function ConvertTo-Color([string]$hex) { [System.Windows.Media.ColorConverter]::
 
 # New brushes for this window. The XAML uses them as DynamicResource, so every style follows at once
 # (brushes inside styles are frozen and cannot be recolored in place).
+# Look picker (Appearance): Auto, Dark or Light, saved as CenterLook
+$lookChoice = Get-RegValue $settingsKey 'CenterLook'
+if ($lookChoice -notin 'dark', 'light') { $lookChoice = 'auto' }
+$ui["Look$([Globalization.CultureInfo]::InvariantCulture.TextInfo.ToTitleCase($lookChoice))"].IsChecked = $true
+foreach ($n in 'Auto', 'Dark', 'Light') {
+    $ui["Look$n"].Add_Checked({ Save-Setting CenterLook $this.Name.Substring(4).ToLowerInvariant(); Set-CenterLook (Get-LookName) })
+}
+
 function Set-CenterAccent($a) {
     $res = $window.Resources
     # ::new, not New-Object: New-Object wraps the brush in a PSObject, which WPF does not accept as a brush
@@ -1593,7 +2145,7 @@ foreach ($file in @(Get-ChildItem -Path (Join-Path $wallpapers '*') -Include *.p
 </ControlTemplate>
 '@)
     $frame = New-Object System.Windows.Controls.Border
-    $frame.Width = 168; $frame.Height = 95; $frame.CornerRadius = 8; $frame.Background = '#3A3A3C'
+    $frame.Width = 168; $frame.Height = 95; $frame.CornerRadius = 8; $frame.SetResourceReference([System.Windows.Controls.Border]::BackgroundProperty, 'Fill')
     $brush = New-Object System.Windows.Media.ImageBrush (Get-Image $file.FullName 340)
     $brush.Stretch = 'UniformToFill'
     $frame.Background = $brush
@@ -1676,6 +2228,7 @@ $ui.SoundPreview.Add_Click({
 # ---------------------------------------------------------------------------------------------
 # Updates and links
 # ---------------------------------------------------------------------------------------------
+Add-Mark 'Updates and links'
 $script:releaseUrl = "https://github.com/$repo/releases"
 function Start-UpdateCheck {
     Set-Status (T 'status.checking') $true
@@ -1747,6 +2300,7 @@ $ui.LinkAtlas.Add_Click({ Start-Process 'https://github.com/Atlas-OS/Atlas' })
 # nothing has to be copied and new AtlasOS settings show up by themselves. A folder with files is one
 # row, each file is one button.
 # ---------------------------------------------------------------------------------------------
+Add-Mark 'System settings'
 # Names and short explanations of the AtlasOS folders: English name, Thai name, English text, Thai text
 $atlasInfo = @{
     'Drivers from Windows Update' = @('Drivers from Windows Update', 'ไดรเวอร์จาก Windows Update', 'Let Windows Update install drivers.', 'ให้ Windows Update ติดตั้งไดรเวอร์เอง')
@@ -1765,7 +2319,7 @@ $atlasInfo = @{
     'Hibernation' = @('Hibernation', 'ไฮเบอร์เนต', 'Off saves disk space (the size of your RAM).', 'ปิดไว้ประหยัดพื้นที่ดิสก์เท่ากับขนาด RAM')
     'Location' = @('Location', 'ตำแหน่งที่ตั้ง', 'Apps can ask for your location.', 'ให้แอปขอตำแหน่งของเครื่องได้')
     'Mobile Devices (Phone Link)' = @('Phone Link', 'Phone Link', 'Connect your phone to Windows.', 'เชื่อมมือถือกับ Windows')
-    'Power-saving' = @('Power saving', 'การประหยัดพลังงาน', 'Off is the Atlas Maximum Performance plan. Best for desktops.', 'ปิดคือ power plan ประสิทธิภาพสูงสุดของ Atlas เหมาะกับคอมตั้งโต๊ะ')
+    'Power-saving' = @('Power saving', 'การประหยัดพลังงาน', 'Off is the Akati OS Maximum Performance plan. Best for desktops.', 'ปิดคือ power plan ประสิทธิภาพสูงสุดของ Akati OS เหมาะกับคอมตั้งโต๊ะ')
     'Search Indexing' = @('Search indexing', 'การทำดัชนีค้นหา', 'Faster file search in exchange for some background work.', 'ค้นหาไฟล์ได้เร็วขึ้น แลกกับงานเบื้องหลังเล็กน้อย')
     'Sleep Study' = @('Sleep study', 'Sleep study', 'Diagnostics of sleep power use.', 'บันทึกการใช้พลังงานตอน sleep')
     'Sleep' = @('Sleep', 'โหมด sleep', 'Let the PC go to sleep.', 'ให้เครื่องเข้าโหมด sleep ได้')
@@ -1834,7 +2388,7 @@ $atlasVerbs = @{
     'Allow' = @('Allow', 'อนุญาต'); 'Disallow' = @('Disallow', 'ไม่อนุญาต'); 'Restore' = @('Restore', 'คืนค่า'); 'Reset' = @('Reset', 'รีเซ็ต')
     'Set' = @('Set', 'ตั้งค่า'); 'Toggle' = @('Turn on or off', 'เปิดหรือปิด'); 'Unlock' = @('Unlock', 'ปลดล็อก'); 'Debloat' = @('Clean up', 'ลบรายการที่ไม่ใช้')
     'Old' = @('Old', 'แบบเก่า'); 'Modern' = @('Modern', 'แบบใหม่'); 'New' = @('New', 'แบบใหม่'); 'Minimal' = @('Minimal', 'น้อยที่สุด')
-    'Default' = @('Windows default', 'ค่าของ Windows'); 'Atlas' = @('Atlas', 'แบบ Atlas'); 'Legacy' = @('Legacy', 'แบบเก่า')
+    'Default' = @('Windows default', 'ค่าของ Windows'); 'Legacy' = @('Legacy', 'แบบเก่า')
 }
 
 # "Disable Hibernation (default)" in the Hibernation row becomes "Disable": the verb alone, when the
@@ -1999,8 +2553,8 @@ function Show-SystemList {
         $dirs = @($top) + @(Get-ChildItem -LiteralPath $top.FullName -Directory -Recurse | Sort-Object FullName)
         Add-SystemCard $key $dirs $top.FullName
     }
-    # Files directly in the folder: AtlasOS links
-    Add-SystemCard 'AtlasOS' @(Get-Item -LiteralPath $desktop) (Get-Item -LiteralPath $desktop).FullName
+    # Files directly in the folder: links
+    Add-SystemCard 'AkatiOS' @(Get-Item -LiteralPath $desktop) (Get-Item -LiteralPath $desktop).FullName
     Update-SystemFilter
 }
 
@@ -2025,6 +2579,7 @@ Show-SystemList
 # ---------------------------------------------------------------------------------------------
 # Problem report: one zip on the desktop with the Akati OS logs and PC details
 # ---------------------------------------------------------------------------------------------
+Add-Mark 'Problem report'
 $ui.IssuesButton.Add_Click({ Start-Process "https://github.com/$repo/issues" })
 $ui.ReportButton.Add_Click({
     $this.IsEnabled = $false
@@ -2045,8 +2600,8 @@ $ui.ReportButton.Add_Click({
             $lines += "CPU: $((Get-CimInstance Win32_Processor | Select-Object -First 1).Name)"
             $lines += 'GPU: ' + ((Get-CimInstance Win32_VideoController | ForEach-Object { "$($_.Name) (driver $($_.DriverVersion))" }) -join '; ')
             $lines += 'RAM: {0:N1} GB' -f ($os.TotalVisibleMemorySize / 1MB)
-            $disk = Get-CimInstance Win32_LogicalDisk -Filter "DeviceID='C:'"
-            $lines += 'C: {0:N1} GB free of {1:N1} GB' -f ($disk.FreeSpace / 1GB), ($disk.Size / 1GB)
+            $disk = [IO.DriveInfo]::new('C')
+            $lines += 'C: {0:N1} GB free of {1:N1} GB' -f ($disk.TotalFreeSpace / 1GB), ($disk.TotalSize / 1GB)
             $lines += "Power plan: $([string](powercfg /getactivescheme))"
         } catch { $lines += "System info error: $($_.Exception.Message)" }
         $lines += "WinGet: $(try { (& winget --version) 2>$null } catch { 'not found' })"
@@ -2077,6 +2632,7 @@ $ui.ReportButton.Add_Click({
 # ---------------------------------------------------------------------------------------------
 # Navigation, title bar, language
 # ---------------------------------------------------------------------------------------------
+Add-Mark 'Navigation, title bar, language'
 $pages = 'dashboard', 'gaming', 'boost', 'tweaks', 'cleaner', 'appearance', 'about'
 $script:page = 'dashboard'
 function Get-PageId([string]$p) { [Globalization.CultureInfo]::InvariantCulture.TextInfo.ToTitleCase($p) }
@@ -2101,8 +2657,12 @@ function Show-Page([string]$name) {
         }
     }
     $ui.PageTitle.Text = T "nav.$name"
+    # A finished message belongs to the page it came from; work that still runs keeps its message
+    if (!$script:statusBusy) { Set-Status (T 'ready') }
     if ($name -eq 'cleaner' -and $ui.CleanTotal.Text -eq '-') { Start-Scan }
     if ($name -eq 'boost') { Update-BoostCard }
+    # Gaming apps: look for app updates once, the first time the page opens
+    if ($name -eq 'gaming' -and !$script:appsChecked -and !$Screenshot) { $script:appsChecked = $true; Start-AppUpdateCheck $true }
 }
 foreach ($p in $pages) {
     $ui["Nav$(Get-PageId $p)"].Add_Checked({ Show-Page $this.Name.Substring(3).ToLowerInvariant() })
@@ -2149,6 +2709,151 @@ $area = [System.Windows.SystemParameters]::WorkArea
 if ($window.Width -gt $area.Width - 16) { $window.Width = [Math]::Max(640, $area.Width - 16); $window.MinWidth = [Math]::Min($window.MinWidth, $window.Width) }
 if ($window.Height -gt $area.Height - 16) { $window.Height = [Math]::Max(480, $area.Height - 16); $window.MinHeight = [Math]::Min($window.MinHeight, $window.Height) }
 
+# ---------------------------------------------------------------------------------------------
+# What's new: once after an update (LastVersion is saved when it is closed; a new install skips it)
+# ---------------------------------------------------------------------------------------------
+function Show-WhatsNew {
+    $ui.WhatsNewTitle.Text = (T 'new.title') -f $version
+    $ui.WhatsNewList.Children.Clear()
+    foreach ($i in 1..6) {
+        $row = New-Object System.Windows.Controls.DockPanel; $row.Margin = '0,0,0,10'
+        $dot = New-Object System.Windows.Controls.Border
+        $dot.Width = 8; $dot.Height = 8; $dot.CornerRadius = 4; $dot.Margin = '2,7,12,0'; $dot.VerticalAlignment = 'Top'
+        $dot.SetResourceReference([System.Windows.Controls.Border]::BackgroundProperty, 'Accent')
+        [System.Windows.Controls.DockPanel]::SetDock($dot, 'Left')
+        [void]$row.Children.Add($dot); [void]$row.Children.Add((New-Text (T "new.$i") 14))
+        [void]$ui.WhatsNewList.Children.Add($row)
+    }
+    $ui.WhatsNew.Visibility = 'Visible'
+}
+$ui.WhatsNewDone.Add_Click({ $ui.WhatsNew.Visibility = 'Collapsed'; Save-Setting LastVersion $version })
+
+# ---------------------------------------------------------------------------------------------
+# Spotlight (Ctrl+K): one search for pages, settings, apps, games and actions
+# ---------------------------------------------------------------------------------------------
+# Both languages are searched, so "dns" or "ล้าง" work whatever the window language is
+function Get-Both([string]$key) { "$($strings.en[$key]) $($strings.th[$key])" }
+function Get-StandbyBytes {
+    try { $m = Get-CimInstance Win32_PerfRawData_PerfOS_Memory -ErrorAction Stop; [double]$m.StandbyCacheNormalPriorityBytes + [double]$m.StandbyCacheReserveBytes + [double]$m.StandbyCacheCoreBytes } catch { 0 }
+}
+function Invoke-FreeRam {
+    $before = Get-StandbyBytes
+    $result = [AkatiOS.Perf]::PurgeStandbyList()
+    if ($result -eq 0) { Set-Status ((T 'status.freed') -f (Format-Size ([Math]::Max(0, $before - (Get-StandbyBytes))))) } else { Set-Status "NTSTATUS $result" }
+}
+# Opens a page and scrolls a row into view, with a short highlight
+function Show-Element([string]$page, $element) {
+    $ui["Nav$(Get-PageId $page)"].IsChecked = $true
+    $script:spotTarget = $element
+    [void]$window.Dispatcher.BeginInvoke([action]{
+        $el = $script:spotTarget
+        if (!$el) { return }
+        $el.BringIntoView()
+        $brush = $window.FindResource('Accent').Clone(); $brush.Opacity = 0.35
+        $el.Background = $brush
+        $fade = New-Object System.Windows.Media.Animation.DoubleAnimation 0.35, 0, (New-Object System.Windows.Duration ([TimeSpan]::FromMilliseconds(1400)))
+        $brush.BeginAnimation([System.Windows.Media.Brush]::OpacityProperty, $fade)
+    }, 'Background')
+}
+function Get-SpotlightItems {
+    $items = New-Object System.Collections.ArrayList
+    $add = { param($text, $search, $sub, $glyph, $action, $data)
+             [void]$items.Add(@{ Text = $text; Search = "$text $search".ToLowerInvariant(); Sub = $sub; Glyph = [string]$glyph; Action = $action; Data = $data }) }
+    foreach ($p in $pages) { & $add (T "nav.$p") (Get-Both "nav.$p") (T 'spot.page') ([char]0xE8A5) { param($d) $ui["Nav$(Get-PageId $d)"].IsChecked = $true } $p }
+    foreach ($t in $tweaks) {
+        if (!$t.Row) { continue }
+        & $add (T "tw.$($t.Key)") ((Get-Both "tw.$($t.Key)") + ' ' + (Get-Both "tw.$($t.Key).d")) (T 'spot.setting') $t.Glyph { param($d) Show-Element 'tweaks' $d } $t.Row
+    }
+    & $add (T 'tw.dns') ((Get-Both 'tw.dns') + ' cloudflare google 1.1.1.1 8.8.8.8') (T 'spot.setting') ([char]0xE774) { param($d) Show-Element 'tweaks' $d } $dnsRow.Row
+    & $add (T 'tw.refresh') ((Get-Both 'tw.refresh') + ' hz') (T 'spot.setting') ([char]0xE7F8) { param($d) Show-Element 'tweaks' $d } $refreshRow.Row
+    foreach ($a in $apps) {
+        & $add $a.Name (Get-Both "app.desc.$($a.Key)") (T 'spot.app') ([char]0xE7FC) { param($d) if (Test-App $d) { Open-App $d } else { Show-Element 'gaming' $d.RowParts.Row } } $a
+    }
+    foreach ($g in @(if (Test-Path $gamesKey) { (Get-Item $gamesKey).Property })) {
+        & $add ([IO.Path]::GetFileNameWithoutExtension($g)) '' (T 'spot.game') ([char]0xE7FC) { param($d) Start-Process explorer.exe -ArgumentList "`"$d`"" } $g
+    }
+    foreach ($ci in $cleanItems) { & $add (T "clean.$($ci.Key)") (Get-Both "clean.$($ci.Key)") (T 'nav.cleaner') $ci.Glyph { param($d) $ui.NavCleaner.IsChecked = $true } $null }
+    & $add (T 'act.freeram') (Get-Both 'act.freeram') (T 'spot.action') ([char]0xE964) { param($d) Invoke-FreeRam } $null
+    & $add (T 'act.flushdns') (Get-Both 'act.flushdns') (T 'spot.action') ([char]0xE774) { param($d) & ipconfig.exe /flushdns *> $null; Set-Status (T 'status.dnsflushed') } $null
+    # Windows starts Explorer again by itself (AutoRestartShell), as the user and not as administrator
+    & $add (T 'act.explorer') (Get-Both 'act.explorer') (T 'spot.action') ([char]0xE72C) { param($d) Stop-Process -Name explorer -Force -ErrorAction SilentlyContinue } $null
+    & $add (T 'act.boost') ((Get-Both 'act.boost') + ' game mode') (T 'spot.action') ([char]0xE945) { param($d) $ui.BoostButton.RaiseEvent((New-Object System.Windows.RoutedEventArgs ([System.Windows.Controls.Primitives.ButtonBase]::ClickEvent))) } $null
+    & $add (T 'act.ping') (Get-Both 'act.ping') (T 'spot.action') ([char]0xE768) { param($d) $ui.NavBoost.IsChecked = $true; $script:pingOn = $true; $script:pingNext = [datetime]::MinValue; Set-PingButton } $null
+    & $add (T 'act.update') (Get-Both 'act.update') (T 'spot.action') ([char]0xE895) { param($d) $ui.NavAbout.IsChecked = $true; Start-UpdateCheck } $null
+    & $add (T 'act.lang') (Get-Both 'act.lang') (T 'spot.action') ([char]0xE774) { param($d) Set-AppLanguage $(if ($lang -eq 'th') { 'en' } else { 'th' }) } $null
+    & $add (T 'act.report') (Get-Both 'act.report') (T 'spot.action') ([char]0xE7BA) { param($d) $ui.ReportButton.RaiseEvent((New-Object System.Windows.RoutedEventArgs ([System.Windows.Controls.Primitives.ButtonBase]::ClickEvent))) } $null
+    return $items
+}
+function Update-SpotSelection {
+    for ($i = 0; $i -lt $script:spotRows.Count; $i++) {
+        $row = $script:spotRows[$i]
+        if ($i -eq $script:spotSel) { $row.SetResourceReference([System.Windows.Controls.Border]::BackgroundProperty, 'Accent') }
+        else { $row.Background = [System.Windows.Media.Brushes]::Transparent }
+    }
+}
+function Update-Spotlight {
+    $text = $ui.SpotlightBox.Text.Trim()
+    $q = $text.ToLowerInvariant()
+    $ui.SpotlightHint.Visibility = if ($text) { 'Collapsed' } else { 'Visible' }
+    $ui.SpotlightResults.Children.Clear()
+    $script:spotRows = @(); $script:spotList = @()
+    if (!$q) { $ui.SpotlightLine.Visibility = 'Collapsed'; return }
+    $words = $q -split '\s+'
+    $found = @($script:spotItems | Where-Object { $s = $_.Search; !($words | Where-Object { $s -notlike "*$_*" }) })
+    # Names that start with the search come first
+    $found = @($found | Sort-Object { if ($_.Text.ToLowerInvariant().StartsWith($q)) { 0 } else { 1 } } | Select-Object -First 8)
+    $found += @{ Text = (T 'spot.atlas') -f $text; Sub = (T 'tweaks.system'); Glyph = [string][char]0xE721; Data = $text
+                 Action = { param($d) $ui.NavTweaks.IsChecked = $true; $ui.SystemSearch.Text = $d } }
+    foreach ($item in $found) {
+        $row = New-Object System.Windows.Controls.Border
+        $row.CornerRadius = 7; $row.Padding = '10,7'; $row.Cursor = 'Hand'; $row.Background = [System.Windows.Media.Brushes]::Transparent
+        $dock = New-Object System.Windows.Controls.DockPanel
+        $icon = New-Object System.Windows.Controls.Border
+        $icon.Width = 26; $icon.Height = 26; $icon.CornerRadius = 6; $icon.SetResourceReference([System.Windows.Controls.Border]::BackgroundProperty, 'Fill'); $icon.Margin = '0,0,12,0'
+        $g = New-Text $item.Glyph 13; $g.Style = $window.FindResource('Glyph'); $g.HorizontalAlignment = 'Center'
+        $g.SetResourceReference([System.Windows.Controls.TextBlock]::ForegroundProperty, 'Accent2'); $icon.Child = $g
+        $sub = New-Text $item.Sub 12; $sub.Opacity = 0.7; $sub.VerticalAlignment = 'Center'
+        [System.Windows.Controls.DockPanel]::SetDock($icon, 'Left'); [System.Windows.Controls.DockPanel]::SetDock($sub, 'Right')
+        $title = New-Text $item.Text 14; $title.VerticalAlignment = 'Center'; $title.TextWrapping = 'NoWrap'; $title.TextTrimming = 'CharacterEllipsis'
+        [void]$dock.Children.Add($icon); [void]$dock.Children.Add($sub); [void]$dock.Children.Add($title)
+        $row.Child = $dock
+        $row.Tag = $script:spotRows.Count
+        $row.Add_MouseEnter({ $script:spotSel = $this.Tag; Update-SpotSelection })
+        $row.Add_MouseLeftButtonUp({ Invoke-SpotlightItem $this.Tag })
+        [void]$ui.SpotlightResults.Children.Add($row)
+        $script:spotRows += $row; $script:spotList += $item
+    }
+    $ui.SpotlightLine.Visibility = 'Visible'
+    $script:spotSel = 0
+    Update-SpotSelection
+}
+function Open-Spotlight {
+    $script:spotItems = Get-SpotlightItems
+    $ui.SpotlightBox.Text = ''
+    Update-Spotlight
+    $ui.Spotlight.Visibility = 'Visible'
+    [void]$ui.SpotlightBox.Focus()
+}
+function Close-Spotlight { $ui.Spotlight.Visibility = 'Collapsed' }
+function Invoke-SpotlightItem([int]$index) {
+    if ($index -lt 0 -or $index -ge $script:spotList.Count) { return }
+    $item = $script:spotList[$index]
+    Close-Spotlight
+    try { & $item.Action $item.Data } catch { Set-Status $_.Exception.Message }
+}
+$ui.SpotlightButton.Add_Click({ Open-Spotlight })
+$ui.SpotlightDim.Add_MouseLeftButtonDown({ Close-Spotlight })
+$ui.SpotlightBox.Add_TextChanged({ Update-Spotlight })
+$ui.SpotlightBox.Add_PreviewKeyDown({
+    param($s, $e)
+    switch ($e.Key) {
+        'Down'   { if ($script:spotRows.Count) { $script:spotSel = [Math]::Min($script:spotSel + 1, $script:spotRows.Count - 1); Update-SpotSelection }; $e.Handled = $true }
+        'Up'     { $script:spotSel = [Math]::Max($script:spotSel - 1, 0); Update-SpotSelection; $e.Handled = $true }
+        'Return' { Invoke-SpotlightItem $script:spotSel; $e.Handled = $true }
+        'Escape' { Close-Spotlight; $e.Handled = $true }
+    }
+})
+
 function Save-Setting([string]$name, $value) {
     try {
         if (!(Test-Path $settingsKey)) { New-Item -Path $settingsKey -Force | Out-Null }
@@ -2168,6 +2873,12 @@ function Update-Language {
     Update-Chips
     if ($stats.Top) { Show-TopApps }
     foreach ($a in $apps) { if ($a.State -ne 'install') { Update-AppRow $a } }
+    Update-AppsToolbar
+    Update-RefreshRow
+    Update-TweakHints
+    Show-Games
+    Request-MenuUpdate
+    if ($ui.WhatsNew.Visibility -eq 'Visible') { Show-WhatsNew }
     Update-ThemeCards
     Update-GpuText
     Update-BoostCard
@@ -2189,6 +2900,10 @@ $ui.WelcomeDone.Add_Click({ Close-Welcome })
 # The welcome covers the title bar, so the window can be moved from anywhere on it
 $ui.Welcome.Add_MouseLeftButtonDown({ $window.DragMove() })
 if (!(Get-RegValue $settingsKey 'Welcomed') -and !$Screenshot) { $ui.Welcome.Visibility = 'Visible' }
+if (!$Screenshot) {
+    if (!(Get-RegValue $settingsKey 'Welcomed')) { Save-Setting LastVersion $version }
+    elseif ((Get-RegValue $settingsKey 'LastVersion') -ne $version) { Show-WhatsNew }
+}
 
 # Keyboard: Ctrl+1 to Ctrl+7 switch pages, Ctrl+F searches the AtlasOS settings in Tweaks, Esc closes the welcome or clears the search
 $window.Add_PreviewKeyDown({
@@ -2197,10 +2912,12 @@ $window.Add_PreviewKeyDown({
     $key = [string]$e.Key
     if ($key -eq 'Escape') {
         if ($ui.Welcome.Visibility -eq 'Visible') { Close-Welcome; $e.Handled = $true }
+        elseif ($ui.WhatsNew.Visibility -eq 'Visible') { $ui.WhatsNew.Visibility = 'Collapsed'; Save-Setting LastVersion $version; $e.Handled = $true }
         elseif ($ui.SystemSearch.Text) { $ui.SystemSearch.Text = ''; $e.Handled = $true }
         return
     }
     if (!$ctrl -or $ui.Welcome.Visibility -eq 'Visible') { return }
+    if ($key -eq 'K') { Open-Spotlight; $e.Handled = $true; return }
     if ($key -eq 'F') {
         $ui.NavTweaks.IsChecked = $true
         [void]$ui.SystemSearch.Focus(); $ui.SystemSearch.SelectAll()
@@ -2216,11 +2933,21 @@ Show-Disks
 Update-Clock
 Update-Chips
 Set-Status (T 'ready')
+# Started from the desktop menu: open that page (and start the ping test)
+if ($Page -and $pages -contains $Page.ToLowerInvariant()) {
+    $ui["Nav$(Get-PageId $Page.ToLowerInvariant())"].IsChecked = $true
+    if ($Ping -and $Page -eq 'boost') { $script:pingOn = $true; $script:pingNext = [datetime]::MinValue; Set-PingButton }
+}
+# The desktop menu is rebuilt each time the window opens (apps, language, task for this user)
+Request-MenuUpdate
 
 # ---------------------------------------------------------------------------------------------
 # Screenshot mode (CI): render every page in both languages to PNG and exit
 # ---------------------------------------------------------------------------------------------
+Add-Mark 'Screenshot mode'
 if ($Screenshot) {
+    Add-Mark 'Ready (before screenshots)'
+    Write-Host 'Startup timing:'; $script:marks | ForEach-Object { Write-Host "  $_" }
     New-Item -ItemType Directory -Path $Screenshot -Force | Out-Null
     $stats.Run = $false
     & $statsSample $stats
@@ -2247,16 +2974,33 @@ if ($Screenshot) {
             if ($p -eq 'cleaner') { $ui.CleanTotal.Text = '0 KB' }
             if ($p -eq 'gaming') {
                 # Show the progress bar and queue states once
-                $apps[2].State = 'install'; $apps[2].Bar.IsIndeterminate = $false; $apps[2].Bar.Value = 45; $apps[2].Sub.Text = (T 'stage.download') + ' 45%'; Update-AppRow $apps[2]
+                $apps[2].State = 'install'; Update-AppRow $apps[2]; Set-Ring $apps[2].Ring 45; $apps[2].Sub.Text = (T 'stage.download') + ' 45%'; $apps[2].Sub.Foreground = $window.FindResource('Accent2')
                 $apps[3].State = 'queued'; Update-AppRow $apps[3]
-                $apps[4].Check.IsChecked = $true; Update-AppsToolbar
             }
             if ($p -eq 'tweaks') { $ui.SystemList.Measure((New-Object System.Windows.Size 800, 10000)) }
             Save-Shot "$p-$l.png"
-            if ($p -eq 'gaming') { foreach ($i in 2, 3) { $apps[$i].State = 'idle'; Update-AppRow $apps[$i] }; $apps[4].Check.IsChecked = $false }
-            if ($p -eq 'appearance' -or $p -eq 'tweaks' -or $p -eq 'boost') {
+            if ($p -eq 'gaming') { foreach ($i in 2, 3) { $apps[$i].State = 'idle'; Update-AppRow $apps[$i] } }
+            if ($p -eq 'gaming') {
+                # The "..." menu on its own (a menu opens in a popup, outside the window)
+                try {
+                    $menu = New-AppMenu $apps[0]
+                    $menu.Measure((New-Object System.Windows.Size ([double]::PositiveInfinity), ([double]::PositiveInfinity)))
+                    $menu.Arrange((New-Object System.Windows.Rect $menu.DesiredSize)); $menu.UpdateLayout()
+                    $mb = New-Object System.Windows.Media.Imaging.RenderTargetBitmap ([int][Math]::Ceiling($menu.ActualWidth)), ([int][Math]::Ceiling($menu.ActualHeight)), 96, 96, ([System.Windows.Media.PixelFormats]::Pbgra32)
+                    $mb.Render($menu)
+                    $me = New-Object System.Windows.Media.Imaging.PngBitmapEncoder
+                    $me.Frames.Add([System.Windows.Media.Imaging.BitmapFrame]::Create($mb))
+                    $mf = [IO.File]::Create((Join-Path $Screenshot "menu-$l.png")); $me.Save($mf); $mf.Close()
+                } catch { Write-Host "Menu screenshot failed: $($_.Exception.Message)" }
+            }
+            if ($p -eq 'appearance' -or $p -eq 'tweaks' -or $p -eq 'boost' -or $p -eq 'gaming') {
                 # The lower part of long pages
                 $sv = $ui["Page$(Get-PageId $p)"]
+                if ($p -eq 'tweaks') {
+                    # The middle of the page: the Network, Display and Memory sections
+                    $sv.UpdateLayout(); $sv.ScrollToVerticalOffset(560); $sv.UpdateLayout()
+                    Save-Shot "$p-$l-mid.png"
+                }
                 $sv.UpdateLayout(); $sv.ScrollToVerticalOffset(100000); $sv.UpdateLayout()
                 Save-Shot "$p-$l-2.png"
                 $sv.ScrollToVerticalOffset(0)
@@ -2266,11 +3010,17 @@ if ($Screenshot) {
         $ui.Welcome.Visibility = 'Visible'
         Save-Shot "welcome-$l.png"
         $ui.Welcome.Visibility = 'Collapsed'
+        Show-WhatsNew; Save-Shot "whatsnew-$l.png"; $ui.WhatsNew.Visibility = 'Collapsed'
+        Open-Spotlight; $ui.SpotlightBox.Text = 'dns'; Save-Shot "spotlight-$l.png"; Close-Spotlight
     }
     # Accent colors recolor the window
     Set-CenterAccent $accents[1]; $ui.NavGaming.IsChecked = $true; Save-Shot 'accent-blue.png'
     Set-CenterAccent $accents[6]; $ui.NavBoost.IsChecked = $true; Save-Shot 'accent-orange.png'
     Set-CenterAccent $accents[0]
+    # The light look
+    Set-CenterLook 'light'
+    foreach ($p in 'dashboard', 'gaming', 'tweaks') { $ui["Nav$(Get-PageId $p)"].IsChecked = $true; Save-Shot "light-$p.png" }
+    Set-CenterLook 'dark'
     # The Akati OS cursors must load in Windows
     foreach ($c in Get-ChildItem -LiteralPath $akatiCursors -File) {
         if ([AkatiOS.Native]::LoadCursorFromFile($c.FullName) -eq [IntPtr]::Zero) { Write-Output "Windows cannot load the cursor $($c.Name)"; exit 1 }
@@ -2283,6 +3033,7 @@ if ($Screenshot) {
 # ---------------------------------------------------------------------------------------------
 # Run
 # ---------------------------------------------------------------------------------------------
+Add-Mark 'Run'
 # Windows 11: Mica, the see-through backdrop of Windows 11 apps, with rounded corners drawn by Windows.
 # The window is then a normal (not layered) window and DWM draws the backdrop behind the glass frame.
 # If Windows refuses the backdrop, the window keeps its solid background.
@@ -2302,12 +3053,13 @@ if ($build -ge 22000) {
         $window.Add_SourceInitialized({
             $hwnd = (New-Object System.Windows.Interop.WindowInteropHelper $window).Handle
             [System.Windows.Interop.HwndSource]::FromHwnd($hwnd).CompositionTarget.BackgroundColor = [System.Windows.Media.Colors]::Transparent
-            $on = 1; [void][AkatiOS.Native]::DwmSetWindowAttribute($hwnd, 20, [ref]$on, 4)        # dark mode
+            $on = if ($script:look -eq 'dark') { 1 } else { 0 }; [void][AkatiOS.Native]::DwmSetWindowAttribute($hwnd, 20, [ref]$on, 4)   # dark mode
             $round = 2; [void][AkatiOS.Native]::DwmSetWindowAttribute($hwnd, 33, [ref]$round, 4)  # round corners
             $mica = 2
             if ([AkatiOS.Native]::DwmSetWindowAttribute($hwnd, 38, [ref]$mica, 4) -eq 0) {
-                $ui.RootBorder.Background = '#D01C1C1E'
-                $ui.Sidebar.Background = '#90232325'
+                # See-through backgrounds of the current look (Set-CenterLook)
+                $script:micaHwnd = $hwnd
+                Set-CenterLook $script:look
             }
         })
     } catch { }
@@ -2315,14 +3067,24 @@ if ($build -ge 22000) {
 
 $timer = New-Object System.Windows.Threading.DispatcherTimer
 $timer.Interval = [TimeSpan]::FromMilliseconds(500)
-$timer.Add_Tick({ Update-Stats; Receive-Work; Update-AppProgress; Update-Ping })
+$timer.Add_Tick({ Update-Stats; Receive-Work; Update-AppProgress; Update-Ping; if ($script:menuAt -and (Get-Date) -gt $script:menuAt) { Update-DesktopMenu } })
+$window.Add_ContentRendered({ Close-Splash; $window.Activate() })
 $window.Add_Loaded({
     # Akati OS checks GitHub once when the window opens (one request, nothing is downloaded)
     Start-UpdateCheck
+    # Icon next to the clock: wanted (setup option or Tweaks) but its sign-in task is missing, as after some
+    # setups in AME Wizard: register it again
+    if (!$Screenshot -and (Get-RegValue 'HKLM:\SOFTWARE\AkatiOS' 'TrayIcon') -eq 1) {
+        Start-Work { param($script)
+            if (!(Get-ScheduledTask -TaskPath '\AkatiOS\' -TaskName 'Akati OS tray' -ErrorAction SilentlyContinue)) {
+                & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $script -Install
+            } } @((Join-Path $appDir 'AkatiTray.ps1'))
+    }
     $script:statsHandle = $statsPs.BeginInvoke()
     $timer.Start()
 })
 $window.Add_Closed({
+    Close-Splash
     $stats.Run = $false
     $timer.Stop()
 })

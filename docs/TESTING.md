@@ -48,10 +48,10 @@
 
 ### เตรียมไฟล์ playbook
 - [ ] build จาก repo: `.\build.ps1` (หรือ `./build.sh`)
-- [ ] ก๊อป `dist\AkatiOS_v<version>.apbx` และ `dist\SHA256SUMS.txt` เข้า VM
+- [ ] ก๊อป `dist\AkatiOS-Win11_v<version>.apbx` และ `dist\SHA256SUMS.txt` เข้า VM
 - [ ] ตรวจ hash ใน VM:
   ```powershell
-  (Get-FileHash .\AkatiOS_v1.4.1.apbx -Algorithm SHA256).Hash.ToLower()
+  (Get-FileHash .\AkatiOS-Win11_v1.4.1.apbx -Algorithm SHA256).Hash.ToLower()
   Get-Content .\SHA256SUMS.txt
   ```
   สองค่าต้องตรงกัน
@@ -161,7 +161,7 @@ Get-CimInstance -Namespace root\Microsoft\Windows\DeviceGuard -ClassName Win32_D
 | ตรวจ | ติ๊กไว้ | ไม่ได้ติ๊ก |
 |---|---|---|
 | Hibernation | `powercfg /a` ขึ้นว่า Hibernation ไม่พร้อมใช้งาน | Hibernation ยังมีอยู่ |
-| Maximum Performance | scheme ชื่อ `Atlas Power Scheme` | scheme เป็น Balanced (`381b4222-...`) |
+| Maximum Performance | scheme ชื่อ `Akati OS Power Scheme` | scheme เป็น Balanced (`381b4222-...`) |
 | Core Isolation | `VirtualizationBasedSecurityStatus` = 0 | ค่าเท่ากับก่อนติดตั้ง |
 
 - [ ] รอบ A: ผลตรงกับคอลัมน์ "ติ๊กไว้" สำหรับ Hibernation และ Maximum Performance และ Core Isolation ไม่ถูกปิด
@@ -172,12 +172,30 @@ Get-CimInstance -Namespace root\Microsoft\Windows\DeviceGuard -ClassName Win32_D
 
 ### ⚠️ แอปเกม (ติดตั้งจาก Akati OS Center > แอปเกม)
 - [ ] หลังติดตั้ง playbook ไม่มีแอปเกมในเครื่อง (Steam, Discord ฯลฯ)
-- [ ] กดติดตั้ง Steam: ติดตั้งได้ ปุ่มเปลี่ยนเป็น "ติดตั้งแล้ว"
+- [ ] กดติดตั้ง Steam: วงแหวนความคืบหน้าขึ้นแทนปุ่ม ติดตั้งได้ ปุ่มเปลี่ยนเป็น "เปิด" ไอคอนเปลี่ยนจากตัวอักษร S เป็นไอคอนจริงของ Steam กด "เปิด" แล้ว Steam เปิดขึ้นมา
+- [ ] Riot Client: หน้าต่างติดตั้ง VALORANT ของ Riot ขึ้นมา (ข้อความในแอปบอกให้กด Install) กด Install แล้วแถวเปลี่ยนเป็นติดตั้งแล้ว
+- [ ] GOG GALAXY, Rockstar Games Launcher, MSI Afterburner ติดตั้งได้และเปิดได้
+- [ ] แอปที่ติดตั้งเสร็จย้ายไปหมวด "ติดตั้งแล้ว" ด้านบน ถอนแล้วกลับไปหมวดเดิม
+- [ ] ปุ่ม "ติดตั้ง Steam และ Discord" ติดตั้งทั้งสองตัวต่อกัน แล้วปุ่มเป็นสีจาง
+- [ ] เปิดหน้าแอปเกมครั้งแรก แถบล่างขึ้น "กำลังตรวจอัปเดต" เอง ถ้ามีอัปเดต ปุ่มเป็น "อัปเดตทั้งหมด (n)"
+- [ ] ปุ่ม ... ของแอปที่ติดตั้งแล้ว: "เปิดโฟลเดอร์" เปิดโฟลเดอร์ของแอป "ถอนการติดตั้ง" ถามก่อน แล้วตัวถอนการติดตั้งของแอปเปิดขึ้น หลังถอนเสร็จแถวกลับเป็น "ติดตั้ง" และไอคอนตัวอักษร
+- [ ] การ์ดไดรเวอร์การ์ดจอ (เครื่องจริงเท่านั้น): บอกเวอร์ชันและวันที่ของไดรเวอร์ ถ้าเก่ากว่า 6 เดือนเป็นตัวสีส้ม
+- [ ] ข้อความล่างสุดของหน้าต่างกลับเป็น "พร้อมใช้งาน" เมื่อเปลี่ยนหน้า (ยกเว้นงานที่ยังทำอยู่ เช่น กำลังติดตั้ง)
 - [ ] กดติดตั้ง Discord: มีหน้าต่างเล็กของ Discord ขึ้น แล้ว Discord เปิดถึงหน้าล็อกอิน Quit แล้วเปิดใหม่จาก Desktop ต้อง**ไม่มี** error "Attempt to install host that is currently running"
-- [ ] Discord ติดตั้งให้ user ที่ใช้อยู่ (`%LOCALAPPDATA%\Discord`) ไม่ไปอยู่ในโปรไฟล์ admin อื่น ถ้าไม่ผ่านดู log ที่ `%LOCALAPPDATA%\AkatiOS\Logs\GAMEAPPS-Discord.log`
+- [ ] Discord ติดตั้งให้ user ที่ใช้อยู่ (`%LOCALAPPDATA%\Discord`) ไม่ไปอยู่ในโปรไฟล์ admin อื่น ถ้าไม่ผ่านดู log ที่ `%LOCALAPPDATA%\AkatiOS\Logs\GAMEAPPS-Discord.log` และ `GAMEAPPS-Discord-user.log` (ส่วนที่ติดตั้งในบัญชีผู้ใช้)
 - [ ] รอบ B: ติดตั้งครบทุกตัว (Epic, EA, Ubisoft, Battle.net ใน `C:\Program Files\Battle.net`, OBS) และเปิดได้
 - [ ] หน้า "Remove Microsoft Store" ติ๊กไว้เป็นค่าเริ่มต้น หลังติดตั้ง Microsoft Store ต้องไม่มีใน Start menu และ taskbar แต่แอปเกมยังติดตั้งจาก Center ได้
 - [ ] "Turn off unused services" (ติ๊กไว้): หลังรีสตาร์ต `Get-Service Spooler, WSearch, SysMain, SSDPSRV | Select Name, Status, StartType` ต้องเป็น Stopped / Disabled ทั้งหมด และช่องค้นหาใน Start ยังหาแอปเจอ
+- [ ] หน้า setup "Input and latency" ติ๊กไว้ทั้งสองข้อ หลังติดตั้ง: Task Scheduler มี "Force Timer Resolution" และ MeasureSleep.exe วัดได้ประมาณ 0.5 ms กด Shift 5 ครั้งต้องไม่มีหน้าต่าง Sticky Keys
+- [ ] คลิกขวาที่ Desktop มีเมนู Akati OS: ล้าง RAM ขึ้นข้อความ "คืน RAM ได้ ..." มุมขวาล่างโดยไม่มี UAC, แอปของฉันเปิดแอปได้, เริ่ม/หยุดบูสต์เกมสลับได้และชื่อเมนูเปลี่ยน, ล้างไฟล์ขยะ/ทดสอบปิงเปิดหน้าใน Center, ล้าง DNS ขึ้นข้อความ, รีสตาร์ต Explorer ใช้ได้, รีสตาร์ตเข้า BIOS ถามก่อน (กด No)
+- [ ] ไอคอน Akati OS ข้างนาฬิกา: ชี้แล้วเห็น CPU/RAM, คลิกขวามีเมนู, เปิด "บูสต์เกมอัตโนมัติ" แล้วเปิดเกมใน "เกมของฉัน" บูสต์เกมต้องเริ่มเอง ปิดเกมแล้วหยุดเอง
+- [ ] Ctrl+K: พิมพ์ "dns" ขึ้น DNS server และ ล้าง DNS cache, Enter แล้วไปที่แถวนั้น (มีแถบสีกะพริบ), พิมพ์ภาษาไทยก็หาเจอ
+- [ ] ธีม > หน้าตา Akati OS Center: สว่าง/มืด/อัตโนมัติ เปลี่ยนทันทีทั้งหน้าต่าง (Win11: Mica ยังโปร่ง)
+- [ ] อัปเดตจากเวอร์ชันก่อน: หน้าต่าง "มีอะไรใหม่" ขึ้นครั้งเดียว ปรับแต่ง > คืนค่าเริ่มต้นของ Windows ถามก่อนแล้วสวิตช์กลับ
+- [ ] Center เปิด: หน้าต่างเล็ก Akati OS Center ขึ้นทันที แล้วหน้าต่างหลักตามมา
+- [ ] Center > ปรับแต่ง: มีหมวด อินพุตและ latency / เครือข่าย / หน้าจอและกราฟิก / หน่วยความจำและระบบ สวิตช์ timer resolution เปิดอยู่ เปลี่ยน DNS เป็น Cloudflare แล้ว `ipconfig /all` แสดง 1.1.1.1 กลับเป็นอัตโนมัติได้
+- [ ] ถ้าจอตั้งไว้ต่ำกว่าค่าสูงสุด แถวอัตรารีเฟรชมีปุ่ม "ใช้ xxx Hz" กดแล้วจอเปลี่ยน และชิปบน Dashboard แสดงค่าใหม่
+- [ ] บูสต์เกม > เกมของฉัน: เพิ่ม .exe ของเกม แถวขึ้นพร้อม "ความสำคัญสูง" และ "การ์ดจอแยก" เปิดอยู่ ลบแล้วค่ากลับ (ดู `HKLM\...\Image File Execution Options\<game>.exe`)
 - [ ] Settings > System > Notifications: "Get notifications from apps" ปิดอยู่ และ Settings > Gaming > Game Bar ปิดอยู่ (เปิดกลับได้ ไม่เป็นสีเทา)
 - [ ] Akati OS Center > ปรับแต่ง > เปิดสวิตช์ Microsoft Store แล้ว Store กลับมา (อาจใช้เวลาประมาณ 1 นาที)
 

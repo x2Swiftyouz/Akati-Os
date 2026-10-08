@@ -6,7 +6,7 @@ $atlasModules = "$windir\AtlasModules"
 $title = 'Preparing Atlas user settings...'
 
 if (!(Test-Path $atlasDesktop) -or !(Test-Path $atlasModules)) {
-    Write-Host "Atlas was about to configure user settings, but its files weren't found. :(" -ForegroundColor Red
+    Write-Host "Akati OS was about to configure user settings, but its files weren't found. :(" -ForegroundColor Red
     Read-Pause
     exit 1
 }
@@ -35,7 +35,7 @@ reg import "$atlasDesktop\3. General Configuration\File Sharing\Network Navigati
 reg import "$atlasDesktop\4. Interface Tweaks\File Explorer Customization\Automatic Folder Discovery\Disable Automatic Folder Discovery (default).reg" *>$null
 
 # Set visual effects
-& "$atlasDesktop\4. Interface Tweaks\Visual Effects (Animations)\Atlas Visual Effects (default).cmd" /silent
+& "$atlasDesktop\4. Interface Tweaks\Visual Effects (Animations)\Akati OS Visual Effects (default).cmd" /silent
 
 # Pin 'Videos' and 'Music' folders to Home/Quick Acesss
 $o = new-object -com shell.application

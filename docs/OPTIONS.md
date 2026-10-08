@@ -37,7 +37,7 @@ Change later: Akati OS Center > Tweaks > General Configuration > Automatic Updat
 ## General options
 
 - **Disable Hibernation** (ticked): turns off hibernation and saves disk space. Shut down and restart work normally. (AtlasOS always turns off Fast Startup.)
-- **Maximum Performance (Disable Power Saving)** (ticked): uses the "Atlas Power Scheme" and turns off power saving features. Best for desktops. On a laptop it uses more battery and makes it warmer.
+- **Maximum Performance (Disable Power Saving)** (ticked): uses the "Akati OS Power Scheme" (AtlasOS calls it "Atlas Power Scheme") and turns off power saving features. Best for desktops. On a laptop it uses more battery and makes it warmer.
 - **Disable Core Isolation (may break anti-cheat games)** (not ticked): turns off Virtualization Based Security. Can give a little more performance, but reduces security and some anti-cheat systems may not start.
 
 **ภาษาไทย**
@@ -63,16 +63,16 @@ Brave, LibreWolf and Firefox are privacy friendly. Chrome is not recommended for
 
 ## Gaming apps
 
-Akati OS does not install gaming apps during setup. Install them when you want in **Akati OS Center > Gaming apps**: Steam, Epic Games Launcher, EA app, Ubisoft Connect, Battle.net, Discord and OBS Studio. They are installed with WinGet, which checks each installer. If WinGet is not available, Steam is downloaded from its official website. Discord is always downloaded from discord.com and installed with its normal installer (a silent install breaks Discord), as the signed-in user; it opens when it is done.
+Akati OS does not install gaming apps during setup. Install them when you want in **Akati OS Center > Gaming apps**: game launchers (Steam, Epic Games Launcher, EA app, Ubisoft Connect, Battle.net, Riot Client with VALORANT, GOG GALAXY, Rockstar Games Launcher), chat and streaming (Discord, OBS Studio) and tools (MSI Afterburner). They are installed with WinGet, which checks each installer. If WinGet is not available, Steam is downloaded from its official website. Discord is always downloaded from discord.com and installed with its normal installer (a silent install breaks Discord), as the signed-in user; it opens when it is done. Riot Client is installed with Riot's official VALORANT (Asia Pacific) installer, only when it is signed by Riot Games; its window opens and you click Install (League of Legends and TFT are added from Riot Client). Installed apps move to **Installed** at the top and have **Open**; the **...** button has **Open folder** and **Uninstall** (runs the app's own uninstaller). Click **Get** on several apps and they install one after another; **Get Steam and Discord** does both in one click. App updates are checked with WinGet the first time the page opens.
 Visual C++ and DirectX runtimes are always installed during setup.
 
-**ภาษาไทย**: Akati OS ไม่ติดตั้งแอปเกมให้ตอนลง กดติดตั้งเองได้ใน Akati OS Center > แอปเกม (Steam, Epic, EA, Ubisoft, Battle.net, Discord, OBS) ติดตั้งผ่าน WinGet ซึ่งตรวจไฟล์ติดตั้งทุกครั้ง ถ้าไม่มี WinGet จะโหลด Steam จากเว็บไซต์ทางการ ส่วน Discord โหลดจาก discord.com และติดตั้งแบบปกติเสมอ แล้วเปิดขึ้นมาเองเมื่อเสร็จ
+**ภาษาไทย**: Akati OS ไม่ติดตั้งแอปเกมให้ตอนลง กดติดตั้งเองได้ใน Akati OS Center > แอปเกม (Steam, Epic, EA, Ubisoft, Battle.net, Riot Client/VALORANT, GOG GALAXY, Rockstar, Discord, OBS, MSI Afterburner) ติดตั้งผ่าน WinGet ซึ่งตรวจไฟล์ติดตั้งทุกครั้ง ถ้าไม่มี WinGet จะโหลด Steam จากเว็บไซต์ทางการ ส่วน Discord โหลดจาก discord.com และติดตั้งแบบปกติเสมอ แล้วเปิดขึ้นมาเองเมื่อเสร็จ Riot Client ใช้ตัวติดตั้ง VALORANT (เอเชียแปซิฟิก) ทางการของ Riot ซึ่งตรวจลายเซ็น Riot Games ก่อนรัน แล้วกด Install ในหน้าต่างของมัน แอปที่ติดตั้งแล้วมีปุ่ม "เปิด" และปุ่ม ... สำหรับเปิดโฟลเดอร์หรือถอนการติดตั้ง
 
 ## GPU drivers
 
-Akati OS does not install GPU drivers. **Akati OS Center > Gaming apps** has buttons that open the NVIDIA, AMD and Intel driver download pages.
+Akati OS does not install GPU drivers. **Akati OS Center > Gaming apps** has buttons that open the NVIDIA, AMD and Intel driver download pages. It shows the version and date of the installed driver and says when it is more than 6 months old.
 
-**ภาษาไทย**: Akati OS ไม่ติดตั้งไดรเวอร์การ์ดจอให้ ในหน้าแอปเกมของ Akati OS Center มีปุ่มเปิดหน้าโหลดไดรเวอร์ NVIDIA, AMD และ Intel
+**ภาษาไทย**: Akati OS ไม่ติดตั้งไดรเวอร์การ์ดจอให้ ในหน้าแอปเกมของ Akati OS Center มีปุ่มเปิดหน้าโหลดไดรเวอร์ NVIDIA, AMD และ Intel และบอกเวอร์ชันกับวันที่ของไดรเวอร์ที่ใช้อยู่ ถ้าเก่ากว่า 6 เดือนจะเตือน
 
 ## Microsoft Store and unused services
 
@@ -88,18 +88,43 @@ Akati OS does not install GPU drivers. **Akati OS Center > Gaming apps** has but
 | Search indexing (Windows Search) | you rarely search inside files; Start search still finds apps and settings, file search is slower | Tweaks > Search indexing > Minimal or Enable |
 | SuperFetch (SysMain) | Windows is on an SSD | Tweaks > SysMain (Superfetch) > Enable |
 | Network discovery (SSDP, NetBIOS helper, function discovery) | you do not browse other PCs or printers on your home network | Tweaks > Network discovery > Enable |
+| Distributed Transaction Coordinator (MSDTC), not an AtlasOS script: `Start` = 4 | you do not run database or server software that needs it (games and normal apps do not) | `sc config msdtc start= demand` as administrator |
 
 Untick it if you use a printer or share files between PCs at home. A restart (setup restarts at the end) applies the changes.
 
-**ภาษาไทย**: "Turn off unused services" ติ๊กไว้เป็นค่าเริ่มต้น จะรันสคริปต์เดิมของ AtlasOS เพื่อปิดบริการที่เครื่องเล่นเกมส่วนใหญ่ไม่ได้ใช้ ได้แก่ การพิมพ์ (Print Spooler), การทำดัชนีค้นหา (Windows Search; ช่องค้นหาใน Start ยังหาแอปและการตั้งค่าได้ แต่ค้นหาไฟล์ช้าลง), SuperFetch (SysMain) และการค้นหาเครื่องในเครือข่าย ถ้าใช้เครื่องพิมพ์หรือแชร์ไฟล์ในบ้านให้เอาติ๊กออก หรือเปิดกลับทีหลังได้ใน Akati OS Center > ปรับแต่ง
+**ภาษาไทย**: "Turn off unused services" ติ๊กไว้เป็นค่าเริ่มต้น จะรันสคริปต์เดิมของ AtlasOS เพื่อปิดบริการที่เครื่องเล่นเกมส่วนใหญ่ไม่ได้ใช้ ได้แก่ การพิมพ์ (Print Spooler), การทำดัชนีค้นหา (Windows Search; ช่องค้นหาใน Start ยังหาแอปและการตั้งค่าได้ แต่ค้นหาไฟล์ช้าลง), SuperFetch (SysMain), การค้นหาเครื่องในเครือข่าย และ MSDTC (บริการที่ใช้กับโปรแกรมฐานข้อมูล/เซิร์ฟเวอร์ เกมไม่ได้ใช้) ถ้าใช้เครื่องพิมพ์หรือแชร์ไฟล์ในบ้านให้เอาติ๊กออก หรือเปิดกลับทีหลังได้ใน Akati OS Center > ปรับแต่ง
 
 ## Notifications and Game Bar
 
 **Turn off notifications** (ticked by default) turns off the "Get notifications from apps and other senders" switch, so no pop-ups appear while you play. Windows Security warnings and messages from Discord or Steam are not shown as pop-ups either. Turn it on again in Settings > System > Notifications.
 
+**Show Akati OS next to the clock** (ticked by default) adds the Akati OS icon to the notification area. Point at it to see CPU and RAM use; its menu opens Akati OS Center, frees up RAM, lists your apps and games, starts or stops Game boost and turns the **automatic Game boost** on or off: when a game from **My games** (Game boost page) opens, Game boost starts, and it stops again when the game closes. The icon runs with normal rights through the sign-in task `\AkatiOS\Akati OS tray`; turn it off in Akati OS Center > Tweaks > Memory and system.
+
 **Turn off Xbox Game Bar** (ticked by default) turns off Game Bar (Win+G) and its background clip recording, and the controller button that opens it. Game Mode and fullscreen optimizations stay as they are. Turn it on again in Settings > Gaming > Game Bar.
 
 **ภาษาไทย**: "Turn off notifications" (ติ๊กไว้) ปิดสวิตช์ "Get notifications from apps and other senders" จะไม่มีป๊อปอัปเด้งระหว่างเล่นเกม รวมถึงคำเตือนของ Windows Security และข้อความจาก Discord หรือ Steam ด้วย เปิดกลับได้ที่ Settings > System > Notifications ส่วน "Turn off Xbox Game Bar" (ติ๊กไว้) ปิด Game Bar (Win+G) การอัดคลิปเบื้องหลัง และปุ่มเปิดจากจอย ไม่แตะ Game Mode เปิดกลับได้ที่ Settings > Gaming > Game Bar
+
+## Input and latency
+
+**Force 0.5 ms timer resolution** (ticked by default) runs the unchanged AtlasOS script "Enable timer resolution": Windows wakes up more often, so games keep a steadier frame time and lower input delay. It uses a little more power. Check it with `MeasureSleep.exe` in `C:\Windows\AtlasDesktop\3. General Configuration\Timer Resolution`.
+
+**Turn off Sticky Keys and Filter Keys shortcuts** (ticked by default): pressing Shift 5 times or holding Shift in a game no longer opens a window. The accessibility features themselves still work from Settings > Accessibility > Keyboard.
+
+**Add Akati OS to the desktop right-click menu** (ticked by default): right-click an empty spot on the desktop > **Akati OS** for:
+
+- **Free up RAM**: empties the standby list (file cache Windows keeps in RAM) and shows how much was freed
+- **Open Akati OS Center**
+- **My apps**: the gaming apps installed from Akati OS Center and the games in My games
+- **Start / Stop Game boost**
+- **Clean junk files** and **Ping test**: open those pages of Akati OS Center
+- **Flush DNS cache**, **Restart Explorer**
+- **Restart into BIOS (UEFI)**: asks first
+
+Free up RAM, Game boost and Restart into BIOS need administrator rights. They run through the task `\AkatiOS\Akati OS menu` (the signed-in user, highest rights), so there is no UAC prompt each time; the task only runs these three fixed actions. Windows 11 shows the menu at once because AtlasOS uses the classic context menu.
+
+All three can be changed later in **Akati OS Center > Tweaks** (Input and latency, and Memory and system for the menu).
+
+**ภาษาไทย**: "Force 0.5 ms timer resolution" (ติ๊กไว้) รันสคริปต์ "Enable timer resolution" ของ AtlasOS ทำให้เฟรมเกมนิ่งขึ้นและ input delay ลดลง ใช้ไฟเพิ่มเล็กน้อย ส่วน "Turn off Sticky Keys and Filter Keys shortcuts" (ติ๊กไว้) กด Shift 5 ครั้งหรือกดค้างในเกมจะไม่มีหน้าต่างเด้ง ฟีเจอร์ช่วยการเข้าถึงยังใช้ได้จาก Settings และ "Add Akati OS to the desktop right-click menu" (ติ๊กไว้) คลิกขวาที่ Desktop > Akati OS มี ล้าง RAM, เปิด Center, แอปของฉัน, เริ่ม/หยุดบูสต์เกม, ล้างไฟล์ขยะ, ทดสอบปิง, ล้าง DNS cache, รีสตาร์ต Explorer และรีสตาร์ตเข้า BIOS (ถามก่อน) ข้อที่ต้องใช้สิทธิ์ผู้ดูแลระบบทำงานผ่าน task ของผู้ใช้เอง จึงไม่มีหน้าต่าง UAC ทุกครั้ง เปลี่ยนทีหลังได้ใน Akati OS Center > ปรับแต่ง > อินพุตและ latency
 
 ## Gaming tweaks
 
@@ -112,7 +137,31 @@ These are not on the setup pages. Turn them on in **Akati OS Center > Tweaks** i
 - Hardware-accelerated GPU scheduling: ให้การ์ดจอจัดการหน่วยความจำเอง ต้องใช้การ์ดจอและไดรเวอร์ที่รองรับ มีผลหลังรีสตาร์ต
 - Optimizations for windowed games (เฉพาะ Windows 11): ลด latency ของเกม DirectX 10/11 ที่เล่นแบบหน้าต่างหรือ borderless
 
+## More tweaks in Akati OS Center
+
+**Akati OS Center > Tweaks** also has these sections. Each switch shows the current state of your PC (on = the Windows default unless written otherwise); turn one back if games run worse.
+
+| Section | Switch | What it does |
+|---|---|---|
+| Input and latency | Timer resolution 0.5 ms | See [Input and latency](#input-and-latency) |
+| | Sticky Keys and Filter Keys shortcuts | See [Input and latency](#input-and-latency) |
+| Network | DNS server | Automatic, Cloudflare (1.1.1.1) or Google (8.8.8.8) on the connected network adapters. Faster web lookups; it does not change ping in games |
+| | Nagle's algorithm | Off can lower delay in some older online games; most games already turn it off themselves |
+| | Network adapter power saving and interrupt moderation | Off: slightly lower network delay, a little more CPU. The connection drops for a few seconds when changed |
+| Display and graphics | Screen refresh rate | Shows the refresh rate of the main screen and sets the highest it can do (many screens run at 60 Hz until changed) |
+| | Multiplane overlay (MPO) | Off fixes flickering and stutter on some PCs; leave it on otherwise |
+| | GPU MSI mode | Message signaled interrupts for the graphics card: lower latency. Most new cards already use it |
+| Memory and system | Memory compression | Advice by RAM: off with 16 GB or more, on with less. Needs SysMain (SuperFetch) on |
+| | Core isolation (VBS and Memory integrity) | Off can make games up to about 10% faster but removes some malware protection; some anti-cheat needs it on |
+| | Delay for startup apps | Off: apps that start at sign-in open right away |
+
+**Game boost** can also free up standby memory (the file cache Windows keeps in RAM) when it starts, which helps PCs with little RAM. **My games** on the Game boost page: add a game's .exe to give it high CPU priority and the dedicated graphics card (laptops with two graphics chips), and optionally let Defender skip its folder. Removing the game puts all three back.
+
+**ภาษาไทย**: หน้าปรับแต่งของ Akati OS Center มีหมวดเพิ่ม: อินพุตและ latency (timer resolution, ปุ่มลัด Sticky Keys), เครือข่าย (DNS, Nagle, การประหยัดไฟของการ์ดแลน), หน้าจอและกราฟิก (อัตรารีเฟรชสูงสุด, MPO, MSI mode ของการ์ดจอ), หน่วยความจำและระบบ (Memory compression แนะนำตาม RAM, Core isolation, หน่วงเวลาแอปตอนล็อกอิน) บูสต์เกมคืน standby memory ได้ และ "เกมของฉัน" ใช้เพิ่มไฟล์ .exe ของเกมเพื่อให้ CPU ความสำคัญสูง ใช้การ์ดจอแยก และเลือกให้ Defender ข้ามโฟลเดอร์เกมได้ ลบเกมออกแล้วทุกอย่างกลับเหมือนเดิม
+
 ## Akati OS Center
+
+**Ctrl+K** (or the search field at the top of the sidebar) searches everything: pages, settings, gaming apps, your games and actions (free up RAM, flush DNS cache, restart Explorer, Game boost, ping test, update check, language, problem report). Up and Down choose, Enter runs. **Appearance > Akati OS Center look** switches between Auto (like the Windows app mode), Dark and Light. After an update, a **What's new** window shows once.
 
 The **Akati OS Center** app (desktop and Start menu) is the one place for everything Akati OS adds: live CPU, RAM and GPU usage, gaming apps (with updates) and GPU driver links, **Game boost** (one-click Game Mode, ping test, startup apps), tweaks (the switches show the real state of your PC), temp file cleaner, themes (Dark, Light, Slideshow), accent colors, wallpapers, Akati OS cursor and sounds, **Tweaks** (gaming switches and every AtlasOS setting, with search and a restore point first), a problem report and the update check. There is no Atlas folder shortcut any more; the files stay in `C:\Windows\AtlasDesktop` because AtlasOS scripts use them. It asks for administrator rights. Switch between English and Thai at the bottom left.
 

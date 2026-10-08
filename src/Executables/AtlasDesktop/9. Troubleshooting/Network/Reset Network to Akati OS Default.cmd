@@ -22,7 +22,7 @@ reg add "HKLM\SOFTWARE\AtlasOS\Services\%settingName%" /v path /t REG_SZ /d "%sc
 
 :: End of state and path update
 
-echo Setting network settings to Atlas defaults...
+echo Setting network settings to Akati OS defaults...
 
 :: Set network adapter driver registry key
 for /f "usebackq" %%a in (`powershell -NonI -NoP -C "(Get-CimInstance Win32_NetworkAdapter).PNPDeviceID | sls 'PCI\\VEN_'"`) do (

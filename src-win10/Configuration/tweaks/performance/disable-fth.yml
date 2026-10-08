@@ -11,5 +11,9 @@ actions:
   - !file: {path: '%windir%\AtlasDesktop\7. Security\Mitigations\Fault Tolerant Heap', cpuArch: 'Arm64'}
 
   # Reset & disable FTH for AMD64
-  - !run: {exe: 'rundll32.exe', args: 'fthsvc.dll,FthSysprepSpecialize', cpuArch: 'X64'}
+  # Akati OS: only when fthsvc.dll exists (trimmed Windows builds such as imOS 10 removed it, rundll32 then shows an error)
+  - !powerShell:
+    command: 'if (Test-Path "$env:windir\System32\fthsvc.dll") { & rundll32.exe fthsvc.dll,FthSysprepSpecialize }'
+    cpuArch: 'X64'
+    wait: true
   - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\FTH', value: 'Enabled', data: '0', type: REG_DWORD, cpuArch: 'X64'}

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Pack each playbook into dist/ (zip, password "malte") and write dist/SHA256SUMS.txt:
-#   src/        -> dist/AkatiOS_v<version>.apbx        (Windows 11)
+#   src/        -> dist/AkatiOS-Win11_v<version>.apbx  (Windows 11)
 #   src-win10/  -> dist/AkatiOS-Win10_v<version>.apbx  (Windows 10)
 # The version is read from each playbook.conf <Version>.
 # Usage: ./build.sh
@@ -9,7 +9,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 DIST="$ROOT/dist"
 PASSWORD="malte"
-VARIANTS=("src:AkatiOS" "src-win10:AkatiOS-Win10")
+VARIANTS=("src:AkatiOS-Win11" "src-win10:AkatiOS-Win10")
 
 mkdir -p "$DIST"
 rm -f "$DIST"/*.apbx "$DIST/SHA256SUMS.txt"

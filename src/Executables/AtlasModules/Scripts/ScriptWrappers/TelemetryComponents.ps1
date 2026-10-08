@@ -47,7 +47,7 @@ function Menu {
 	$ColourDisable = $ColourEnable = 'White'
 	if ($TelemetryDisabled) {$ColourDisable = 'Gray'} else {$ColourEnable = 'Gray'}
 
-	Write-Host "This script adds or removes Atlas' NoTelemetry package, which removes certain telemetry components in Windows.`n" -ForegroundColor Cyan
+	Write-Host "This script adds or removes the NoTelemetry package, which removes certain telemetry components in Windows.`n" -ForegroundColor Cyan
 
 	Write-BulletPoint @"
 Removing the package restores the telemetry components, which can aid in troubleshooting. If

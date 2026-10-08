@@ -31,7 +31,7 @@ if (!(powercfg /l | Select-String "GUID: 11111111-1111-1111-1111-111111111111" -
     powercfg /duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61 11111111-1111-1111-1111-111111111111 > $null
 }
 powercfg /setactive 11111111-1111-1111-1111-111111111111
-powercfg /changename scheme_current "Atlas Power Scheme" "Power scheme optimized for optimal latency and performance."
+powercfg /changename scheme_current "Akati OS Power Scheme" "Power scheme optimized for optimal latency and performance."
 ## Secondary NVMe Idle Timeout - 0 milliseconds
 powercfg /setacvalueindex scheme_current 0012ee47-9041-4b5d-9b77-535fba8b1442 d3d55efd-c1ff-424e-9dc3-441be7833010 0
 ## Primary NVMe Idle Timeout - 0 milliseconds

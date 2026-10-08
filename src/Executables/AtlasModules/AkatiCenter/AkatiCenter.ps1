@@ -187,6 +187,8 @@ function Set-ThemeBrush([string]$key, [string]$hex) {
 function Get-LookName {
     $choice = Get-RegValue $settingsKey 'CenterLook'
     if ($choice -in 'dark', 'light') { return $choice }
+    # By time: light from 7:00 to 19:00
+    if ($choice -eq 'time') { $h = (Get-Date).Hour; if ($h -ge 7 -and $h -lt 19) { return 'light' } else { return 'dark' } }
     if ((Get-RegValue 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize' 'AppsUseLightTheme') -eq 1) { 'light' } else { 'dark' }
 }
 function Set-CenterLook([string]$name) {
@@ -485,8 +487,8 @@ function Update-Chips {
         [void]$ui.StatusChips.Children.Add((New-Chip (T $(if ($stats.Defender -eq 1) { 'chip.defender.on' } else { 'chip.defender.off' })) $(if ($stats.Defender -eq 1) { $good } else { '#FF9F0A' })))
     }
     if ($script:doctorResult -is [hashtable]) {
-        $issues = @($doctorChecks | Where-Object { !$script:doctorResult[$_] }).Count
-        $chip = New-Chip $(if ($issues) { (T 'chip.doctor.bad') -f $issues } else { T 'chip.doctor.ok' }) $(if ($issues) { '#FF9F0A' } else { $good })
+        $sc = Get-AkatiScore
+        $chip = New-Chip ((T 'chip.score') -f $sc.Score) (Get-ScoreBrush $sc.Score)
         $chip.Cursor = 'Hand'; $chip.ToolTip = T 'nav.health'
         $chip.Add_MouseLeftButtonUp({ $ui.NavHealth.IsChecked = $true })
         [void]$ui.StatusChips.Children.Add($chip)
@@ -1711,6 +1713,9 @@ $tweaks = @(
                if (!(Test-Path $personalizeKey)) { New-Item -Path $personalizeKey -Force | Out-Null }
                Set-ItemProperty -Path $personalizeKey -Name ColorPrevalence -Value ([int]$on) -Type DWord -Force
                Send-SettingChange 'ImmersiveColorSet' } }
+    @{ Key = 'schedtheme'; Group = 'looks'; Glyph = [char]0xE706; Default = $false
+       Get = { (Get-RegValue $settingsKey 'ScheduleTheme') -eq 1 }
+       Set = { param($on) Save-Setting ScheduleTheme ([int]$on) } }
     @{ Key = 'transparency'; Group = 'looks'; Glyph = [char]0xE727; Default = $true
        Get = { (Get-RegValue $personalizeKey 'EnableTransparency') -ne 0 }
        Set = { param($on)
@@ -2131,6 +2136,18 @@ function Show-Games {
         if (!$name) { $name = [IO.Path]::GetFileNameWithoutExtension($path) }
         $row = New-Row ([string][char]0xE7FC) $name $null $right $null
         $row.Sub.Text = Split-Path $path -Parent
+        # Play time, counted by the icon next to the clock
+        $played = [double](Get-RegValue "$settingsKey\PlayTime" $path)
+        if ($played -ge 60) {
+            $h = [Math]::Floor($played / 3600); $m = [Math]::Floor(($played % 3600) / 60)
+            $text = if ($h -ge 1) { (T 'games.hours') -f $h, $m } else { (T 'games.minutes') -f $m }
+            $last = Get-RegValue "$settingsKey\PlayTime" "$path|last"
+            if ($last) {
+                $c = [Globalization.CultureInfo]::GetCultureInfo($(if ($lang -eq 'th') { 'th-TH' } else { 'en-US' }))
+                try { $text += ' · ' + ((T 'games.last') -f [datetime]::ParseExact($last, 'yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture).ToString('d MMM', $c)) } catch { }
+            }
+            $row.Sub.Text += ' · ' + ((T 'games.played') -f $text)
+        }
         $panel = $row.Sub.Parent
         $panel.Children.Insert($panel.Children.IndexOf($row.Sub) + 1, $chips)
         $icon = Get-FileIcon @($path)
@@ -2215,28 +2232,8 @@ Show-Games
 # Cleaner
 # ---------------------------------------------------------------------------------------------
 Add-Mark 'Cleaner'
-# Folders: their contents are deleted (wildcards allowed). Files: these files are deleted.
-# Only caches, logs and temporary files: nothing that holds settings, saves, passwords or cookies.
-# Off = not ticked at first (cleaning them makes the next start of a game or browser slower).
-$cleanItems = @(
-    @{ Key = 'temp';    Glyph = [char]0xE8B7; Folders = @($env:TEMP) }
-    @{ Key = 'wintemp'; Glyph = [char]0xE8B7; Folders = @((Join-Path $windir 'Temp')) }
-    @{ Key = 'update';  Glyph = [char]0xE895; Folders = @((Join-Path $windir 'SoftwareDistribution\Download'),
-                                                         (Join-Path $windir 'ServiceProfiles\NetworkService\AppData\Local\Microsoft\Windows\DeliveryOptimization\Cache')) }
-    @{ Key = 'dumps';   Glyph = [char]0xE7BA; Folders = @((Join-Path $env:LOCALAPPDATA 'CrashDumps'), (Join-Path $env:LOCALAPPDATA 'Microsoft\Windows\WER'),
-                                                         (Join-Path $env:ProgramData 'Microsoft\Windows\WER\ReportArchive'), (Join-Path $env:ProgramData 'Microsoft\Windows\WER\ReportQueue')) }
-    @{ Key = 'logs';    Glyph = [char]0xE9F9; Files = @((Join-Path $windir 'Logs\CBS\*.log'), (Join-Path $windir 'Logs\DISM\*.log'), (Join-Path $windir 'Panther\*.log')) }
-    @{ Key = 'thumbs';  Glyph = [char]0xE91B; Files = @((Join-Path $env:LOCALAPPDATA 'Microsoft\Windows\Explorer\thumbcache_*.db')) }
-    @{ Key = 'apps';    Glyph = [char]0xE8BD; Folders = @((Join-Path $env:APPDATA 'discord\Cache\Cache_Data'), (Join-Path $env:APPDATA 'discord\Code Cache'), (Join-Path $env:APPDATA 'discord\GPUCache'),
-                                                         (Join-Path $env:LOCALAPPDATA 'Steam\htmlcache'), (Join-Path $env:LOCALAPPDATA 'EpicGamesLauncher\Saved\webcache*')) }
-    @{ Key = 'browser'; Glyph = [char]0xE774; Off = $true
-       Folders = @((Join-Path $env:LOCALAPPDATA 'BraveSoftware\Brave-Browser\User Data\*\Cache\Cache_Data'), (Join-Path $env:LOCALAPPDATA 'Microsoft\Edge\User Data\*\Cache\Cache_Data'),
-                   (Join-Path $env:LOCALAPPDATA 'Google\Chrome\User Data\*\Cache\Cache_Data'), (Join-Path $env:LOCALAPPDATA 'Mozilla\Firefox\Profiles\*\cache2')) }
-    @{ Key = 'shaders'; Glyph = [char]0xE7F4; Off = $true
-       Folders = @((Join-Path $env:LOCALAPPDATA 'D3DSCache'), (Join-Path $env:LOCALAPPDATA 'NVIDIA\DXCache'), (Join-Path $env:LOCALAPPDATA 'NVIDIA\GLCache'),
-                   (Join-Path $env:LOCALAPPDATA 'AMD\DxCache'), (Join-Path $env:LOCALAPPDATA 'AMD\GLCache'), (Join-Path $env:LOCALAPPDATA 'Intel\ShaderCache')) }
-    @{ Key = 'recycle'; Glyph = [char]0xE74D; Recycle = $true }
-)
+# The items are in AkatiClean.ps1 (also used by the weekly automatic clean)
+. (Join-Path $appDir 'AkatiClean.ps1')
 foreach ($ci in $cleanItems) {
     $right = New-Object System.Windows.Controls.StackPanel
     $right.Orientation = 'Horizontal'
@@ -2256,27 +2253,6 @@ function Update-CleanTotal {
     $total = 0
     foreach ($ci in $cleanItems) { if ($ci.Check.IsChecked) { $total += $ci.Bytes } }
     $ui.CleanTotal.Text = Format-Size $total
-}
-
-$measureWork = {
-    param($items)
-    $out = @{}
-    foreach ($i in $items) {
-        $sum = 0
-        if ($i.Recycle) {
-            try { (New-Object -ComObject Shell.Application).NameSpace(10).Items() | ForEach-Object { $sum += $_.Size } } catch { }
-        }
-        foreach ($f in @($i.Folders)) {
-            if (!$f) { continue }
-            $sum += [double](Get-ChildItem -Path $f -Recurse -Force -File -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum
-        }
-        foreach ($f in @($i.Files)) {
-            if (!$f) { continue }
-            $sum += [double](Get-ChildItem -Path $f -Force -File -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum
-        }
-        $out[$i.Key] = [double]$sum
-    }
-    $out
 }
 
 function Start-Scan([scriptblock]$then) {
@@ -2300,22 +2276,7 @@ function Start-Clean {
     if (!$selected.Count) { return }
     Set-Status (T 'status.cleaning') $true
     $ui.ScanButton.IsEnabled = $false; $ui.CleanButton.IsEnabled = $false
-    Start-Work {
-        param($items)
-        foreach ($i in $items) {
-            if ($i.Recycle) { try { Clear-RecycleBin -Force -ErrorAction SilentlyContinue } catch { } }
-            # The contents of each folder (the folder itself stays); files in use are skipped
-            foreach ($f in @($i.Folders)) {
-                if (!$f) { continue }
-                foreach ($dir in @(Get-Item -Path $f -Force -ErrorAction SilentlyContinue | Where-Object { $_.PSIsContainer })) {
-                    Get-ChildItem -LiteralPath $dir.FullName -Force -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
-                }
-            }
-            foreach ($f in @($i.Files)) {
-                if ($f) { Get-ChildItem -Path $f -Force -File -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue }
-            }
-        }
-    } @(, $selected) {
+    Start-Work $cleanWork @(, $selected) {
         param($r, $ctx)
         Start-Scan {
             $after = 0
@@ -2325,6 +2286,25 @@ function Start-Clean {
     }
 }
 
+# Weekly automatic clean: the task "\AkatiOS\Akati OS clean" (AkatiClean.ps1 -CleanNow)
+function Update-AutoClean {
+    $last = Get-RegValue $settingsKey 'AutoCleanLast'
+    if ($last) {
+        $c = [Globalization.CultureInfo]::GetCultureInfo($(if ($lang -eq 'th') { 'th-TH' } else { 'en-US' }))
+        $when = try { [datetime]::ParseExact($last, 's', [Globalization.CultureInfo]::InvariantCulture).ToString('d MMM', $c) } catch { $last }
+        $ui.AutoCleanSub.Text = (T 'autoclean.last') -f $when, (Format-Size ([double](Get-RegValue $settingsKey 'AutoCleanBytes')))
+    } else { $ui.AutoCleanSub.Text = T 'autoclean.sub' }
+}
+$ui.AutoCleanToggle.IsChecked = !$Screenshot -and [bool](Get-ScheduledTask -TaskPath '\AkatiOS\' -TaskName 'Akati OS clean' -ErrorAction SilentlyContinue)
+$ui.AutoCleanToggle.Add_Click({
+    $on = [bool]$this.IsChecked
+    Start-Work { param($file, $on) & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $file $(if ($on) { '-RegisterTask' } else { '-RemoveTask' }) } @((Join-Path $appDir 'AkatiClean.ps1'), $on) {
+        param($r, $on)
+        $ui.AutoCleanToggle.IsChecked = [bool](Get-ScheduledTask -TaskPath '\AkatiOS\' -TaskName 'Akati OS clean' -ErrorAction SilentlyContinue)
+        Set-Status (T $(if ($ui.AutoCleanToggle.IsChecked) { 'autoclean.on' } else { 'autoclean.off' }))
+    } $on
+})
+Update-AutoClean
 $ui.ScanButton.Add_Click({ Start-Scan })
 $ui.CleanButton.Add_Click({ Start-Clean })
 $ui.QuickClean.Add_Click({ $ui.NavCleaner.IsChecked = $true; Start-Scan { Start-Clean } })
@@ -2407,9 +2387,9 @@ function ConvertTo-Color([string]$hex) { [System.Windows.Media.ColorConverter]::
 # (brushes inside styles are frozen and cannot be recolored in place).
 # Look picker (Appearance): Auto, Dark or Light, saved as CenterLook
 $lookChoice = Get-RegValue $settingsKey 'CenterLook'
-if ($lookChoice -notin 'dark', 'light') { $lookChoice = 'auto' }
+if ($lookChoice -notin 'dark', 'light', 'time') { $lookChoice = 'auto' }
 $ui["Look$([Globalization.CultureInfo]::InvariantCulture.TextInfo.ToTitleCase($lookChoice))"].IsChecked = $true
-foreach ($n in 'Auto', 'Dark', 'Light') {
+foreach ($n in 'Auto', 'Dark', 'Light', 'Time') {
     $ui["Look$n"].Add_Checked({ Save-Setting CenterLook $this.Name.Substring(4).ToLowerInvariant(); Set-CenterLook (Get-LookName) })
 }
 
@@ -3167,7 +3147,52 @@ function Show-Doctor($r) {
     $row.Sub.Text = T 'doc.repair.d'
     [void]$ui.DoctorList.Children.Add($row.Row)
     Update-Separators $ui.DoctorList
+    Update-Score
     $ui.DoctorSummary.Text = $(if ($bad) { (T 'doc.issues') -f $bad } else { T 'doc.allgood' }) + ' · ' + ((T 'doc.checked') -f (Get-Date).ToString('HH:mm'))
+}
+# Akati Score (0-100): Akati Doctor 40, startup apps 15, memory in use 15, ping 15, free space 15
+function Get-StartupOnCount {
+    if (!$script:startupAt -or (Get-Date) -gt $script:startupAt) {
+        $script:startupAt = (Get-Date).AddMinutes(1)
+        $script:startupOn = try { @(Get-StartupItems | Where-Object { Test-StartupOn $_ }).Count } catch { 0 }
+    }
+    $script:startupOn
+}
+function Get-AkatiScore {
+    $r = $script:doctorResult
+    if ($r -isnot [hashtable]) { return $null }
+    $tips = New-Object System.Collections.ArrayList
+    $issues = @($doctorChecks | Where-Object { !$r[$_] }).Count
+    $score = [Math]::Max(0, 40 - 5 * $issues)
+    if ($issues) { [void]$tips.Add('score.tip.doctor') }
+    $startup = Get-StartupOnCount
+    $score += if ($startup -le 3) { 15 } elseif ($startup -le 6) { 10 } elseif ($startup -le 10) { 5 } else { 0 }
+    if ($startup -gt 3) { [void]$tips.Add('score.tip.startup') }
+    $score += if ($stats.Ram -lt 50) { 15 } elseif ($stats.Ram -lt 70) { 10 } elseif ($stats.Ram -lt 85) { 5 } else { 0 }
+    if ($stats.Ram -ge 50) { [void]$tips.Add('score.tip.ram') }
+    $ping = $stats.Ping
+    $score += if ($null -eq $ping -or $ping -lt 0) { 8 } elseif ($ping -lt 40) { 15 } elseif ($ping -lt 80) { 10 } elseif ($ping -lt 150) { 5 } else { 0 }
+    if ($ping -ge 40) { [void]$tips.Add('score.tip.ping') }
+    $free = [int]$r.diskFree
+    $score += if ($free -ge 25) { 15 } elseif ($free -ge 10) { 8 } else { 0 }
+    if ($free -lt 25) { [void]$tips.Add('score.tip.disk') }
+    @{ Score = [int]$score; Tips = @($tips) }
+}
+function Get-ScoreBrush([int]$s) {
+    if ($s -ge 80) { $window.FindResource('Good') } elseif ($s -ge 60) { $orange } else { (New-Object System.Windows.Media.BrushConverter).ConvertFromString('#FF453A') }
+}
+function Update-Score {
+    $s = Get-AkatiScore
+    if (!$s) { return }
+    $ui.ScoreValue.Text = [string]$s.Score
+    $ui.ScoreValue.Foreground = Get-ScoreBrush $s.Score
+    $ui.ScoreTitle.Text = T $(if ($s.Score -ge 85) { 'score.great' } elseif ($s.Score -ge 65) { 'score.good' } else { 'score.low' })
+    $ui.ScoreTips.Children.Clear()
+    foreach ($tip in @($s.Tips | Select-Object -First 3)) {
+        $tb = New-Text ('•  ' + (T $tip)) 13; $tb.Margin = '0,2,0,0'
+        $tb.Foreground = $window.FindResource('MutedBrush')
+        [void]$ui.ScoreTips.Children.Add($tb)
+    }
 }
 function Invoke-DoctorFix([string]$k) {
     switch ($k) {
@@ -3673,6 +3698,9 @@ function Update-Language {
     Show-Games
     Request-MenuUpdate
     if ($ui.WhatsNew.Visibility -eq 'Visible') { Show-WhatsNew }
+    if ($ui.Tour.Visibility -eq 'Visible') { Show-TourStep }
+    if ($script:doctorResult) { Update-Score }
+    Update-AutoClean
     Update-ThemeCards
     Update-GpuText
     Update-BoostCard
@@ -3690,7 +3718,24 @@ $ui.WelcomeEn.Add_Click({ Set-AppLanguage 'en' })
 $ui.WelcomeTh.Add_Click({ Set-AppLanguage 'th' })
 $ui.WelcomeApps.Add_Click({ Close-Welcome; $ui.NavGaming.IsChecked = $true })
 $ui.WelcomeLook.Add_Click({ Close-Welcome; $ui.NavAppearance.IsChecked = $true })
-$ui.WelcomeDone.Add_Click({ Close-Welcome })
+$ui.WelcomeDone.Add_Click({ Close-Welcome; if (!(Get-RegValue $settingsKey 'TourDone')) { Start-Tour } })
+
+# Tour: five short steps, each on its page
+$tourPages = 'dashboard', 'boost', 'health', 'tweaks', 'dashboard'
+$script:tourStep = -1
+function Show-TourStep {
+    $i = $script:tourStep
+    $ui["Nav$(Get-PageId $tourPages[$i])"].IsChecked = $true
+    $ui.TourStep.Text = '{0} / {1}' -f ($i + 1), $tourPages.Count
+    $ui.TourTitle.Text = T "tour.$($i + 1)"
+    $ui.TourText.Text = T "tour.$($i + 1).d"
+    $ui.TourNext.Content = T $(if ($i -eq $tourPages.Count - 1) { 'tour.done' } else { 'tour.next' })
+}
+function Start-Tour { $script:tourStep = 0; $ui.Tour.Visibility = 'Visible'; Show-TourStep }
+function Stop-Tour { $ui.Tour.Visibility = 'Collapsed'; $script:tourStep = -1; Save-Setting TourDone 1 }
+$ui.TourNext.Add_Click({ if ($script:tourStep -ge $tourPages.Count - 1) { Stop-Tour } else { $script:tourStep++; Show-TourStep } })
+$ui.TourSkip.Add_Click({ Stop-Tour })
+$ui.TourStart.Add_Click({ Start-Tour })
 # The welcome covers the title bar, so the window can be moved from anywhere on it
 $ui.Welcome.Add_MouseLeftButtonDown({ $window.DragMove() })
 if (!(Get-RegValue $settingsKey 'Welcomed') -and !$Screenshot) { $ui.Welcome.Visibility = 'Visible' }
@@ -3699,19 +3744,28 @@ if (!$Screenshot) {
     elseif ((Get-RegValue $settingsKey 'LastVersion') -ne $version) { Show-WhatsNew }
 }
 
-# Keyboard: Ctrl+1 to Ctrl+7 switch pages, Ctrl+F searches the AtlasOS settings in Tweaks, Esc closes the welcome or clears the search
+# Keyboard: Ctrl+1 to Ctrl+8 switch pages, Ctrl+Tab the next page, F1 the tour, Ctrl+F searches the AtlasOS settings in Tweaks, Esc closes the welcome or clears the search
 $window.Add_PreviewKeyDown({
     param($sender, $e)
     $ctrl = ([System.Windows.Input.Keyboard]::Modifiers -band [System.Windows.Input.ModifierKeys]::Control) -ne 0
     $key = [string]$e.Key
+    if ($key -eq 'F1') { Start-Tour; $e.Handled = $true; return }
     if ($key -eq 'Escape') {
-        if ($ui.Welcome.Visibility -eq 'Visible') { Close-Welcome; $e.Handled = $true }
+        if ($ui.Tour.Visibility -eq 'Visible') { Stop-Tour; $e.Handled = $true }
+        elseif ($ui.Welcome.Visibility -eq 'Visible') { Close-Welcome; $e.Handled = $true }
         elseif ($ui.WhatsNew.Visibility -eq 'Visible') { $ui.WhatsNew.Visibility = 'Collapsed'; Save-Setting LastVersion $version; $e.Handled = $true }
         elseif ($ui.SystemSearch.Text) { $ui.SystemSearch.Text = ''; $e.Handled = $true }
         return
     }
     if (!$ctrl -or $ui.Welcome.Visibility -eq 'Visible') { return }
     if ($key -eq 'K') { Open-Spotlight; $e.Handled = $true; return }
+    # Ctrl+Tab / Ctrl+Shift+Tab: next or previous page
+    if ($key -eq 'Tab') {
+        $shift = ([System.Windows.Input.Keyboard]::Modifiers -band [System.Windows.Input.ModifierKeys]::Shift) -ne 0
+        $i = [array]::IndexOf($pages, $script:page) + $(if ($shift) { -1 } else { 1 })
+        $ui["Nav$(Get-PageId $pages[($i + $pages.Count) % $pages.Count])"].IsChecked = $true
+        $e.Handled = $true; return
+    }
     if ($key -eq 'F') {
         $ui.NavTweaks.IsChecked = $true
         [void]$ui.SystemSearch.Focus(); $ui.SystemSearch.SelectAll()
@@ -3722,12 +3776,35 @@ $window.Add_PreviewKeyDown({
     }
 })
 
+# Keyboard focus shows an accent ring on buttons, switches, choices and lists (Tab moves between them)
+$focusRing = $window.FindResource('FocusRing')
+$window.Add_PreviewGotKeyboardFocus({
+    param($sender, $e)
+    $c = $e.NewFocus
+    if (($c -is [System.Windows.Controls.Primitives.ButtonBase] -or $c -is [System.Windows.Controls.ComboBox] -or $c -is [System.Windows.Controls.ListBoxItem]) -and $c.FocusVisualStyle -ne $focusRing) {
+        $c.FocusVisualStyle = $focusRing
+    }
+})
+# Sidebar: Tab stops once, the arrow keys move between the pages
+$navPanel = $ui.NavDashboard.Parent
+[System.Windows.Input.KeyboardNavigation]::SetTabNavigation($navPanel, 'Once')
+[System.Windows.Input.KeyboardNavigation]::SetDirectionalNavigation($navPanel, 'Cycle')
+
 Set-Language
 Show-Disks
 Update-Clock
 Update-Chips
 Set-Status (T 'ready')
 # Started from the desktop menu: open that page (and start the ping test)
+$lastPage = [string](Get-RegValue $settingsKey 'LastPage')
+if (!$Page -and !$Screenshot -and $lastPage -in $pages -and (Get-RegValue $settingsKey 'Welcomed')) { $ui["Nav$(Get-PageId $lastPage)"].IsChecked = $true }
+# The saved position when it is still on a screen (screens can change)
+$wx = Get-RegValue $settingsKey 'WindowX'; $wy = Get-RegValue $settingsKey 'WindowY'
+$desk = [System.Windows.SystemParameters]
+if (!$Screenshot -and $null -ne $wx -and $null -ne $wy -and $wx -ge $desk::VirtualScreenLeft - 100 -and $wy -ge $desk::VirtualScreenTop -and
+    $wx + 200 -le $desk::VirtualScreenLeft + $desk::VirtualScreenWidth -and $wy + 100 -le $desk::VirtualScreenTop + $desk::VirtualScreenHeight) {
+    $window.WindowStartupLocation = 'Manual'; $window.Left = $wx; $window.Top = $wy
+}
 if ($Page -and $pages -contains $Page.ToLowerInvariant()) {
     $ui["Nav$(Get-PageId $Page.ToLowerInvariant())"].IsChecked = $true
     if ($Ping -and $Page -eq 'boost') { $script:pingOn = $true; $script:pingNext = [datetime]::MinValue; Set-PingButton }
@@ -3835,6 +3912,7 @@ if ($Screenshot) {
         $box = @($tweaks | Where-Object { $_.Key -eq 'timer' } | ForEach-Object { $_.Sub.Parent.Children } | Where-Object { $_ -is [System.Windows.Controls.TextBox] })[0]
         if ($box) { $box.Visibility = 'Visible' }
         $ui.NavTweaks.IsChecked = $true; Save-Shot "extras-$l.png"
+        Start-Tour; $script:tourStep = 1; Show-TourStep; Save-Shot "tour-$l.png"; $ui.Tour.Visibility = 'Collapsed'
         Set-Compact $false; $ui.RestartBar.Visibility = 'Collapsed'; $ui.Toast.Visibility = 'Collapsed'; if ($box) { $box.Visibility = 'Collapsed' }
     }
     # Accent colors recolor the window
@@ -3891,7 +3969,13 @@ if ($build -ge 22000) {
 
 $timer = New-Object System.Windows.Threading.DispatcherTimer
 $timer.Interval = [TimeSpan]::FromMilliseconds(500)
-$timer.Add_Tick({ Update-Stats; Receive-Work; Update-AppProgress; Update-Ping; if ($script:menuAt -and (Get-Date) -gt $script:menuAt) { Update-DesktopMenu } })
+$script:lookAt = Get-Date
+$timer.Add_Tick({
+    Update-Stats; Receive-Work; Update-AppProgress; Update-Ping
+    if ($script:menuAt -and (Get-Date) -gt $script:menuAt) { Update-DesktopMenu }
+    # Auto follows Windows, By time follows the clock
+    if (!$Screenshot -and (Get-Date) -gt $script:lookAt) { $script:lookAt = (Get-Date).AddSeconds(30); $n = Get-LookName; if ($n -ne $script:look) { Set-CenterLook $n } }
+})
 $window.Add_ContentRendered({ Close-Splash; $window.Activate() })
 $window.Add_Loaded({
     # Akati OS checks GitHub once when the window opens (one request, nothing is downloaded)
@@ -3906,6 +3990,14 @@ $window.Add_Loaded({
     }
     $script:statsHandle = $statsPs.BeginInvoke()
     $timer.Start()
+})
+# Where the window was and the page it showed, for the next start
+$window.Add_Closing({
+    if ($Screenshot) { return }
+    try {
+        if (!$script:full -and $window.WindowState -eq 'Normal') { Save-Setting WindowX ([int]$window.Left); Save-Setting WindowY ([int]$window.Top) }
+        Save-Setting LastPage $script:page
+    } catch { }
 })
 $window.Add_Closed({
     Close-Splash

@@ -243,6 +243,35 @@ public class AkatiHotkeys : NativeWindow, IDisposable {
 # CPU and RAM for the tooltip, and the automatic Game boost, every 3 seconds
 $script:autoStarted = $null
 $script:affinityDone = @{}
+# Play time: seconds per game (path in My games), saved once a minute to HKCU\...\Center\PlayTime
+$script:playPending = @{}
+$script:ticks = 0
+function Save-PlayTime {
+    if (!$script:playPending.Count) { return }
+    $key = "$userKey\PlayTime"
+    try {
+        if (!(Test-Path $key)) { New-Item -Path $key -Force | Out-Null }
+        foreach ($path in @($script:playPending.Keys)) {
+            $total = [int](Get-ItemProperty -Path $key -Name $path -ErrorAction SilentlyContinue).$path + [int]$script:playPending[$path]
+            Set-ItemProperty -Path $key -Name $path -Value $total -Type DWord -Force
+            Set-ItemProperty -Path $key -Name "$path|last" -Value (Get-Date -Format 'yyyy-MM-dd') -Type String -Force
+        }
+    } catch { }
+    $script:playPending = @{}
+}
+# Windows light by day (7:00-19:00) and dark at night, when "ScheduleTheme" is 1
+Add-Type -Namespace AkatiOS -Name TrayNative -MemberDefinition '[DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern IntPtr SendMessageTimeout(IntPtr hWnd, int msg, IntPtr wParam, string lParam, int flags, int timeout, out IntPtr result);'
+function Update-ScheduledTheme {
+    if ((Get-Setting 'ScheduleTheme') -ne 1) { return }
+    $h = (Get-Date).Hour
+    $light = [int]($h -ge 7 -and $h -lt 19)
+    $key = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize'
+    if ((Get-ItemProperty -Path $key -Name AppsUseLightTheme -ErrorAction SilentlyContinue).AppsUseLightTheme -eq $light) { return }
+    Set-ItemProperty -Path $key -Name AppsUseLightTheme -Value $light -Type DWord -Force
+    Set-ItemProperty -Path $key -Name SystemUsesLightTheme -Value $light -Type DWord -Force
+    $r = [IntPtr]::Zero
+    [void][AkatiOS.TrayNative]::SendMessageTimeout([IntPtr]0xffff, 0x1A, [IntPtr]::Zero, 'ImmersiveColorSet', 2, 3000, [ref]$r)
+}
 $timer = New-Object System.Windows.Forms.Timer
 $timer.Interval = 3000
 $timer.Add_Tick({
@@ -270,6 +299,21 @@ $timer.Add_Tick({
                 try { $p.ProcessorAffinity = [IntPtr]$mask } catch { }
             }
         }
+    } catch { }
+    try {
+        $script:ticks++
+        $gamePaths = @(if (Test-Path "$userKey\Games") { (Get-Item "$userKey\Games").Property })
+        if ($gamePaths.Count) {
+            $byName = @{}
+            foreach ($g in $gamePaths) { $byName[[IO.Path]::GetFileNameWithoutExtension($g)] = $g }
+            $seen = @{}
+            foreach ($p in @(Get-GameProcess @($byName.Keys))) {
+                $n = if ($p.Name -like 'FiveM_*GTAProcess') { 'FiveM' } else { $p.Name }
+                if ($byName.ContainsKey($n)) { $seen[$byName[$n]] = $true }
+            }
+            foreach ($path in $seen.Keys) { $script:playPending[$path] = [int]$script:playPending[$path] + 3 }
+        }
+        if ($script:ticks % 20 -eq 0) { Save-PlayTime; Update-ScheduledTheme }
     } catch { }
     if ((Get-Setting 'AutoBoost') -ne 1) { $script:autoStarted = $null; return }
     $games = @(if (Test-Path "$userKey\Games") { (Get-Item "$userKey\Games").Property | ForEach-Object { [IO.Path]::GetFileNameWithoutExtension($_) } })
@@ -327,6 +371,7 @@ $updateShow.Start()
 
 [System.Windows.Forms.Application]::Run()
 $timer.Stop()
+Save-PlayTime
 if ($hotkeys) { $hotkeys.Dispose() }
 $notify.Dispose()
 $mutex.ReleaseMutex()

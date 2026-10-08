@@ -42,6 +42,7 @@ W11 = Windows 11 playbook, W10 = Windows 10 playbook.
 | `Executables/AtlasModules/Scripts/Modules/Themes/Themes.psm1` | W11, W10 | Akati OS themes in `Set-ThemeMRU` (AtlasOS themes removed), default lock screen image |
 | `Executables/AtlasModules/Scripts/Modules/Qol/Qol.psm1` | W11 | `Set-AtlasTheme` uses `akatios-dark.theme` |
 | `Executables/SHORTCUTS.ps1` | W11, W10 | No Atlas folder shortcut on the desktop or in the Start menu (the settings are in Akati OS Center > Tweaks). The folder `C:\Windows\AtlasDesktop` itself stays, AtlasOS scripts use it |
+| `Configuration/tweaks/performance/disable-fth.yml` | W11, W10 | `rundll32 fthsvc.dll,FthSysprepSpecialize` only runs when `fthsvc.dll` exists (trimmed Windows builds such as imOS 10 removed it, and rundll32 showed an error). The registry value that turns FTH off is unchanged |
 
 ## Removed files
 

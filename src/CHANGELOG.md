@@ -27,6 +27,7 @@
 - The System settings page is now part of **Tweaks**: gaming switches on top, then every AtlasOS setting with search and the restore point. Ctrl+1 to Ctrl+7 switch pages, Ctrl+F opens the search in Tweaks
 
 ### Fixed
+- Setup on Windows builds without `fthsvc.dll` (seen on imOS 10) showed "There was a problem starting fthsvc.dll". The Fault Tolerant Heap reset now only runs when the file exists; FTH is still turned off
 - The Akati OS icon next to the clock was sometimes not set up by AME Wizard (seen on imOS 10), so it did not start after sign-in. Setup now also marks it as wanted, and Akati OS Center sets it up again when it opens. Errors of the setup go to `%ProgramData%\AkatiOS\AkatiTray.log`
 - The Storage card in Akati OS Center was empty on Windows builds where WMI returns drives without a size (seen on imOS 10). Drives are now read with .NET
 - **Check for updates** in Akati OS Center always said "Could not reach GitHub" (the answer from GitHub was read wrong). It also works now when the GitHub API limit is reached

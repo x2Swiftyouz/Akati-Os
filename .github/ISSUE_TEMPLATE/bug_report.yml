@@ -1,0 +1,50 @@
+name: Bug report / แจ้งปัญหา
+description: Something in Akati OS or Akati OS Center does not work / มีบางอย่างใน Akati OS หรือ Akati OS Center ไม่ทำงาน
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you! Please attach the problem report: Akati OS Center > About > **Create problem report** saves one .zip on your desktop (no personal files, your user name is removed).
+        ขอบคุณที่แจ้ง! แนบไฟล์รายงานปัญหาด้วย: Akati OS Center > เกี่ยวกับ > **สร้างรายงานปัญหา** จะได้ไฟล์ .zip บนเดสก์ท็อป (ไม่มีไฟล์ส่วนตัว และลบชื่อผู้ใช้ออกแล้ว)
+  - type: dropdown
+    id: windows
+    attributes:
+      label: Windows
+      options:
+        - Windows 11 (AkatiOS-Win11)
+        - Windows 10 22H2 (AkatiOS-Win10)
+        - Modified Windows (imOS, Tiny10, ...) / Windows ที่ถูกปรับแต่งมาแล้ว
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Akati OS version / เวอร์ชัน
+      placeholder: v1.5.0 (Akati OS Center > About)
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where / เกิดตอนไหน
+      options:
+        - Setup in AME Wizard / ตอนติดตั้งใน AME Wizard
+        - Akati OS Center
+        - Icon next to the clock or desktop menu / ไอคอนข้างนาฬิกาหรือเมนูคลิกขวา
+        - A game / ในเกม
+        - Other / อื่น ๆ
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened / เกิดอะไรขึ้น
+      description: What you did, what you expected and what happened instead. Screenshots help a lot. / ทำอะไร คาดว่าจะเป็นอย่างไร แต่ได้อะไรแทน แนบภาพหน้าจอได้จะช่วยมาก
+    validations:
+      required: true
+  - type: textarea
+    id: report
+    attributes:
+      label: Problem report (.zip) / ไฟล์รายงานปัญหา
+      description: Drag the .zip from your desktop here. / ลากไฟล์ .zip จากเดสก์ท็อปมาวางที่นี่

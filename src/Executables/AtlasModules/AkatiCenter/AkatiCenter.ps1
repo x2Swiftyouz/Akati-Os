@@ -1717,6 +1717,9 @@ $tweaks = @(
                if (!(Test-Path $personalizeKey)) { New-Item -Path $personalizeKey -Force | Out-Null }
                Set-ItemProperty -Path $personalizeKey -Name EnableTransparency -Value ([int]$on) -Type DWord -Force
                Send-SettingChange 'ImmersiveColorSet' } }
+    @{ Key = 'updatenotify'; Group = 'system'; Glyph = [char]0xE895; Default = $true
+       Get = { (Get-RegValue $settingsKey 'UpdateNotify') -ne 0 }
+       Set = { param($on) Save-Setting UpdateNotify ([int]$on) } }
     @{ Key = 'startdelay'; Group = 'system'; Glyph = [char]0xE823; Default = $true
        Get = { (Get-RegValue $serializeKey 'StartupDelayInMSec') -ne 0 }
        Set = { param($on)
@@ -3031,7 +3034,7 @@ Show-SystemList
 # Problem report: one zip on the desktop with the Akati OS logs and PC details
 # ---------------------------------------------------------------------------------------------
 Add-Mark 'Problem report'
-$ui.IssuesButton.Add_Click({ Start-Process "https://github.com/$repo/issues" })
+$ui.IssuesButton.Add_Click({ Start-Process "https://github.com/$repo/issues/new/choose" })
 $ui.ReportButton.Add_Click({
     $this.IsEnabled = $false
     Set-Status (T 'status.report') $true

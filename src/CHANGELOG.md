@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- The icon next to the clock tells you once when a new Akati OS version is out (checked a minute after sign-in and then twice a day; switch: Tweaks > System > Tell me about new versions), and shows it at the top of its menu
+- GitHub issue forms for bugs and ideas (English and Thai); GitHub issues in Akati OS Center opens them
+
 ## v1.5.0
 
 ### Added

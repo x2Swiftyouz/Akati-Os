@@ -1476,6 +1476,10 @@ function Get-GpuMsiKeys {
 }
 # Group: the section on the Tweaks page (none = Gaming). Script: an unchanged AtlasOS script in AtlasDesktop,
 # run with /silent in the background. Work: a script block run in the background, param($on).
+# More unused services (setup option "disable-extra-services") and their Windows default start type
+$extraServices = [ordered]@{ AJRouter = 3; Fax = 3; MapsBroker = 2; PhoneSvc = 3; RetailDemo = 3; wisvc = 3; SCardSvr = 3; ScDeviceEnum = 3
+    SCPolicySvc = 3; WpcMonSvc = 3; SEMgrSvc = 3; WalletService = 3; WMPNetworkSvc = 3; TroubleshootingSvc = 3 }
+$servicesKey = 'HKLM:\SYSTEM\CurrentControlSet\Services'
 $tweaks = @(
     @{ Key = 'hags'; Glyph = [char]0xE7F4; Restart = $true
        Get = { (Get-RegValue $gpuKey 'HwSchMode') -eq 2 }
@@ -1560,6 +1564,14 @@ $tweaks = @(
        Work = { param($on)
                 try { if ($on) { Enable-MMAgent -MemoryCompression -ErrorAction Stop } else { Disable-MMAgent -MemoryCompression -ErrorAction Stop } }
                 catch { $_.Exception.Message } } }
+    # On: the services this Windows has are disabled (from the next start); off: their Windows default
+    @{ Key = 'extrasvc'; Group = 'system'; Glyph = [char]0xE912; Restart = $true; Default = $false
+       Get = { $found = @($extraServices.Keys | Where-Object { Test-Path "$servicesKey\$_" })
+               $found.Count -gt 0 -and !($found | Where-Object { (Get-RegValue "$servicesKey\$_" 'Start') -ne 4 }) }
+       Set = { param($on)
+               foreach ($name in $extraServices.Keys) {
+                   if (Test-Path "$servicesKey\$name") { Set-ItemProperty -Path "$servicesKey\$name" -Name Start -Value $(if ($on) { 4 } else { $extraServices[$name] }) -Type DWord -Force }
+               } } }
     # The same two values as the AtlasOS scripts "Enable VBS" / "Disable VBS" (AtlasOS 0.4.1 for Windows 10 has no such scripts)
     @{ Key = 'vbs'; Group = 'system'; Glyph = [char]0xE72E; Restart = $true
        Get = { (Get-RegValue $hvciKey 'Enabled') -eq 1 }
@@ -1766,6 +1778,34 @@ $ui.TweaksReset.Add_Click({
     if ($auto.IsEnabled -and !$auto.IsChecked) { $auto.IsChecked = $true; Set-Dns 'auto' }
     Set-Status (T 'status.reset')
 })
+
+# Game boost > Anti-cheat mode: Valorant (Vanguard) can ask for Memory integrity (HVCI) on, FiveM needs it
+# off. The buttons use the Core isolation tweak; Windows changes it at the next start.
+$vbsTweak = $tweaks | Where-Object { $_.Key -eq 'vbs' }
+function Test-HvciRunning {
+    try { 2 -in @((Get-CimInstance -Namespace 'root\Microsoft\Windows\DeviceGuard' -ClassName Win32_DeviceGuard -ErrorAction Stop).SecurityServicesRunning) }
+    catch { $false }
+}
+function Update-AntiCheat {
+    $wanted = (Get-RegValue $hvciKey 'Enabled') -eq 1
+    $text = if ($wanted) { T 'ac.on' } else { T 'ac.off' }
+    if ($Screenshot) { $ui.AcState.Text = $text; return }
+    if ($wanted -ne (Test-HvciRunning)) { $text += '  ·  ' + (T 'ac.pending') }
+    $ui.AcState.Text = $text
+}
+function Set-AntiCheat([bool]$on) {
+    if ((Get-RegValue $hvciKey 'Enabled') -ne [int]$on) {
+        $vbsTweak.Toggle.IsChecked = $on
+        Invoke-Tweak $vbsTweak $on
+    }
+    Update-AntiCheat
+    if (!$Screenshot -and $on -ne (Test-HvciRunning)) {
+        if ([System.Windows.MessageBox]::Show((T 'ac.restartask'), 'Akati OS Center', 'YesNo', 'Question') -eq 'Yes') { Restart-Computer -Force }
+    }
+}
+$ui.AcValorant.Add_Click({ Set-AntiCheat $true })
+$ui.AcFiveM.Add_Click({ Set-AntiCheat $false })
+Update-AntiCheat
 
 # ---------------------------------------------------------------------------------------------
 # Game boost > My games: settings for each game the user adds (its .exe)
@@ -2871,6 +2911,7 @@ function Update-Language {
     Show-Disks
     Update-Clock
     Update-Chips
+    Update-AntiCheat
     if ($stats.Top) { Show-TopApps }
     foreach ($a in $apps) { if ($a.State -ne 'install') { Update-AppRow $a } }
     Update-AppsToolbar

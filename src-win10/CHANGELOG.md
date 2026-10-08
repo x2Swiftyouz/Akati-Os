@@ -10,6 +10,7 @@
 - Dashboard: a **Health** chip shows what Akati Doctor found (click to open the Health page)
 - New **Health** page in Akati OS Center (Ctrl+5):
   - **Akati Doctor** checks the icon next to the clock, the desktop menu, the power plan, free space, a waiting restart, Memory integrity, devices with a problem and blue screens, with a button that fixes or opens each one, and **Repair Windows files** (DISM and SFC)
+  - On Windows builds that do not record the startup time (imOS), a **Record the startup time** button turns the Diagnostics-Performance log on; the time shows after the next restart
   - How long Windows took to start (last and average), and the temperatures Windows reports (ACPI thermal zone, NVIDIA GPU; also as chips on the Dashboard, orange from 80 °C and red from 90 °C). No sensor driver is installed, so anti-cheats are not affected
   - Crashes of the last 30 days: blue screens with their code, sudden power loss and apps that stopped working
   - **Windows Update**: pause for 1 or 5 weeks, resume, and the date the pause ends

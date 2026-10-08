@@ -3120,6 +3120,8 @@ $doctorWork = {
 # Startup time (Diagnostics-Performance log) and crashes of the last 30 days
 $healthWork = {
     $r = @{ Boot = @(); Crashes = @() }
+    # Some Windows builds (imOS) turn the startup time log off
+    $r.BootLog = try { [bool](Get-WinEvent -ListLog 'Microsoft-Windows-Diagnostics-Performance/Operational' -ErrorAction Stop).IsEnabled } catch { $false }
     try {
         $r.Boot = @(Get-WinEvent -FilterHashtable @{ LogName = 'Microsoft-Windows-Diagnostics-Performance/Operational'; Id = 100 } -MaxEvents 5 -ErrorAction Stop | ForEach-Object {
             $d = @{}; foreach ($x in ([xml]$_.ToXml()).Event.EventData.Data) { $d[$x.Name] = $x.'#text' }
@@ -3190,7 +3192,8 @@ function Show-HealthInfo($r) {
     if ($boot.Count) {
         $ui.BootTime.Text = (T 'boot.last') -f ($boot[0].Ms / 1000)
         $ui.BootDetail.Text = (T 'boot.avg') -f $boot.Count, (($boot | ForEach-Object { $_.Ms } | Measure-Object -Average).Average / 1000)
-    } else { $ui.BootTime.Text = '-'; $ui.BootDetail.Text = T 'boot.none' }
+    } else { $ui.BootTime.Text = '-'; $ui.BootDetail.Text = T $(if ($r -is [hashtable] -and !$r.BootLog) { 'boot.off' } else { 'boot.none' }) }
+    $ui.BootLogOn.Visibility = if ($r -is [hashtable] -and !$r.BootLog) { 'Visible' } else { 'Collapsed' }
     $ui.CrashList.Children.Clear()
     $crashes = @(if ($r -is [hashtable]) { $r.Crashes | Where-Object { $_ } })
     foreach ($x in $crashes) {
@@ -3218,6 +3221,11 @@ function Start-Health {
     Start-Work $healthWork @() { param($r) Show-HealthInfo (Get-LastOutput $r) } $null
 }
 $ui.DoctorRun.Add_Click({ Start-Health })
+$ui.BootLogOn.Add_Click({
+    & wevtutil.exe sl 'Microsoft-Windows-Diagnostics-Performance/Operational' /e:true 2>$null
+    if ($LASTEXITCODE -eq 0) { $this.Visibility = 'Collapsed'; $ui.BootDetail.Text = T 'boot.next'; Set-Status (T 'boot.next') }
+    else { Set-Status (T 'boot.failed') }
+})
 $ui.MinidumpOpen.Add_Click({ Start-Process explorer.exe -ArgumentList "`"$(Join-Path $windir 'Minidump')`"" })
 
 # Windows Update: the same pause values as Settings > Windows Update > Pause updates

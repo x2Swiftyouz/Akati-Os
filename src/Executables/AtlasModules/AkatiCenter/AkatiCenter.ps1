@@ -298,7 +298,7 @@ function Show-Disks {
 }
 
 # Usage is read in a background runspace so the window never stutters
-$stats = [hashtable]::Synchronized(@{ Cpu = 0; Ram = 0; RamUsed = 0; RamTotal = 0; Gpu = -1; Run = $true; N = 0; Seq = 0
+$stats = [hashtable]::Synchronized(@{ Cpu = 0; Ram = 0; RamUsed = 0; RamTotal = 0; Gpu = -1; CpuTemp = -1; GpuTemp = -1; Run = $true; N = 0; Seq = 0
     Down = -1; Up = -1; Ping = -1; Top = $null; TopSeq = 0; Defender = -1; Boot = $null; Self = $PID })
 $statsSample = {
     param($stats)
@@ -356,6 +356,20 @@ $statsSample = {
                 $c.Close()
             } catch { }
             $stats.Ping = $ms
+        }
+        # Temperatures every 5th sample: the NVIDIA driver tool and the ACPI thermal zone. Many PCs report
+        # no zone; no extra driver is installed for this (anti-cheats block the usual sensor drivers)
+        if ($n % 5 -eq 0) {
+            $gpuTemp = -1
+            foreach ($smi in "$env:windir\System32\nvidia-smi.exe", "$env:ProgramFiles\NVIDIA Corporation\NVSMI\nvidia-smi.exe") {
+                if (Test-Path $smi) { try { $gpuTemp = [int](@(& $smi --query-gpu=temperature.gpu --format=csv,noheader,nounits)[0]) } catch { }; break }
+            }
+            $stats.GpuTemp = $gpuTemp
+            try {
+                $zones = @(Get-CimInstance -Namespace 'root/wmi' -ClassName MSAcpi_ThermalZoneTemperature -ErrorAction Stop |
+                    ForEach-Object { $_.CurrentTemperature / 10 - 273.15 } | Where-Object { $_ -gt 5 -and $_ -lt 125 })
+                $stats.CpuTemp = if ($zones.Count) { [int]($zones | Measure-Object -Maximum).Maximum } else { -1 }
+            } catch { $stats.CpuTemp = -1 }
         }
         if ($n -eq 0) {
             try { $stats.Boot = (Get-CimInstance Win32_OperatingSystem).LastBootUpTime } catch { }
@@ -470,6 +484,18 @@ function Update-Chips {
     if ($stats.Defender -ge 0) {
         [void]$ui.StatusChips.Children.Add((New-Chip (T $(if ($stats.Defender -eq 1) { 'chip.defender.on' } else { 'chip.defender.off' })) $(if ($stats.Defender -eq 1) { $good } else { '#FF9F0A' })))
     }
+    if ($script:doctorResult -is [hashtable]) {
+        $issues = @($doctorChecks | Where-Object { !$script:doctorResult[$_] }).Count
+        $chip = New-Chip $(if ($issues) { (T 'chip.doctor.bad') -f $issues } else { T 'chip.doctor.ok' }) $(if ($issues) { '#FF9F0A' } else { $good })
+        $chip.Cursor = 'Hand'; $chip.ToolTip = T 'nav.health'
+        $chip.Add_MouseLeftButtonUp({ $ui.NavHealth.IsChecked = $true })
+        [void]$ui.StatusChips.Children.Add($chip)
+    }
+    # Orange from 80 °C, red from 90 °C
+    foreach ($tp in @(@('chip.temp.sys', $stats.CpuTemp), @('chip.temp.gpu', $stats.GpuTemp))) {
+        if ($tp[1] -gt 0) { [void]$ui.StatusChips.Children.Add((New-Chip ((T $tp[0]) -f $tp[1]) $(if ($tp[1] -ge 90) { '#FF453A' } elseif ($tp[1] -ge 80) { '#FF9F0A' } else { $muted }))) }
+    }
+    if ($ui.PageHealth.Visibility -eq 'Visible') { Update-TempText }
     if ($stats.Boot) {
         $up = (Get-Date) - $stats.Boot
         $text = if ($up.TotalDays -ge 1) { (T 'chip.days') -f [int][Math]::Floor($up.TotalDays), $up.Hours } else { (T 'chip.hours') -f $up.Hours, $up.Minutes }
@@ -1288,9 +1314,25 @@ function Stop-Boost {
     Remove-Item -Path $boostKey -Recurse -Force -ErrorAction SilentlyContinue
 }
 
+# Game boost started: a short sound and the icon grows and settles (can be turned off)
+$ui.BoostSound.IsChecked = (Get-RegValue $settingsKey 'BoostSound') -ne 0
+$ui.BoostSound.Add_Click({ Save-Setting BoostSound ([int][bool]$this.IsChecked) })
+function Show-BoostEffect {
+    if (!$ui.BoostSound.IsChecked) { return }
+    try {
+        $wav = Join-Path $windir 'AtlasModules\Other\AkatiOS\Sounds\akatios-connect.wav'
+        if (Test-Path $wav) { (New-Object System.Media.SoundPlayer $wav).Play() }
+    } catch { }
+    $scale = New-Object System.Windows.Media.ScaleTransform 1, 1
+    $ui.BoostIcon.RenderTransformOrigin = '0.5,0.5'; $ui.BoostIcon.RenderTransform = $scale
+    $grow = New-Object System.Windows.Media.Animation.DoubleAnimation 1, 1.25, (New-Object System.Windows.Duration ([TimeSpan]::FromMilliseconds(180)))
+    $grow.AutoReverse = $true; $grow.RepeatBehavior = New-Object System.Windows.Media.Animation.RepeatBehavior 2
+    $scale.BeginAnimation([System.Windows.Media.ScaleTransform]::ScaleXProperty, $grow)
+    $scale.BeginAnimation([System.Windows.Media.ScaleTransform]::ScaleYProperty, $grow)
+}
 $ui.BoostButton.Add_Click({
     try {
-        if (Test-Boost) { Stop-Boost; Set-Status (T 'status.boostoff') } else { Start-Boost; Set-Status (T 'status.booston') }
+        if (Test-Boost) { Stop-Boost; Set-Status (T 'status.boostoff') } else { Start-Boost; Set-Status (T 'status.booston'); Show-BoostEffect }
     } catch { Set-Status $_.Exception.Message }
     Update-BoostCard
     Request-MenuUpdate
@@ -1476,10 +1518,34 @@ function Get-GpuMsiKeys {
 }
 # Group: the section on the Tweaks page (none = Gaming). Script: an unchanged AtlasOS script in AtlasDesktop,
 # run with /silent in the background. Work: a script block run in the background, param($on).
-# More unused services (setup option "disable-extra-services") and their Windows default start type
-$extraServices = [ordered]@{ AJRouter = 3; Fax = 3; MapsBroker = 2; PhoneSvc = 3; RetailDemo = 3; wisvc = 3; SCardSvr = 3; ScDeviceEnum = 3
-    SCPolicySvc = 3; WpcMonSvc = 3; SEMgrSvc = 3; WalletService = 3; WMPNetworkSvc = 3; TroubleshootingSvc = 3 }
+# Windows services Akati OS can turn off (Start = 4), each with its Windows default start type (2 automatic,
+# 3 manual). extra: the setup option "disable-extra-services" and one switch; the others: one switch each.
+# Services this Windows does not have are skipped, so no empty service keys are made.
+$serviceGroups = @{
+    extra    = [ordered]@{ AJRouter = 3; Fax = 3; MapsBroker = 2; PhoneSvc = 3; RetailDemo = 3; wisvc = 3; SCardSvr = 3; ScDeviceEnum = 3
+                           SCPolicySvc = 3; WpcMonSvc = 3; SEMgrSvc = 3; WalletService = 3; WMPNetworkSvc = 3; TroubleshootingSvc = 3
+                           dmwappushservice = 3; TermService = 3; SessionEnv = 3; UmRdpService = 3; WinRM = 3; CertPropSvc = 3
+                           vmickvpexchange = 3; vmicguestinterface = 3; vmicshutdown = 3; vmicheartbeat = 3; vmicvmsession = 3
+                           vmicrdv = 3; vmictimesync = 3; vmicvss = 3; edgeupdate = 2; edgeupdatem = 3 }
+    xbox     = [ordered]@{ XblAuthManager = 3; XblGameSave = 3; XboxNetApiSvc = 3; XboxGipSvc = 3 }
+    iphelper = @{ iphlpsvc = 2 }
+    hello    = @{ WbioSrvc = 3 }
+    scanner  = @{ stisvc = 3 }
+    hotspot  = @{ SharedAccess = 3 }
+    notify   = @{ WpnService = 2 }
+    cdp      = @{ CDPSvc = 2 }
+}
 $servicesKey = 'HKLM:\SYSTEM\CurrentControlSet\Services'
+function Test-ServicesOff($group) {
+    $found = @($group.Keys | Where-Object { Test-Path "$servicesKey\$_" })
+    $found.Count -gt 0 -and !($found | Where-Object { (Get-RegValue "$servicesKey\$_" 'Start') -ne 4 })
+}
+function Set-ServicesOff($group, [bool]$off) {
+    foreach ($name in $group.Keys) {
+        if (Test-Path "$servicesKey\$name") { Set-ItemProperty -Path "$servicesKey\$name" -Name Start -Value $(if ($off) { 4 } else { $group[$name] }) -Type DWord -Force }
+    }
+}
+$personalizeKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize'
 $tweaks = @(
     @{ Key = 'hags'; Glyph = [char]0xE7F4; Restart = $true
        Get = { (Get-RegValue $gpuKey 'HwSchMode') -eq 2 }
@@ -1564,14 +1630,23 @@ $tweaks = @(
        Work = { param($on)
                 try { if ($on) { Enable-MMAgent -MemoryCompression -ErrorAction Stop } else { Disable-MMAgent -MemoryCompression -ErrorAction Stop } }
                 catch { $_.Exception.Message } } }
-    # On: the services this Windows has are disabled (from the next start); off: their Windows default
-    @{ Key = 'extrasvc'; Group = 'system'; Glyph = [char]0xE912; Restart = $true; Default = $false
-       Get = { $found = @($extraServices.Keys | Where-Object { Test-Path "$servicesKey\$_" })
-               $found.Count -gt 0 -and !($found | Where-Object { (Get-RegValue "$servicesKey\$_" 'Start') -ne 4 }) }
-       Set = { param($on)
-               foreach ($name in $extraServices.Keys) {
-                   if (Test-Path "$servicesKey\$name") { Set-ItemProperty -Path "$servicesKey\$name" -Name Start -Value $(if ($on) { 4 } else { $extraServices[$name] }) -Type DWord -Force }
-               } } }
+    # Tweaks > Services: on = turned off from the next start, off = back to the Windows default start type
+    @{ Key = 'extrasvc'; Group = 'services'; Glyph = [char]0xE912; Restart = $true; Default = $false
+       Get = { Test-ServicesOff $serviceGroups.extra }; Set = { param($on) Set-ServicesOff $serviceGroups.extra $on } }
+    @{ Key = 'svcxbox'; Group = 'services'; Glyph = [char]0xE7FC; Restart = $true; Default = $false
+       Get = { Test-ServicesOff $serviceGroups.xbox }; Set = { param($on) Set-ServicesOff $serviceGroups.xbox $on } }
+    @{ Key = 'svciphelper'; Group = 'services'; Glyph = [char]0xE968; Restart = $true; Default = $false
+       Get = { Test-ServicesOff $serviceGroups.iphelper }; Set = { param($on) Set-ServicesOff $serviceGroups.iphelper $on } }
+    @{ Key = 'svchello'; Group = 'services'; Glyph = [char]0xE928; Restart = $true; Default = $false
+       Get = { Test-ServicesOff $serviceGroups.hello }; Set = { param($on) Set-ServicesOff $serviceGroups.hello $on } }
+    @{ Key = 'svcscanner'; Group = 'services'; Glyph = [char]0xE722; Restart = $true; Default = $false
+       Get = { Test-ServicesOff $serviceGroups.scanner }; Set = { param($on) Set-ServicesOff $serviceGroups.scanner $on } }
+    @{ Key = 'svchotspot'; Group = 'services'; Glyph = [char]0xE88A; Restart = $true; Default = $false
+       Get = { Test-ServicesOff $serviceGroups.hotspot }; Set = { param($on) Set-ServicesOff $serviceGroups.hotspot $on } }
+    @{ Key = 'svcnotify'; Group = 'services'; Glyph = [char]0xEA8F; Restart = $true; Default = $false
+       Get = { Test-ServicesOff $serviceGroups.notify }; Set = { param($on) Set-ServicesOff $serviceGroups.notify $on } }
+    @{ Key = 'svccdp'; Group = 'services'; Glyph = [char]0xE8EA; Restart = $true; Default = $false
+       Get = { Test-ServicesOff $serviceGroups.cdp }; Set = { param($on) Set-ServicesOff $serviceGroups.cdp $on } }
     # The same two values as the AtlasOS scripts "Enable VBS" / "Disable VBS" (AtlasOS 0.4.1 for Windows 10 has no such scripts)
     @{ Key = 'vbs'; Group = 'system'; Glyph = [char]0xE72E; Restart = $true
        Get = { (Get-RegValue $hvciKey 'Enabled') -eq 1 }
@@ -1585,6 +1660,63 @@ $tweaks = @(
     @{ Key = 'tray'; Group = 'system'; Glyph = [char]0xE7C4; Async = $true
        Get = { [bool](Get-ScheduledTask -TaskPath '\AkatiOS\' -TaskName 'Akati OS tray' -ErrorAction SilentlyContinue) }
        Work = { param($on, $script) & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path (Split-Path $script) 'AkatiTray.ps1') $(if ($on) { '-Install' } else { '-Remove' }) } }
+    # Read by the icon next to the clock (AkatiTray.ps1), which is restarted to pick up the change
+    @{ Key = 'hotkeys'; Group = 'system'; Glyph = [char]0xE765; Default = $true
+       Get = { (Get-RegValue $settingsKey 'Hotkeys') -ne 0 }
+       Set = { param($on)
+               Save-Setting Hotkeys ([int]$on)
+               if (Get-ScheduledTask -TaskPath '\AkatiOS\' -TaskName 'Akati OS tray' -ErrorAction SilentlyContinue) {
+                   Stop-ScheduledTask -TaskPath '\AkatiOS\' -TaskName 'Akati OS tray' -ErrorAction SilentlyContinue
+                   Start-ScheduledTask -TaskPath '\AkatiOS\' -TaskName 'Akati OS tray' -ErrorAction SilentlyContinue
+               } } }
+    @{ Key = 'mouseaccel'; Group = 'latency'; Glyph = [char]0xE962; Default = $true
+       Get = { (Get-RegValue 'HKCU:\Control Panel\Mouse' 'MouseSpeed') -ne '0' }
+       Set = { param($on)
+               $v = if ($on) { '1', '6', '10' } else { '0', '0', '0' }
+               Set-ItemProperty -Path 'HKCU:\Control Panel\Mouse' -Name MouseSpeed -Value $v[0] -Type String -Force
+               Set-ItemProperty -Path 'HKCU:\Control Panel\Mouse' -Name MouseThreshold1 -Value $v[1] -Type String -Force
+               Set-ItemProperty -Path 'HKCU:\Control Panel\Mouse' -Name MouseThreshold2 -Value $v[2] -Type String -Force
+               # Applies now, not only after the next sign-in (SPI_SETMOUSE)
+               if (!('AkatiOS.Mouse' -as [type])) { Add-Type -Namespace AkatiOS -Name Mouse -MemberDefinition '[DllImport("user32.dll")] public static extern bool SystemParametersInfo(int action, int param, int[] values, int flags);' }
+               [void][AkatiOS.Mouse]::SystemParametersInfo(4, 0, [int[]]@([int]$v[1], [int]$v[2], [int]$v[0]), 3) } }
+    @{ Key = 'ducking'; Group = 'latency'; Glyph = [char]0xE767; Default = $true
+       Get = { (Get-RegValue 'HKCU:\Software\Microsoft\Multimedia\Audio' 'UserDuckingPreference') -ne 3 }
+       Set = { param($on)
+               if ($on) { Remove-ItemProperty -Path 'HKCU:\Software\Microsoft\Multimedia\Audio' -Name UserDuckingPreference -ErrorAction SilentlyContinue }
+               else {
+                   if (!(Test-Path 'HKCU:\Software\Microsoft\Multimedia\Audio')) { New-Item -Path 'HKCU:\Software\Microsoft\Multimedia\Audio' -Force | Out-Null }
+                   Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Multimedia\Audio' -Name UserDuckingPreference -Value 3 -Type DWord -Force
+               } } }
+    @{ Key = 'keydelay'; Group = 'latency'; Glyph = [char]0xE92E; Default = $false
+       Get = { (Get-RegValue 'HKCU:\Control Panel\Keyboard' 'KeyboardDelay') -eq '0' }
+       Set = { param($on) Set-ItemProperty -Path 'HKCU:\Control Panel\Keyboard' -Name KeyboardDelay -Value $(if ($on) { '0' } else { '1' }) -Type String -Force } }
+    @{ Key = 'widget'; Group = 'system'; Glyph = [char]0xE9D9; Default = $false
+       Get = { (Get-RegValue $settingsKey 'Widget') -eq 1 }
+       Set = { param($on)
+               $running = @(Get-CimInstance Win32_Process -Filter "Name='powershell.exe'" -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like '*AkatiWidget.ps1*' })
+               if ($on -and !$running.Count) { Start-Process -FilePath powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$(Join-Path $appDir 'AkatiWidget.ps1')`"" -WindowStyle Hidden }
+               if (!$on) { $running | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue } }
+               Save-Setting Widget ([int]$on) } }
+    @{ Key = 'darkmode'; Group = 'looks'; Glyph = [char]0xE708; Default = $false
+       Get = { (Get-RegValue $personalizeKey 'AppsUseLightTheme') -eq 0 }
+       Set = { param($on)
+               if (!(Test-Path $personalizeKey)) { New-Item -Path $personalizeKey -Force | Out-Null }
+               Set-ItemProperty -Path $personalizeKey -Name AppsUseLightTheme -Value ([int]!$on) -Type DWord -Force
+               Set-ItemProperty -Path $personalizeKey -Name SystemUsesLightTheme -Value ([int]!$on) -Type DWord -Force
+               Send-SettingChange 'ImmersiveColorSet' } }
+    @{ Key = 'accentbars'; Group = 'looks'; Glyph = [char]0xE790; Default = $false
+       Get = { (Get-RegValue 'HKCU:\Software\Microsoft\Windows\DWM' 'ColorPrevalence') -eq 1 }
+       Set = { param($on)
+               Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\DWM' -Name ColorPrevalence -Value ([int]$on) -Type DWord -Force
+               if (!(Test-Path $personalizeKey)) { New-Item -Path $personalizeKey -Force | Out-Null }
+               Set-ItemProperty -Path $personalizeKey -Name ColorPrevalence -Value ([int]$on) -Type DWord -Force
+               Send-SettingChange 'ImmersiveColorSet' } }
+    @{ Key = 'transparency'; Group = 'looks'; Glyph = [char]0xE727; Default = $true
+       Get = { (Get-RegValue $personalizeKey 'EnableTransparency') -ne 0 }
+       Set = { param($on)
+               if (!(Test-Path $personalizeKey)) { New-Item -Path $personalizeKey -Force | Out-Null }
+               Set-ItemProperty -Path $personalizeKey -Name EnableTransparency -Value ([int]$on) -Type DWord -Force
+               Send-SettingChange 'ImmersiveColorSet' } }
     @{ Key = 'startdelay'; Group = 'system'; Glyph = [char]0xE823; Default = $true
        Get = { (Get-RegValue $serializeKey 'StartupDelayInMSec') -ne 0 }
        Set = { param($on)
@@ -1598,7 +1730,7 @@ $tweaks = @(
 
 # One gray heading and one grouped list per section (Gaming is in the XAML)
 $tweakLists = @{ gaming = $ui.TweaksList }
-foreach ($g in 'latency', 'network', 'graphics', 'system') {
+foreach ($g in 'latency', 'network', 'graphics', 'system', 'looks', 'services') {
     $head = New-Text (T "tw.group.$g") 13 'SemiBold' "t:tw.group.$g"
     $head.Style = $window.FindResource('Section')
     $card = New-Object System.Windows.Controls.Border
@@ -1624,7 +1756,7 @@ function Invoke-Tweak($t, [bool]$on) {
         $err = Get-LastOutput $r
         if ($err -is [string] -and $err) { Set-Status "$($ctx.Name): $err"; return }
         $msg = (T 'status.tweakdone') -f $ctx.Name
-        if ($ctx.Tweak.Restart) { $msg += ' · ' + (T 'restart') }
+        if ($ctx.Tweak.Restart) { $msg += ' · ' + (T 'restart'); Set-RestartNeeded }
         Set-Status $msg
     }
     if ($t.Script) {
@@ -1663,6 +1795,53 @@ function Invoke-Tweak($t, [bool]$on) {
     }
 }
 
+# A bar in the title bar when a change needs a restart, with "Restart now"
+function Set-RestartNeeded { if (!$Screenshot) { $ui.RestartBar.Visibility = 'Visible' } }
+$ui.RestartNow.Add_Click({
+    if ([System.Windows.MessageBox]::Show((T 'restart.ask'), 'Akati OS Center', 'YesNo', 'Question') -eq 'Yes') { Restart-Computer -Force }
+})
+
+# A short message at the bottom of the page after a switch changed, with Undo
+$script:toastUndo = $null
+$toastTimer = New-Object System.Windows.Threading.DispatcherTimer
+$toastTimer.Interval = [TimeSpan]::FromSeconds(6)
+$toastTimer.Add_Tick({ $toastTimer.Stop(); $ui.Toast.Visibility = 'Collapsed' })
+function Show-Toast([string]$text, $undo) {
+    $ui.ToastText.Text = $text
+    $script:toastUndo = $undo
+    $ui.ToastUndo.Visibility = if ($undo) { 'Visible' } else { 'Collapsed' }
+    $ui.Toast.Visibility = 'Visible'
+    $toastTimer.Stop(); $toastTimer.Start()
+}
+$ui.ToastUndo.Add_Click({
+    $u = $script:toastUndo; $script:toastUndo = $null
+    $toastTimer.Stop(); $ui.Toast.Visibility = 'Collapsed'
+    if ($u) { $u.Tweak.Toggle.IsChecked = $u.Before; Invoke-Tweak $u.Tweak $u.Before; Add-History $u.Tweak.Key $u.Before }
+})
+
+# "What it changes" under a switch: the PowerShell the switch runs, or the AtlasOS scripts it starts
+function Format-Code([scriptblock]$block) {
+    $lines = @($block.ToString().Trim("`r", "`n") -split "`r?`n")
+    $indent = @($lines | Select-Object -Skip 1 | Where-Object { $_.Trim() } | ForEach-Object { $_.Length - $_.TrimStart().Length } | Measure-Object -Minimum).Minimum
+    if ($indent) { $lines = @($lines[0].Trim()) + @($lines | Select-Object -Skip 1 | ForEach-Object { if ($_.Length -ge $indent) { $_.Substring($indent) } else { $_.TrimStart() } }) }
+    ($lines -join "`r`n").Trim()
+}
+function Add-Details($row, [string]$code) {
+    $link = New-Text (T 'tw.details') 12 'Normal' 't:tw.details'
+    $link.SetResourceReference([System.Windows.Controls.TextBlock]::ForegroundProperty, 'Accent2')
+    $link.Cursor = 'Hand'; $link.Margin = '0,4,0,0'; $link.HorizontalAlignment = 'Left'
+    $box = New-Object System.Windows.Controls.TextBox
+    $box.Text = $code; $box.IsReadOnly = $true; $box.FontFamily = 'Cascadia Mono, Consolas'; $box.FontSize = 11
+    $box.TextWrapping = 'Wrap'; $box.Margin = '0,6,16,2'; $box.Padding = '8,6'; $box.BorderThickness = '0'; $box.Visibility = 'Collapsed'
+    $box.SetResourceReference([System.Windows.Controls.Control]::BackgroundProperty, 'Field')
+    $box.SetResourceReference([System.Windows.Controls.Control]::ForegroundProperty, 'Text2')
+    $link.DataContext = $box
+    $link.Add_MouseLeftButtonUp({ $b = $this.DataContext; $b.Visibility = if ($b.Visibility -eq 'Visible') { 'Collapsed' } else { 'Visible' } })
+    $panel = $row.Sub.Parent
+    $at = $panel.Children.IndexOf($row.Sub) + 1
+    $panel.Children.Insert($at, $box); $panel.Children.Insert($at, $link)
+}
+
 foreach ($tw in $tweaks) {
     if ($tw.Win11 -and $build -lt 22000) { continue }
     $toggle = New-Object System.Windows.Controls.CheckBox
@@ -1670,6 +1849,9 @@ foreach ($tw in $tweaks) {
     $row = New-Row ([string]$tw.Glyph) (T "tw.$($tw.Key)") "t:tw.$($tw.Key)" $toggle "t:tw.$($tw.Key).d"
     $row.Sub.Text = T "tw.$($tw.Key).d"
     $tw.Toggle = $toggle; $tw.Sub = $row.Sub
+    $code = if ($tw.Script) { "AtlasDesktop\$($tw.Script.Folder)\$($tw.Script.On)`r`nAtlasDesktop\$($tw.Script.Folder)\$($tw.Script.Off)" }
+            elseif ($tw.Work) { Format-Code $tw.Work } elseif ($tw.Set) { Format-Code $tw.Set } else { '' }
+    if ($code) { Add-Details $row $code }
     if ($tw.Async -and !$Screenshot) {
         # Slow to read (modules, Store, network): read in the background, the switch is filled in when done.
         # These Get blocks use only cmdlets, no variables of this script.
@@ -1684,7 +1866,12 @@ foreach ($tw in $tweaks) {
         try { $toggle.IsChecked = [bool](& $tw.Get) } catch { $toggle.IsEnabled = $false }
     }
     $toggle.Tag = $tw
-    $toggle.Add_Click({ Invoke-Tweak $this.Tag ([bool]$this.IsChecked) })
+    $toggle.Add_Click({
+        $t = $this.Tag; $on = [bool]$this.IsChecked
+        Invoke-Tweak $t $on
+        Add-History $t.Key $on
+        Show-Toast ((T $(if ($on) { 'toast.on' } else { 'toast.off' })) -f (T "tw.$($t.Key)")) @{ Tweak = $t; Before = !$on }
+    })
     $group = if ($tw.Group) { $tw.Group } else { 'gaming' }
     $tw.Row = $row.Row
     [void]$tweakLists[$group].Children.Add($row.Row)
@@ -1777,31 +1964,39 @@ $ui.TweaksReset.Add_Click({
     $auto = $dnsPanel.Children | Where-Object { $_.Tag -eq 't:dns.auto' }
     if ($auto.IsEnabled -and !$auto.IsChecked) { $auto.IsChecked = $true; Set-Dns 'auto' }
     Set-Status (T 'status.reset')
+    Set-RestartNeeded
 })
 
 # Game boost > Anti-cheat mode: Valorant (Vanguard) can ask for Memory integrity (HVCI) on, FiveM needs it
 # off. The buttons use the Core isolation tweak; Windows changes it at the next start.
 $vbsTweak = $tweaks | Where-Object { $_.Key -eq 'vbs' }
+# $true / $false while Windows runs; $null when Windows cannot report it (the DeviceGuard WMI provider is
+# missing on some trimmed builds, for example imOS 10: "Provider load failure")
 function Test-HvciRunning {
     try { 2 -in @((Get-CimInstance -Namespace 'root\Microsoft\Windows\DeviceGuard' -ClassName Win32_DeviceGuard -ErrorAction Stop).SecurityServicesRunning) }
-    catch { $false }
+    catch { $null }
 }
 function Update-AntiCheat {
     $wanted = (Get-RegValue $hvciKey 'Enabled') -eq 1
     $text = if ($wanted) { T 'ac.on' } else { T 'ac.off' }
     if ($Screenshot) { $ui.AcState.Text = $text; return }
-    if ($wanted -ne (Test-HvciRunning)) { $text += '  ·  ' + (T 'ac.pending') }
+    $running = Test-HvciRunning
+    if ($null -ne $running -and $wanted -ne $running) { $text += '  ·  ' + (T 'ac.pending') }
     $ui.AcState.Text = $text
 }
 function Set-AntiCheat([bool]$on) {
-    if ((Get-RegValue $hvciKey 'Enabled') -ne [int]$on) {
+    $changed = ((Get-RegValue $hvciKey 'Enabled') -eq 1) -ne $on
+    if ($changed) {
         $vbsTweak.Toggle.IsChecked = $on
         Invoke-Tweak $vbsTweak $on
     }
     Update-AntiCheat
-    if (!$Screenshot -and $on -ne (Test-HvciRunning)) {
-        if ([System.Windows.MessageBox]::Show((T 'ac.restartask'), 'Akati OS Center', 'YesNo', 'Question') -eq 'Yes') { Restart-Computer -Force }
-    }
+    if ($Screenshot) { return }
+    # A restart is needed when what runs differs; when Windows cannot tell, when the setting just changed
+    $running = Test-HvciRunning
+    $ask = if ($null -ne $running) { $on -ne $running } else { $changed }
+    if ($ask) { Set-RestartNeeded }
+    if ($ask -and [System.Windows.MessageBox]::Show((T 'ac.restartask'), 'Akati OS Center', 'YesNo', 'Question') -eq 'Yes') { Restart-Computer -Force }
 }
 $ui.AcValorant.Add_Click({ Set-AntiCheat $true })
 $ui.AcFiveM.Add_Click({ Set-AntiCheat $false })
@@ -1841,16 +2036,43 @@ function Set-GameOption([string]$path, [string]$kind, [bool]$on) {
         }
     }
 }
+# Game profile, in HKCU\Software\AkatiOS\Center\GameProfiles as "<path>|<name>":
+#   boost = 1: Play starts Game boost first
+#   core0 = 1: the icon next to the clock keeps the game off CPU 0 (where Windows handles most interrupts)
+#   hvci  = 1 / 0: the game needs Memory integrity on (Valorant) / off (FiveM); Play offers to switch it
+$profilesKey = "$settingsKey\GameProfiles"
+function Get-GameProfile([string]$path, [string]$name) { Get-RegValue $profilesKey "$path|$name" }
+function Set-GameProfile([string]$path, [string]$name, $value) {
+    if (!(Test-Path $profilesKey)) { New-Item -Path $profilesKey -Force | Out-Null }
+    if ($null -eq $value) { Remove-ItemProperty -Path $profilesKey -Name "$path|$name" -ErrorAction SilentlyContinue }
+    else { Set-ItemProperty -Path $profilesKey -Name "$path|$name" -Value ([int]$value) -Type DWord -Force }
+}
+function Get-HvciText($value) { T $(switch ($value) { 1 { 'games.hvci.on' } 0 { 'games.hvci.off' } default { 'games.hvci.any' } }) }
+# Play: Memory integrity as the game needs it, Game boost if wanted, then the game, as the user (not elevated)
+function Start-Game([string]$path) {
+    $name = [IO.Path]::GetFileNameWithoutExtension($path)
+    $need = Get-GameProfile $path 'hvci'
+    if ($null -ne $need -and ([bool]$need) -ne ((Get-RegValue $hvciKey 'Enabled') -eq 1)) {
+        $ask = (T 'games.hvciask') -f $name, (T $(if ($need) { 'games.on' } else { 'games.off' }))
+        if ([System.Windows.MessageBox]::Show($ask, 'Akati OS Center', 'YesNo', 'Question') -eq 'Yes') { Set-AntiCheat ([bool]$need); return }
+    }
+    if ((Get-GameProfile $path 'boost') -eq 1 -and !(Test-Boost)) {
+        try { Start-Boost; Show-BoostEffect } catch { }
+        Update-BoostCard
+    }
+    Start-Process explorer.exe -ArgumentList "`"$path`""
+    Set-Status ((T 'status.gamestarted') -f $name)
+}
 function Show-Games {
     $ui.GamesList.Children.Clear()
     $paths = @(if (Test-Path $gamesKey) { (Get-Item $gamesKey).Property })
     # Defender exclusions are read once per refresh (null when Defender is off)
     $exclusions = try { @((Get-MpPreference -ErrorAction Stop).ExclusionPath) } catch { $null }
     foreach ($path in $paths) {
-        $right = New-Object System.Windows.Controls.StackPanel; $right.Orientation = 'Horizontal'
+        $chips = New-Object System.Windows.Controls.WrapPanel; $chips.Margin = '0,6,0,0'
         foreach ($kind in 'cpu', 'gpu', 'defender') {
             $chip = New-Object System.Windows.Controls.CheckBox
-            $chip.Style = $window.FindResource('Chip'); $chip.Content = T "games.$kind"; $chip.Margin = '0,0,6,0'; $chip.VerticalAlignment = 'Center'
+            $chip.Style = $window.FindResource('Chip'); $chip.Content = T "games.$kind"; $chip.Margin = '0,0,6,6'
             $chip.Tag = @{ Path = $path; Kind = $kind }
             $chip.IsChecked = Get-GameOption $path $kind $exclusions
             if ($kind -eq 'defender' -and $null -eq $exclusions) { $chip.IsEnabled = $false; $chip.ToolTip = T 'games.nodefender' }
@@ -1858,14 +2080,44 @@ function Show-Games {
                 $t = $this.Tag
                 try { Set-GameOption $t.Path $t.Kind ([bool]$this.IsChecked) } catch { $this.IsChecked = !$this.IsChecked; Set-Status $_.Exception.Message }
             })
-            [void]$right.Children.Add($chip)
+            [void]$chips.Children.Add($chip)
         }
+        foreach ($kind in 'boost', 'core0') {
+            $chip = New-Object System.Windows.Controls.CheckBox
+            $chip.Style = $window.FindResource('Chip'); $chip.Content = T "games.$kind"; $chip.Margin = '0,0,6,6'; $chip.ToolTip = T "games.$kind.tip"
+            $chip.Tag = @{ Path = $path; Kind = $kind }
+            $chip.IsChecked = (Get-GameProfile $path $kind) -eq 1
+            $chip.Add_Click({ $t = $this.Tag; Set-GameProfile $t.Path $t.Kind $(if ($this.IsChecked) { 1 } else { $null }) })
+            [void]$chips.Children.Add($chip)
+        }
+        # Memory integrity: any > on > off > any
+        $hv = New-Object System.Windows.Controls.Button
+        $hv.Style = $window.FindResource('Pill'); $hv.Padding = '10,3'; $hv.Margin = '0,0,6,6'; $hv.FontSize = 12
+        $hv.Content = Get-HvciText (Get-GameProfile $path 'hvci'); $hv.Tag = $path; $hv.ToolTip = T 'games.hvci.tip'
+        $hv.Add_Click({
+            $now = Get-GameProfile $this.Tag 'hvci'
+            $next = switch ($now) { 1 { 0 } 0 { $null } default { 1 } }
+            Set-GameProfile $this.Tag 'hvci' $next
+            $this.Content = Get-HvciText $next
+        })
+        [void]$chips.Children.Add($hv)
+
+        $right = New-Object System.Windows.Controls.StackPanel; $right.Orientation = 'Horizontal'
+        $play = New-Object System.Windows.Controls.Button
+        $play.Style = $window.FindResource('PillAccent'); $play.Padding = '14,5'; $play.Tag = $path
+        $pc = New-Object System.Windows.Controls.StackPanel; $pc.Orientation = 'Horizontal'
+        $pg = New-Text ([string][char]0xE768) 11; $pg.Style = $window.FindResource('Glyph'); $pg.Margin = '0,0,6,0'; $pg.VerticalAlignment = 'Center'
+        [void]$pc.Children.Add($pg); [void]$pc.Children.Add((New-Text (T 'games.play') 13 'SemiBold'))
+        $play.Content = $pc
+        $play.Add_Click({ Start-Game $this.Tag })
+        [void]$right.Children.Add($play)
         $remove = New-Object System.Windows.Controls.Button
         $remove.Style = $window.FindResource('Bare'); $remove.Padding = '7'; $remove.Margin = '4,0,0,0'; $remove.ToolTip = T 'games.remove'; $remove.Tag = $path
         $x = New-Text ([string][char]0xE711) 12; $x.Style = $window.FindResource('Glyph'); $remove.Content = $x
         $remove.Add_Click({
             $path = $this.Tag
             foreach ($kind in 'cpu', 'gpu', 'defender') { try { Set-GameOption $path $kind $false } catch { } }
+            foreach ($kind in 'boost', 'core0', 'hvci') { Set-GameProfile $path $kind $null }
             Remove-ItemProperty -Path $gamesKey -Name $path -ErrorAction SilentlyContinue
             Set-Status ((T 'status.gameremoved') -f [IO.Path]::GetFileNameWithoutExtension($path))
             Show-Games
@@ -1876,6 +2128,8 @@ function Show-Games {
         if (!$name) { $name = [IO.Path]::GetFileNameWithoutExtension($path) }
         $row = New-Row ([string][char]0xE7FC) $name $null $right $null
         $row.Sub.Text = Split-Path $path -Parent
+        $panel = $row.Sub.Parent
+        $panel.Children.Insert($panel.Children.IndexOf($row.Sub) + 1, $chips)
         $icon = Get-FileIcon @($path)
         if ($icon) { Set-RowIcon $row $icon }
         [void]$ui.GamesList.Children.Add($row.Row)
@@ -1883,11 +2137,7 @@ function Show-Games {
     $ui.GamesEmpty.Visibility = if ($paths.Count) { 'Collapsed' } else { 'Visible' }
     Update-Separators $ui.GamesList
 }
-$ui.GameAddButton.Add_Click({
-    $dialog = New-Object Microsoft.Win32.OpenFileDialog
-    $dialog.Title = T 'games.pick'; $dialog.Filter = 'Games (*.exe)|*.exe'
-    if (!$dialog.ShowDialog($window)) { return }
-    $path = $dialog.FileName
+function Add-Game([string]$path) {
     if (!(Test-Path $gamesKey)) { New-Item -Path $gamesKey -Force | Out-Null }
     Set-ItemProperty -Path $gamesKey -Name $path -Value 1 -Type DWord -Force
     # High priority and the dedicated GPU at once; skipping Defender is the user's choice
@@ -1895,6 +2145,66 @@ $ui.GameAddButton.Add_Click({
     Set-Status ((T 'status.gameadded') -f [IO.Path]::GetFileNameWithoutExtension($path))
     Show-Games
     Request-MenuUpdate
+}
+
+# FiveM: installed per user in %LOCALAPPDATA%\FiveM
+$fivemDir = Join-Path $env:LOCALAPPDATA 'FiveM'
+$fivemExe = Join-Path $fivemDir 'FiveM.exe'
+$fivemData = Join-Path $fivemDir 'FiveM.app\data'
+function Update-Fivem {
+    $found = Test-Path -LiteralPath $fivemExe
+    $ui.FivemState.Text = if ($found) { (T 'fivem.found') -f $fivemDir } else { T 'fivem.none' }
+    foreach ($b in $ui.FivemClear, $ui.FivemOpen, $ui.FivemAdd) { $b.IsEnabled = $found }
+    $ui.FivemServerHint.Visibility = if ($ui.FivemServer.Text) { 'Collapsed' } else { 'Visible' }
+}
+$ui.FivemServer.Text = [string](Get-RegValue $settingsKey 'FivemServer')
+$ui.FivemServer.Add_TextChanged({ $ui.FivemServerHint.Visibility = if ($this.Text) { 'Collapsed' } else { 'Visible' } })
+$ui.FivemOpen.Add_Click({ Start-Process explorer.exe -ArgumentList "`"$fivemDir`"" })
+$ui.FivemAdd.Add_Click({ Add-Game $fivemExe; Set-Status (T 'fivem.added') })
+# The cache folders FiveM rebuilds by itself; game files, settings and saved data stay
+$ui.FivemClear.Add_Click({
+    if (Get-Process -Name 'FiveM*' -ErrorAction SilentlyContinue) { Set-Status (T 'fivem.running'); return }
+    $bytes = 0
+    foreach ($name in 'cache', 'server-cache', 'server-cache-priv') {
+        $dir = Join-Path $fivemData $name
+        if (!(Test-Path -LiteralPath $dir)) { continue }
+        $bytes += [double](Get-ChildItem -LiteralPath $dir -Recurse -File -Force -ErrorAction SilentlyContinue | Measure-Object Length -Sum).Sum
+        Remove-Item -LiteralPath $dir -Recurse -Force -ErrorAction SilentlyContinue
+    }
+    Set-Status ((T 'fivem.cleared') -f (Format-Size $bytes))
+})
+# Connection time: TCP connect to the server (FiveM uses port 30120 when none is given), the average of 3 tries
+$ui.FivemPing.Add_Click({
+    $server = $ui.FivemServer.Text.Trim()
+    if (!$server) { return }
+    Save-Setting FivemServer $server
+    $ui.FivemPing.IsEnabled = $false; $ui.FivemResult.Text = '...'
+    Start-Work {
+        param($server)
+        $hostName, $port = $server -split ':', 2
+        if (!$port) { $port = 30120 }
+        $times = foreach ($i in 1..3) {
+            $client = New-Object System.Net.Sockets.TcpClient
+            $watch = [Diagnostics.Stopwatch]::StartNew()
+            try {
+                $wait = $client.BeginConnect($hostName, [int]$port, $null, $null)
+                if ($wait.AsyncWaitHandle.WaitOne(3000) -and $client.Connected) { [int]$watch.ElapsedMilliseconds }
+            } catch { } finally { $client.Close() }
+        }
+        if ($times) { [int](($times | Measure-Object -Average).Average) } else { -1 }
+    } @($server) {
+        param($r, $server)
+        $ms = Get-LastOutput $r
+        $ui.FivemResult.Text = if ($ms -ge 0) { (T 'fivem.result') -f $server, $ms } else { (T 'fivem.fail') -f $server }
+        $ui.FivemPing.IsEnabled = $true
+    } $server
+})
+Update-Fivem
+$ui.GameAddButton.Add_Click({
+    $dialog = New-Object Microsoft.Win32.OpenFileDialog
+    $dialog.Title = T 'games.pick'; $dialog.Filter = 'Games (*.exe)|*.exe'
+    if (!$dialog.ShowDialog($window)) { return }
+    Add-Game $dialog.FileName
 })
 Show-Games
 
@@ -2149,6 +2459,55 @@ function Set-TerminalAccent($a) {
     [IO.File]::WriteAllText($fragment, ($json | ConvertTo-Json -Depth 5), (New-Object Text.UTF8Encoding $false))
 }
 
+# Center, Windows and Terminal at once; AccentLight is read by the performance widget
+function Use-Accent($acc) {
+    Set-CenterAccent $acc
+    Save-Setting Accent $acc.Key
+    Save-Setting AccentLight $acc.Light
+    if ($acc.Swatch) { $acc.Swatch.IsChecked = $true }
+    try { Set-WindowsAccent $acc; Set-TerminalAccent $acc; Set-Status ((T 'status.accent') -f (T "accent.$($acc.Key)")) }
+    catch { Set-Status $_.Exception.Message }
+}
+# Accent from the wallpaper: the most colorful hue of the desktop picture, in the same shades as the others
+function ConvertFrom-Hsv([double]$h, [double]$s, [double]$v) {
+    $c = $v * $s; $x = $c * (1 - [Math]::Abs((($h / 60) % 2) - 1)); $m = $v - $c
+    $r, $g, $b = switch ([int][Math]::Floor($h / 60) % 6) { 0 { $c, $x, 0 } 1 { $x, $c, 0 } 2 { 0, $c, $x } 3 { 0, $x, $c } 4 { $x, 0, $c } default { $c, 0, $x } }
+    '#{0:X2}{1:X2}{2:X2}' -f [int](($r + $m) * 255), [int](($g + $m) * 255), [int](($b + $m) * 255)
+}
+function New-HueAccent([double]$hue) {
+    @{ Key = 'wallpaper'; Hue = $hue
+       Base = ConvertFrom-Hsv $hue 0.7 0.84; Light = ConvertFrom-Hsv $hue 0.45 0.96
+       G1 = ConvertFrom-Hsv $hue 0.62 0.94; G2 = ConvertFrom-Hsv $hue 0.74 0.78 }
+}
+function Get-WallpaperFile {
+    $file = [string](Get-RegValue 'HKCU:\Control Panel\Desktop' 'WallPaper')
+    if ($file -and (Test-Path -LiteralPath $file)) { $file } else { $null }
+}
+function Get-WallpaperHue {
+    $file = Get-WallpaperFile
+    if (!$file) { return $null }
+    $bmp = New-Object System.Windows.Media.Imaging.BitmapImage
+    $bmp.BeginInit(); $bmp.UriSource = [Uri]$file; $bmp.DecodePixelWidth = 48; $bmp.CacheOption = 'OnLoad'; $bmp.EndInit()
+    $conv = New-Object System.Windows.Media.Imaging.FormatConvertedBitmap $bmp, ([System.Windows.Media.PixelFormats]::Bgra32), $null, 0
+    $w = $conv.PixelWidth; $h = $conv.PixelHeight
+    $px = New-Object byte[] ($w * $h * 4)
+    $conv.CopyPixels($px, $w * 4, 0)
+    # Hue histogram (10 degree bins), weighted by saturation and brightness
+    $bins = New-Object double[] 36
+    for ($i = 0; $i -lt $px.Length; $i += 4) {
+        $b = $px[$i] / 255; $g = $px[$i + 1] / 255; $r = $px[$i + 2] / 255
+        $max = [Math]::Max($r, [Math]::Max($g, $b)); $min = [Math]::Min($r, [Math]::Min($g, $b)); $d = $max - $min
+        if ($d -lt 0.08) { continue }
+        $hue = if ($max -eq $r) { 60 * ((($g - $b) / $d) % 6) } elseif ($max -eq $g) { 60 * (($b - $r) / $d + 2) } else { 60 * (($r - $g) / $d + 4) }
+        if ($hue -lt 0) { $hue += 360 }
+        $bins[[int][Math]::Floor($hue / 10) % 36] += ($d / $max) * ($d / $max) * $max
+    }
+    $best = -1; $score = 0
+    for ($i = 0; $i -lt 36; $i++) { $s = $bins[($i + 35) % 36] * 0.5 + $bins[$i] + $bins[($i + 1) % 36] * 0.5; if ($s -gt $score) { $score = $s; $best = $i } }
+    # A black, white or gray picture has no color to take
+    if ($best -lt 0 -or $score -lt 2) { return $null }
+    $best * 10 + 5
+}
 $savedAccent = Get-RegValue $settingsKey 'Accent'
 foreach ($a in $accents) {
     $sw = New-Object System.Windows.Controls.RadioButton
@@ -2158,19 +2517,40 @@ foreach ($a in $accents) {
     $sw.Tag = $a
     $sw.ToolTip = T "accent.$($a.Key)"
     $sw.IsChecked = ($a.Key -eq $savedAccent) -or (!$savedAccent -and $a.Key -eq 'purple')
-    $sw.Add_Click({
-        $acc = $this.Tag
-        Set-CenterAccent $acc
-        Save-Setting Accent $acc.Key
-        try { Set-WindowsAccent $acc; Set-TerminalAccent $acc; Set-Status ((T 'status.accent') -f (T "accent.$($acc.Key)")) }
-        catch { Set-Status $_.Exception.Message }
-    })
+    $sw.Add_Click({ Use-Accent $this.Tag })
     $a.Swatch = $sw
     [void]$ui.AccentPanel.Children.Add($sw)
     if ($a.Key -eq $savedAccent) { Set-CenterAccent $a }
 }
 
+$wallSwatch = New-Object System.Windows.Controls.RadioButton
+$wallSwatch.Style = $window.FindResource('Swatch'); $wallSwatch.ToolTip = T 'accent.wallpaper'
+function Update-WallSwatch {
+    $file = Get-WallpaperFile
+    $wallSwatch.Background = if ($file) { $b = New-Object System.Windows.Media.ImageBrush (Get-Image $file 80); $b.Stretch = 'UniformToFill'; $b } else { $window.FindResource('Fill') }
+}
+Update-WallSwatch
+$wallSwatch.Add_Click({
+    $hue = try { Get-WallpaperHue } catch { $null }
+    if ($null -eq $hue) { Set-Status (T 'accent.nowallcolor'); $this.IsChecked = $false; return }
+    Save-Setting AccentHue ([int]$hue)
+    Use-Accent (New-HueAccent $hue)
+})
+[void]$ui.AccentPanel.Children.Add($wallSwatch)
+if ($savedAccent -eq 'wallpaper' -and $null -ne (Get-RegValue $settingsKey 'AccentHue')) {
+    $wallSwatch.IsChecked = $true
+    Set-CenterAccent (New-HueAccent ([double](Get-RegValue $settingsKey 'AccentHue')))
+}
+
 # Wallpapers: every picture in the Akati OS wallpaper folder
+function Set-Wallpaper([string]$path) {
+    # SPI_SETDESKWALLPAPER, saved to the user profile and sent to all windows
+    Set-ItemProperty -Path 'HKCU:\Control Panel\Desktop' -Name WallpaperStyle -Value '10'
+    Set-ItemProperty -Path 'HKCU:\Control Panel\Desktop' -Name TileWallpaper -Value '0'
+    [void][AkatiOS.Native]::SystemParametersInfo(0x14, 0, $path, 3)
+    Update-WallSwatch
+    Set-Status ((T 'status.wallpaper') -f [IO.Path]::GetFileNameWithoutExtension($path))
+}
 foreach ($file in @(Get-ChildItem -Path (Join-Path $wallpapers '*') -Include *.png, *.jpg -File -ErrorAction SilentlyContinue | Sort-Object Name)) {
     $btn = New-Object System.Windows.Controls.Button
     $btn.Cursor = 'Hand'; $btn.Margin = '0,0,12,12'; $btn.Tag = $file.FullName; $btn.ToolTip = $file.BaseName
@@ -2190,13 +2570,7 @@ foreach ($file in @(Get-ChildItem -Path (Join-Path $wallpapers '*') -Include *.p
     $brush.Stretch = 'UniformToFill'
     $frame.Background = $brush
     $btn.Content = $frame
-    $btn.Add_Click({
-        # SPI_SETDESKWALLPAPER, saved to the user profile and sent to all windows
-        Set-ItemProperty -Path 'HKCU:\Control Panel\Desktop' -Name WallpaperStyle -Value '10'
-        Set-ItemProperty -Path 'HKCU:\Control Panel\Desktop' -Name TileWallpaper -Value '0'
-        [void][AkatiOS.Native]::SystemParametersInfo(0x14, 0, $this.Tag, 3)
-        Set-Status ((T 'status.wallpaper') -f [IO.Path]::GetFileNameWithoutExtension($this.Tag))
-    })
+    $btn.Add_Click({ Set-Wallpaper $this.Tag })
     [void]$ui.WallPanel.Children.Add($btn)
 }
 
@@ -2265,6 +2639,43 @@ $ui.SoundPreview.Add_Click({
     } else { Set-Status (T 'status.sound.none') }
 })
 
+# Style presets: wallpaper, accent color, look of Akati OS Center, cursor and sounds in one click
+$presets = @(
+    @{ Key = 'neon';    Wall = 'akatios-dark.png';  Accent = 'purple'; Look = 'Dark';  Cursor = $true;  Sound = 'akati' }
+    @{ Key = 'ocean';   Wall = 'akatios-ocean.png'; Accent = 'cyan';   Look = 'Dark';  Cursor = $true;  Sound = 'akati' }
+    @{ Key = 'ember';   Wall = 'akatios-ember.png'; Accent = 'orange'; Look = 'Dark';  Cursor = $true;  Sound = 'akati' }
+    @{ Key = 'sakura';  Wall = 'akatios-mist.png';  Accent = 'pink';   Look = 'Light'; Cursor = $true;  Sound = 'akati' }
+    @{ Key = 'stealth'; Wall = 'akatios-oled.png';  Accent = 'red';    Look = 'Dark';  Cursor = $false; Sound = 'none' }
+)
+foreach ($p in $presets) {
+    $file = Join-Path $wallpapers $p.Wall
+    if (!(Test-Path -LiteralPath $file)) { continue }
+    $acc = $accents | Where-Object { $_.Key -eq $p.Accent } | Select-Object -First 1
+    $btn = New-Object System.Windows.Controls.Button
+    $btn.Style = $window.FindResource('Bare'); $btn.Margin = '0,0,12,12'; $btn.Padding = '0'; $btn.Tag = $p
+    $stack = New-Object System.Windows.Controls.StackPanel
+    $frame = New-Object System.Windows.Controls.Border
+    $frame.Width = 150; $frame.Height = 84; $frame.CornerRadius = 8; $frame.BorderThickness = '0,0,0,4'
+    $frame.BorderBrush = New-Object System.Windows.Media.LinearGradientBrush (ConvertTo-Color $acc.G1), (ConvertTo-Color $acc.G2), 0
+    $brush = New-Object System.Windows.Media.ImageBrush (Get-Image $file 300); $brush.Stretch = 'UniformToFill'
+    $frame.Background = $brush
+    $name = New-Text (T "preset.$($p.Key)") 13 'SemiBold' "t:preset.$($p.Key)"; $name.Margin = '2,6,0,0'
+    [void]$stack.Children.Add($frame); [void]$stack.Children.Add($name)
+    $btn.Content = $stack
+    $btn.Add_Click({
+        $p = $this.Tag
+        try {
+            Set-Wallpaper (Join-Path $wallpapers $p.Wall)
+            Use-Accent ($accents | Where-Object { $_.Key -eq $p.Accent } | Select-Object -First 1)
+            $ui["Look$($p.Look)"].IsChecked = $true
+            Set-Cursors $p.Cursor
+            Set-Sounds $p.Sound
+            Set-Status ((T 'status.preset') -f (T "preset.$($p.Key)"))
+        } catch { Set-Status $_.Exception.Message }
+    })
+    [void]$ui.PresetPanel.Children.Add($btn)
+}
+
 # ---------------------------------------------------------------------------------------------
 # Updates and links
 # ---------------------------------------------------------------------------------------------
@@ -2326,7 +2737,7 @@ $ui.UpdateButton.Add_Click({ if ($this.Tag -eq 'open') { Start-Process $script:r
 $ui.QuickUpdate.Add_Click({ $ui.NavAbout.IsChecked = $true; Start-UpdateCheck })
 $ui.QuickBoost.Add_Click({
     try {
-        if (Test-Boost) { Stop-Boost; Set-Status (T 'status.boostoff') } else { Start-Boost; Set-Status (T 'status.booston') }
+        if (Test-Boost) { Stop-Boost; Set-Status (T 'status.boostoff') } else { Start-Boost; Set-Status (T 'status.booston'); Show-BoostEffect }
     } catch { Set-Status $_.Exception.Message }
     Update-BoostCard; Update-Chips
 })
@@ -2670,10 +3081,274 @@ $ui.ReportButton.Add_Click({
 })
 
 # ---------------------------------------------------------------------------------------------
+# Health: Akati Doctor, startup time, temperatures, crashes, Windows Update, change history, backup
+# ---------------------------------------------------------------------------------------------
+Add-Mark 'Health'
+$getCulture = { [Globalization.CultureInfo]::GetCultureInfo($(if ($lang -eq 'th') { 'th-TH' } else { 'en-US' })) }
+$orange = (New-Object System.Windows.Media.BrushConverter).ConvertFromString('#FF9F0A')
+
+# Akati Doctor: each check is $true when fine. Runs in the background (no functions of this script)
+$doctorChecks = 'tray', 'menu', 'power', 'disk', 'restart', 'hvci', 'devices', 'crash'
+$doctorWork = {
+    $r = @{}
+    $wanted = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\AkatiOS' -Name TrayIcon -ErrorAction SilentlyContinue).TrayIcon -eq 1
+    $r.tray = !$wanted -or [bool](Get-ScheduledTask -TaskPath '\AkatiOS\' -TaskName 'Akati OS tray' -ErrorAction SilentlyContinue)
+    $menu = Test-Path 'HKLM:\SOFTWARE\Classes\DesktopBackground\Shell\AkatiOS'
+    $r.menu = !$menu -or [bool](Get-ScheduledTask -TaskPath '\AkatiOS\' -TaskName 'Akati OS menu' -ErrorAction SilentlyContinue)
+    # Akati OS power scheme (AtlasOS GUID), High performance or Ultimate Performance
+    $r.power = [string](& powercfg.exe /getactivescheme) -match '11111111-1111-1111-1111-111111111111|8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c|e9a42b02-d5df-448d-aa00-03f14749eb61'
+    try {
+        $drive = [IO.DriveInfo]::new($env:SystemDrive.Substring(0, 1))
+        $r.diskFree = [int](100 * $drive.AvailableFreeSpace / $drive.TotalSize)
+    } catch { $r.diskFree = 100 }
+    $r.disk = $r.diskFree -ge 10
+    $r.restart = !((Test-Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired') -or
+                   (Test-Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending'))
+    # Memory integrity: what runs differs from the setting (unknown on builds without the DeviceGuard provider)
+    try {
+        $running = 2 -in @((Get-CimInstance -Namespace 'root\Microsoft\Windows\DeviceGuard' -ClassName Win32_DeviceGuard -ErrorAction Stop).SecurityServicesRunning)
+        $want = (Get-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\HypervisorEnforcedCodeIntegrity' -Name Enabled -ErrorAction SilentlyContinue).Enabled -eq 1
+        $r.hvci = $running -eq $want
+    } catch { $r.hvci = $true }
+    # Devices with a problem; 22 is a device the user turned off
+    $r.devicesBad = @(Get-CimInstance Win32_PnPEntity -Filter 'ConfigManagerErrorCode <> 0' -ErrorAction SilentlyContinue | Where-Object { $_.ConfigManagerErrorCode -ne 22 }).Count
+    $r.devices = $r.devicesBad -eq 0
+    $r.crashCount = @(Get-WinEvent -FilterHashtable @{ LogName = 'System'; Id = 1001; ProviderName = 'Microsoft-Windows-WER-SystemErrorReporting'; StartTime = (Get-Date).AddDays(-7) } -ErrorAction SilentlyContinue).Count
+    $r.crash = $r.crashCount -eq 0
+    $r
+}
+# Startup time (Diagnostics-Performance log) and crashes of the last 30 days
+$healthWork = {
+    $r = @{ Boot = @(); Crashes = @() }
+    # Some Windows builds (imOS) turn the startup time log off
+    $r.BootLog = try { [bool](Get-WinEvent -ListLog 'Microsoft-Windows-Diagnostics-Performance/Operational' -ErrorAction Stop).IsEnabled } catch { $false }
+    try {
+        $r.Boot = @(Get-WinEvent -FilterHashtable @{ LogName = 'Microsoft-Windows-Diagnostics-Performance/Operational'; Id = 100 } -MaxEvents 5 -ErrorAction Stop | ForEach-Object {
+            $d = @{}; foreach ($x in ([xml]$_.ToXml()).Event.EventData.Data) { $d[$x.Name] = $x.'#text' }
+            @{ Time = $_.TimeCreated; Ms = [int]$d['BootTime'] }
+        })
+    } catch { }
+    $since = (Get-Date).AddDays(-30)
+    $list = @()
+    try { $list += @(Get-WinEvent -FilterHashtable @{ LogName = 'System'; Id = 1001; ProviderName = 'Microsoft-Windows-WER-SystemErrorReporting'; StartTime = $since } -MaxEvents 10 -ErrorAction Stop | ForEach-Object { @{ Kind = 'bsod'; Time = $_.TimeCreated; Text = [string]$_.Properties[0].Value } }) } catch { }
+    try { $list += @(Get-WinEvent -FilterHashtable @{ LogName = 'System'; Id = 41; ProviderName = 'Microsoft-Windows-Kernel-Power'; StartTime = $since } -MaxEvents 10 -ErrorAction Stop | ForEach-Object { @{ Kind = 'power'; Time = $_.TimeCreated; Text = '' } }) } catch { }
+    try { $list += @(Get-WinEvent -FilterHashtable @{ LogName = 'Application'; Id = 1000; ProviderName = 'Application Error'; StartTime = $since } -MaxEvents 15 -ErrorAction Stop | ForEach-Object { @{ Kind = 'app'; Time = $_.TimeCreated; Text = [string]$_.Properties[0].Value } }) } catch { }
+    $r.Crashes = @($list | Sort-Object { $_.Time } -Descending | Select-Object -First 12)
+    $r
+}
+function Show-Doctor($r) {
+    $script:doctorResult = $r
+    $ui.DoctorList.Children.Clear()
+    if ($r -isnot [hashtable]) { $ui.DoctorSummary.Text = T 'doc.failed'; return }
+    $bad = 0
+    foreach ($k in $doctorChecks) {
+        $ok = [bool]$r[$k]
+        if (!$ok) { $bad++ }
+        $arg = switch ($k) { 'disk' { $r.diskFree } 'devices' { $r.devicesBad } 'crash' { $r.crashCount } default { '' } }
+        $right = New-Object System.Windows.Controls.Border
+        if (!$ok) {
+            $right = New-Object System.Windows.Controls.Button
+            $right.Style = $window.FindResource('PillAccent'); $right.Padding = '12,4'; $right.Content = T "doc.fix.$k"; $right.Tag = $k
+            $right.Add_Click({ Invoke-DoctorFix $this.Tag })
+        }
+        $row = New-Row ([string][char]$(if ($ok) { 0xE73E } else { 0xE7BA })) ((T "doc.$k.$(if ($ok) { 'ok' } else { 'bad' })") -f $arg) $null $right $null
+        $row.Sub.Visibility = 'Collapsed'
+        $row.Icon.Child.Foreground = if ($ok) { $window.FindResource('Good') } else { $orange }
+        [void]$ui.DoctorList.Children.Add($row.Row)
+    }
+    # Repair Windows files: DISM then SFC in a window (Akati OS Center runs as administrator)
+    $repair = New-Object System.Windows.Controls.Button
+    $repair.Style = $window.FindResource('Pill'); $repair.Padding = '12,4'; $repair.Content = T 'doc.repair.button'
+    $repair.Add_Click({ Start-Process cmd.exe -ArgumentList '/k title Akati OS - Repair Windows files & DISM /Online /Cleanup-Image /RestoreHealth & sfc /scannow' })
+    $row = New-Row ([string][char]0xE90F) (T 'doc.repair') $null $repair $null
+    $row.Sub.Text = T 'doc.repair.d'
+    [void]$ui.DoctorList.Children.Add($row.Row)
+    Update-Separators $ui.DoctorList
+    $ui.DoctorSummary.Text = $(if ($bad) { (T 'doc.issues') -f $bad } else { T 'doc.allgood' }) + ' · ' + ((T 'doc.checked') -f (Get-Date).ToString('HH:mm'))
+}
+function Invoke-DoctorFix([string]$k) {
+    switch ($k) {
+        'tray' {
+            Set-Status (T 'doc.fixing') $true
+            Start-Work { param($f) & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $f -Install } @((Join-Path $appDir 'AkatiTray.ps1')) { param($r) Set-Status (T 'ready'); Start-Health } $null
+        }
+        'menu' { Update-DesktopMenu; Start-Health }
+        'power' {
+            $t = $tweaks | Where-Object { $_.Key -eq 'maxperf' } | Select-Object -First 1
+            if ($t -and $t.Toggle) { $t.Toggle.IsChecked = $true; Invoke-Tweak $t $true; Add-History $t.Key $true }
+        }
+        'disk' { $ui.NavCleaner.IsChecked = $true }
+        { $_ -in 'restart', 'hvci' } {
+            if ([System.Windows.MessageBox]::Show((T 'restart.ask'), 'Akati OS Center', 'YesNo', 'Question') -eq 'Yes') { Restart-Computer -Force }
+        }
+        'devices' { Start-Process devmgmt.msc }
+        'crash' { $ui.CrashList.BringIntoView() }
+    }
+}
+function Show-HealthInfo($r) {
+    $script:healthResult = $r
+    $c = & $getCulture
+    $boot = @(if ($r -is [hashtable]) { $r.Boot | Where-Object { $_ -and $_.Ms -gt 0 } })
+    if ($boot.Count) {
+        $ui.BootTime.Text = (T 'boot.last') -f ($boot[0].Ms / 1000)
+        $ui.BootDetail.Text = (T 'boot.avg') -f $boot.Count, (($boot | ForEach-Object { $_.Ms } | Measure-Object -Average).Average / 1000)
+    } else { $ui.BootTime.Text = '-'; $ui.BootDetail.Text = T $(if ($r -is [hashtable] -and !$r.BootLog) { 'boot.off' } else { 'boot.none' }) }
+    $ui.BootLogOn.Visibility = if ($r -is [hashtable] -and !$r.BootLog) { 'Visible' } else { 'Collapsed' }
+    $ui.CrashList.Children.Clear()
+    $crashes = @(if ($r -is [hashtable]) { $r.Crashes | Where-Object { $_ } })
+    foreach ($x in $crashes) {
+        $title = switch ($x.Kind) { 'bsod' { (T 'crash.bsod') -f (([string]$x.Text).Trim() -split '\s')[0] } 'power' { T 'crash.power' } default { (T 'crash.app') -f $x.Text } }
+        $glyph = switch ($x.Kind) { 'bsod' { 0xE7BA } 'power' { 0xE7E8 } default { 0xE783 } }
+        $row = New-Row ([string][char]$glyph) $title $null (New-Object System.Windows.Controls.Border) $null
+        $row.Sub.Text = ([datetime]$x.Time).ToString('d MMM yyyy HH:mm', $c)
+        if ($x.Kind -ne 'app') { $row.Icon.Child.Foreground = $orange }
+        [void]$ui.CrashList.Children.Add($row.Row)
+    }
+    $ui.CrashEmpty.Visibility = if ($crashes.Count) { 'Collapsed' } else { 'Visible' }
+    Update-Separators $ui.CrashList
+    $ui.MinidumpOpen.Visibility = if (Test-Path (Join-Path $windir 'Minidump')) { 'Visible' } else { 'Collapsed' }
+}
+function Update-TempText {
+    $parts = @()
+    if ($stats.CpuTemp -gt 0) { $parts += (T 'chip.temp.sys') -f $stats.CpuTemp }
+    if ($stats.GpuTemp -gt 0) { $parts += (T 'chip.temp.gpu') -f $stats.GpuTemp }
+    $ui.TempDetail.Text = if ($parts.Count) { (T 'temp.now') -f ($parts -join ' · ') } else { T 'temp.none' }
+}
+function Start-Health {
+    if ($Screenshot) { Show-Doctor (& $doctorWork); Show-HealthInfo (& $healthWork); return }
+    $ui.DoctorRun.IsEnabled = $false; $ui.DoctorSummary.Text = T 'doc.checking'
+    Start-Work $doctorWork @() { param($r) Show-Doctor (Get-LastOutput $r); $ui.DoctorRun.IsEnabled = $true } $null
+    Start-Work $healthWork @() { param($r) Show-HealthInfo (Get-LastOutput $r) } $null
+}
+$ui.DoctorRun.Add_Click({ Start-Health })
+$ui.BootLogOn.Add_Click({
+    & wevtutil.exe sl 'Microsoft-Windows-Diagnostics-Performance/Operational' /e:true 2>$null
+    if ($LASTEXITCODE -eq 0) { $this.Visibility = 'Collapsed'; $ui.BootDetail.Text = T 'boot.next'; Set-Status (T 'boot.next') }
+    else { Set-Status (T 'boot.failed') }
+})
+$ui.MinidumpOpen.Add_Click({ Start-Process explorer.exe -ArgumentList "`"$(Join-Path $windir 'Minidump')`"" })
+
+# Windows Update: the same pause values as Settings > Windows Update > Pause updates
+$wuKey = 'HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings'
+$wuNames = 'PauseUpdatesStartTime', 'PauseUpdatesExpiryTime', 'PauseFeatureUpdatesStartTime', 'PauseFeatureUpdatesEndTime', 'PauseQualityUpdatesStartTime', 'PauseQualityUpdatesEndTime'
+function Update-WuState {
+    $until = $null
+    try { $until = [datetime]::Parse((Get-RegValue $wuKey 'PauseUpdatesExpiryTime'), [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]'AdjustToUniversal, AssumeUniversal') } catch { }
+    $paused = $until -and $until -gt (Get-Date).ToUniversalTime()
+    $ui.WuState.Text = if ($paused) { (T 'wu.paused') -f $until.ToLocalTime().ToString('d MMMM yyyy', (& $getCulture)) } else { T 'wu.on' }
+    $ui.WuResume.IsEnabled = [bool]$paused
+}
+function Set-WuPause([int]$days) {
+    try {
+        if ($days -le 0) { Remove-ItemProperty -Path $wuKey -Name $wuNames -ErrorAction SilentlyContinue }
+        else {
+            if (!(Test-Path $wuKey)) { New-Item -Path $wuKey -Force | Out-Null }
+            $start = (Get-Date).ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss'Z'")
+            $end = (Get-Date).AddDays($days).ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss'Z'")
+            foreach ($n in $wuNames) { Set-ItemProperty -Path $wuKey -Name $n -Value $(if ($n -like '*Start*') { $start } else { $end }) -Type String -Force }
+        }
+    } catch { Set-Status $_.Exception.Message }
+    Update-WuState
+}
+$ui.WuPause7.Add_Click({ Set-WuPause 7 })
+$ui.WuPause35.Add_Click({ Set-WuPause 35 })
+$ui.WuResume.Add_Click({ Set-WuPause 0 })
+$ui.WuOpen.Add_Click({ Start-Process 'ms-settings:windowsupdate' })
+
+# Change history: the last 30 switches changed in Akati OS Center, newest first ("time|key|1 or 0")
+function Add-History([string]$key, [bool]$on) {
+    try {
+        if (!(Test-Path $settingsKey)) { New-Item -Path $settingsKey -Force | Out-Null }
+        $list = @("$((Get-Date).ToString('s'))|$key|$([int]$on)") + @(Get-RegValue $settingsKey 'History' | Where-Object { $_ })
+        Set-ItemProperty -Path $settingsKey -Name History -Value ([string[]]@($list | Select-Object -First 30)) -Type MultiString -Force
+    } catch { }
+    if ($script:page -eq 'health') { Show-History }
+}
+function Show-History {
+    $ui.HistoryList.Children.Clear()
+    $c = & $getCulture
+    foreach ($item in @(Get-RegValue $settingsKey 'History' | Where-Object { $_ })) {
+        $time, $key, $state = $item -split '\|', 3
+        $t = $tweaks | Where-Object { $_.Key -eq $key } | Select-Object -First 1
+        if (!$t -or !$t.Toggle) { continue }
+        $on = $state -eq '1'
+        $undo = New-Object System.Windows.Controls.Button
+        $undo.Style = $window.FindResource('Pill'); $undo.Padding = '12,4'; $undo.Content = T 'toast.undo'; $undo.Tag = @{ Tweak = $t; On = $on }
+        # Only while the switch is still as this change left it
+        $undo.IsEnabled = $t.Toggle.IsEnabled -and ([bool]$t.Toggle.IsChecked -eq $on)
+        $undo.Add_Click({ $u = $this.Tag; $back = !$u.On; $u.Tweak.Toggle.IsChecked = $back; Invoke-Tweak $u.Tweak $back; Add-History $u.Tweak.Key $back })
+        $row = New-Row ([string]$t.Glyph) (T "tw.$key") $null $undo $null
+        $when = try { [datetime]::ParseExact($time, 's', [Globalization.CultureInfo]::InvariantCulture).ToString('d MMM HH:mm', $c) } catch { $time }
+        $row.Sub.Text = (T $(if ($on) { 'history.on' } else { 'history.off' })) + ' · ' + $when
+        [void]$ui.HistoryList.Children.Add($row.Row)
+    }
+    $any = $ui.HistoryList.Children.Count -gt 0
+    $ui.HistoryEmpty.Visibility = if ($any) { 'Collapsed' } else { 'Visible' }
+    $ui.HistoryClear.Visibility = if ($any) { 'Visible' } else { 'Collapsed' }
+    Update-Separators $ui.HistoryList
+}
+$ui.HistoryClear.Add_Click({ Remove-ItemProperty -Path $settingsKey -Name History -ErrorAction SilentlyContinue; Show-History })
+
+# Backup: settings of Akati OS Center, My games with their profiles and the state of every switch, in one JSON file
+$ui.BackupSave.Add_Click({
+    $d = New-Object Microsoft.Win32.SaveFileDialog
+    $d.Filter = 'Akati OS backup (*.json)|*.json'; $d.FileName = "AkatiOS-backup-$(Get-Date -Format yyyy-MM-dd).json"
+    if (!$d.ShowDialog($window)) { return }
+    $data = [ordered]@{ AkatiOS = $version; Date = (Get-Date).ToString('s'); Settings = [ordered]@{}; Games = @(); Profiles = [ordered]@{}; Tweaks = [ordered]@{} }
+    if (Test-Path $settingsKey) {
+        foreach ($p in (Get-ItemProperty -Path $settingsKey).PSObject.Properties) {
+            if ($p.Name -notlike 'PS*' -and $p.Name -ne 'History' -and $p.Value -isnot [byte[]]) { $data.Settings[$p.Name] = $p.Value }
+        }
+    }
+    if (Test-Path $gamesKey) { $data.Games = @((Get-Item $gamesKey).Property) }
+    if (Test-Path $profilesKey) { foreach ($p in (Get-ItemProperty -Path $profilesKey).PSObject.Properties) { if ($p.Name -notlike 'PS*') { $data.Profiles[$p.Name] = $p.Value } } }
+    # Slow switches (Microsoft Store) are left out
+    foreach ($t in $tweaks) { if ($t.Toggle -and $t.Toggle.IsEnabled -and !$t.Slow -and $null -ne $t.Toggle.IsChecked) { $data.Tweaks[$t.Key] = [bool]$t.Toggle.IsChecked } }
+    try {
+        [IO.File]::WriteAllText($d.FileName, ($data | ConvertTo-Json -Depth 5), (New-Object System.Text.UTF8Encoding $false))
+        Set-Status ((T 'backup.saved') -f (Split-Path $d.FileName -Leaf))
+    } catch { Set-Status $_.Exception.Message }
+})
+$ui.BackupLoad.Add_Click({
+    $d = New-Object Microsoft.Win32.OpenFileDialog
+    $d.Filter = 'Akati OS backup (*.json)|*.json'
+    if (!$d.ShowDialog($window)) { return }
+    $data = try { [IO.File]::ReadAllText($d.FileName) | ConvertFrom-Json } catch { $null }
+    if (!$data -or !$data.AkatiOS) { Set-Status (T 'backup.bad'); return }
+    if ([System.Windows.MessageBox]::Show((T 'backup.ask'), 'Akati OS Center', 'YesNo', 'Question') -ne 'Yes') { return }
+    if (!(Test-Path $settingsKey)) { New-Item -Path $settingsKey -Force | Out-Null }
+    foreach ($p in @($data.Settings.PSObject.Properties)) {
+        $v = $p.Value
+        if ($v -is [array]) { Set-ItemProperty -Path $settingsKey -Name $p.Name -Value ([string[]]@($v)) -Type MultiString -Force }
+        elseif ($v -is [int] -or $v -is [long]) { Set-ItemProperty -Path $settingsKey -Name $p.Name -Value ([int]$v) -Type DWord -Force }
+        elseif ($null -ne $v) { Set-ItemProperty -Path $settingsKey -Name $p.Name -Value ([string]$v) -Type String -Force }
+    }
+    if (@($data.Games).Count) {
+        if (!(Test-Path $gamesKey)) { New-Item -Path $gamesKey -Force | Out-Null }
+        foreach ($g in @($data.Games)) { if ($g) { Set-ItemProperty -Path $gamesKey -Name $g -Value 1 -Type DWord -Force } }
+    }
+    foreach ($p in @($data.Profiles.PSObject.Properties)) {
+        if (!(Test-Path $profilesKey)) { New-Item -Path $profilesKey -Force | Out-Null }
+        Set-ItemProperty -Path $profilesKey -Name $p.Name -Value ([int]$p.Value) -Type DWord -Force
+    }
+    $changed = 0
+    foreach ($p in @($data.Tweaks.PSObject.Properties)) {
+        $t = $tweaks | Where-Object { $_.Key -eq $p.Name } | Select-Object -First 1
+        if (!$t -or !$t.Toggle -or !$t.Toggle.IsEnabled -or [bool]$t.Toggle.IsChecked -eq [bool]$p.Value) { continue }
+        $t.Toggle.IsChecked = [bool]$p.Value; Invoke-Tweak $t ([bool]$p.Value); Add-History $t.Key ([bool]$p.Value)
+        $changed++
+    }
+    Show-Games
+    Request-MenuUpdate
+    if ($data.Settings.Language -in 'en', 'th' -and $data.Settings.Language -ne $lang) { Set-AppLanguage $data.Settings.Language }
+    Set-Status ((T 'backup.restored') -f $changed)
+})
+
+# ---------------------------------------------------------------------------------------------
 # Navigation, title bar, language
 # ---------------------------------------------------------------------------------------------
 Add-Mark 'Navigation, title bar, language'
-$pages = 'dashboard', 'gaming', 'boost', 'tweaks', 'cleaner', 'appearance', 'about'
+$pages = 'dashboard', 'gaming', 'boost', 'tweaks', 'health', 'cleaner', 'appearance', 'about'
 $script:page = 'dashboard'
 function Get-PageId([string]$p) { [Globalization.CultureInfo]::InvariantCulture.TextInfo.ToTitleCase($p) }
 function Show-Page([string]$name) {
@@ -2701,6 +3376,10 @@ function Show-Page([string]$name) {
     if (!$script:statusBusy) { Set-Status (T 'ready') }
     if ($name -eq 'cleaner' -and $ui.CleanTotal.Text -eq '-') { Start-Scan }
     if ($name -eq 'boost') { Update-BoostCard }
+    if ($name -eq 'health') {
+        if (!$script:healthLoaded) { $script:healthLoaded = $true; Start-Health }
+        Show-History; Update-WuState; Update-TempText
+    }
     # Gaming apps: look for app updates once, the first time the page opens
     if ($name -eq 'gaming' -and !$script:appsChecked -and !$Screenshot) { $script:appsChecked = $true; Start-AppUpdateCheck $true }
 }
@@ -2797,17 +3476,18 @@ function Show-Element([string]$page, $element) {
 }
 function Get-SpotlightItems {
     $items = New-Object System.Collections.ArrayList
-    $add = { param($text, $search, $sub, $glyph, $action, $data)
-             [void]$items.Add(@{ Text = $text; Search = "$text $search".ToLowerInvariant(); Sub = $sub; Glyph = [string]$glyph; Action = $action; Data = $data }) }
+    # Name: the title and other names of the item (both languages, keywords); Desc: its description
+    $add = { param($text, $search, $sub, $glyph, $action, $data, $desc)
+             [void]$items.Add(@{ Id = $(if ($search) { [string]$search } else { [string]$text }); Text = $text; Name = "$text $search".ToLowerInvariant(); Desc = "$desc".ToLowerInvariant(); Sub = $sub; Glyph = [string]$glyph; Action = $action; Data = $data }) }
     foreach ($p in $pages) { & $add (T "nav.$p") (Get-Both "nav.$p") (T 'spot.page') ([char]0xE8A5) { param($d) $ui["Nav$(Get-PageId $d)"].IsChecked = $true } $p }
     foreach ($t in $tweaks) {
         if (!$t.Row) { continue }
-        & $add (T "tw.$($t.Key)") ((Get-Both "tw.$($t.Key)") + ' ' + (Get-Both "tw.$($t.Key).d")) (T 'spot.setting') $t.Glyph { param($d) Show-Element 'tweaks' $d } $t.Row
+        & $add (T "tw.$($t.Key)") (Get-Both "tw.$($t.Key)") (T 'spot.setting') $t.Glyph { param($d) Show-Element 'tweaks' $d } $t.Row (Get-Both "tw.$($t.Key).d")
     }
     & $add (T 'tw.dns') ((Get-Both 'tw.dns') + ' cloudflare google 1.1.1.1 8.8.8.8') (T 'spot.setting') ([char]0xE774) { param($d) Show-Element 'tweaks' $d } $dnsRow.Row
     & $add (T 'tw.refresh') ((Get-Both 'tw.refresh') + ' hz') (T 'spot.setting') ([char]0xE7F8) { param($d) Show-Element 'tweaks' $d } $refreshRow.Row
     foreach ($a in $apps) {
-        & $add $a.Name (Get-Both "app.desc.$($a.Key)") (T 'spot.app') ([char]0xE7FC) { param($d) if (Test-App $d) { Open-App $d } else { Show-Element 'gaming' $d.RowParts.Row } } $a
+        & $add $a.Name '' (T 'spot.app') ([char]0xE7FC) { param($d) if (Test-App $d) { Open-App $d } else { Show-Element 'gaming' $d.RowParts.Row } } $a (Get-Both "app.desc.$($a.Key)")
     }
     foreach ($g in @(if (Test-Path $gamesKey) { (Get-Item $gamesKey).Property })) {
         & $add ([IO.Path]::GetFileNameWithoutExtension($g)) '' (T 'spot.game') ([char]0xE7FC) { param($d) Start-Process explorer.exe -ArgumentList "`"$d`"" } $g
@@ -2831,37 +3511,82 @@ function Update-SpotSelection {
         else { $row.Background = [System.Windows.Media.Brushes]::Transparent }
     }
 }
+# A search word matches at the start of a word ("ram" finds "Free up RAM", not "frame"). Thai has no spaces
+# between words, so a word with Thai letters matches anywhere.
+function Test-SpotWord([string]$text, [string]$word) {
+    if ($word -match '[\u0E00-\u0E7F]') { return $text.Contains($word) }
+    return $text -match ('(^|[^\p{L}\p{N}])' + [regex]::Escape($word))
+}
+# A result row; the parts of the title that match the search are bold
+function Add-SpotRow($item, [string[]]$words) {
+    $row = New-Object System.Windows.Controls.Border
+    $row.CornerRadius = 7; $row.Padding = '10,7'; $row.Cursor = 'Hand'; $row.Background = [System.Windows.Media.Brushes]::Transparent
+    $dock = New-Object System.Windows.Controls.DockPanel
+    $icon = New-Object System.Windows.Controls.Border
+    $icon.Width = 26; $icon.Height = 26; $icon.CornerRadius = 6; $icon.SetResourceReference([System.Windows.Controls.Border]::BackgroundProperty, 'Fill'); $icon.Margin = '0,0,12,0'
+    $g = New-Text $item.Glyph 13; $g.Style = $window.FindResource('Glyph'); $g.HorizontalAlignment = 'Center'
+    $g.SetResourceReference([System.Windows.Controls.TextBlock]::ForegroundProperty, 'Accent2'); $icon.Child = $g
+    $sub = New-Text $item.Sub 12; $sub.Opacity = 0.7; $sub.VerticalAlignment = 'Center'
+    [System.Windows.Controls.DockPanel]::SetDock($icon, 'Left'); [System.Windows.Controls.DockPanel]::SetDock($sub, 'Right')
+    $title = New-Object System.Windows.Controls.TextBlock
+    $title.FontSize = 14; $title.VerticalAlignment = 'Center'; $title.TextWrapping = 'NoWrap'; $title.TextTrimming = 'CharacterEllipsis'
+    $text = [string]$item.Text; $lower = $text.ToLowerInvariant()
+    $marks = New-Object 'bool[]' $text.Length
+    foreach ($w in $words) {
+        $at = if ($w -match '[฀-๿]') { $lower.IndexOf($w) } else { $m = [regex]::Match($lower, '(^|[^\p{L}\p{N}])' + [regex]::Escape($w)); if ($m.Success) { $m.Index + $m.Groups[1].Length } else { -1 } }
+        if ($at -ge 0) { for ($i = $at; $i -lt [Math]::Min($text.Length, $at + $w.Length); $i++) { $marks[$i] = $true } }
+    }
+    $i = 0
+    while ($i -lt $text.Length) {
+        $j = $i; while ($j -lt $text.Length -and $marks[$j] -eq $marks[$i]) { $j++ }
+        $run = New-Object System.Windows.Documents.Run ($text.Substring($i, $j - $i))
+        if ($marks[$i]) { $run.FontWeight = 'Bold'; $run.SetResourceReference([System.Windows.Documents.TextElement]::ForegroundProperty, 'Accent2') }
+        [void]$title.Inlines.Add($run)
+        $i = $j
+    }
+    [void]$dock.Children.Add($icon); [void]$dock.Children.Add($sub); [void]$dock.Children.Add($title)
+    $row.Child = $dock
+    $row.Tag = $script:spotRows.Count
+    $row.Add_MouseEnter({ $script:spotSel = $this.Tag; Update-SpotSelection })
+    $row.Add_MouseLeftButtonUp({ Invoke-SpotlightItem $this.Tag })
+    [void]$ui.SpotlightResults.Children.Add($row)
+    $script:spotRows += $row; $script:spotList += $item
+}
 function Update-Spotlight {
     $text = $ui.SpotlightBox.Text.Trim()
     $q = $text.ToLowerInvariant()
     $ui.SpotlightHint.Visibility = if ($text) { 'Collapsed' } else { 'Visible' }
     $ui.SpotlightResults.Children.Clear()
     $script:spotRows = @(); $script:spotList = @()
-    if (!$q) { $ui.SpotlightLine.Visibility = 'Collapsed'; return }
-    $words = $q -split '\s+'
-    $found = @($script:spotItems | Where-Object { $s = $_.Search; !($words | Where-Object { $s -notlike "*$_*" }) })
-    # Names that start with the search come first
-    $found = @($found | Sort-Object { if ($_.Text.ToLowerInvariant().StartsWith($q)) { 0 } else { 1 } } | Select-Object -First 8)
-    $found += @{ Text = (T 'spot.atlas') -f $text; Sub = (T 'tweaks.system'); Glyph = [string][char]0xE721; Data = $text
-                 Action = { param($d) $ui.NavTweaks.IsChecked = $true; $ui.SystemSearch.Text = $d } }
-    foreach ($item in $found) {
-        $row = New-Object System.Windows.Controls.Border
-        $row.CornerRadius = 7; $row.Padding = '10,7'; $row.Cursor = 'Hand'; $row.Background = [System.Windows.Media.Brushes]::Transparent
-        $dock = New-Object System.Windows.Controls.DockPanel
-        $icon = New-Object System.Windows.Controls.Border
-        $icon.Width = 26; $icon.Height = 26; $icon.CornerRadius = 6; $icon.SetResourceReference([System.Windows.Controls.Border]::BackgroundProperty, 'Fill'); $icon.Margin = '0,0,12,0'
-        $g = New-Text $item.Glyph 13; $g.Style = $window.FindResource('Glyph'); $g.HorizontalAlignment = 'Center'
-        $g.SetResourceReference([System.Windows.Controls.TextBlock]::ForegroundProperty, 'Accent2'); $icon.Child = $g
-        $sub = New-Text $item.Sub 12; $sub.Opacity = 0.7; $sub.VerticalAlignment = 'Center'
-        [System.Windows.Controls.DockPanel]::SetDock($icon, 'Left'); [System.Windows.Controls.DockPanel]::SetDock($sub, 'Right')
-        $title = New-Text $item.Text 14; $title.VerticalAlignment = 'Center'; $title.TextWrapping = 'NoWrap'; $title.TextTrimming = 'CharacterEllipsis'
-        [void]$dock.Children.Add($icon); [void]$dock.Children.Add($sub); [void]$dock.Children.Add($title)
-        $row.Child = $dock
-        $row.Tag = $script:spotRows.Count
-        $row.Add_MouseEnter({ $script:spotSel = $this.Tag; Update-SpotSelection })
-        $row.Add_MouseLeftButtonUp({ Invoke-SpotlightItem $this.Tag })
-        [void]$ui.SpotlightResults.Children.Add($row)
-        $script:spotRows += $row; $script:spotList += $item
+    $words = @(if ($q) { $q -split '\s+' })
+    $groups = [ordered]@{}
+    if (!$q) {
+        # Nothing typed: the items opened last from the search
+        $recent = @(foreach ($id in @(Get-RegValue $settingsKey 'SpotRecent')) { $script:spotItems | Where-Object { $_.Id -eq $id } | Select-Object -First 1 })
+        if (!$recent) { $ui.SpotlightLine.Visibility = 'Collapsed'; return }
+        $groups[(T 'spot.recent')] = $recent
+    } else {
+        # Order: the title starts with the search, then every word in the names, then words found in the description
+        $ranked = for ($i = 0; $i -lt $script:spotItems.Count; $i++) {
+            $item = $script:spotItems[$i]
+            if (!($words | Where-Object { !(Test-SpotWord $item.Name $_) })) { $rank = if ($item.Text.ToLowerInvariant().StartsWith($q)) { 0 } else { 1 } }
+            elseif (!($words | Where-Object { !(Test-SpotWord "$($item.Name) $($item.Desc)" $_) })) { $rank = 2 }
+            else { continue }
+            [pscustomobject]@{ Item = $item; Rank = $rank; Index = $i }
+        }
+        $found = @($ranked | Sort-Object Rank, Index | Select-Object -First 8 | ForEach-Object { $_.Item })
+        $found += @{ Text = (T 'spot.atlas') -f $text; Sub = (T 'tweaks.system'); Glyph = [string][char]0xE721; Data = $text
+                     Action = { param($d) $ui.NavTweaks.IsChecked = $true; $ui.SystemSearch.Text = $d } }
+        # Grouped by kind (Page, Setting, App...), the groups in the order of their best result
+        foreach ($item in $found) {
+            if (!$groups.Contains($item.Sub)) { $groups[$item.Sub] = New-Object System.Collections.ArrayList }
+            [void]$groups[$item.Sub].Add($item)
+        }
+    }
+    foreach ($key in $groups.Keys) {
+        $head = New-Text $key 11 'SemiBold'; $head.Opacity = 0.6; $head.Margin = '10,6,0,2'
+        [void]$ui.SpotlightResults.Children.Add($head)
+        foreach ($item in $groups[$key]) { Add-SpotRow $item $words }
     }
     $ui.SpotlightLine.Visibility = 'Visible'
     $script:spotSel = 0
@@ -2878,6 +3603,10 @@ function Close-Spotlight { $ui.Spotlight.Visibility = 'Collapsed' }
 function Invoke-SpotlightItem([int]$index) {
     if ($index -lt 0 -or $index -ge $script:spotList.Count) { return }
     $item = $script:spotList[$index]
+    if ($item.Id) {
+        $ids = @(@($item.Id) + @(@(Get-RegValue $settingsKey 'SpotRecent') | Where-Object { $_ -and $_ -ne $item.Id }) | Select-Object -First 5)
+        Save-Setting SpotRecent ([string[]]$ids)
+    }
     Close-Spotlight
     try { & $item.Action $item.Data } catch { Set-Status $_.Exception.Message }
 }
@@ -2905,6 +3634,23 @@ function Set-AppLanguage([string]$l) {
     Save-Setting Language $l
     Update-Language
 }
+# Narrow sidebar: icons only, the page names show as tooltips
+$navButtons = @($ui.NavDashboard, $ui.NavGaming, $ui.NavBoost, $ui.NavTweaks, $ui.NavHealth, $ui.NavCleaner, $ui.NavAppearance, $ui.NavAbout)
+$script:compact = $false
+function Set-Compact([bool]$on) {
+    $script:compact = $on
+    $ui.SideColumn.Width = New-Object System.Windows.GridLength ($(if ($on) { 96 } else { 248 }))
+    $vis = if ($on) { 'Collapsed' } else { 'Visible' }
+    $ui.Brand.Visibility = $vis; $ui.SpotlightButton.Visibility = $vis; $ui.SideBottom.Visibility = $vis
+    foreach ($b in $navButtons) {
+        $label = $b.Content.Children[1]
+        $label.Visibility = $vis
+        $b.ToolTip = if ($on) { $label.Text } else { $null }
+    }
+    $ui.SidebarToggle.ToolTip = T $(if ($on) { 'side.wide' } else { 'side.narrow' })
+}
+$ui.SidebarToggle.Add_Click({ Set-Compact (!$script:compact); Save-Setting Compact ([int]$script:compact) })
+Set-Compact ((Get-RegValue $settingsKey 'Compact') -eq 1 -and !$Screenshot)
 $ui.LangButton.Add_Click({ Set-AppLanguage $(if ($lang -eq 'th') { 'en' } else { 'th' }) })
 function Update-Language {
     Set-Language
@@ -2912,6 +3658,10 @@ function Update-Language {
     Update-Clock
     Update-Chips
     Update-AntiCheat
+    if ($script:doctorResult) { Show-Doctor $script:doctorResult }
+    if ($script:healthResult) { Show-HealthInfo $script:healthResult }
+    Show-History; Update-WuState; Update-TempText; Update-Fivem
+    Set-Compact $script:compact
     if ($stats.Top) { Show-TopApps }
     foreach ($a in $apps) { if ($a.State -ne 'install') { Update-AppRow $a } }
     Update-AppsToolbar
@@ -2963,7 +3713,7 @@ $window.Add_PreviewKeyDown({
         $ui.NavTweaks.IsChecked = $true
         [void]$ui.SystemSearch.Focus(); $ui.SystemSearch.SelectAll()
         $e.Handled = $true
-    } elseif ($key -match '^(D|NumPad)([1-7])$') {
+    } elseif ($key -match '^(D|NumPad)([1-8])$') {
         $ui["Nav$(Get-PageId $pages[[int]$Matches[2] - 1])"].IsChecked = $true
         $e.Handled = $true
     }
@@ -2981,6 +3731,16 @@ if ($Page -and $pages -contains $Page.ToLowerInvariant()) {
 }
 # The desktop menu is rebuilt each time the window opens (apps, language, task for this user)
 Request-MenuUpdate
+# Akati Doctor once in the background a few seconds after start, for the Health chip on the Dashboard
+if (!$Screenshot) {
+    $doctorTimer = New-Object System.Windows.Threading.DispatcherTimer
+    $doctorTimer.Interval = [TimeSpan]::FromSeconds(5)
+    $doctorTimer.Add_Tick({
+        $doctorTimer.Stop()
+        if (!$script:doctorResult) { Start-Work $doctorWork @() { param($r) Show-Doctor (Get-LastOutput $r); Update-Chips } $null }
+    })
+    $doctorTimer.Start()
+}
 
 # ---------------------------------------------------------------------------------------------
 # Screenshot mode (CI): render every page in both languages to PNG and exit
@@ -3034,12 +3794,26 @@ if ($Screenshot) {
                     $mf = [IO.File]::Create((Join-Path $Screenshot "menu-$l.png")); $me.Save($mf); $mf.Close()
                 } catch { Write-Host "Menu screenshot failed: $($_.Exception.Message)" }
             }
-            if ($p -eq 'appearance' -or $p -eq 'tweaks' -or $p -eq 'boost' -or $p -eq 'gaming') {
+            if ($p -eq 'appearance' -or $p -eq 'tweaks' -or $p -eq 'boost' -or $p -eq 'gaming' -or $p -eq 'health') {
                 # The lower part of long pages
                 $sv = $ui["Page$(Get-PageId $p)"]
                 if ($p -eq 'tweaks') {
                     # The middle of the page: the Network, Display and Memory sections
                     $sv.UpdateLayout(); $sv.ScrollToVerticalOffset(560); $sv.UpdateLayout()
+                    Save-Shot "$p-$l-mid.png"
+                    # The Services section
+                    $top = $tweakLists['services'].TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
+                    $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 60)); $sv.UpdateLayout()
+                    Save-Shot "$p-$l-services.png"
+                }
+                if ($p -eq 'boost') {
+                    # My games with one game (CI runner: Notepad) and the FiveM card
+                    if (!(Test-Path $gamesKey)) { New-Item -Path $gamesKey -Force | Out-Null }
+                    Set-ItemProperty -Path $gamesKey -Name (Join-Path $windir 'notepad.exe') -Value 1 -Type DWord -Force
+                    Set-GameProfile (Join-Path $windir 'notepad.exe') 'boost' 1; Set-GameProfile (Join-Path $windir 'notepad.exe') 'hvci' 0
+                    Show-Games
+                    $top = $ui.GamesList.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
+                    $sv.UpdateLayout(); $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 80)); $sv.UpdateLayout()
                     Save-Shot "$p-$l-mid.png"
                 }
                 $sv.UpdateLayout(); $sv.ScrollToVerticalOffset(100000); $sv.UpdateLayout()
@@ -3053,6 +3827,12 @@ if ($Screenshot) {
         $ui.Welcome.Visibility = 'Collapsed'
         Show-WhatsNew; Save-Shot "whatsnew-$l.png"; $ui.WhatsNew.Visibility = 'Collapsed'
         Open-Spotlight; $ui.SpotlightBox.Text = 'dns'; Save-Shot "spotlight-$l.png"; Close-Spotlight
+        # Narrow sidebar, restart bar, the message after a change and one "What it changes" box open
+        Set-Compact $true; $ui.RestartBar.Visibility = 'Visible'; Show-Toast ((T 'toast.on') -f (T 'tw.timer')) @{}
+        $box = @($tweaks | Where-Object { $_.Key -eq 'timer' } | ForEach-Object { $_.Sub.Parent.Children } | Where-Object { $_ -is [System.Windows.Controls.TextBox] })[0]
+        if ($box) { $box.Visibility = 'Visible' }
+        $ui.NavTweaks.IsChecked = $true; Save-Shot "extras-$l.png"
+        Set-Compact $false; $ui.RestartBar.Visibility = 'Collapsed'; $ui.Toast.Visibility = 'Collapsed'; if ($box) { $box.Visibility = 'Collapsed' }
     }
     # Accent colors recolor the window
     Set-CenterAccent $accents[1]; $ui.NavGaming.IsChecked = $true; Save-Shot 'accent-blue.png'

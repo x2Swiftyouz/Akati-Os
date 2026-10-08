@@ -3,7 +3,26 @@
 ## v1.4.1
 
 ### Added
-- Setup option **Turn off more unused services** (ticked, on the Microsoft Store page): maps, phone, smart card, payments and NFC, wallet, parental controls, retail demo, Windows Insider, AllJoyn, fax, media sharing and recommended troubleshooting. Switch in Akati OS Center > Tweaks to turn them off or back to the Windows defaults
+- **Performance widget**: a small bar on top of other windows and borderless games with CPU, RAM, GPU, GPU temperature (NVIDIA) and ping. Open it from the icon next to the clock or Tweaks > System; drag to move, right-click to close; it comes back at sign-in while it was open
+- Appearance: **Style presets** (Neon, Ocean, Ember, Sakura, Stealth for OLED screens) set the wallpaper, accent color, Akati OS Center look, cursor and sounds in one click, and an accent color **from the wallpaper** (the most colorful hue of your desktop picture)
+- Three new wallpapers: **OLED** and **OLED logo** (true black, so OLED pixels stay off) and **Ember**
+- Tweaks > **Windows look**: dark mode, accent color on title bars and the taskbar, transparency effects
+- Dashboard: a **Health** chip shows what Akati Doctor found (click to open the Health page)
+- New **Health** page in Akati OS Center (Ctrl+5):
+  - **Akati Doctor** checks the icon next to the clock, the desktop menu, the power plan, free space, a waiting restart, Memory integrity, devices with a problem and blue screens, with a button that fixes or opens each one, and **Repair Windows files** (DISM and SFC)
+  - On Windows builds that do not record the startup time (imOS), a **Record the startup time** button turns the Diagnostics-Performance log on; the time shows after the next restart
+  - How long Windows took to start (last and average), and the temperatures Windows reports (ACPI thermal zone, NVIDIA GPU; also as chips on the Dashboard, orange from 80 °C and red from 90 °C). No sensor driver is installed, so anti-cheats are not affected
+  - Crashes of the last 30 days: blue screens with their code, sudden power loss and apps that stopped working
+  - **Windows Update**: pause for 1 or 5 weeks, resume, and the date the pause ends
+  - **Change history**: the last 30 switches you changed, each with Undo
+  - **Backup**: saves the settings, My games with their profiles and every switch to a .json file, and restores them on a new install
+- Tweaks > Input and latency: **Mouse acceleration** (Enhance pointer precision, applies at once), **Lower other sounds during calls** and **Short key repeat delay**
+- **My games, one click to play**: each game has a **Play** button and its own profile: start Game boost first, keep the game off CPU 0 (the icon next to the clock does it while the game runs) and the Memory integrity setting it needs (on for Valorant, off for FiveM; Play offers to switch and restart)
+- Game boost > **FiveM**: finds FiveM, clears its cache folders (game files and settings stay), opens its folder, adds it to My games, and tests the connection time to your server (IP or IP:port)
+- Icon next to the clock: **Anti-cheat mode** and **Power plan** submenus, and keys that work in games: **Ctrl+Alt+B** starts or stops Game boost, **Ctrl+Alt+R** frees up RAM (switch in Tweaks > System). Automatic Game boost also notices the FiveM game process
+- Starting Game boost plays a short sound and the icon pulses (can be turned off on the Game boost page)
+- Setup option **Turn off more unused services** (ticked, on the Microsoft Store page): maps, phone, smart card, payments and NFC, wallet, parental controls, retail demo, Windows Insider, AllJoyn, fax, media sharing and recommended troubleshooting. Switch in Akati OS Center > Tweaks to turn them off or back to the Windows defaults. Also WAP Push, Remote Desktop, WinRM, smart card certificates, Hyper-V guest services and the Edge updaters
+- Akati OS Center > Tweaks > **Services**: switches for Xbox services, IP Helper, Windows Hello biometrics, scanners and cameras (WIA), Mobile hotspot, the notification service and Connected Devices (not changed during setup)
 - Game boost > **Anti-cheat mode**: Valorant mode turns Memory integrity (HVCI) on, FiveM mode turns it off, shows the current state and offers a restart
 - **Akati OS icon next to the clock** (setup option on the Notifications page, ticked; switch in Tweaks): CPU and RAM when you point at it, a menu with your apps and tools, and the **automatic Game boost**: it starts when a game from My games opens and stops when the game closes (Game boost page)
 - **Search everything with Ctrl+K** (or the search field in the sidebar): pages, settings, gaming apps, your games and actions such as free up RAM, flush DNS or start Game boost, in English and Thai
@@ -18,6 +37,8 @@
 - Setup page **Notifications and Game Bar** (both ticked by default): turns off Windows notifications and Xbox Game Bar (Win+G, background clip recording, controller button). Both can be turned on again in Windows Settings; Game Mode is not changed
 
 ### Changed
+- The `.apbx` files are 7z archives (password `malte`) as the AME Wizard docs describe, instead of zip archives. They are also about a quarter smaller
+- Ctrl+K search: names come before descriptions, and a word only matches at the start of a word, so "ram" finds Free up RAM first and no longer finds settings that only mention "frame"
 - New Akati OS logo: a white peak with a play arrow on a purple to pink tile, the same in AME Wizard (`playbook.png`), Akati OS Center, the shortcuts, the icon next to the clock, the desktop menu and the default account picture. Drawn from code by `tools/make-assets.py logos`
 - The Windows 11 file is now `AkatiOS-Win11_v<version>.apbx` and shows as **AkatiOS11** / "Akati OS v<version> for Windows 11" in AME Wizard, so it is clear which file is for Windows 11 and which for Windows 10 (`AkatiOS-Win10_v<version>.apbx`, **AkatiOS10**). The README has a table of which file to use
 - **Akati OS names everywhere you look**: the power plan is "Akati OS Power Scheme", script windows and setup texts say Akati OS, the setup pages point to Akati OS Center (Tweaks) instead of the Atlas folder, the Tweaks section is just "System", and the links to the AtlasOS website, Discord and documentation are removed from the settings (one link to the Akati OS GitHub page instead). The credit to AtlasOS (GPL-3.0) stays in CREDITS.txt, the README, the setup description and the About page
@@ -28,6 +49,7 @@
 - The System settings page is now part of **Tweaks**: gaming switches on top, then every AtlasOS setting with search and the restore point. Ctrl+1 to Ctrl+7 switch pages, Ctrl+F opens the search in Tweaks
 
 ### Fixed
+- Anti-cheat mode on Windows builds that cannot report Memory integrity (no DeviceGuard WMI provider, seen on imOS 10): it no longer shows "restart to apply" forever, and asks for a restart only after a change
 - The search field in the Akati OS Center sidebar stayed "Search" in Thai. `tools/test-center.ps1` now also fails on texts placed where the language switch cannot reach them
 - The Akati OS icon next to the clock and the desktop menu task were not set up during setup: AME Wizard runs that step as SYSTEM, so the task was registered for the computer account ("No mapping between account names and security IDs"). The tasks are now registered for the signed-in user
 - Settings of Akati OS Center (language, My games, automatic Game boost) were erased when a desktop menu item ran with administrator rights or when automatic Game boost was switched in the tray menu; the setup also erased the "icon wanted" mark when it wrote the version. Existing registry keys are no longer recreated

@@ -58,6 +58,16 @@ $appKeys = [regex]::Matches($ps1, "@\{ Key = '(\w+)';\s+Cat = ") | ForEach-Objec
 if (!$appKeys) { Fail 'No gaming apps found in AkatiCenter.ps1' }
 foreach ($k in $appKeys) { if ($gameApps -notmatch "(?m)^\s+$k\s+= @\{") { Fail "GAMEAPPS.ps1 cannot install '$k'" } }
 
+# The services the setup option turns off are the ones the Tweaks switch turns back on
+$extraBlock = [regex]::Match($ps1, '(?s)extra\s+=\s+\[ordered\]@\{(.*?)\}').Groups[1].Value
+$centerServices = @([regex]::Matches($extraBlock, '(\w+)\s*=\s*\d') | ForEach-Object { $_.Groups[1].Value } | Sort-Object)
+foreach ($tree in 'src', 'src-win10') {
+    $yml = Get-Content -Raw -Encoding UTF8 (Join-Path $root "$tree/Configuration/tweaks/misc/akati-services.yml")
+    $list = [regex]::Match($yml, "(?s)foreach \(\`$name in (.*?)\) \{").Groups[1].Value
+    $setupServices = @([regex]::Matches($list, "'(\w+)'") | ForEach-Object { $_.Groups[1].Value } | Sort-Object)
+    if (!$centerServices -or ($centerServices -join ',') -ne ($setupServices -join ',')) { Fail "$tree akati-services.yml and `$serviceGroups.extra list different services" }
+}
+
 # Both playbooks ship the same Akati OS Center
 foreach ($f in Get-ChildItem -LiteralPath $center -File) {
     $other = Join-Path $root "src-win10/Executables/AtlasModules/AkatiCenter/$($f.Name)"

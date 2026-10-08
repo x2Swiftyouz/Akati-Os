@@ -79,11 +79,11 @@ Some anti-cheat systems (for example Valorant Vanguard and FACEIT) need Defender
 
 ## Build from source
 
-The Windows 11 playbook source is in `src/`, the Windows 10 one in `src-win10/`. Each `.apbx` file is a zip archive of one of them with the password `malte` (the AME Wizard default). From the repository root:
+The Windows 11 playbook source is in `src/`, the Windows 10 one in `src-win10/`. Each `.apbx` file is a 7z archive (as the AME Wizard docs describe) of one of them with the password `malte` (the AME Wizard default). From the repository root:
 
 ```
 .\build.ps1     # Windows, needs 7-Zip (winget install 7zip.7zip)
-./build.sh      # Linux/macOS, needs 7z or zip
+./build.sh      # Linux/macOS, needs 7-Zip (7z, 7zz or 7za)
 ```
 
 The output is `dist/AkatiOS-Win11_v<version>.apbx`, `dist/AkatiOS-Win10_v<version>.apbx` and `dist/SHA256SUMS.txt`.

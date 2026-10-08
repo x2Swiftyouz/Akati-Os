@@ -38,6 +38,7 @@ $texts = @{
         freed = 'Freed {0} of RAM'; dnsdone = 'DNS cache cleared'; biosask = 'Restart now and open the BIOS (UEFI) settings? Save your work first.'
         biosfail = 'This PC cannot restart into the BIOS from Windows (needs UEFI).'; failed = 'Did not work: {0}'
         boostStarted = 'Game boost on'; boostStopped = 'Game boost off'
+        hvciOn = 'Valorant mode: Memory integrity on after a restart'; hvciOff = 'FiveM mode: Memory integrity off after a restart'
     }
     th = @{
         root = 'Akati OS'; freeram = 'ล้าง RAM'; center = 'เปิด Akati OS Center'; apps = 'แอปของฉัน'; appsmore = 'แอปเกม...'
@@ -46,6 +47,7 @@ $texts = @{
         freed = 'คืน RAM ได้ {0}'; dnsdone = 'ล้าง DNS cache แล้ว'; biosask = 'รีสตาร์ตตอนนี้แล้วเข้าหน้าตั้งค่า BIOS (UEFI) ใช่ไหม บันทึกงานก่อน'
         biosfail = 'เครื่องนี้รีสตาร์ตเข้า BIOS จาก Windows ไม่ได้ (ต้องเป็น UEFI)'; failed = 'ไม่สำเร็จ: {0}'
         boostStarted = 'เปิดบูสต์เกมแล้ว'; boostStopped = 'ปิดบูสต์เกมแล้ว'
+        hvciOn = 'โหมด Valorant: เปิด Memory integrity หลังรีสตาร์ต'; hvciOff = 'โหมด FiveM: ปิด Memory integrity หลังรีสตาร์ต'
     }
 }
 if (!$texts.ContainsKey($lang)) { $lang = 'en' }
@@ -233,6 +235,15 @@ public static class AkatiMenuMemory {
             # The menu shows Start or Stop: rebuild it, only if the user has it
             if (Test-Path $menuKey) { Build-Menu }
         }
+        { $_ -in 'hvcion', 'hvcioff' } {
+            # Anti-cheat mode: the same two values as the Core isolation switch in Akati OS Center
+            $on = [int]($item -eq 'hvcion')
+            $dg = 'HKLM:\SYSTEM\CurrentControlSet\Control\DeviceGuard'
+            foreach ($k in $dg, "$dg\Scenarios\HypervisorEnforcedCodeIntegrity") { if (!(Test-Path $k)) { New-Item -Path $k -Force | Out-Null } }
+            Set-ItemProperty -Path "$dg\Scenarios\HypervisorEnforcedCodeIntegrity" -Name Enabled -Value $on -Type DWord -Force
+            Set-ItemProperty -Path $dg -Name EnableVirtualizationBasedSecurity -Value $on -Type DWord -Force
+            $result = T $(if ($on) { 'hvciOn' } else { 'hvciOff' })
+        }
         'bios' {
             & shutdown.exe /r /fw /t 0 *> $null
             if ($LASTEXITCODE -ne 0) { $result = T 'biosfail' }
@@ -247,6 +258,8 @@ switch ($Action) {
     'boost'    { Invoke-Elevated 'boost' }
     'booston'  { Invoke-Elevated 'booston' }
     'boostoff' { Invoke-Elevated 'boostoff' }
+    'hvcion'   { Invoke-Elevated 'hvcion' }
+    'hvcioff'  { Invoke-Elevated 'hvcioff' }
     'bios' {
         Add-Type -AssemblyName PresentationFramework
         if ([System.Windows.MessageBox]::Show((T 'biosask'), 'Akati OS', 'YesNo', 'Warning') -eq 'Yes') { Invoke-Elevated 'bios' }

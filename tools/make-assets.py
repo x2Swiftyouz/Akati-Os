@@ -74,6 +74,26 @@ def make_wallpapers():
               (2950, 650, 250, 120, 11, 70), (150, 120, 200))
 
 
+
+def make_more_wallpapers():
+    """OLED wallpapers (true black, so the pixels of an OLED screen stay off) and Ember."""
+    wallpaper('akatios-oled.png', (0, 0, 0), [], (1920, 1080, 300, 140, 9, 34), (150, 90, 230))
+    # Black with the Akati OS mark in the middle, dimmed
+    out = Image.new('RGBA', (W, H), (0, 0, 0, 255))
+    s = LOGO
+    mark = Image.new('RGBA', (s, s), (0, 0, 0, 0))
+    logo_mark(ImageDraw.Draw(mark), s)
+    mark = mark.resize((360, 360), Image.LANCZOS)
+    mark.putalpha(mark.getchannel('A').point(lambda v: int(v * 0.35)))
+    out.alpha_composite(mark, ((W - 360) // 2, (H - 360) // 2))
+    for tree in TREES:
+        out.convert('RGB').save(os.path.join(tree, 'Executables', 'AtlasModules', 'Wallpapers', 'akatios-oled-logo.png'), optimize=True)
+    print('wallpaper akatios-oled-logo.png')
+    wallpaper('akatios-ember.png', (10, 4, 4),
+              [(0.2, 0.85, 0.55, (190, 50, 30), 0.8), (0.85, 0.2, 0.5, (150, 30, 60), 0.75), (0.55, 0.65, 0.3, (230, 120, 40), 0.45)],
+              (2900, 650, 250, 120, 11, 55), (255, 190, 160))
+
+
 # ---------------------------------------------------------------------------------------------
 # Cursors: a white arrow with a dark outline and an Akati OS purple edge, plus busy rings.
 # Each .cur holds several sizes (Windows picks one for the cursor size setting).
@@ -320,11 +340,13 @@ def make_logos():
 
 
 if __name__ == '__main__':
-    # python3 tools/make-assets.py [wallpapers] [cursors] [sounds] [logos]  (nothing: all)
+    # python3 tools/make-assets.py [wallpapers] [more] [cursors] [sounds] [logos]  (nothing: all; more: only the OLED and Ember wallpapers)
     import sys
     parts = sys.argv[1:] or ['wallpapers', 'cursors', 'sounds', 'logos']
     if 'wallpapers' in parts:
         make_wallpapers()
+    if 'wallpapers' in parts or 'more' in parts:
+        make_more_wallpapers()
     if 'cursors' in parts:
         make_cursors()
     if 'sounds' in parts:

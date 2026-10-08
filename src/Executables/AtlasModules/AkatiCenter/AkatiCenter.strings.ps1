@@ -107,6 +107,7 @@ $strings = @{
         'fps.boost.on' = 'Game boost on'; 'fps.boost.off' = 'Game boost off'; 'fps.diff.boost' = '{0}% with Game boost'; 'fps.diff.noboost' = '{0}% without Game boost'
         'look.time' = 'By time'; 'games.played' = 'played {0}'; 'games.hours' = '{0} h {1} min'; 'games.minutes' = '{0} min'; 'games.last' = 'last {0}'
         'autoclean.title' = 'Clean automatically every week'; 'autoclean.sub' = 'Sundays at 12:00 (or when the PC is on next). The items ticked by default; not the browser caches or the Recycle Bin.'
+        'autoclean.failed' = 'Automatic clean could not be turned on: {0}'
         'autoclean.last' = 'Last automatic clean: {0}, {1} freed'; 'autoclean.on' = 'Automatic clean is on (every Sunday)'; 'autoclean.off' = 'Automatic clean is off'
         'tour.start' = 'Take the tour (F1)'; 'tour.next' = 'Next'; 'tour.done' = 'Done'; 'tour.skip' = 'Skip'
         'tour.1' = 'Dashboard'; 'tour.1.d' = 'CPU, RAM, GPU, network and ping at a glance. The chip with your Akati Score opens the Health page.'
@@ -381,6 +382,7 @@ $strings = @{
         'fps.boost.on' = 'เปิดบูสต์เกม'; 'fps.boost.off' = 'ปิดบูสต์เกม'; 'fps.diff.boost' = '{0}% เมื่อเปิดบูสต์เกม'; 'fps.diff.noboost' = '{0}% เมื่อปิดบูสต์เกม'
         'look.time' = 'ตามเวลา'; 'games.played' = 'เล่นไปแล้ว {0}'; 'games.hours' = '{0} ชม. {1} นาที'; 'games.minutes' = '{0} นาที'; 'games.last' = 'ล่าสุด {0}'
         'autoclean.title' = 'ล้างไฟล์ขยะอัตโนมัติทุกสัปดาห์'; 'autoclean.sub' = 'ทุกวันอาทิตย์ 12:00 (หรือเมื่อเปิดเครื่องครั้งถัดไป) เฉพาะรายการที่ติ๊กไว้ตั้งต้น ไม่รวมแคชเบราว์เซอร์และถังขยะ'
+        'autoclean.failed' = 'เปิดล้างอัตโนมัติไม่สำเร็จ: {0}'
         'autoclean.last' = 'ล้างอัตโนมัติล่าสุด: {0} ได้พื้นที่คืน {1}'; 'autoclean.on' = 'เปิดล้างอัตโนมัติแล้ว (ทุกวันอาทิตย์)'; 'autoclean.off' = 'ปิดล้างอัตโนมัติแล้ว'
         'tour.start' = 'แนะนำการใช้งาน (F1)'; 'tour.next' = 'ถัดไป'; 'tour.done' = 'เสร็จ'; 'tour.skip' = 'ข้าม'
         'tour.1' = 'แดชบอร์ด'; 'tour.1.d' = 'ดู CPU, RAM, GPU, เน็ตและปิงได้ในที่เดียว ชิป Akati Score กดแล้วไปหน้าสุขภาพเครื่อง'
@@ -551,6 +553,7 @@ $strings = @{
     }
     # Vietnamese (translated from English; corrections welcome in a GitHub issue)
     vi = @{
+        'autoclean.failed' = 'Không bật được dọn dẹp tự động: {0}'
         'ac.fivem' = 'Chế độ FiveM'
         'ac.off' = 'Tính toàn vẹn bộ nhớ: tắt (chế độ FiveM)'
         'ac.on' = 'Tính toàn vẹn bộ nhớ: bật (chế độ Valorant)'
@@ -1149,6 +1152,7 @@ $strings = @{
     }
     # Indonesian (translated from English; corrections welcome in a GitHub issue)
     id = @{
+        'autoclean.failed' = 'Pembersihan otomatis tidak bisa diaktifkan: {0}'
         'ac.fivem' = 'Mode FiveM'
         'ac.off' = 'Integritas memori: mati (mode FiveM)'
         'ac.on' = 'Integritas memori: aktif (mode Valorant)'

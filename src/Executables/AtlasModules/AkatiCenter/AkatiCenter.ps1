@@ -778,6 +778,15 @@ $window.Add_Loaded({
         Start-Work { param($script)
             if (!(Get-ScheduledTask -TaskPath '\AkatiOS\' -TaskName 'Akati OS tray' -ErrorAction SilentlyContinue)) {
                 & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $script -Install
+                return
+            }
+            # After an update of Akati OS the icon still runs the old script until the next sign-in: restart it
+            $changed = (Get-Item -LiteralPath $script).LastWriteTime
+            $old = @(Get-CimInstance Win32_Process -Filter "Name='powershell.exe'" -ErrorAction SilentlyContinue |
+                Where-Object { $_.CommandLine -like '*AkatiTray.ps1*' -and $_.CommandLine -notlike '*-Install*' -and $_.CreationDate -lt $changed })
+            if ($old.Count) {
+                $old | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+                Start-ScheduledTask -TaskPath '\AkatiOS\' -TaskName 'Akati OS tray' -ErrorAction SilentlyContinue
             } } @((Join-Path $appDir 'AkatiTray.ps1'))
     }
     $script:statsHandle = $statsPs.BeginInvoke()

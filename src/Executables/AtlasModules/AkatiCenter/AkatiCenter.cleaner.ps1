@@ -73,9 +73,12 @@ function Update-AutoClean {
 $ui.AutoCleanToggle.IsChecked = !$Screenshot -and [bool](Get-ScheduledTask -TaskPath '\AkatiOS\' -TaskName 'Akati OS clean' -ErrorAction SilentlyContinue)
 $ui.AutoCleanToggle.Add_Click({
     $on = [bool]$this.IsChecked
-    Start-Work { param($file, $on) & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $file $(if ($on) { '-RegisterTask' } else { '-RemoveTask' }) } @((Join-Path $appDir 'AkatiClean.ps1'), $on) {
+    Start-Work { param($file, $on) (& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $file $(if ($on) { '-RegisterTask' } else { '-RemoveTask' }) 2>&1 | Out-String).Trim() } @((Join-Path $appDir 'AkatiClean.ps1'), $on) {
         param($r, $on)
         $ui.AutoCleanToggle.IsChecked = [bool](Get-ScheduledTask -TaskPath '\AkatiOS\' -TaskName 'Akati OS clean' -ErrorAction SilentlyContinue)
+        $out = [string](Get-LastOutput $r)
+        # Turned on but no task: show why
+        if ($on -and !$ui.AutoCleanToggle.IsChecked) { Set-Status ((T 'autoclean.failed') -f $out); return }
         Set-Status (T $(if ($ui.AutoCleanToggle.IsChecked) { 'autoclean.on' } else { 'autoclean.off' }))
     } $on
 })

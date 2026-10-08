@@ -80,13 +80,26 @@ $cleanWork = {
 }
 
 if ($RegisterTask) {
-    $ps = Join-Path $windir 'System32\WindowsPowerShell\v1.0\powershell.exe'
-    $action = New-ScheduledTaskAction -Execute $ps -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$PSCommandPath`" -CleanNow"
-    $trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Sunday -At 12:00
-    $principal = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive -RunLevel Highest
-    $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Hours 1)
-    Register-ScheduledTask -TaskPath '\AkatiOS\' -TaskName 'Akati OS clean' -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force | Out-Null
-    return
+    # The reason of a failure is printed (Akati OS Center shows it) and written to %ProgramData%\AkatiOS\AkatiClean.log
+    try {
+        $ps = Join-Path $windir 'System32\WindowsPowerShell\v1.0\powershell.exe'
+        $action = New-ScheduledTaskAction -Execute $ps -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$PSCommandPath`" -CleanNow"
+        $trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Sunday -At ([datetime]::Today.AddHours(12))
+        $user = [Security.Principal.WindowsIdentity]::GetCurrent().Name
+        $principal = New-ScheduledTaskPrincipal -UserId $user -LogonType Interactive -RunLevel Highest
+        $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Hours 1)
+        Register-ScheduledTask -TaskPath '\AkatiOS\' -TaskName 'Akati OS clean' -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force -ErrorAction Stop | Out-Null
+        exit 0
+    } catch {
+        $message = "Akati OS clean task: $($_.Exception.Message)"
+        try {
+            $dir = Join-Path $env:ProgramData 'AkatiOS'
+            if (!(Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
+            Add-Content -Path (Join-Path $dir 'AkatiClean.log') -Value "$(Get-Date -Format s) $message"
+        } catch { }
+        Write-Output $message
+        exit 1
+    }
 }
 if ($RemoveTask) {
     Unregister-ScheduledTask -TaskPath '\AkatiOS\' -TaskName 'Akati OS clean' -Confirm:$false -ErrorAction SilentlyContinue

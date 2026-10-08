@@ -26,6 +26,7 @@
 - The System settings page is now part of **Tweaks**: gaming switches on top, then every AtlasOS setting with search and the restore point. Ctrl+1 to Ctrl+7 switch pages, Ctrl+F opens the search in Tweaks
 
 ### Fixed
+- The search field in the Akati OS Center sidebar stayed "Search" in Thai. `tools/test-center.ps1` now also fails on texts placed where the language switch cannot reach them
 - The Akati OS icon next to the clock and the desktop menu task were not set up during setup: AME Wizard runs that step as SYSTEM, so the task was registered for the computer account ("No mapping between account names and security IDs"). The tasks are now registered for the signed-in user
 - Settings of Akati OS Center (language, My games, automatic Game boost) were erased when a desktop menu item ran with administrator rights or when automatic Game boost was switched in the tray menu; the setup also erased the "icon wanted" mark when it wrote the version. Existing registry keys are no longer recreated
 - Setup on Windows builds without `fthsvc.dll` (seen on imOS 10) showed "There was a problem starting fthsvc.dll". The Fault Tolerant Heap reset now only runs when the file exists; FTH is still turned off

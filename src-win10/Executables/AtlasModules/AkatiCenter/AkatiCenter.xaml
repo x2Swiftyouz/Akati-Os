@@ -563,14 +563,14 @@
                     </StackPanel>
 
                     <!-- Search like macOS Spotlight: opens the search over the window (Ctrl+K) -->
-                    <Button x:Name="SpotlightButton" DockPanel.Dock="Top" Cursor="Hand" Margin="0,0,0,12">
+                    <Button x:Name="SpotlightButton" DockPanel.Dock="Top" Cursor="Hand" Margin="0,0,0,12" Tag="t:spot.search" Content="Search">
                         <Button.Template>
                             <ControlTemplate TargetType="Button">
                                 <Border x:Name="Bd" Background="{DynamicResource Field}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="7" Padding="10,6">
                                     <DockPanel>
                                         <TextBlock DockPanel.Dock="Right" Text="Ctrl+K" FontSize="11" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center"/>
                                         <TextBlock Style="{StaticResource Glyph}" Text="&#xE721;" FontSize="12" Foreground="{DynamicResource MutedBrush}" Margin="0,0,8,0"/>
-                                        <TextBlock Tag="t:spot.search" Text="Search" Foreground="{DynamicResource MutedBrush}" FontSize="13" VerticalAlignment="Center"/>
+                                        <ContentPresenter TextElement.Foreground="{DynamicResource MutedBrush}" TextElement.FontSize="13" VerticalAlignment="Center"/>
                                     </DockPanel>
                                 </Border>
                                 <ControlTemplate.Triggers>

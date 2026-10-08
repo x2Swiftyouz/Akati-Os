@@ -39,6 +39,11 @@ foreach ($m in [regex]::Matches($ps1 + $xaml, '[''"]t:([\w.]+)')) {
     if (!$en.ContainsKey($key)) { Fail "Tag t:$key has no text" }
 }
 
+# Text inside a ControlTemplate is not in the logical tree, so Set-Language never translates it
+foreach ($m in [regex]::Matches($xaml, '(?s)<ControlTemplate\b[^>]*>.*?</ControlTemplate>')) {
+    foreach ($t in [regex]::Matches($m.Value, 'Tag="t:([\w.]+)"')) { Fail "Tag t:$($t.Groups[1].Value) is inside a ControlTemplate (not translated)" }
+}
+
 # Names of the window elements
 $names = @([regex]::Matches($xaml, 'x:Name="(\w+)"') | ForEach-Object { $_.Groups[1].Value })
 $used = [regex]::Matches($ps1, '\$ui\.(\w+)') | ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique

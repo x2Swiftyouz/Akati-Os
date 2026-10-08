@@ -151,6 +151,16 @@ jobs:
           Write-Host "Ctrl+Alt+B registered: $($h.Add(1, 0x42))"
           $h.Dispose()
 
+      - name: Check the performance widget window loads
+        shell: powershell
+        run: |
+          Add-Type -AssemblyName PresentationFramework
+          $w = Get-Content -Raw -Encoding UTF8 src\Executables\AtlasModules\AkatiCenter\AkatiWidget.ps1
+          $x = [regex]::Match($w, '(?s)\[xml\]\$xaml = @"\r?\n(.*?)\r?\n"@').Groups[1].Value
+          if (!$x) { Write-Host "::error::No window found in AkatiWidget.ps1"; exit 1 }
+          $window = [Windows.Markup.XamlReader]::Load((New-Object System.Xml.XmlNodeReader ([xml]$x)))
+          Write-Host "Widget window: $($window.Title)"
+
       - name: Render Akati OS Center screenshots
         shell: powershell
         run: |

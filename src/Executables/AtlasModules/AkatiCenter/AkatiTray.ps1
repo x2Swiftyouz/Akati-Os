@@ -20,6 +20,7 @@ param (
 $windir     = [Environment]::GetFolderPath('Windows')
 $ps         = Join-Path $windir 'System32\WindowsPowerShell\v1.0\powershell.exe'
 $menuScript = Join-Path $PSScriptRoot 'AkatiMenu.ps1'
+$widgetScript = Join-Path $PSScriptRoot 'AkatiWidget.ps1'
 $center     = Join-Path $PSScriptRoot 'AkatiCenter.ps1'
 $iconFile   = Join-Path $windir 'AtlasModules\Other\akatios-folder.ico'
 $userKey    = 'HKCU:\Software\AkatiOS\Center'
@@ -98,7 +99,7 @@ $texts = @{
         boostOn = 'Stop Game boost'; boostOff = 'Start Game boost'; auto = 'Automatic Game boost'; clean = 'Clean junk files'
         ping = 'Ping test'; flushdns = 'Flush DNS cache'; quit = 'Hide this icon until the next sign-in'; more = 'Gaming apps...'
         ac = 'Anti-cheat mode'; acValorant = 'Valorant (Core isolation on)'; acFivem = 'FiveM (Core isolation off)'
-        acNote = 'Takes effect after a restart'; power = 'Power plan'
+        acNote = 'Takes effect after a restart'; power = 'Power plan'; widget = 'Performance widget'
         tipKeys = 'Ctrl+Alt+B Game boost · Ctrl+Alt+R Free up RAM'
     }
     th = @{
@@ -106,7 +107,7 @@ $texts = @{
         boostOn = 'หยุดบูสต์เกม'; boostOff = 'เริ่มบูสต์เกม'; auto = 'บูสต์เกมอัตโนมัติ'; clean = 'ล้างไฟล์ขยะ'
         ping = 'ทดสอบปิง'; flushdns = 'ล้าง DNS cache'; quit = 'ซ่อนไอคอนนี้จนกว่าจะล็อกอินใหม่'; more = 'แอปเกม...'
         ac = 'โหมดแอนตี้ชีต'; acValorant = 'Valorant (เปิด Core isolation)'; acFivem = 'FiveM (ปิด Core isolation)'
-        acNote = 'มีผลหลังรีสตาร์ท'; power = 'แผนการใช้พลังงาน'
+        acNote = 'มีผลหลังรีสตาร์ท'; power = 'แผนการใช้พลังงาน'; widget = 'วิดเจ็ตประสิทธิภาพ'
         tipKeys = 'Ctrl+Alt+B บูสต์เกม · Ctrl+Alt+R ล้าง RAM'
     }
 }
@@ -186,6 +187,8 @@ $menu.Add_Opening({
         $p.Add_Click({ & powercfg.exe /setactive $this.Tag 2>$null | Out-Null })
     }
     if ($power.DropDownItems.Count) { [void]$menu.Items.Add($power) }
+    $w = & $add (T 'widget') { Start-Hidden $widgetScript '-Toggle' }
+    $w.Checked = (Get-Setting 'Widget') -eq 1
     [void](& $add (T 'clean') { Start-Hidden $center '-Page cleaner' })
     [void](& $add (T 'ping') { Start-Hidden $center '-Page boost -Ping' })
     [void](& $add (T 'flushdns') { Start-Hidden $menuScript '-Action flushdns' })
@@ -195,6 +198,8 @@ $menu.Add_Opening({
     $e.Cancel = $false
 })
 $notify.ContextMenuStrip = $menu
+# The performance widget comes back at sign-in when it was open
+if ((Get-Setting 'Widget') -eq 1) { Start-Hidden $widgetScript '' }
 
 # Keys that work in any app and game: Ctrl+Alt+B Game boost, Ctrl+Alt+R Free up RAM
 $hotkeys = $null

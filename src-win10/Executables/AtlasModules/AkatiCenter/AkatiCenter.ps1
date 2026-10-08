@@ -484,6 +484,13 @@ function Update-Chips {
     if ($stats.Defender -ge 0) {
         [void]$ui.StatusChips.Children.Add((New-Chip (T $(if ($stats.Defender -eq 1) { 'chip.defender.on' } else { 'chip.defender.off' })) $(if ($stats.Defender -eq 1) { $good } else { '#FF9F0A' })))
     }
+    if ($script:doctorResult -is [hashtable]) {
+        $issues = @($doctorChecks | Where-Object { !$script:doctorResult[$_] }).Count
+        $chip = New-Chip $(if ($issues) { (T 'chip.doctor.bad') -f $issues } else { T 'chip.doctor.ok' }) $(if ($issues) { '#FF9F0A' } else { $good })
+        $chip.Cursor = 'Hand'; $chip.ToolTip = T 'nav.health'
+        $chip.Add_MouseLeftButtonUp({ $ui.NavHealth.IsChecked = $true })
+        [void]$ui.StatusChips.Children.Add($chip)
+    }
     # Orange from 80 °C, red from 90 °C
     foreach ($tp in @(@('chip.temp.sys', $stats.CpuTemp), @('chip.temp.gpu', $stats.GpuTemp))) {
         if ($tp[1] -gt 0) { [void]$ui.StatusChips.Children.Add((New-Chip ((T $tp[0]) -f $tp[1]) $(if ($tp[1] -ge 90) { '#FF453A' } elseif ($tp[1] -ge 80) { '#FF9F0A' } else { $muted }))) }
@@ -1538,6 +1545,7 @@ function Set-ServicesOff($group, [bool]$off) {
         if (Test-Path "$servicesKey\$name") { Set-ItemProperty -Path "$servicesKey\$name" -Name Start -Value $(if ($off) { 4 } else { $group[$name] }) -Type DWord -Force }
     }
 }
+$personalizeKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize'
 $tweaks = @(
     @{ Key = 'hags'; Glyph = [char]0xE7F4; Restart = $true
        Get = { (Get-RegValue $gpuKey 'HwSchMode') -eq 2 }
@@ -1682,6 +1690,33 @@ $tweaks = @(
     @{ Key = 'keydelay'; Group = 'latency'; Glyph = [char]0xE92E; Default = $false
        Get = { (Get-RegValue 'HKCU:\Control Panel\Keyboard' 'KeyboardDelay') -eq '0' }
        Set = { param($on) Set-ItemProperty -Path 'HKCU:\Control Panel\Keyboard' -Name KeyboardDelay -Value $(if ($on) { '0' } else { '1' }) -Type String -Force } }
+    @{ Key = 'widget'; Group = 'system'; Glyph = [char]0xE9D9; Default = $false
+       Get = { (Get-RegValue $settingsKey 'Widget') -eq 1 }
+       Set = { param($on)
+               $running = @(Get-CimInstance Win32_Process -Filter "Name='powershell.exe'" -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like '*AkatiWidget.ps1*' })
+               if ($on -and !$running.Count) { Start-Process -FilePath powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$(Join-Path $appDir 'AkatiWidget.ps1')`"" -WindowStyle Hidden }
+               if (!$on) { $running | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue } }
+               Save-Setting Widget ([int]$on) } }
+    @{ Key = 'darkmode'; Group = 'looks'; Glyph = [char]0xE708; Default = $false
+       Get = { (Get-RegValue $personalizeKey 'AppsUseLightTheme') -eq 0 }
+       Set = { param($on)
+               if (!(Test-Path $personalizeKey)) { New-Item -Path $personalizeKey -Force | Out-Null }
+               Set-ItemProperty -Path $personalizeKey -Name AppsUseLightTheme -Value ([int]!$on) -Type DWord -Force
+               Set-ItemProperty -Path $personalizeKey -Name SystemUsesLightTheme -Value ([int]!$on) -Type DWord -Force
+               Send-SettingChange 'ImmersiveColorSet' } }
+    @{ Key = 'accentbars'; Group = 'looks'; Glyph = [char]0xE790; Default = $false
+       Get = { (Get-RegValue 'HKCU:\Software\Microsoft\Windows\DWM' 'ColorPrevalence') -eq 1 }
+       Set = { param($on)
+               Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\DWM' -Name ColorPrevalence -Value ([int]$on) -Type DWord -Force
+               if (!(Test-Path $personalizeKey)) { New-Item -Path $personalizeKey -Force | Out-Null }
+               Set-ItemProperty -Path $personalizeKey -Name ColorPrevalence -Value ([int]$on) -Type DWord -Force
+               Send-SettingChange 'ImmersiveColorSet' } }
+    @{ Key = 'transparency'; Group = 'looks'; Glyph = [char]0xE727; Default = $true
+       Get = { (Get-RegValue $personalizeKey 'EnableTransparency') -ne 0 }
+       Set = { param($on)
+               if (!(Test-Path $personalizeKey)) { New-Item -Path $personalizeKey -Force | Out-Null }
+               Set-ItemProperty -Path $personalizeKey -Name EnableTransparency -Value ([int]$on) -Type DWord -Force
+               Send-SettingChange 'ImmersiveColorSet' } }
     @{ Key = 'startdelay'; Group = 'system'; Glyph = [char]0xE823; Default = $true
        Get = { (Get-RegValue $serializeKey 'StartupDelayInMSec') -ne 0 }
        Set = { param($on)
@@ -1695,7 +1730,7 @@ $tweaks = @(
 
 # One gray heading and one grouped list per section (Gaming is in the XAML)
 $tweakLists = @{ gaming = $ui.TweaksList }
-foreach ($g in 'latency', 'network', 'graphics', 'system', 'services') {
+foreach ($g in 'latency', 'network', 'graphics', 'system', 'looks', 'services') {
     $head = New-Text (T "tw.group.$g") 13 'SemiBold' "t:tw.group.$g"
     $head.Style = $window.FindResource('Section')
     $card = New-Object System.Windows.Controls.Border
@@ -2424,6 +2459,55 @@ function Set-TerminalAccent($a) {
     [IO.File]::WriteAllText($fragment, ($json | ConvertTo-Json -Depth 5), (New-Object Text.UTF8Encoding $false))
 }
 
+# Center, Windows and Terminal at once; AccentLight is read by the performance widget
+function Use-Accent($acc) {
+    Set-CenterAccent $acc
+    Save-Setting Accent $acc.Key
+    Save-Setting AccentLight $acc.Light
+    if ($acc.Swatch) { $acc.Swatch.IsChecked = $true }
+    try { Set-WindowsAccent $acc; Set-TerminalAccent $acc; Set-Status ((T 'status.accent') -f (T "accent.$($acc.Key)")) }
+    catch { Set-Status $_.Exception.Message }
+}
+# Accent from the wallpaper: the most colorful hue of the desktop picture, in the same shades as the others
+function ConvertFrom-Hsv([double]$h, [double]$s, [double]$v) {
+    $c = $v * $s; $x = $c * (1 - [Math]::Abs((($h / 60) % 2) - 1)); $m = $v - $c
+    $r, $g, $b = switch ([int][Math]::Floor($h / 60) % 6) { 0 { $c, $x, 0 } 1 { $x, $c, 0 } 2 { 0, $c, $x } 3 { 0, $x, $c } 4 { $x, 0, $c } default { $c, 0, $x } }
+    '#{0:X2}{1:X2}{2:X2}' -f [int](($r + $m) * 255), [int](($g + $m) * 255), [int](($b + $m) * 255)
+}
+function New-HueAccent([double]$hue) {
+    @{ Key = 'wallpaper'; Hue = $hue
+       Base = ConvertFrom-Hsv $hue 0.7 0.84; Light = ConvertFrom-Hsv $hue 0.45 0.96
+       G1 = ConvertFrom-Hsv $hue 0.62 0.94; G2 = ConvertFrom-Hsv $hue 0.74 0.78 }
+}
+function Get-WallpaperFile {
+    $file = [string](Get-RegValue 'HKCU:\Control Panel\Desktop' 'WallPaper')
+    if ($file -and (Test-Path -LiteralPath $file)) { $file } else { $null }
+}
+function Get-WallpaperHue {
+    $file = Get-WallpaperFile
+    if (!$file) { return $null }
+    $bmp = New-Object System.Windows.Media.Imaging.BitmapImage
+    $bmp.BeginInit(); $bmp.UriSource = [Uri]$file; $bmp.DecodePixelWidth = 48; $bmp.CacheOption = 'OnLoad'; $bmp.EndInit()
+    $conv = New-Object System.Windows.Media.Imaging.FormatConvertedBitmap $bmp, ([System.Windows.Media.PixelFormats]::Bgra32), $null, 0
+    $w = $conv.PixelWidth; $h = $conv.PixelHeight
+    $px = New-Object byte[] ($w * $h * 4)
+    $conv.CopyPixels($px, $w * 4, 0)
+    # Hue histogram (10 degree bins), weighted by saturation and brightness
+    $bins = New-Object double[] 36
+    for ($i = 0; $i -lt $px.Length; $i += 4) {
+        $b = $px[$i] / 255; $g = $px[$i + 1] / 255; $r = $px[$i + 2] / 255
+        $max = [Math]::Max($r, [Math]::Max($g, $b)); $min = [Math]::Min($r, [Math]::Min($g, $b)); $d = $max - $min
+        if ($d -lt 0.08) { continue }
+        $hue = if ($max -eq $r) { 60 * ((($g - $b) / $d) % 6) } elseif ($max -eq $g) { 60 * (($b - $r) / $d + 2) } else { 60 * (($r - $g) / $d + 4) }
+        if ($hue -lt 0) { $hue += 360 }
+        $bins[[int][Math]::Floor($hue / 10) % 36] += ($d / $max) * ($d / $max) * $max
+    }
+    $best = -1; $score = 0
+    for ($i = 0; $i -lt 36; $i++) { $s = $bins[($i + 35) % 36] * 0.5 + $bins[$i] + $bins[($i + 1) % 36] * 0.5; if ($s -gt $score) { $score = $s; $best = $i } }
+    # A black, white or gray picture has no color to take
+    if ($best -lt 0 -or $score -lt 2) { return $null }
+    $best * 10 + 5
+}
 $savedAccent = Get-RegValue $settingsKey 'Accent'
 foreach ($a in $accents) {
     $sw = New-Object System.Windows.Controls.RadioButton
@@ -2433,19 +2517,40 @@ foreach ($a in $accents) {
     $sw.Tag = $a
     $sw.ToolTip = T "accent.$($a.Key)"
     $sw.IsChecked = ($a.Key -eq $savedAccent) -or (!$savedAccent -and $a.Key -eq 'purple')
-    $sw.Add_Click({
-        $acc = $this.Tag
-        Set-CenterAccent $acc
-        Save-Setting Accent $acc.Key
-        try { Set-WindowsAccent $acc; Set-TerminalAccent $acc; Set-Status ((T 'status.accent') -f (T "accent.$($acc.Key)")) }
-        catch { Set-Status $_.Exception.Message }
-    })
+    $sw.Add_Click({ Use-Accent $this.Tag })
     $a.Swatch = $sw
     [void]$ui.AccentPanel.Children.Add($sw)
     if ($a.Key -eq $savedAccent) { Set-CenterAccent $a }
 }
 
+$wallSwatch = New-Object System.Windows.Controls.RadioButton
+$wallSwatch.Style = $window.FindResource('Swatch'); $wallSwatch.ToolTip = T 'accent.wallpaper'
+function Update-WallSwatch {
+    $file = Get-WallpaperFile
+    $wallSwatch.Background = if ($file) { $b = New-Object System.Windows.Media.ImageBrush (Get-Image $file 80); $b.Stretch = 'UniformToFill'; $b } else { $window.FindResource('Fill') }
+}
+Update-WallSwatch
+$wallSwatch.Add_Click({
+    $hue = try { Get-WallpaperHue } catch { $null }
+    if ($null -eq $hue) { Set-Status (T 'accent.nowallcolor'); $this.IsChecked = $false; return }
+    Save-Setting AccentHue ([int]$hue)
+    Use-Accent (New-HueAccent $hue)
+})
+[void]$ui.AccentPanel.Children.Add($wallSwatch)
+if ($savedAccent -eq 'wallpaper' -and $null -ne (Get-RegValue $settingsKey 'AccentHue')) {
+    $wallSwatch.IsChecked = $true
+    Set-CenterAccent (New-HueAccent ([double](Get-RegValue $settingsKey 'AccentHue')))
+}
+
 # Wallpapers: every picture in the Akati OS wallpaper folder
+function Set-Wallpaper([string]$path) {
+    # SPI_SETDESKWALLPAPER, saved to the user profile and sent to all windows
+    Set-ItemProperty -Path 'HKCU:\Control Panel\Desktop' -Name WallpaperStyle -Value '10'
+    Set-ItemProperty -Path 'HKCU:\Control Panel\Desktop' -Name TileWallpaper -Value '0'
+    [void][AkatiOS.Native]::SystemParametersInfo(0x14, 0, $path, 3)
+    Update-WallSwatch
+    Set-Status ((T 'status.wallpaper') -f [IO.Path]::GetFileNameWithoutExtension($path))
+}
 foreach ($file in @(Get-ChildItem -Path (Join-Path $wallpapers '*') -Include *.png, *.jpg -File -ErrorAction SilentlyContinue | Sort-Object Name)) {
     $btn = New-Object System.Windows.Controls.Button
     $btn.Cursor = 'Hand'; $btn.Margin = '0,0,12,12'; $btn.Tag = $file.FullName; $btn.ToolTip = $file.BaseName
@@ -2465,13 +2570,7 @@ foreach ($file in @(Get-ChildItem -Path (Join-Path $wallpapers '*') -Include *.p
     $brush.Stretch = 'UniformToFill'
     $frame.Background = $brush
     $btn.Content = $frame
-    $btn.Add_Click({
-        # SPI_SETDESKWALLPAPER, saved to the user profile and sent to all windows
-        Set-ItemProperty -Path 'HKCU:\Control Panel\Desktop' -Name WallpaperStyle -Value '10'
-        Set-ItemProperty -Path 'HKCU:\Control Panel\Desktop' -Name TileWallpaper -Value '0'
-        [void][AkatiOS.Native]::SystemParametersInfo(0x14, 0, $this.Tag, 3)
-        Set-Status ((T 'status.wallpaper') -f [IO.Path]::GetFileNameWithoutExtension($this.Tag))
-    })
+    $btn.Add_Click({ Set-Wallpaper $this.Tag })
     [void]$ui.WallPanel.Children.Add($btn)
 }
 
@@ -2539,6 +2638,43 @@ $ui.SoundPreview.Add_Click({
         try { (New-Object System.Media.SoundPlayer $f).Play(); Set-Status ((T 'status.sound.play') -f [IO.Path]::GetFileNameWithoutExtension($f)) } catch { Set-Status $_.Exception.Message }
     } else { Set-Status (T 'status.sound.none') }
 })
+
+# Style presets: wallpaper, accent color, look of Akati OS Center, cursor and sounds in one click
+$presets = @(
+    @{ Key = 'neon';    Wall = 'akatios-dark.png';  Accent = 'purple'; Look = 'Dark';  Cursor = $true;  Sound = 'akati' }
+    @{ Key = 'ocean';   Wall = 'akatios-ocean.png'; Accent = 'cyan';   Look = 'Dark';  Cursor = $true;  Sound = 'akati' }
+    @{ Key = 'ember';   Wall = 'akatios-ember.png'; Accent = 'orange'; Look = 'Dark';  Cursor = $true;  Sound = 'akati' }
+    @{ Key = 'sakura';  Wall = 'akatios-mist.png';  Accent = 'pink';   Look = 'Light'; Cursor = $true;  Sound = 'akati' }
+    @{ Key = 'stealth'; Wall = 'akatios-oled.png';  Accent = 'red';    Look = 'Dark';  Cursor = $false; Sound = 'none' }
+)
+foreach ($p in $presets) {
+    $file = Join-Path $wallpapers $p.Wall
+    if (!(Test-Path -LiteralPath $file)) { continue }
+    $acc = $accents | Where-Object { $_.Key -eq $p.Accent } | Select-Object -First 1
+    $btn = New-Object System.Windows.Controls.Button
+    $btn.Style = $window.FindResource('Bare'); $btn.Margin = '0,0,12,12'; $btn.Padding = '0'; $btn.Tag = $p
+    $stack = New-Object System.Windows.Controls.StackPanel
+    $frame = New-Object System.Windows.Controls.Border
+    $frame.Width = 150; $frame.Height = 84; $frame.CornerRadius = 8; $frame.BorderThickness = '0,0,0,4'
+    $frame.BorderBrush = New-Object System.Windows.Media.LinearGradientBrush (ConvertTo-Color $acc.G1), (ConvertTo-Color $acc.G2), 0
+    $brush = New-Object System.Windows.Media.ImageBrush (Get-Image $file 300); $brush.Stretch = 'UniformToFill'
+    $frame.Background = $brush
+    $name = New-Text (T "preset.$($p.Key)") 13 'SemiBold' "t:preset.$($p.Key)"; $name.Margin = '2,6,0,0'
+    [void]$stack.Children.Add($frame); [void]$stack.Children.Add($name)
+    $btn.Content = $stack
+    $btn.Add_Click({
+        $p = $this.Tag
+        try {
+            Set-Wallpaper (Join-Path $wallpapers $p.Wall)
+            Use-Accent ($accents | Where-Object { $_.Key -eq $p.Accent } | Select-Object -First 1)
+            $ui["Look$($p.Look)"].IsChecked = $true
+            Set-Cursors $p.Cursor
+            Set-Sounds $p.Sound
+            Set-Status ((T 'status.preset') -f (T "preset.$($p.Key)"))
+        } catch { Set-Status $_.Exception.Message }
+    })
+    [void]$ui.PresetPanel.Children.Add($btn)
+}
 
 # ---------------------------------------------------------------------------------------------
 # Updates and links
@@ -3516,7 +3652,7 @@ function Update-Language {
     Update-AntiCheat
     if ($script:doctorResult) { Show-Doctor $script:doctorResult }
     if ($script:healthResult) { Show-HealthInfo $script:healthResult }
-    Show-History; Update-WuState; Update-TempText
+    Show-History; Update-WuState; Update-TempText; Update-Fivem
     Set-Compact $script:compact
     if ($stats.Top) { Show-TopApps }
     foreach ($a in $apps) { if ($a.State -ne 'install') { Update-AppRow $a } }
@@ -3587,6 +3723,16 @@ if ($Page -and $pages -contains $Page.ToLowerInvariant()) {
 }
 # The desktop menu is rebuilt each time the window opens (apps, language, task for this user)
 Request-MenuUpdate
+# Akati Doctor once in the background a few seconds after start, for the Health chip on the Dashboard
+if (!$Screenshot) {
+    $doctorTimer = New-Object System.Windows.Threading.DispatcherTimer
+    $doctorTimer.Interval = [TimeSpan]::FromSeconds(5)
+    $doctorTimer.Add_Tick({
+        $doctorTimer.Stop()
+        if (!$script:doctorResult) { Start-Work $doctorWork @() { param($r) Show-Doctor (Get-LastOutput $r); Update-Chips } $null }
+    })
+    $doctorTimer.Start()
+}
 
 # ---------------------------------------------------------------------------------------------
 # Screenshot mode (CI): render every page in both languages to PNG and exit

@@ -106,6 +106,8 @@ The same **Services** section has switches that are not part of setup, for thing
 
 **Show Akati OS next to the clock** (ticked by default) adds the Akati OS icon to the notification area. Point at it to see CPU and RAM use; its menu opens Akati OS Center, frees up RAM, lists your apps and games, starts or stops Game boost and turns the **automatic Game boost** on or off: when a game from **My games** (Game boost page) opens, Game boost starts, and it stops again when the game closes. The icon runs with normal rights through the sign-in task `\AkatiOS\Akati OS tray`; turn it off in Akati OS Center > Tweaks > Memory and system.
 
+The menu also has the **anti-cheat mode** (Memory integrity on for Valorant, off for FiveM; after a restart), the **power plan** and the **performance widget**. **Ctrl+Alt+B** starts or stops Game boost and **Ctrl+Alt+R** frees up RAM, also inside games (switch: Tweaks > System > Shortcut keys). Games with **Keep off CPU 0** in their profile (Game boost > My games) run on every CPU but CPU 0 while the icon runs.
+
 **Turn off Xbox Game Bar** (ticked by default) turns off Game Bar (Win+G) and its background clip recording, and the controller button that opens it. Game Mode and fullscreen optimizations stay as they are. Turn it on again in Settings > Gaming > Game Bar.
 
 **ภาษาไทย**: "Turn off notifications" (ติ๊กไว้) ปิดสวิตช์ "Get notifications from apps and other senders" จะไม่มีป๊อปอัปเด้งระหว่างเล่นเกม รวมถึงคำเตือนของ Windows Security และข้อความจาก Discord หรือ Steam ด้วย เปิดกลับได้ที่ Settings > System > Notifications ส่วน "Turn off Xbox Game Bar" (ติ๊กไว้) ปิด Game Bar (Win+G) การอัดคลิปเบื้องหลัง และปุ่มเปิดจากจอย ไม่แตะ Game Mode เปิดกลับได้ที่ Settings > Gaming > Game Bar

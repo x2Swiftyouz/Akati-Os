@@ -3,6 +3,11 @@
 ## v1.4.1
 
 ### Added
+- **Performance widget**: a small bar on top of other windows and borderless games with CPU, RAM, GPU, GPU temperature (NVIDIA) and ping. Open it from the icon next to the clock or Tweaks > System; drag to move, right-click to close; it comes back at sign-in while it was open
+- Appearance: **Style presets** (Neon, Ocean, Ember, Sakura, Stealth for OLED screens) set the wallpaper, accent color, Akati OS Center look, cursor and sounds in one click, and an accent color **from the wallpaper** (the most colorful hue of your desktop picture)
+- Three new wallpapers: **OLED** and **OLED logo** (true black, so OLED pixels stay off) and **Ember**
+- Tweaks > **Windows look**: dark mode, accent color on title bars and the taskbar, transparency effects
+- Dashboard: a **Health** chip shows what Akati Doctor found (click to open the Health page)
 - New **Health** page in Akati OS Center (Ctrl+5):
   - **Akati Doctor** checks the icon next to the clock, the desktop menu, the power plan, free space, a waiting restart, Memory integrity, devices with a problem and blue screens, with a button that fixes or opens each one, and **Repair Windows files** (DISM and SFC)
   - How long Windows took to start (last and average), and the temperatures Windows reports (ACPI thermal zone, NVIDIA GPU; also as chips on the Dashboard, orange from 80 °C and red from 90 °C). No sensor driver is installed, so anti-cheats are not affected

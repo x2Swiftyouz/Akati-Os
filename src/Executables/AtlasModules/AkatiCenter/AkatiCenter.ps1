@@ -3072,6 +3072,14 @@ $window.Add_ContentRendered({ Close-Splash; $window.Activate() })
 $window.Add_Loaded({
     # Akati OS checks GitHub once when the window opens (one request, nothing is downloaded)
     Start-UpdateCheck
+    # Icon next to the clock: wanted (setup option or Tweaks) but its sign-in task is missing, as after some
+    # setups in AME Wizard: register it again
+    if (!$Screenshot -and (Get-RegValue 'HKLM:\SOFTWARE\AkatiOS' 'TrayIcon') -eq 1) {
+        Start-Work { param($script)
+            if (!(Get-ScheduledTask -TaskPath '\AkatiOS\' -TaskName 'Akati OS tray' -ErrorAction SilentlyContinue)) {
+                & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $script -Install
+            } } @((Join-Path $appDir 'AkatiTray.ps1'))
+    }
     $script:statsHandle = $statsPs.BeginInvoke()
     $timer.Start()
 })

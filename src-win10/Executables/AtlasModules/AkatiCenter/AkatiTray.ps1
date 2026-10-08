@@ -24,19 +24,46 @@ $userKey    = 'HKCU:\Software\AkatiOS\Center'
 $taskPath   = '\AkatiOS\'
 $taskName   = 'Akati OS tray'
 
+# HKLM\SOFTWARE\AkatiOS TrayIcon = 1: the icon is wanted. Akati OS Center registers the task again when it is
+# missing (setup in AME Wizard did not always register it)
+$machineKey = 'HKLM:\SOFTWARE\AkatiOS'
+function Set-Wanted([int]$value) {
+    if (!(Test-Path $machineKey)) { New-Item -Path $machineKey -Force | Out-Null }
+    Set-ItemProperty -Path $machineKey -Name TrayIcon -Value $value -Type DWord
+}
+# Errors of -Install and -Remove go to %ProgramData%\AkatiOS\AkatiTray.log
+function Write-TrayLog([string]$text) {
+    try {
+        $dir = Join-Path $env:ProgramData 'AkatiOS'
+        if (!(Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
+        Add-Content -Path (Join-Path $dir 'AkatiTray.log') -Value "$(Get-Date -Format s) $env:USERDOMAIN\$env:USERNAME $text"
+    } catch { }
+}
+
 if ($Install) {
-    # At sign-in, as this user with normal rights, running as long as the user is signed in
-    $action = New-ScheduledTaskAction -Execute $ps -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$PSCommandPath`""
-    $trigger = New-ScheduledTaskTrigger -AtLogOn -User "$env:USERDOMAIN\$env:USERNAME"
-    $principal = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive -RunLevel Limited
-    $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit ([TimeSpan]::Zero) -MultipleInstances IgnoreNew
-    Register-ScheduledTask -TaskPath $taskPath -TaskName $taskName -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force | Out-Null
-    Start-ScheduledTask -TaskPath $taskPath -TaskName $taskName -ErrorAction SilentlyContinue
-    exit 0
+    try {
+        Set-Wanted 1
+        # At sign-in, as this user with normal rights, running as long as the user is signed in
+        $action = New-ScheduledTaskAction -Execute $ps -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$PSCommandPath`""
+        $trigger = New-ScheduledTaskTrigger -AtLogOn -User "$env:USERDOMAIN\$env:USERNAME"
+        $principal = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive -RunLevel Limited
+        $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit ([TimeSpan]::Zero) -MultipleInstances IgnoreNew
+        Register-ScheduledTask -TaskPath $taskPath -TaskName $taskName -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force -ErrorAction Stop | Out-Null
+        Start-ScheduledTask -TaskPath $taskPath -TaskName $taskName -ErrorAction SilentlyContinue
+        Write-TrayLog 'installed'
+        exit 0
+    } catch {
+        Write-TrayLog "install failed: $($_.Exception.Message)"
+        exit 1
+    }
 }
 if ($Remove) {
+    try { Set-Wanted 0 } catch { Write-TrayLog "remove: $($_.Exception.Message)" }
     Stop-ScheduledTask -TaskPath $taskPath -TaskName $taskName -ErrorAction SilentlyContinue
     Unregister-ScheduledTask -TaskPath $taskPath -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue
+    Get-CimInstance Win32_Process -Filter "Name='powershell.exe'" -ErrorAction SilentlyContinue |
+        Where-Object { $_.CommandLine -like '*AkatiTray.ps1*' -and $_.CommandLine -notlike '*-Remove*' } |
+        ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
     exit 0
 }
 

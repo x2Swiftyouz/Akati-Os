@@ -874,6 +874,18 @@
                                     <TextBlock x:Name="GamesEmpty" Tag="t:games.empty" Text="No games added yet." Style="{StaticResource Muted}" Margin="14,8"/>
                                 </StackPanel>
                             </Border>
+                            <!-- Anti-cheat mode: Memory integrity (HVCI) on for Valorant, off for FiveM -->
+                            <Border Style="{StaticResource Card}" Margin="0,0,0,16">
+                                <StackPanel>
+                                    <TextBlock Tag="t:ac.title" Text="Anti-cheat mode" Style="{StaticResource CardTitle}"/>
+                                    <TextBlock Tag="t:ac.sub" Text="Valorant (Vanguard) can ask for Memory integrity on, FiveM needs it off. Pick the game you play next; Windows changes it after a restart." Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,4,0,10"/>
+                                    <TextBlock x:Name="AcState" Text="-" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                                    <WrapPanel>
+                                        <Button x:Name="AcValorant" Style="{StaticResource Secondary}" Margin="0,0,10,0" Tag="t:ac.valorant" Content="Valorant mode"/>
+                                        <Button x:Name="AcFiveM" Style="{StaticResource Secondary}" Tag="t:ac.fivem" Content="FiveM mode"/>
+                                    </WrapPanel>
+                                </StackPanel>
+                            </Border>
                             <Border Style="{StaticResource Card}" Margin="0,0,0,16">
                                 <StackPanel>
                                     <DockPanel>

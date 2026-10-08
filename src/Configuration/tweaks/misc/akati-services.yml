@@ -36,6 +36,21 @@ actions:
     # Distributed Transaction Coordinator (MSDTC): only database and server software uses it, but it is
     # started at times and stays in the background. Disabled from the next start (default: Manual, 3)
   - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Services\MSDTC', value: 'Start', data: '4', type: REG_DWORD, option: 'disable-unused-services'}
+    # More services gaming PCs rarely use (option, ticked by default): AllJoyn Router, Fax, Downloaded Maps
+    # Manager, Phone Service, Retail Demo, Windows Insider, Smart Card (3 services), Parental Controls, Payments
+    # and NFC, Wallet, Windows Media Player network sharing and Recommended Troubleshooting. Disabled from the
+    # next start; services this Windows does not have are skipped (no empty service keys are made). Back to the
+    # Windows defaults with the "Turn off more unused services" switch in Akati OS Center > Tweaks.
+  - !writeStatus: {status: 'Turning off more unused services', option: 'disable-extra-services'}
+  - !powerShell:
+    command: |
+      foreach ($name in 'AJRouter', 'Fax', 'MapsBroker', 'PhoneSvc', 'RetailDemo', 'wisvc', 'SCardSvr', 'ScDeviceEnum', 'SCPolicySvc',
+          'WpcMonSvc', 'SEMgrSvc', 'WalletService', 'WMPNetworkSvc', 'TroubleshootingSvc') {
+          $key = 'HKLM:\SYSTEM\CurrentControlSet\Services\' + $name
+          if (Test-Path $key) { Set-ItemProperty -Path $key -Name Start -Value 4 -Type DWord }
+      }
+    wait: true
+    option: 'disable-extra-services'
     # Timer resolution 0.5 ms (option, ticked by default): the unchanged AtlasOS script, which sets
     # GlobalTimerResolutionRequests and adds the "Force Timer Resolution" task. Off again in Akati OS Center > Tweaks.
   - !writeStatus: {status: 'Setting timer resolution', option: 'enable-timer-resolution'}

@@ -92,6 +92,10 @@ Akati OS does not install GPU drivers. **Akati OS Center > Gaming apps** has but
 
 Untick it if you use a printer or share files between PCs at home. A restart (setup restarts at the end) applies the changes.
 
+**Turn off more unused services** is ticked by default. It disables (`Start` = 4) AllJoyn Router (`AJRouter`), Fax, Downloaded Maps Manager (`MapsBroker`), Phone Service (`PhoneSvc`), Retail Demo (`RetailDemo`), Windows Insider (`wisvc`), Smart Card (`SCardSvr`, `ScDeviceEnum`, `SCPolicySvc`), Parental Controls (`WpcMonSvc`), Payments and NFC (`SEMgrSvc`), Wallet (`WalletService`), Windows Media Player network sharing (`WMPNetworkSvc`) and Recommended Troubleshooting (`TroubleshootingSvc`). Services this Windows does not have are skipped. Untick it if you use a smart card, offline maps or parental controls. Akati OS Center > Tweaks > **Turn off more unused services** turns them off or back to the Windows defaults.
+
+**ภาษาไทย**: "Turn off more unused services" ติ๊กไว้เป็นค่าเริ่มต้น ปิด service ที่เครื่องเล่นเกมแทบไม่ได้ใช้เพิ่มอีก 14 ตัว (แผนที่ออฟไลน์, Phone, Smart card, Payments และ NFC, Wallet, การควบคุมโดยผู้ปกครอง, Retail demo, Windows Insider, AllJoyn, Fax, การแชร์สื่อของ Windows Media Player และ Recommended troubleshooting) ถ้าใช้ smart card แผนที่ออฟไลน์ หรือการควบคุมโดยผู้ปกครอง ให้เอาติ๊กออก เปิดกลับได้ที่ Akati OS Center > ปรับแต่ง
+
 **ภาษาไทย**: "Turn off unused services" ติ๊กไว้เป็นค่าเริ่มต้น จะรันสคริปต์เดิมของ AtlasOS เพื่อปิดบริการที่เครื่องเล่นเกมส่วนใหญ่ไม่ได้ใช้ ได้แก่ การพิมพ์ (Print Spooler), การทำดัชนีค้นหา (Windows Search; ช่องค้นหาใน Start ยังหาแอปและการตั้งค่าได้ แต่ค้นหาไฟล์ช้าลง), SuperFetch (SysMain), การค้นหาเครื่องในเครือข่าย และ MSDTC (บริการที่ใช้กับโปรแกรมฐานข้อมูล/เซิร์ฟเวอร์ เกมไม่ได้ใช้) ถ้าใช้เครื่องพิมพ์หรือแชร์ไฟล์ในบ้านให้เอาติ๊กออก หรือเปิดกลับทีหลังได้ใน Akati OS Center > ปรับแต่ง
 
 ## Notifications and Game Bar

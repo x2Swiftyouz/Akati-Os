@@ -1325,7 +1325,7 @@ function Show-BoostEffect {
     } catch { }
     $scale = New-Object System.Windows.Media.ScaleTransform 1, 1
     $ui.BoostIcon.RenderTransformOrigin = '0.5,0.5'; $ui.BoostIcon.RenderTransform = $scale
-    $grow = New-Object System.Windows.Media.Animation.DoubleAnimation 1, 1.25, ([TimeSpan]::FromMilliseconds(180))
+    $grow = New-Object System.Windows.Media.Animation.DoubleAnimation 1, 1.25, (New-Object System.Windows.Duration ([TimeSpan]::FromMilliseconds(180)))
     $grow.AutoReverse = $true; $grow.RepeatBehavior = New-Object System.Windows.Media.Animation.RepeatBehavior 2
     $scale.BeginAnimation([System.Windows.Media.ScaleTransform]::ScaleXProperty, $grow)
     $scale.BeginAnimation([System.Windows.Media.ScaleTransform]::ScaleYProperty, $grow)

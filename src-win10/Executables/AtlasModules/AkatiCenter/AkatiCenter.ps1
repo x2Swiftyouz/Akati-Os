@@ -2911,6 +2911,7 @@ function Update-Language {
     Show-Disks
     Update-Clock
     Update-Chips
+    Update-AntiCheat
     if ($stats.Top) { Show-TopApps }
     foreach ($a in $apps) { if ($a.State -ne 'install') { Update-AppRow $a } }
     Update-AppsToolbar

@@ -46,7 +46,7 @@
 - Dashboard in Akati OS Center: live graphs for CPU, RAM and GPU, the busiest apps by CPU or by memory (with a Quit button; Akati OS Center shows by its own name), CPU and RAM turn orange from 85% and red from 95%, a drive with less than 15% free has a shortcut to the Cleaner, the GPU card is hidden when Windows reports no GPU usage (virtual machines), status chips (Game boost, power plan, Defender, uptime), download/upload speed and ping, every drive with free space, a greeting with the clock, and an automatic update check in the version card. Game boost can be started from the quick actions
 - Cleaner in Akati OS Center cleans more: Windows Update downloads, error reports, setup logs, thumbnail cache and the web caches of Discord, Steam and Epic; browser and GPU shader caches can be ticked too. Each row says what it removes; no cookies, passwords or settings
 - Akati OS Center looks like macOS System Settings: colored icons in the sidebar, grouped lists with thin separators and gray section headings, macOS-style switches and buttons, neutral dark colors (the accent color stays)
-- The System settings page is now part of **Tweaks**: gaming switches on top, then every AtlasOS setting with search and the restore point. Ctrl+1 to Ctrl+7 switch pages, Ctrl+F opens the search in Tweaks
+- The System settings page is now part of **Tweaks**: gaming switches on top, then every AtlasOS setting with search and the restore point. Ctrl+1 to Ctrl+8 switch pages, Ctrl+F opens the search in Tweaks
 
 ### Fixed
 - Anti-cheat mode on Windows builds that cannot report Memory integrity (no DeviceGuard WMI provider, seen on imOS 10): it no longer shows "restart to apply" forever, and asks for a restart only after a change

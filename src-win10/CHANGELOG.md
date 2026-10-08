@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Changed
+- Akati OS Center no longer closes when a click runs into an error (seen with Ctrl+K > a setting > Enter): the error shows in the status bar and goes to `%ProgramData%\AkatiOS\AkatiCenter.log`, which the problem report includes
 - Light by day / dark at night (Akati OS Center By time and the Windows switch) follows a time zone changed while the app runs; the last page and the window position are saved at once, not only when the window is closed
 - After an update, Akati OS Center restarts the icon next to the clock when it still runs the old version (new features of the icon, such as play time, work without signing in again)
 - Turning on the weekly automatic clean shows why when Windows does not create the task (also in `%ProgramData%\AkatiOS\AkatiClean.log`)

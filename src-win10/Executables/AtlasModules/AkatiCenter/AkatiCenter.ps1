@@ -384,11 +384,13 @@ function Show-Element([string]$page, $element) {
     [void]$window.Dispatcher.BeginInvoke([action]{
         $el = $script:spotTarget
         if (!$el) { return }
-        $el.BringIntoView()
-        $brush = $window.FindResource('Accent').Clone(); $brush.Opacity = 0.35
-        $el.Background = $brush
-        $fade = New-Object System.Windows.Media.Animation.DoubleAnimation 0.35, 0, (New-Object System.Windows.Duration ([TimeSpan]::FromMilliseconds(1400)))
-        $brush.BeginAnimation([System.Windows.Media.Brush]::OpacityProperty, $fade)
+        try {
+            $el.BringIntoView()
+            $brush = $window.FindResource('Accent').Clone(); $brush.Opacity = 0.35
+            $el.Background = $brush
+            $fade = New-Object System.Windows.Media.Animation.DoubleAnimation 0.35, 0, (New-Object System.Windows.Duration ([TimeSpan]::FromMilliseconds(1400)))
+            $brush.BeginAnimation([System.Windows.Media.Brush]::OpacityProperty, $fade)
+        } catch { Set-Status $_.Exception.Message }
     }, 'Background')
 }
 function Get-SpotlightItems {
@@ -674,6 +676,18 @@ $window.Add_PreviewKeyDown({
     }
 })
 
+# An error in a click or a timer must not close the window: it goes to the status bar and to
+# %ProgramData%\AkatiOS\AkatiCenter.log (attach it to a GitHub issue)
+$window.Dispatcher.Add_UnhandledException({
+    param($sender, $e)
+    $e.Handled = $true
+    try {
+        $dir = Join-Path $env:ProgramData 'AkatiOS'
+        if (!(Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
+        Add-Content -Path (Join-Path $dir 'AkatiCenter.log') -Value "$(Get-Date -Format s) $($e.Exception.ToString())"
+        Set-Status $e.Exception.Message
+    } catch { }
+})
 # Keyboard focus shows an accent ring on buttons, switches, choices and lists (Tab moves between them)
 $focusRing = $window.FindResource('FocusRing')
 $window.Add_PreviewGotKeyboardFocus({
@@ -694,8 +708,9 @@ Update-Clock
 Update-Chips
 Set-Status (T 'ready')
 # Started from the desktop menu: open that page (and start the ping test)
-$lastPage = [string](Get-RegValue $settingsKey 'LastPage')
-if (!$Page -and !$Screenshot -and $lastPage -in $pages -and (Get-RegValue $settingsKey 'Welcomed')) { $ui["Nav$(Get-PageId $lastPage)"].IsChecked = $true }
+# The last page opens when the window has loaded (before that, the sidebar buttons are not one group yet)
+$script:startPage = [string](Get-RegValue $settingsKey 'LastPage')
+if ($Page -or $Screenshot -or $script:startPage -notin $pages -or !(Get-RegValue $settingsKey 'Welcomed')) { $script:startPage = $null }
 # The saved position when it is still on a screen (screens can change)
 $wx = Get-RegValue $settingsKey 'WindowX'; $wy = Get-RegValue $settingsKey 'WindowY'
 $desk = [System.Windows.SystemParameters]
@@ -782,6 +797,7 @@ $timer.Add_Tick({
 })
 $window.Add_ContentRendered({ Close-Splash; $window.Activate() })
 $window.Add_Loaded({
+    if ($script:startPage) { $ui["Nav$(Get-PageId $script:startPage)"].IsChecked = $true }
     # Akati OS checks GitHub once when the window opens (one request, nothing is downloaded)
     Start-UpdateCheck
     # Icon next to the clock: wanted (setup option or Tweaks) but its sign-in task is missing, as after some

@@ -776,7 +776,7 @@
                                         <Button x:Name="QuickAtlas" Style="{StaticResource Action}" Margin="5,0">
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Style="{StaticResource Glyph}" Text="&#xE713;" Foreground="{DynamicResource Accent2}" Margin="0,0,12,0"/>
-                                                <StackPanel><TextBlock Tag="t:quick.system" Text="Tweaks" FontWeight="SemiBold"/><TextBlock Tag="t:quick.system.d" Text="Gaming and AtlasOS settings" Style="{StaticResource Muted}" FontSize="11"/></StackPanel>
+                                                <StackPanel><TextBlock Tag="t:quick.system" Text="Tweaks" FontWeight="SemiBold"/><TextBlock Tag="t:quick.system.d" Text="Gaming and Windows settings" Style="{StaticResource Muted}" FontSize="11"/></StackPanel>
                                             </StackPanel>
                                         </Button>
                                     </UniformGrid>
@@ -917,8 +917,8 @@
                             </Border>
                             <!-- More sections (latency, network, graphics, memory), filled by AkatiCenter.ps1 -->
                             <StackPanel x:Name="TweakGroups"/>
-                            <TextBlock Tag="t:tweaks.system" Text="System (AtlasOS)" Style="{StaticResource Section}"/>
-                            <TextBlock Tag="t:system.sub" Text="All AtlasOS settings. A button applies that option; scripts open in a window that explains what they change." Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,4,0,14"/>
+                            <TextBlock Tag="t:tweaks.system" Text="System" Style="{StaticResource Section}"/>
+                            <TextBlock Tag="t:system.sub" Text="All Windows settings of Akati OS. A button applies that option; scripts open in a window that explains what they change." Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,4,0,14"/>
                             <Border Style="{StaticResource Card}" Padding="14,10" Margin="0,0,0,16">
                                 <DockPanel>
                                     <TextBlock Style="{StaticResource Glyph}" Text="&#xE721;" Foreground="{DynamicResource MutedBrush}" Margin="0,0,12,0" VerticalAlignment="Center"/>

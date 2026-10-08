@@ -37,7 +37,7 @@ Change later: Akati OS Center > Tweaks > General Configuration > Automatic Updat
 ## General options
 
 - **Disable Hibernation** (ticked): turns off hibernation and saves disk space. Shut down and restart work normally. (AtlasOS always turns off Fast Startup.)
-- **Maximum Performance (Disable Power Saving)** (ticked): uses the "Atlas Power Scheme" and turns off power saving features. Best for desktops. On a laptop it uses more battery and makes it warmer.
+- **Maximum Performance (Disable Power Saving)** (ticked): uses the "Akati OS Power Scheme" (AtlasOS calls it "Atlas Power Scheme") and turns off power saving features. Best for desktops. On a laptop it uses more battery and makes it warmer.
 - **Disable Core Isolation (may break anti-cheat games)** (not ticked): turns off Virtualization Based Security. Can give a little more performance, but reduces security and some anti-cheat systems may not start.
 
 **ภาษาไทย**

@@ -161,7 +161,7 @@ Get-CimInstance -Namespace root\Microsoft\Windows\DeviceGuard -ClassName Win32_D
 | ตรวจ | ติ๊กไว้ | ไม่ได้ติ๊ก |
 |---|---|---|
 | Hibernation | `powercfg /a` ขึ้นว่า Hibernation ไม่พร้อมใช้งาน | Hibernation ยังมีอยู่ |
-| Maximum Performance | scheme ชื่อ `Atlas Power Scheme` | scheme เป็น Balanced (`381b4222-...`) |
+| Maximum Performance | scheme ชื่อ `Akati OS Power Scheme` | scheme เป็น Balanced (`381b4222-...`) |
 | Core Isolation | `VirtualizationBasedSecurityStatus` = 0 | ค่าเท่ากับก่อนติดตั้ง |
 
 - [ ] รอบ A: ผลตรงกับคอลัมน์ "ติ๊กไว้" สำหรับ Hibernation และ Maximum Performance และ Core Isolation ไม่ถูกปิด

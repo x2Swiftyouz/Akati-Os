@@ -2,7 +2,7 @@
 title: Defaults
 description: Run default AtlasFolder scripts
 actions:
-  - !writeStatus: {status: 'Applying default Atlas Folder settings'}
+  - !writeStatus: {status: 'Applying default Akati OS settings'}
   - !cmd:
     command: 'reg import .\DEFAULT.reg'
     exeDir: true

@@ -10,7 +10,7 @@ $atlasModules = "$windir\AtlasModules"
 $title = 'Preparing Atlas user settings...'
 
 if (!(Test-Path $atlasDesktop) -or !(Test-Path $atlasModules)) {
-    Write-Host "Atlas was about to configure user settings, but its files weren't found. :(" -ForegroundColor Red
+    Write-Host "Akati OS was about to configure user settings, but its files weren't found. :(" -ForegroundColor Red
     Read-Pause
     exit 1
 }
@@ -40,7 +40,7 @@ Set-LockscreenImage
 & "$atlasDesktop\4. Interface Tweaks\File Explorer Customization\Automatic Folder Discovery\Disable Automatic Folder Discovery (default).cmd" /silent
 
 # Set visual effects
-& "$atlasDesktop\4. Interface Tweaks\Visual Effects (Animations)\Atlas Visual Effects (default).cmd" /silent
+& "$atlasDesktop\4. Interface Tweaks\Visual Effects (Animations)\Akati OS Visual Effects (default).cmd" /silent
 
 # Set taskbar pins 
 $valueName = "Browser"

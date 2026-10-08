@@ -11,7 +11,7 @@ fltmc > nul 2>&1 || (
 	exit /b
 )
 
-echo Before running this, please see the Atlas documentation, linked in the folder.
+echo Before running this, read what it changes in Akati OS Center (Tweaks).
 pause
 echo]
 

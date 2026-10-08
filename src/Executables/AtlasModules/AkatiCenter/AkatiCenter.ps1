@@ -1178,7 +1178,7 @@ $toastKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\PushNotifications'
 # Background apps that are safe to close while playing (never game launchers or browsers)
 $boostCandidates = 'OneDrive', 'Teams', 'ms-teams', 'Spotify', 'PhoneExperienceHost', 'Dropbox', 'GoogleDriveFS', 'Skype'
 $powerSchemes = @(
-    '11111111-1111-1111-1111-111111111111'   # Atlas Power Scheme (Maximum Performance)
+    '11111111-1111-1111-1111-111111111111'   # Akati OS Power Scheme (Maximum Performance)
     'e9a42b02-d5df-448d-aa00-03f14749eb61'   # Ultimate Performance
     '8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c'   # High performance
 )
@@ -1620,7 +1620,7 @@ function Invoke-Tweak($t, [bool]$on) {
             param($desktop, $folder, $pattern)
             $file = Get-ChildItem -Path (Join-Path $desktop $folder) -Filter $pattern -ErrorAction SilentlyContinue | Select-Object -First 1
             if ($file) { Start-Process cmd.exe -ArgumentList "/c `"`"$($file.FullName)`" /silent < nul`"" -WindowStyle Hidden -Wait }
-            else { "AtlasOS script not found: $folder\$pattern" }
+            else { "Script not found: $folder\$pattern" }
         } @($desktop, $t.Script.Folder, $(if ($on) { $t.Script.On } else { $t.Script.Off })) $finish $context
         return
     }
@@ -2318,7 +2318,7 @@ $atlasInfo = @{
     'Hibernation' = @('Hibernation', 'ไฮเบอร์เนต', 'Off saves disk space (the size of your RAM).', 'ปิดไว้ประหยัดพื้นที่ดิสก์เท่ากับขนาด RAM')
     'Location' = @('Location', 'ตำแหน่งที่ตั้ง', 'Apps can ask for your location.', 'ให้แอปขอตำแหน่งของเครื่องได้')
     'Mobile Devices (Phone Link)' = @('Phone Link', 'Phone Link', 'Connect your phone to Windows.', 'เชื่อมมือถือกับ Windows')
-    'Power-saving' = @('Power saving', 'การประหยัดพลังงาน', 'Off is the Atlas Maximum Performance plan. Best for desktops.', 'ปิดคือ power plan ประสิทธิภาพสูงสุดของ Atlas เหมาะกับคอมตั้งโต๊ะ')
+    'Power-saving' = @('Power saving', 'การประหยัดพลังงาน', 'Off is the Akati OS Maximum Performance plan. Best for desktops.', 'ปิดคือ power plan ประสิทธิภาพสูงสุดของ Akati OS เหมาะกับคอมตั้งโต๊ะ')
     'Search Indexing' = @('Search indexing', 'การทำดัชนีค้นหา', 'Faster file search in exchange for some background work.', 'ค้นหาไฟล์ได้เร็วขึ้น แลกกับงานเบื้องหลังเล็กน้อย')
     'Sleep Study' = @('Sleep study', 'Sleep study', 'Diagnostics of sleep power use.', 'บันทึกการใช้พลังงานตอน sleep')
     'Sleep' = @('Sleep', 'โหมด sleep', 'Let the PC go to sleep.', 'ให้เครื่องเข้าโหมด sleep ได้')
@@ -2387,7 +2387,7 @@ $atlasVerbs = @{
     'Allow' = @('Allow', 'อนุญาต'); 'Disallow' = @('Disallow', 'ไม่อนุญาต'); 'Restore' = @('Restore', 'คืนค่า'); 'Reset' = @('Reset', 'รีเซ็ต')
     'Set' = @('Set', 'ตั้งค่า'); 'Toggle' = @('Turn on or off', 'เปิดหรือปิด'); 'Unlock' = @('Unlock', 'ปลดล็อก'); 'Debloat' = @('Clean up', 'ลบรายการที่ไม่ใช้')
     'Old' = @('Old', 'แบบเก่า'); 'Modern' = @('Modern', 'แบบใหม่'); 'New' = @('New', 'แบบใหม่'); 'Minimal' = @('Minimal', 'น้อยที่สุด')
-    'Default' = @('Windows default', 'ค่าของ Windows'); 'Atlas' = @('Atlas', 'แบบ Atlas'); 'Legacy' = @('Legacy', 'แบบเก่า')
+    'Default' = @('Windows default', 'ค่าของ Windows'); 'Legacy' = @('Legacy', 'แบบเก่า')
 }
 
 # "Disable Hibernation (default)" in the Hibernation row becomes "Disable": the verb alone, when the
@@ -2552,8 +2552,8 @@ function Show-SystemList {
         $dirs = @($top) + @(Get-ChildItem -LiteralPath $top.FullName -Directory -Recurse | Sort-Object FullName)
         Add-SystemCard $key $dirs $top.FullName
     }
-    # Files directly in the folder: AtlasOS links
-    Add-SystemCard 'AtlasOS' @(Get-Item -LiteralPath $desktop) (Get-Item -LiteralPath $desktop).FullName
+    # Files directly in the folder: links
+    Add-SystemCard 'AkatiOS' @(Get-Item -LiteralPath $desktop) (Get-Item -LiteralPath $desktop).FullName
     Update-SystemFilter
 }
 
@@ -2801,7 +2801,7 @@ function Update-Spotlight {
     $found = @($script:spotItems | Where-Object { $s = $_.Search; !($words | Where-Object { $s -notlike "*$_*" }) })
     # Names that start with the search come first
     $found = @($found | Sort-Object { if ($_.Text.ToLowerInvariant().StartsWith($q)) { 0 } else { 1 } } | Select-Object -First 8)
-    $found += @{ Text = (T 'spot.atlas') -f $text; Sub = 'AtlasOS'; Glyph = [string][char]0xE721; Data = $text
+    $found += @{ Text = (T 'spot.atlas') -f $text; Sub = (T 'tweaks.system'); Glyph = [string][char]0xE721; Data = $text
                  Action = { param($d) $ui.NavTweaks.IsChecked = $true; $ui.SystemSearch.Text = $d } }
     foreach ($item in $found) {
         $row = New-Object System.Windows.Controls.Border

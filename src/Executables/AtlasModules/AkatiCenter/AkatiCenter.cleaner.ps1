@@ -65,7 +65,7 @@ function Start-Clean {
 function Update-AutoClean {
     $last = Get-RegValue $settingsKey 'AutoCleanLast'
     if ($last) {
-        $c = [Globalization.CultureInfo]::GetCultureInfo($(if ($lang -eq 'th') { 'th-TH' } else { 'en-US' }))
+        $c = (Get-LangCulture)
         $when = try { [datetime]::ParseExact($last, 's', [Globalization.CultureInfo]::InvariantCulture).ToString('d MMM', $c) } catch { $last }
         $ui.AutoCleanSub.Text = (T 'autoclean.last') -f $when, (Format-Size ([double](Get-RegValue $settingsKey 'AutoCleanBytes')))
     } else { $ui.AutoCleanSub.Text = T 'autoclean.sub' }

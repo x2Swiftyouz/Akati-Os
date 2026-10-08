@@ -96,6 +96,14 @@ if ($Screenshot) {
         Start-Tour; $script:tourStep = 1; Show-TourStep; Save-Shot "tour-$l.png"; $ui.Tour.Visibility = 'Collapsed'
         Set-Compact $false; $ui.RestartBar.Visibility = 'Collapsed'; $ui.Toast.Visibility = 'Collapsed'; if ($box) { $box.Visibility = 'Collapsed' }
     }
+    # Vietnamese and Indonesian: a few pages, to see that the texts fit
+    foreach ($l in 'vi', 'id') {
+        $script:lang = $l
+        Update-Language
+        foreach ($p in 'dashboard', 'boost', 'health', 'tweaks') { $ui["Nav$(Get-PageId $p)"].IsChecked = $true; Show-Page $p; Save-Shot "$p-$l.png" }
+        $ui.Welcome.Visibility = 'Visible'; Save-Shot "welcome-$l.png"; $ui.Welcome.Visibility = 'Collapsed'
+    }
+    $script:lang = 'en'; Update-Language
     # Accent colors recolor the window
     Set-CenterAccent $accents[1]; $ui.NavGaming.IsChecked = $true; Save-Shot 'accent-blue.png'
     Set-CenterAccent $accents[6]; $ui.NavBoost.IsChecked = $true; Save-Shot 'accent-orange.png'

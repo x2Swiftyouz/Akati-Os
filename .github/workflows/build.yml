@@ -213,7 +213,12 @@ jobs:
           git init -q -b ci-screenshots
           git add .
           git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com commit -qm "Akati OS Center screenshots for $GITHUB_SHA"
-          git push -qf "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" ci-screenshots
+          # The push of the pictures sometimes drops; try three times
+          for i in 1 2 3; do
+            git push -qf "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" ci-screenshots && exit 0
+            sleep $((i * 10))
+          done
+          exit 1
 
       - name: Build with build.ps1
         run: .\build.ps1

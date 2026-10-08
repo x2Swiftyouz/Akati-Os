@@ -1372,7 +1372,9 @@
                             <TextBlock Grid.Column="1" Tag="t:welcome.lang" Text="Language" FontWeight="SemiBold" VerticalAlignment="Center"/>
                             <StackPanel Grid.Column="2" Orientation="Horizontal">
                                 <Button x:Name="WelcomeEn" Style="{StaticResource Secondary}" Content="English" Margin="0,0,8,0"/>
-                                <Button x:Name="WelcomeTh" Style="{StaticResource Secondary}" Content="ภาษาไทย"/>
+                                <Button x:Name="WelcomeTh" Style="{StaticResource Secondary}" Content="ภาษาไทย" Margin="0,0,8,0"/>
+                                <Button x:Name="WelcomeVi" Style="{StaticResource Secondary}" Content="Tiếng Việt" Margin="0,0,8,0"/>
+                                <Button x:Name="WelcomeId" Style="{StaticResource Secondary}" Content="Bahasa Indonesia"/>
                             </StackPanel>
                         </Grid>
                         <Grid Margin="0,0,0,14">

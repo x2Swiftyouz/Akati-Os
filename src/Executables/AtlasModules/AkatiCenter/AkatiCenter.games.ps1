@@ -136,7 +136,7 @@ function Show-Games {
             $text = if ($h -ge 1) { (T 'games.hours') -f $h, $m } else { (T 'games.minutes') -f $m }
             $last = Get-RegValue "$settingsKey\PlayTime" "$path|last"
             if ($last) {
-                $c = [Globalization.CultureInfo]::GetCultureInfo($(if ($lang -eq 'th') { 'th-TH' } else { 'en-US' }))
+                $c = (Get-LangCulture)
                 try { $text += ' · ' + ((T 'games.last') -f [datetime]::ParseExact($last, 'yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture).ToString('d MMM', $c)) } catch { }
             }
             $row.Sub.Text += ' · ' + ((T 'games.played') -f $text)
@@ -207,7 +207,7 @@ $fpsWork = {
 # Results: "time|game|avg|1% low|boost", newest first, the last 12
 function Show-FpsResults {
     $ui.FpsList.Children.Clear()
-    $c = [Globalization.CultureInfo]::GetCultureInfo($(if ($lang -eq 'th') { 'th-TH' } else { 'en-US' }))
+    $c = (Get-LangCulture)
     $list = @(Get-RegValue $settingsKey 'FpsResults' | Where-Object { $_ })
     foreach ($item in $list) {
         $time, $name, $avg, $low, $boost = $item -split '\|'

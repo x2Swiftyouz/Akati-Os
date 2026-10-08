@@ -21,7 +21,7 @@ Check 'score best tips' $best.Tips.Count 0
 $worst = Get-ScorePoints 8 20 95 300 5
 Check 'score worst' $worst.Score 0
 Check 'score worst tips' ($worst.Tips -join ',') 'score.tip.doctor,score.tip.startup,score.tip.ram,score.tip.ping,score.tip.disk'
-Check 'score ping unknown' (Get-ScorePoints 0 0 0 -1 50).Score 93
+Check 'score ping unknown' (Get-ScorePoints 0 0 0 (-1) 50).Score 93
 Check 'score middle' (Get-ScorePoints 1 5 60 60 15).Score 73
 
 # FPS: 16.667 ms = 60 FPS; one slow frame of 50 ms in 100 sets the 1% low to 20 FPS

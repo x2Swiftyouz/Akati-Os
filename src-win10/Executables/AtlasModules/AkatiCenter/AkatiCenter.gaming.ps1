@@ -534,7 +534,7 @@ foreach ($k in $gpuVendors.Keys) {
 function Update-GpuText {
     $ui.GpuDetected.Text = if ($gpuNames.Count) { (T 'gpu.detected') -f ($gpuNames -join ', ') } else { T 'gpu.none' }
     # Installed driver version and date; older than about 6 months: a hint to look for a newer one
-    $culture = [Globalization.CultureInfo]::GetCultureInfo($(if ($lang -eq 'th') { 'th-TH' } else { 'en-US' }))
+    $culture = (Get-LangCulture)
     $lines = @(); $old = $false
     foreach ($g in $gpus) {
         if (!$g.DriverVersion -or !$g.DriverDate) { continue }

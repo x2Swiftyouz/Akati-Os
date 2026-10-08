@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
     Checks Akati OS Center without running it (CI, and locally with PowerShell 7 on any OS):
-    - English and Thai have the same text keys, and no key is empty
+    - every language has the same text keys as English, no text is empty, the same {0} placeholders
     - every T 'key' in the scripts and every Tag="t:key" in the XAML exists
     - every $ui.Name used in AkatiCenter.ps1 is an x:Name in AkatiCenter.xaml
     - every gaming app of Akati OS Center can be installed by GAMEAPPS.ps1
@@ -17,16 +17,19 @@ function Fail([string]$message) { $failures.Add($message); Write-Host "FAIL: $me
 
 # Strings
 . (Join-Path $center 'AkatiCenter.strings.ps1')
-$en = $strings.en; $th = $strings.th
-foreach ($k in $en.Keys) { if (!$th.ContainsKey($k)) { Fail "Thai text missing: $k" } elseif (!$th[$k]) { Fail "Thai text empty: $k" } }
-foreach ($k in $th.Keys) { if (!$en.ContainsKey($k)) { Fail "English text missing: $k" } }
+$en = $strings.en
 foreach ($k in $en.Keys) { if (!$en[$k]) { Fail "English text empty: $k" } }
-# {0} placeholders must match, otherwise -f fails in one language
-foreach ($k in $en.Keys) {
-    if (!$th.ContainsKey($k)) { continue }
-    $a = ([regex]::Matches($en[$k], '\{\d\}') | ForEach-Object { $_.Value } | Sort-Object -Unique) -join ','
-    $b = ([regex]::Matches($th[$k], '\{\d\}') | ForEach-Object { $_.Value } | Sort-Object -Unique) -join ','
-    if ($a -ne $b) { Fail "Placeholders differ in '$k': en '$a', th '$b'" }
+# Every other language has the same keys, no empty text and the same {0} placeholders (else -f fails in that language)
+foreach ($l in @($strings.Keys | Where-Object { $_ -ne 'en' })) {
+    $tr = $strings[$l]
+    foreach ($k in $en.Keys) { if (!$tr.ContainsKey($k)) { Fail "$l text missing: $k" } elseif (!$tr[$k]) { Fail "$l text empty: $k" } }
+    foreach ($k in $tr.Keys) { if (!$en.ContainsKey($k)) { Fail "English text missing: $k (in $l)" } }
+    foreach ($k in $en.Keys) {
+        if (!$tr.ContainsKey($k)) { continue }
+        $a = ([regex]::Matches($en[$k], '\{\d(:[^}]*)?\}') | ForEach-Object { $_.Value } | Sort-Object -Unique) -join ','
+        $b = ([regex]::Matches($tr[$k], '\{\d(:[^}]*)?\}') | ForEach-Object { $_.Value } | Sort-Object -Unique) -join ','
+        if ($a -ne $b) { Fail "Placeholders differ in '$k': en '$a', $l '$b'" }
+    }
 }
 
 # Keys used by the code and the window

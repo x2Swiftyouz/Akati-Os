@@ -7,7 +7,7 @@
 # Health: Akati Doctor, startup time, temperatures, crashes, Windows Update, change history, backup
 # ---------------------------------------------------------------------------------------------
 Add-Mark 'Health'
-$getCulture = { [Globalization.CultureInfo]::GetCultureInfo($(if ($lang -eq 'th') { 'th-TH' } else { 'en-US' })) }
+$getCulture = { Get-LangCulture }
 $orange = (New-Object System.Windows.Media.BrushConverter).ConvertFromString('#FF9F0A')
 
 # Akati Doctor: each check is $true when fine. Runs in the background (no functions of this script)
@@ -294,7 +294,7 @@ $ui.BackupLoad.Add_Click({
     }
     Show-Games
     Request-MenuUpdate
-    if ($data.Settings.Language -in 'en', 'th' -and $data.Settings.Language -ne $lang) { Set-AppLanguage $data.Settings.Language }
+    if ($data.Settings.Language -in $languages.Keys -and $data.Settings.Language -ne $lang) { Set-AppLanguage $data.Settings.Language }
     Set-Status ((T 'backup.restored') -f $changed)
 })
 

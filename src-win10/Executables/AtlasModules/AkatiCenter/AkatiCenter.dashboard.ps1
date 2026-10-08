@@ -204,7 +204,7 @@ function Update-Clock {
     $h = $now.Hour
     $ui.Greeting.Text = T $(if ($h -ge 5 -and $h -lt 12) { 'greet.morning' } elseif ($h -lt 17 -and $h -ge 12) { 'greet.afternoon' } elseif ($h -ge 17 -and $h -lt 21) { 'greet.evening' } else { 'greet.night' })
     $ui.ClockTime.Text = $now.ToString('HH:mm')
-    $culture = [Globalization.CultureInfo]::GetCultureInfo($(if ($lang -eq 'th') { 'th-TH' } else { 'en-US' }))
+    $culture = (Get-LangCulture)
     $ui.ClockDate.Text = $now.ToString('ddd d MMMM', $culture)
 }
 

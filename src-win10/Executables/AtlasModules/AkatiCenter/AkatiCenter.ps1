@@ -101,13 +101,18 @@ trap { Close-Splash; break }
 
 $settingsKey = 'HKCU:\Software\AkatiOS\Center'
 $lang = (Get-ItemProperty -Path $settingsKey -Name Language -ErrorAction SilentlyContinue).Language
-if ($lang -notin 'en', 'th') { $lang = if ((Get-Culture).TwoLetterISOLanguageName -eq 'th') { 'th' } else { 'en' } }
+# The languages of Akati OS Center, in their own names; the first start picks the Windows language when it is one of them
+$languages = [ordered]@{ en = 'English'; th = 'ภาษาไทย'; vi = 'Tiếng Việt'; id = 'Bahasa Indonesia' }
+$cultures = @{ en = 'en-US'; th = 'th-TH'; vi = 'vi-VN'; id = 'id-ID' }
+if ($lang -notin $languages.Keys) { $two = (Get-Culture).TwoLetterISOLanguageName; $lang = if ($languages.Contains($two)) { $two } else { 'en' } }
 function T([string]$key) {
     $value = $strings[$lang][$key]
     if (!$value) { $value = $strings['en'][$key] }
     if (!$value) { $value = $key }
     return $value
 }
+# Dates and numbers in the window language (th-TH uses the Buddhist year, like Thai Windows)
+function Get-LangCulture { [Globalization.CultureInfo]::GetCultureInfo($cultures[$lang]) }
 
 # ---------------------------------------------------------------------------------------------
 # Window
@@ -361,7 +366,7 @@ $ui.WhatsNewDone.Add_Click({ $ui.WhatsNew.Visibility = 'Collapsed'; Save-Setting
 # Spotlight (Ctrl+K): one search for pages, settings, apps, games and actions
 # ---------------------------------------------------------------------------------------------
 # Both languages are searched, so "dns" or "ล้าง" work whatever the window language is
-function Get-Both([string]$key) { "$($strings.en[$key]) $($strings.th[$key])" }
+function Get-Both([string]$key) { ($languages.Keys | ForEach-Object { $strings[$_][$key] }) -join ' ' }
 function Get-StandbyBytes {
     try { $m = Get-CimInstance Win32_PerfRawData_PerfOS_Memory -ErrorAction Stop; [double]$m.StandbyCacheNormalPriorityBytes + [double]$m.StandbyCacheReserveBytes + [double]$m.StandbyCacheCoreBytes } catch { 0 }
 }
@@ -410,7 +415,7 @@ function Get-SpotlightItems {
     & $add (T 'act.boost') ((Get-Both 'act.boost') + ' game mode') (T 'spot.action') ([char]0xE945) { param($d) $ui.BoostButton.RaiseEvent((New-Object System.Windows.RoutedEventArgs ([System.Windows.Controls.Primitives.ButtonBase]::ClickEvent))) } $null
     & $add (T 'act.ping') (Get-Both 'act.ping') (T 'spot.action') ([char]0xE768) { param($d) $ui.NavBoost.IsChecked = $true; $script:pingOn = $true; $script:pingNext = [datetime]::MinValue; Set-PingButton } $null
     & $add (T 'act.update') (Get-Both 'act.update') (T 'spot.action') ([char]0xE895) { param($d) $ui.NavAbout.IsChecked = $true; Start-UpdateCheck } $null
-    & $add (T 'act.lang') (Get-Both 'act.lang') (T 'spot.action') ([char]0xE774) { param($d) Set-AppLanguage $(if ($lang -eq 'th') { 'en' } else { 'th' }) } $null
+    & $add (T 'act.lang') (Get-Both 'act.lang') (T 'spot.action') ([char]0xE774) { param($d) $keys = @($languages.Keys); Set-AppLanguage $keys[([array]::IndexOf($keys, $lang) + 1) % $keys.Count] } $null
     & $add (T 'act.report') (Get-Both 'act.report') (T 'spot.action') ([char]0xE7BA) { param($d) $ui.ReportButton.RaiseEvent((New-Object System.Windows.RoutedEventArgs ([System.Windows.Controls.Primitives.ButtonBase]::ClickEvent))) } $null
     return $items
 }
@@ -557,7 +562,17 @@ function Set-Compact([bool]$on) {
 }
 $ui.SidebarToggle.Add_Click({ Set-Compact (!$script:compact); Save-Setting Compact ([int]$script:compact) })
 Set-Compact ((Get-RegValue $settingsKey 'Compact') -eq 1 -and !$Screenshot)
-$ui.LangButton.Add_Click({ Set-AppLanguage $(if ($lang -eq 'th') { 'en' } else { 'th' }) })
+# Language: a menu with every language in its own name
+$ui.LangButton.Add_Click({
+    $menu = New-Object System.Windows.Controls.ContextMenu
+    foreach ($k in $languages.Keys) {
+        $item = New-Object System.Windows.Controls.MenuItem
+        $item.Header = $languages[$k]; $item.Tag = $k; $item.IsChecked = ($k -eq $lang)
+        $item.Add_Click({ Set-AppLanguage $this.Tag })
+        [void]$menu.Items.Add($item)
+    }
+    $menu.PlacementTarget = $this; $menu.Placement = 'Top'; $menu.IsOpen = $true
+})
 function Update-Language {
     Set-Language
     Show-Disks
@@ -595,6 +610,8 @@ function Close-Welcome {
 }
 $ui.WelcomeEn.Add_Click({ Set-AppLanguage 'en' })
 $ui.WelcomeTh.Add_Click({ Set-AppLanguage 'th' })
+$ui.WelcomeVi.Add_Click({ Set-AppLanguage 'vi' })
+$ui.WelcomeId.Add_Click({ Set-AppLanguage 'id' })
 $ui.WelcomeApps.Add_Click({ Close-Welcome; $ui.NavGaming.IsChecked = $true })
 $ui.WelcomeLook.Add_Click({ Close-Welcome; $ui.NavAppearance.IsChecked = $true })
 $ui.WelcomeDone.Add_Click({ Close-Welcome; if (!(Get-RegValue $settingsKey 'TourDone')) { Start-Tour } })

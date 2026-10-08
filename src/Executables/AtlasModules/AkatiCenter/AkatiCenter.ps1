@@ -3092,6 +3092,10 @@ if ($Screenshot) {
                     # The middle of the page: the Network, Display and Memory sections
                     $sv.UpdateLayout(); $sv.ScrollToVerticalOffset(560); $sv.UpdateLayout()
                     Save-Shot "$p-$l-mid.png"
+                    # The Services section
+                    $top = $tweakLists['services'].TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
+                    $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 60)); $sv.UpdateLayout()
+                    Save-Shot "$p-$l-services.png"
                 }
                 $sv.UpdateLayout(); $sv.ScrollToVerticalOffset(100000); $sv.UpdateLayout()
                 Save-Shot "$p-$l-2.png"

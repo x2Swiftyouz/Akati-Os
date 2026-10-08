@@ -2797,17 +2797,18 @@ function Show-Element([string]$page, $element) {
 }
 function Get-SpotlightItems {
     $items = New-Object System.Collections.ArrayList
-    $add = { param($text, $search, $sub, $glyph, $action, $data)
-             [void]$items.Add(@{ Text = $text; Search = "$text $search".ToLowerInvariant(); Sub = $sub; Glyph = [string]$glyph; Action = $action; Data = $data }) }
+    # Name: the title and other names of the item (both languages, keywords); Desc: its description
+    $add = { param($text, $search, $sub, $glyph, $action, $data, $desc)
+             [void]$items.Add(@{ Text = $text; Name = "$text $search".ToLowerInvariant(); Desc = "$desc".ToLowerInvariant(); Sub = $sub; Glyph = [string]$glyph; Action = $action; Data = $data }) }
     foreach ($p in $pages) { & $add (T "nav.$p") (Get-Both "nav.$p") (T 'spot.page') ([char]0xE8A5) { param($d) $ui["Nav$(Get-PageId $d)"].IsChecked = $true } $p }
     foreach ($t in $tweaks) {
         if (!$t.Row) { continue }
-        & $add (T "tw.$($t.Key)") ((Get-Both "tw.$($t.Key)") + ' ' + (Get-Both "tw.$($t.Key).d")) (T 'spot.setting') $t.Glyph { param($d) Show-Element 'tweaks' $d } $t.Row
+        & $add (T "tw.$($t.Key)") (Get-Both "tw.$($t.Key)") (T 'spot.setting') $t.Glyph { param($d) Show-Element 'tweaks' $d } $t.Row (Get-Both "tw.$($t.Key).d")
     }
     & $add (T 'tw.dns') ((Get-Both 'tw.dns') + ' cloudflare google 1.1.1.1 8.8.8.8') (T 'spot.setting') ([char]0xE774) { param($d) Show-Element 'tweaks' $d } $dnsRow.Row
     & $add (T 'tw.refresh') ((Get-Both 'tw.refresh') + ' hz') (T 'spot.setting') ([char]0xE7F8) { param($d) Show-Element 'tweaks' $d } $refreshRow.Row
     foreach ($a in $apps) {
-        & $add $a.Name (Get-Both "app.desc.$($a.Key)") (T 'spot.app') ([char]0xE7FC) { param($d) if (Test-App $d) { Open-App $d } else { Show-Element 'gaming' $d.RowParts.Row } } $a
+        & $add $a.Name '' (T 'spot.app') ([char]0xE7FC) { param($d) if (Test-App $d) { Open-App $d } else { Show-Element 'gaming' $d.RowParts.Row } } $a (Get-Both "app.desc.$($a.Key)")
     }
     foreach ($g in @(if (Test-Path $gamesKey) { (Get-Item $gamesKey).Property })) {
         & $add ([IO.Path]::GetFileNameWithoutExtension($g)) '' (T 'spot.game') ([char]0xE7FC) { param($d) Start-Process explorer.exe -ArgumentList "`"$d`"" } $g
@@ -2831,6 +2832,12 @@ function Update-SpotSelection {
         else { $row.Background = [System.Windows.Media.Brushes]::Transparent }
     }
 }
+# A search word matches at the start of a word ("ram" finds "Free up RAM", not "frame"). Thai has no spaces
+# between words, so a word with Thai letters matches anywhere.
+function Test-SpotWord([string]$text, [string]$word) {
+    if ($word -match '[\u0E00-\u0E7F]') { return $text.Contains($word) }
+    return $text -match ('(^|[^\p{L}\p{N}])' + [regex]::Escape($word))
+}
 function Update-Spotlight {
     $text = $ui.SpotlightBox.Text.Trim()
     $q = $text.ToLowerInvariant()
@@ -2839,9 +2846,15 @@ function Update-Spotlight {
     $script:spotRows = @(); $script:spotList = @()
     if (!$q) { $ui.SpotlightLine.Visibility = 'Collapsed'; return }
     $words = $q -split '\s+'
-    $found = @($script:spotItems | Where-Object { $s = $_.Search; !($words | Where-Object { $s -notlike "*$_*" }) })
-    # Names that start with the search come first
-    $found = @($found | Sort-Object { if ($_.Text.ToLowerInvariant().StartsWith($q)) { 0 } else { 1 } } | Select-Object -First 8)
+    # Order: the title starts with the search, then every word in the names, then words found in the description
+    $ranked = for ($i = 0; $i -lt $script:spotItems.Count; $i++) {
+        $item = $script:spotItems[$i]
+        if (!($words | Where-Object { !(Test-SpotWord $item.Name $_) })) { $rank = if ($item.Text.ToLowerInvariant().StartsWith($q)) { 0 } else { 1 } }
+        elseif (!($words | Where-Object { !(Test-SpotWord "$($item.Name) $($item.Desc)" $_) })) { $rank = 2 }
+        else { continue }
+        [pscustomobject]@{ Item = $item; Rank = $rank; Index = $i }
+    }
+    $found = @($ranked | Sort-Object Rank, Index | Select-Object -First 8 | ForEach-Object { $_.Item })
     $found += @{ Text = (T 'spot.atlas') -f $text; Sub = (T 'tweaks.system'); Glyph = [string][char]0xE721; Data = $text
                  Action = { param($d) $ui.NavTweaks.IsChecked = $true; $ui.SystemSearch.Text = $d } }
     foreach ($item in $found) {

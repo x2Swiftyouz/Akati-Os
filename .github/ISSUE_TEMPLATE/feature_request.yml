@@ -1,0 +1,15 @@
+name: Idea / ขอฟีเจอร์
+description: Something Akati OS could do / อยากให้ Akati OS ทำอะไรเพิ่ม
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: Idea / ไอเดีย
+      description: What should it do, and for which game or situation? / อยากให้ทำอะไร ใช้กับเกมหรือสถานการณ์ไหน
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why / ทำไมถึงอยากได้

@@ -18,6 +18,7 @@ Akati OS คือ playbook สำหรับ Windows 11 เน้นเล่�
 - Windows 11 ใช้ `AkatiOS-Win11_v<เวอร์ชัน>.apbx` ส่วน Windows 10 22H2 ใช้ `AkatiOS-Win10_v<เวอร์ชัน>.apbx` (Windows 10 หมดซัพพอร์ตแล้ว ถ้าลง Windows 11 ได้ให้ใช้ Windows 11)
 - **สำรองไฟล์ก่อน** ย้อนกลับไม่ได้ทั้งหมด ถ้าจะกลับต้องลง Windows ใหม่
 - ทดสอบใน VM ก่อนใช้กับเครื่องจริง ดู [docs/TESTING.md](docs/TESTING.md)
+- ภาพหน้าจอดูที่หัวข้อ [Screenshots](#screenshots) เจอปัญหาให้เปิด [issue](../../issues/new/choose) แล้วแนบไฟล์จาก Akati OS Center > เกี่ยวกับ > **สร้างรายงานปัญหา**
 
 ### ไฟล์ไหนใช้กับ Windows อะไร
 
@@ -51,6 +52,22 @@ Akati OS คือ playbook สำหรับ Windows 11 เน้นเล่�
 - **Akati OS Center** app, the one place for everything: install and update gaming apps (Steam, Epic Games Launcher, EA app, Ubisoft Connect, Battle.net, Riot Client, GOG GALAXY, Rockstar Games Launcher, Discord, OBS Studio, MSI Afterburner), GPU driver links, **Game boost** (one-click Game Mode, ping test, startup apps), gaming tweaks, cleaner, themes, accent colors, wallpapers, Akati OS cursor and sounds, live CPU/RAM/GPU usage, problem report, update check and **Tweaks** with every Windows setting in English and Thai
 - Akati OS Slideshow theme and a Windows Terminal color scheme
 - Defaults: Maximum Performance and Disable Hibernation are checked
+
+## Screenshots
+
+| Dashboard | Health (Akati Doctor) |
+|---|---|
+| ![Dashboard](docs/images/screenshots/dashboard-en.png) | ![Health](docs/images/screenshots/health-en.png) |
+| **Game boost: My games and FiveM** | **Appearance: style presets** |
+| ![Game boost](docs/images/screenshots/boost-en-mid.png) | ![Appearance](docs/images/screenshots/appearance-en.png) |
+| **Gaming apps** | **Tweaks** |
+| ![Gaming apps](docs/images/screenshots/gaming-en.png) | ![Tweaks](docs/images/screenshots/tweaks-en.png) |
+
+Every page is also in Thai (one click on the language button). The CI renders these from the code (`AkatiCenter.ps1 -Screenshot`).
+
+## Found a problem?
+
+Open an [issue](../../issues/new/choose) and attach the problem report from Akati OS Center > About > **Create problem report** (one .zip on your desktop, no personal files).
 
 ## Install
 

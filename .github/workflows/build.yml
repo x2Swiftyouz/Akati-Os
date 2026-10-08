@@ -113,6 +113,13 @@ jobs:
         shell: pwsh
         run: ./tools/test-center.ps1
 
+      - name: Test the Akati OS Center logic (PowerShell 7 and Windows PowerShell 5.1)
+        shell: pwsh
+        run: |
+          ./tools/test-logic.ps1
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/test-logic.ps1
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
       - name: Check the Riot installer signature
         # GAMEAPPS.ps1 runs the Riot installer only when it is signed by Riot Games. Warning only, so a
         # download problem on Riot's side does not fail the build.
@@ -125,6 +132,23 @@ jobs:
           $sig = Get-AuthenticodeSignature -FilePath $file
           Write-Host "Size: $((Get-Item $file).Length) bytes; signature: $($sig.Status); signer: $($sig.SignerCertificate.Subject)"
           if ($sig.Status -ne 'Valid' -or $sig.SignerCertificate.Subject -notlike '*Riot Games*') { Write-Host "::warning::The Riot installer is not signed by Riot Games"; exit 1 }
+
+      - name: Check the PresentMon download
+        # The FPS test downloads the latest PresentMon x64 console exe and runs it only when signed by Intel
+        if: github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        shell: powershell
+        run: |
+          [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+          $rel = Invoke-RestMethod -Uri 'https://api.github.com/repos/GameTechDev/PresentMon/releases/latest' -Headers @{ 'User-Agent' = 'AkatiOS-CI' } -UseBasicParsing
+          $asset = @($rel.assets | Where-Object { $_.name -match '^PresentMon-[\d.]+-x64\.exe$' })[0]
+          if (!$asset) { Write-Host "::warning::No PresentMon x64 exe in $($rel.tag_name): $($rel.assets.name -join ', ')"; exit 1 }
+          $file = "$env:RUNNER_TEMP\PresentMon.exe"
+          Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $file -UseBasicParsing
+          $sig = Get-AuthenticodeSignature -FilePath $file
+          Write-Host "$($asset.name): $($sig.Status), $($sig.SignerCertificate.Subject)"
+          & $file --help 2>&1 | Select-String -Pattern 'process_name|output_file|timed|terminate_after_timed|no_console_stats|stop_existing_session|session_name' | ForEach-Object { Write-Host $_ }
+          if ($sig.Status -ne 'Valid' -or $sig.SignerCertificate.Subject -notlike '*Intel Corporation*') { Write-Host "::warning::PresentMon is not signed by Intel"; exit 1 }
 
       - name: Check the desktop menu
         shell: powershell
@@ -189,7 +213,12 @@ jobs:
           git init -q -b ci-screenshots
           git add .
           git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com commit -qm "Akati OS Center screenshots for $GITHUB_SHA"
-          git push -qf "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" ci-screenshots
+          # The push of the pictures sometimes drops; try three times
+          for i in 1 2 3; do
+            git push -qf "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" ci-screenshots && exit 0
+            sleep $((i * 10))
+          done
+          exit 1
 
       - name: Build with build.ps1
         run: .\build.ps1

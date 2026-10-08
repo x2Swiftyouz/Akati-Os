@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Testing guide / วิธีทดสอบ
+    url: https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/TESTING.md
+    about: Test in a virtual machine first / ทดสอบใน VM ก่อน

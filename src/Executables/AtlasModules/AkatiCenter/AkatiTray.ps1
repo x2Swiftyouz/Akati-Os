@@ -101,6 +101,7 @@ $texts = @{
         ac = 'Anti-cheat mode'; acValorant = 'Valorant (Core isolation on)'; acFivem = 'FiveM (Core isolation off)'
         acNote = 'Takes effect after a restart'; power = 'Power plan'; widget = 'Performance widget'
         tipKeys = 'Ctrl+Alt+B Game boost · Ctrl+Alt+R Free up RAM'
+        update = 'Akati OS {0} is available'; updateTip = 'Click to see what is new and how to update.'
     }
     th = @{
         tip = 'Akati OS · CPU {0}% · RAM {1}%'; open = 'เปิด Akati OS Center'; freeram = 'ล้าง RAM'; apps = 'แอปของฉัน'
@@ -109,6 +110,7 @@ $texts = @{
         ac = 'โหมดแอนตี้ชีต'; acValorant = 'Valorant (เปิด Core isolation)'; acFivem = 'FiveM (ปิด Core isolation)'
         acNote = 'มีผลหลังรีสตาร์ท'; power = 'แผนการใช้พลังงาน'; widget = 'วิดเจ็ตประสิทธิภาพ'
         tipKeys = 'Ctrl+Alt+B บูสต์เกม · Ctrl+Alt+R ล้าง RAM'
+        update = 'Akati OS {0} ออกแล้ว'; updateTip = 'คลิกเพื่อดูว่ามีอะไรใหม่และวิธีอัปเดต'
     }
 }
 function T([string]$key) { $l = (Get-ItemProperty -Path $userKey -Name Language -ErrorAction SilentlyContinue).Language; if ($l -notin 'en', 'th') { $l = 'en' }; $texts[$l][$key] }
@@ -150,6 +152,10 @@ $menu.Add_Opening({
     param($sender, $e)
     $menu.Items.Clear()
     $add = { param($text, $click) $item = $menu.Items.Add($text); if ($click) { $item.Add_Click($click) }; $item }
+    if ($script:update.Newer) {
+        $u = & $add ((T 'update') -f "v$($script:update.Tag)") { Start-Hidden $center '-Page about' }
+        $u.Font = New-Object System.Drawing.Font $u.Font, ([System.Drawing.FontStyle]::Bold)
+    }
     [void](& $add (T 'open') { Start-Hidden $center '' })
     [void]$menu.Items.Add('-')
     [void](& $add (T 'freeram') { Start-Hidden $menuScript '-Action freeram' })
@@ -237,6 +243,36 @@ public class AkatiHotkeys : NativeWindow, IDisposable {
 # CPU and RAM for the tooltip, and the automatic Game boost, every 3 seconds
 $script:autoStarted = $null
 $script:affinityDone = @{}
+# Play time: seconds per game (path in My games), saved once a minute to HKCU\...\Center\PlayTime
+$script:playPending = @{}
+$script:ticks = 0
+function Save-PlayTime {
+    if (!$script:playPending.Count) { return }
+    $key = "$userKey\PlayTime"
+    try {
+        if (!(Test-Path $key)) { New-Item -Path $key -Force | Out-Null }
+        foreach ($path in @($script:playPending.Keys)) {
+            $total = [int](Get-ItemProperty -Path $key -Name $path -ErrorAction SilentlyContinue).$path + [int]$script:playPending[$path]
+            Set-ItemProperty -Path $key -Name $path -Value $total -Type DWord -Force
+            Set-ItemProperty -Path $key -Name "$path|last" -Value (Get-Date -Format 'yyyy-MM-dd') -Type String -Force
+        }
+    } catch { }
+    $script:playPending = @{}
+}
+# Windows light by day (7:00-19:00) and dark at night, when "ScheduleTheme" is 1
+Add-Type -Namespace AkatiOS -Name TrayNative -MemberDefinition '[DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern IntPtr SendMessageTimeout(IntPtr hWnd, int msg, IntPtr wParam, string lParam, int flags, int timeout, out IntPtr result);'
+function Update-ScheduledTheme {
+    if ((Get-Setting 'ScheduleTheme') -ne 1) { return }
+    [TimeZoneInfo]::ClearCachedData()
+    $h = (Get-Date).Hour
+    $light = [int]($h -ge 7 -and $h -lt 19)
+    $key = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize'
+    if ((Get-ItemProperty -Path $key -Name AppsUseLightTheme -ErrorAction SilentlyContinue).AppsUseLightTheme -eq $light) { return }
+    Set-ItemProperty -Path $key -Name AppsUseLightTheme -Value $light -Type DWord -Force
+    Set-ItemProperty -Path $key -Name SystemUsesLightTheme -Value $light -Type DWord -Force
+    $r = [IntPtr]::Zero
+    [void][AkatiOS.TrayNative]::SendMessageTimeout([IntPtr]0xffff, 0x1A, [IntPtr]::Zero, 'ImmersiveColorSet', 2, 3000, [ref]$r)
+}
 $timer = New-Object System.Windows.Forms.Timer
 $timer.Interval = 3000
 $timer.Add_Tick({
@@ -265,6 +301,21 @@ $timer.Add_Tick({
             }
         }
     } catch { }
+    try {
+        $script:ticks++
+        $gamePaths = @(if (Test-Path "$userKey\Games") { (Get-Item "$userKey\Games").Property })
+        if ($gamePaths.Count) {
+            $byName = @{}
+            foreach ($g in $gamePaths) { $byName[[IO.Path]::GetFileNameWithoutExtension($g)] = $g }
+            $seen = @{}
+            foreach ($p in @(Get-GameProcess @($byName.Keys))) {
+                $n = if ($p.Name -like 'FiveM_*GTAProcess') { 'FiveM' } else { $p.Name }
+                if ($byName.ContainsKey($n)) { $seen[$byName[$n]] = $true }
+            }
+            foreach ($path in $seen.Keys) { $script:playPending[$path] = [int]$script:playPending[$path] + 3 }
+        }
+        if ($script:ticks % 20 -eq 0) { Save-PlayTime; Update-ScheduledTheme }
+    } catch { }
     if ((Get-Setting 'AutoBoost') -ne 1) { $script:autoStarted = $null; return }
     $games = @(if (Test-Path "$userKey\Games") { (Get-Item "$userKey\Games").Property | ForEach-Object { [IO.Path]::GetFileNameWithoutExtension($_) } })
     if (!$games.Count) { return }
@@ -280,8 +331,48 @@ $timer.Add_Tick({
 })
 $timer.Start()
 
+# New Akati OS version: checked a minute after sign-in, then twice a day, in the background. One message per
+# version (unless "UpdateNotify" is 0); the menu shows it at the top until the update is installed
+$script:update = [hashtable]::Synchronized(@{ Tag = $null; Newer = $false })
+$installed = [string](Get-ItemProperty -Path 'HKLM:\SOFTWARE\AkatiOS' -Name Version -ErrorAction SilentlyContinue).Version
+$updateTimer = New-Object System.Windows.Forms.Timer
+$updateTimer.Interval = 60000
+$updateTimer.Add_Tick({
+    $updateTimer.Interval = 12 * 3600 * 1000
+    if (!$installed) { return }
+    $check = [PowerShell]::Create()
+    [void]$check.AddScript({
+        param($u)
+        try {
+            # The release page redirects to the latest tag (no GitHub API limit)
+            $req = [Net.HttpWebRequest]::Create('https://github.com/x2Swiftyouz/Akati-Os/releases/latest')
+            $req.Method = 'HEAD'; $req.AllowAutoRedirect = $false; $req.UserAgent = 'AkatiOS-Tray'; $req.Timeout = 20000
+            $res = $req.GetResponse(); $location = $res.Headers['Location']; $res.Close()
+            if ($location -match '/releases/tag/v?(\d+(\.\d+){1,3})') { $u.Tag = $Matches[1] }
+        } catch { }
+    }).AddArgument($script:update)
+    $script:updateRun = @{ PS = $check; Handle = $check.BeginInvoke() }
+})
+$updateTimer.Start()
+$notify.Add_BalloonTipClicked({ Start-Hidden $center '-Page about' })
+$updateShow = New-Object System.Windows.Forms.Timer
+$updateShow.Interval = 5000
+$updateShow.Add_Tick({
+    $tag = $script:update.Tag
+    if (!$tag -or $script:update.Shown -eq $tag) { return }
+    $script:update.Shown = $tag
+    if ($script:updateRun) { try { $script:updateRun.PS.EndInvoke($script:updateRun.Handle); $script:updateRun.PS.Dispose() } catch { }; $script:updateRun = $null }
+    $newer = try { [version]$tag -gt [version]$installed.TrimStart('v') } catch { $false }
+    $script:update.Newer = $newer
+    if (!$newer -or (Get-Setting 'UpdateNotify') -eq 0 -or (Get-Setting 'NotifiedVersion') -eq $tag) { return }
+    try { Set-ItemProperty -Path $userKey -Name NotifiedVersion -Value $tag -Force } catch { }
+    $notify.ShowBalloonTip(10000, ((T 'update') -f "v$tag"), (T 'updateTip'), [System.Windows.Forms.ToolTipIcon]::Info)
+})
+$updateShow.Start()
+
 [System.Windows.Forms.Application]::Run()
 $timer.Stop()
+Save-PlayTime
 if ($hotkeys) { $hotkeys.Dispose() }
 $notify.Dispose()
 $mutex.ReleaseMutex()

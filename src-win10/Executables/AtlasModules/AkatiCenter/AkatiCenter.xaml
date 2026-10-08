@@ -657,6 +657,9 @@
                         <RadioButton x:Name="NavTweaks" Style="{StaticResource Nav}">
                             <StackPanel Orientation="Horizontal"><Border Style="{StaticResource NavIcon}" Background="#8E8E93"><TextBlock Style="{StaticResource NavGlyph}" Text="&#xE713;"/></Border><TextBlock Tag="t:nav.tweaks" Text="Tweaks"/></StackPanel>
                         </RadioButton>
+                        <RadioButton x:Name="NavHealth" Style="{StaticResource Nav}">
+                            <StackPanel Orientation="Horizontal"><Border Style="{StaticResource NavIcon}" Background="#FF375F"><TextBlock Style="{StaticResource NavGlyph}" Text="&#xE95E;"/></Border><TextBlock Tag="t:nav.health" Text="Health"/></StackPanel>
+                        </RadioButton>
                         <RadioButton x:Name="NavCleaner" Style="{StaticResource Nav}">
                             <StackPanel Orientation="Horizontal"><Border Style="{StaticResource NavIcon}" Background="#FF453A"><TextBlock Style="{StaticResource NavGlyph}" Text="&#xE74D;"/></Border><TextBlock Tag="t:nav.cleaner" Text="Cleaner"/></StackPanel>
                         </RadioButton>
@@ -1056,6 +1059,73 @@
                                 </DockPanel>
                             </Border>
                             <StackPanel x:Name="SystemList"/>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- Health: Akati Doctor, startup time and temperatures, crashes, Windows Update, change history, backup -->
+                    <ScrollViewer x:Name="PageHealth" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
+                        <StackPanel>
+                            <DockPanel Margin="0,4,0,18">
+                                <Button x:Name="DoctorRun" DockPanel.Dock="Right" Style="{StaticResource Pill}" VerticalAlignment="Top" Margin="12,0,0,0">
+                                    <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE72C;" FontSize="12" Margin="0,0,8,0"/><TextBlock Tag="t:doc.run" Text="Check again"/></StackPanel>
+                                </Button>
+                                <TextBlock x:Name="DoctorSummary" Text="-" Style="{StaticResource Muted}" TextWrapping="Wrap"/>
+                            </DockPanel>
+                            <TextBlock Tag="t:doc.title" Text="Akati Doctor" Style="{StaticResource Section}"/>
+                            <Border Style="{StaticResource Card}" Padding="0" Margin="0,0,0,22">
+                                <StackPanel x:Name="DoctorList"/>
+                            </Border>
+                            <TextBlock Tag="t:health.speed" Text="Startup and temperatures" Style="{StaticResource Section}"/>
+                            <Border Style="{StaticResource Card}" Margin="0,0,0,22">
+                                <StackPanel>
+                                    <TextBlock x:Name="BootTime" Text="-" FontSize="22" FontWeight="Bold"/>
+                                    <TextBlock x:Name="BootDetail" Text="" Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                    <TextBlock x:Name="TempDetail" Text="" Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                                </StackPanel>
+                            </Border>
+                            <DockPanel>
+                                <Button x:Name="MinidumpOpen" DockPanel.Dock="Right" Style="{StaticResource Pill}" VerticalAlignment="Bottom" Margin="0,0,0,8" Padding="10,3" Tag="t:crash.folder" Content="Crash dump folder" Visibility="Collapsed"/>
+                                <TextBlock Tag="t:crash.title" Text="Crashes in the last 30 days" Style="{StaticResource Section}"/>
+                            </DockPanel>
+                            <Border Style="{StaticResource Card}" Padding="0" Margin="0,0,0,22">
+                                <StackPanel>
+                                    <TextBlock x:Name="CrashEmpty" Tag="t:crash.none" Text="No crashes. Nice." Style="{StaticResource Muted}" Margin="14,12"/>
+                                    <StackPanel x:Name="CrashList"/>
+                                </StackPanel>
+                            </Border>
+                            <TextBlock Tag="t:wu.title" Text="Windows Update" Style="{StaticResource Section}"/>
+                            <Border Style="{StaticResource Card}" Margin="0,0,0,22">
+                                <StackPanel>
+                                    <TextBlock x:Name="WuState" Text="-" FontWeight="SemiBold"/>
+                                    <TextBlock Tag="t:wu.sub" Text="Pause updates before a tournament or a long gaming night. Updates come again when the pause ends." Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,4,0,12"/>
+                                    <WrapPanel>
+                                        <Button x:Name="WuPause7" Style="{StaticResource Secondary}" Margin="0,0,10,10" Tag="t:wu.pause7" Content="Pause 1 week"/>
+                                        <Button x:Name="WuPause35" Style="{StaticResource Secondary}" Margin="0,0,10,10" Tag="t:wu.pause35" Content="Pause 5 weeks"/>
+                                        <Button x:Name="WuResume" Style="{StaticResource Secondary}" Margin="0,0,10,10" Tag="t:wu.resume" Content="Resume updates"/>
+                                        <Button x:Name="WuOpen" Style="{StaticResource Secondary}" Margin="0,0,10,10" Tag="t:wu.open" Content="Open Windows Update"/>
+                                    </WrapPanel>
+                                </StackPanel>
+                            </Border>
+                            <DockPanel>
+                                <Button x:Name="HistoryClear" DockPanel.Dock="Right" Style="{StaticResource Pill}" VerticalAlignment="Bottom" Margin="0,0,0,8" Padding="10,3" Tag="t:history.clear" Content="Clear"/>
+                                <TextBlock Tag="t:history.title" Text="Change history" Style="{StaticResource Section}"/>
+                            </DockPanel>
+                            <Border Style="{StaticResource Card}" Padding="0" Margin="0,0,0,22">
+                                <StackPanel>
+                                    <TextBlock x:Name="HistoryEmpty" Tag="t:history.none" Text="Switches you change in Tweaks show here, with Undo." Style="{StaticResource Muted}" Margin="14,12" TextWrapping="Wrap"/>
+                                    <StackPanel x:Name="HistoryList"/>
+                                </StackPanel>
+                            </Border>
+                            <TextBlock Tag="t:backup.title" Text="Backup" Style="{StaticResource Section}"/>
+                            <Border Style="{StaticResource Card}" Margin="0,0,0,16">
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Button x:Name="BackupSave" Style="{StaticResource Secondary}" Margin="0,0,8,0" Tag="t:backup.save" Content="Save backup"/>
+                                        <Button x:Name="BackupLoad" Style="{StaticResource Primary}" Tag="t:backup.load" Content="Restore"/>
+                                    </StackPanel>
+                                    <TextBlock Tag="t:backup.sub" Text="Save your settings, My games and every switch to a file." Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,0,16,0" VerticalAlignment="Center"/>
+                                </DockPanel>
+                            </Border>
                         </StackPanel>
                     </ScrollViewer>
 

@@ -3,6 +3,14 @@
 ## v1.4.1
 
 ### Added
+- New **Health** page in Akati OS Center (Ctrl+5):
+  - **Akati Doctor** checks the icon next to the clock, the desktop menu, the power plan, free space, a waiting restart, Memory integrity, devices with a problem and blue screens, with a button that fixes or opens each one, and **Repair Windows files** (DISM and SFC)
+  - How long Windows took to start (last and average), and the temperatures Windows reports (ACPI thermal zone, NVIDIA GPU; also as chips on the Dashboard, orange from 80 °C and red from 90 °C). No sensor driver is installed, so anti-cheats are not affected
+  - Crashes of the last 30 days: blue screens with their code, sudden power loss and apps that stopped working
+  - **Windows Update**: pause for 1 or 5 weeks, resume, and the date the pause ends
+  - **Change history**: the last 30 switches you changed, each with Undo
+  - **Backup**: saves the settings, My games with their profiles and every switch to a .json file, and restores them on a new install
+- Tweaks > Input and latency: **Mouse acceleration** (Enhance pointer precision, applies at once), **Lower other sounds during calls** and **Short key repeat delay**
 - **My games, one click to play**: each game has a **Play** button and its own profile: start Game boost first, keep the game off CPU 0 (the icon next to the clock does it while the game runs) and the Memory integrity setting it needs (on for Valorant, off for FiveM; Play offers to switch and restart)
 - Game boost > **FiveM**: finds FiveM, clears its cache folders (game files and settings stay), opens its folder, adds it to My games, and tests the connection time to your server (IP or IP:port)
 - Icon next to the clock: **Anti-cheat mode** and **Power plan** submenus, and keys that work in games: **Ctrl+Alt+B** starts or stops Game boost, **Ctrl+Alt+R** frees up RAM (switch in Tweaks > System). Automatic Game boost also notices the FiveM game process

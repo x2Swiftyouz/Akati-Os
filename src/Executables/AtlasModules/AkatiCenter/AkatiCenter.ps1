@@ -271,14 +271,15 @@ try {
 # Storage: every local drive with a bar
 function Show-Disks {
     $ui.DisksPanel.Children.Clear()
-    foreach ($d in @(Get-CimInstance Win32_LogicalDisk -Filter 'DriveType=3' -ErrorAction SilentlyContinue | Sort-Object DeviceID)) {
-        if (!$d.Size) { continue }
-        $used = 100 * ($d.Size - $d.FreeSpace) / $d.Size
+    # .NET instead of Win32_LogicalDisk: on some trimmed Windows builds (imOS) WMI returns drives without a size
+    foreach ($d in @([IO.DriveInfo]::GetDrives() | Where-Object { $_.DriveType -eq 'Fixed' -and $_.IsReady } | Sort-Object Name)) {
+        if (!$d.TotalSize) { continue }
+        $used = 100 * ($d.TotalSize - $d.TotalFreeSpace) / $d.TotalSize
         $row = New-Object System.Windows.Controls.StackPanel
         $row.Margin = '0,0,0,10'
         $top = New-Object System.Windows.Controls.Grid
-        $name = New-Text ("$($d.DeviceID)  " + $(if ($d.VolumeName) { $d.VolumeName } else { T 'disk.local' })) 13 'SemiBold'
-        $free = New-Text ((T 'disk.free') -f (Format-Size $d.FreeSpace), (Format-Size $d.Size)) 12
+        $name = New-Text ("$($d.Name.TrimEnd('\'))  " + $(if ($d.VolumeLabel) { $d.VolumeLabel } else { T 'disk.local' })) 13 'SemiBold'
+        $free = New-Text ((T 'disk.free') -f (Format-Size $d.TotalFreeSpace), (Format-Size $d.TotalSize)) 12
         $free.Foreground = $window.FindResource('MutedBrush'); $free.HorizontalAlignment = 'Right'
         [void]$top.Children.Add($name); [void]$top.Children.Add($free)
         $bar = New-Object System.Windows.Controls.ProgressBar
@@ -286,7 +287,7 @@ function Show-Disks {
         if ($used -ge 90) { $bar.Foreground = '#FF453A' }
         [void]$row.Children.Add($top); [void]$row.Children.Add($bar)
         # Less than 15% free: a shortcut to the Cleaner
-        if ($d.FreeSpace / $d.Size -lt 0.15) {
+        if ($d.TotalFreeSpace / $d.TotalSize -lt 0.15) {
             $clean = New-Object System.Windows.Controls.Button
             $clean.Style = $window.FindResource('Pill'); $clean.Content = T 'disk.clean'; $clean.HorizontalAlignment = 'Left'; $clean.Margin = '0,8,0,0'
             $clean.Add_Click({ $ui.NavCleaner.IsChecked = $true })
@@ -2599,8 +2600,8 @@ $ui.ReportButton.Add_Click({
             $lines += "CPU: $((Get-CimInstance Win32_Processor | Select-Object -First 1).Name)"
             $lines += 'GPU: ' + ((Get-CimInstance Win32_VideoController | ForEach-Object { "$($_.Name) (driver $($_.DriverVersion))" }) -join '; ')
             $lines += 'RAM: {0:N1} GB' -f ($os.TotalVisibleMemorySize / 1MB)
-            $disk = Get-CimInstance Win32_LogicalDisk -Filter "DeviceID='C:'"
-            $lines += 'C: {0:N1} GB free of {1:N1} GB' -f ($disk.FreeSpace / 1GB), ($disk.Size / 1GB)
+            $disk = [IO.DriveInfo]::new('C')
+            $lines += 'C: {0:N1} GB free of {1:N1} GB' -f ($disk.TotalFreeSpace / 1GB), ($disk.TotalSize / 1GB)
             $lines += "Power plan: $([string](powercfg /getactivescheme))"
         } catch { $lines += "System info error: $($_.Exception.Message)" }
         $lines += "WinGet: $(try { (& winget --version) 2>$null } catch { 'not found' })"

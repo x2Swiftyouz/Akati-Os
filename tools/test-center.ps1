@@ -30,7 +30,9 @@ foreach ($k in $en.Keys) {
 }
 
 # Keys used by the code and the window
-$ps1 = Get-Content -Raw -Encoding UTF8 (Join-Path $center 'AkatiCenter.ps1')
+# AkatiCenter.ps1 and its parts (AkatiCenter.<page>.ps1, AkatiClean.ps1), not the texts
+$ps1 = (Get-ChildItem -LiteralPath $center -Filter '*.ps1' | Where-Object { $_.Name -like 'AkatiCenter*' -or $_.Name -eq 'AkatiClean.ps1' } |
+    Where-Object { $_.Name -ne 'AkatiCenter.strings.ps1' } | ForEach-Object { Get-Content -Raw -Encoding UTF8 $_.FullName }) -join "`n"
 $xaml = Get-Content -Raw -Encoding UTF8 (Join-Path $center 'AkatiCenter.xaml')
 foreach ($m in [regex]::Matches($ps1, "\bT '([\w.]+)'")) { if (!$en.ContainsKey($m.Groups[1].Value)) { Fail "T '$($m.Groups[1].Value)' has no text" } }
 foreach ($m in [regex]::Matches($ps1 + $xaml, '[''"]t:([\w.]+)')) {

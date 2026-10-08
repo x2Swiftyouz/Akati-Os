@@ -113,6 +113,13 @@ jobs:
         shell: pwsh
         run: ./tools/test-center.ps1
 
+      - name: Test the Akati OS Center logic (PowerShell 7 and Windows PowerShell 5.1)
+        shell: pwsh
+        run: |
+          ./tools/test-logic.ps1
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/test-logic.ps1
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
       - name: Check the Riot installer signature
         # GAMEAPPS.ps1 runs the Riot installer only when it is signed by Riot Games. Warning only, so a
         # download problem on Riot's side does not fail the build.

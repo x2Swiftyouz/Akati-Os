@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Changed
+- Akati OS Center is split into one file per page, and `tools/test-logic.ps1` tests the score, FPS, size, color and search functions in CI (PowerShell 7 and 5.1)
+
 ### Added
 - Game boost > **FPS test**: measures the game from My games that runs for 30 seconds (average FPS and 1% low) and compares with and without Game boost. Uses PresentMon by Intel, downloaded once from its GitHub releases and run only when signed by Intel (it reads the frame times from Windows, nothing is injected into the game)
 - **Akati Score** (0-100) on the Health page and the Dashboard: Akati Doctor, startup apps, memory in use, ping and free space, with what would raise it

@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Changed
+- Light by day / dark at night (Akati OS Center By time and the Windows switch) follows a time zone changed while the app runs; the last page and the window position are saved at once, not only when the window is closed
 - After an update, Akati OS Center restarts the icon next to the clock when it still runs the old version (new features of the icon, such as play time, work without signing in again)
 - Turning on the weekly automatic clean shows why when Windows does not create the task (also in `%ProgramData%\AkatiOS\AkatiClean.log`)
 - Akati OS Center is split into one file per page, and `tools/test-logic.ps1` tests the score, FPS, size, color and search functions in CI (PowerShell 7 and 5.1)

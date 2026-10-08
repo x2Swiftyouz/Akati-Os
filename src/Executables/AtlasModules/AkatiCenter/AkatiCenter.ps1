@@ -268,6 +268,8 @@ $script:page = 'dashboard'
 function Get-PageId([string]$p) { [Globalization.CultureInfo]::InvariantCulture.TextInfo.ToTitleCase($p) }
 function Show-Page([string]$name) {
     $script:page = $name
+    # Saved at once, so the next start opens it even when the app did not close normally
+    if (!$Screenshot) { Save-Setting LastPage $name }
     foreach ($p in $pages) {
         $el = $ui["Page$(Get-PageId $p)"]
         if ($p -ne $name) { $el.Visibility = 'Collapsed'; continue }
@@ -766,7 +768,17 @@ $timer.Add_Tick({
     Update-Stats; Receive-Work; Update-AppProgress; Update-Ping
     if ($script:menuAt -and (Get-Date) -gt $script:menuAt) { Update-DesktopMenu }
     # Auto follows Windows, By time follows the clock
-    if (!$Screenshot -and (Get-Date) -gt $script:lookAt) { $script:lookAt = (Get-Date).AddSeconds(30); $n = Get-LookName; if ($n -ne $script:look) { Set-CenterLook $n } }
+    if (!$Screenshot -and (Get-Date) -gt $script:lookAt) {
+        $script:lookAt = (Get-Date).AddSeconds(30)
+        # A changed time zone in Windows reaches a running app only after this
+        [TimeZoneInfo]::ClearCachedData()
+        $n = Get-LookName; if ($n -ne $script:look) { Set-CenterLook $n }
+    }
+    # The window position, a few seconds after it was moved (also when Windows closes the app at shutdown)
+    if ($script:posAt -and (Get-Date) -gt $script:posAt) {
+        $script:posAt = $null
+        if (!$script:full -and $window.WindowState -eq 'Normal') { Save-Setting WindowX ([int]$window.Left); Save-Setting WindowY ([int]$window.Top) }
+    }
 })
 $window.Add_ContentRendered({ Close-Splash; $window.Activate() })
 $window.Add_Loaded({
@@ -793,6 +805,7 @@ $window.Add_Loaded({
     $timer.Start()
 })
 # Where the window was and the page it showed, for the next start
+$window.Add_LocationChanged({ if (!$Screenshot) { $script:posAt = (Get-Date).AddSeconds(2) } })
 $window.Add_Closing({
     if ($Screenshot) { return }
     try {

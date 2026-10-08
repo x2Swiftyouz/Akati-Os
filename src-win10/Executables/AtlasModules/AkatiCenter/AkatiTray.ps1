@@ -263,6 +263,7 @@ function Save-PlayTime {
 Add-Type -Namespace AkatiOS -Name TrayNative -MemberDefinition '[DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern IntPtr SendMessageTimeout(IntPtr hWnd, int msg, IntPtr wParam, string lParam, int flags, int timeout, out IntPtr result);'
 function Update-ScheduledTheme {
     if ((Get-Setting 'ScheduleTheme') -ne 1) { return }
+    [TimeZoneInfo]::ClearCachedData()
     $h = (Get-Date).Hour
     $light = [int]($h -ge 7 -and $h -lt 19)
     $key = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize'

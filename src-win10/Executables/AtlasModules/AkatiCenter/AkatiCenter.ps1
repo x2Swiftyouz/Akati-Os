@@ -1476,10 +1476,33 @@ function Get-GpuMsiKeys {
 }
 # Group: the section on the Tweaks page (none = Gaming). Script: an unchanged AtlasOS script in AtlasDesktop,
 # run with /silent in the background. Work: a script block run in the background, param($on).
-# More unused services (setup option "disable-extra-services") and their Windows default start type
-$extraServices = [ordered]@{ AJRouter = 3; Fax = 3; MapsBroker = 2; PhoneSvc = 3; RetailDemo = 3; wisvc = 3; SCardSvr = 3; ScDeviceEnum = 3
-    SCPolicySvc = 3; WpcMonSvc = 3; SEMgrSvc = 3; WalletService = 3; WMPNetworkSvc = 3; TroubleshootingSvc = 3 }
+# Windows services Akati OS can turn off (Start = 4), each with its Windows default start type (2 automatic,
+# 3 manual). extra: the setup option "disable-extra-services" and one switch; the others: one switch each.
+# Services this Windows does not have are skipped, so no empty service keys are made.
+$serviceGroups = @{
+    extra    = [ordered]@{ AJRouter = 3; Fax = 3; MapsBroker = 2; PhoneSvc = 3; RetailDemo = 3; wisvc = 3; SCardSvr = 3; ScDeviceEnum = 3
+                           SCPolicySvc = 3; WpcMonSvc = 3; SEMgrSvc = 3; WalletService = 3; WMPNetworkSvc = 3; TroubleshootingSvc = 3
+                           dmwappushservice = 3; TermService = 3; SessionEnv = 3; UmRdpService = 3; WinRM = 3; CertPropSvc = 3
+                           vmickvpexchange = 3; vmicguestinterface = 3; vmicshutdown = 3; vmicheartbeat = 3; vmicvmsession = 3
+                           vmicrdv = 3; vmictimesync = 3; vmicvss = 3; edgeupdate = 2; edgeupdatem = 3 }
+    xbox     = [ordered]@{ XblAuthManager = 3; XblGameSave = 3; XboxNetApiSvc = 3; XboxGipSvc = 3 }
+    iphelper = @{ iphlpsvc = 2 }
+    hello    = @{ WbioSrvc = 3 }
+    scanner  = @{ stisvc = 3 }
+    hotspot  = @{ SharedAccess = 3 }
+    notify   = @{ WpnService = 2 }
+    cdp      = @{ CDPSvc = 2 }
+}
 $servicesKey = 'HKLM:\SYSTEM\CurrentControlSet\Services'
+function Test-ServicesOff($group) {
+    $found = @($group.Keys | Where-Object { Test-Path "$servicesKey\$_" })
+    $found.Count -gt 0 -and !($found | Where-Object { (Get-RegValue "$servicesKey\$_" 'Start') -ne 4 })
+}
+function Set-ServicesOff($group, [bool]$off) {
+    foreach ($name in $group.Keys) {
+        if (Test-Path "$servicesKey\$name") { Set-ItemProperty -Path "$servicesKey\$name" -Name Start -Value $(if ($off) { 4 } else { $group[$name] }) -Type DWord -Force }
+    }
+}
 $tweaks = @(
     @{ Key = 'hags'; Glyph = [char]0xE7F4; Restart = $true
        Get = { (Get-RegValue $gpuKey 'HwSchMode') -eq 2 }
@@ -1564,14 +1587,23 @@ $tweaks = @(
        Work = { param($on)
                 try { if ($on) { Enable-MMAgent -MemoryCompression -ErrorAction Stop } else { Disable-MMAgent -MemoryCompression -ErrorAction Stop } }
                 catch { $_.Exception.Message } } }
-    # On: the services this Windows has are disabled (from the next start); off: their Windows default
-    @{ Key = 'extrasvc'; Group = 'system'; Glyph = [char]0xE912; Restart = $true; Default = $false
-       Get = { $found = @($extraServices.Keys | Where-Object { Test-Path "$servicesKey\$_" })
-               $found.Count -gt 0 -and !($found | Where-Object { (Get-RegValue "$servicesKey\$_" 'Start') -ne 4 }) }
-       Set = { param($on)
-               foreach ($name in $extraServices.Keys) {
-                   if (Test-Path "$servicesKey\$name") { Set-ItemProperty -Path "$servicesKey\$name" -Name Start -Value $(if ($on) { 4 } else { $extraServices[$name] }) -Type DWord -Force }
-               } } }
+    # Tweaks > Services: on = turned off from the next start, off = back to the Windows default start type
+    @{ Key = 'extrasvc'; Group = 'services'; Glyph = [char]0xE912; Restart = $true; Default = $false
+       Get = { Test-ServicesOff $serviceGroups.extra }; Set = { param($on) Set-ServicesOff $serviceGroups.extra $on } }
+    @{ Key = 'svcxbox'; Group = 'services'; Glyph = [char]0xE7FC; Restart = $true; Default = $false
+       Get = { Test-ServicesOff $serviceGroups.xbox }; Set = { param($on) Set-ServicesOff $serviceGroups.xbox $on } }
+    @{ Key = 'svciphelper'; Group = 'services'; Glyph = [char]0xE968; Restart = $true; Default = $false
+       Get = { Test-ServicesOff $serviceGroups.iphelper }; Set = { param($on) Set-ServicesOff $serviceGroups.iphelper $on } }
+    @{ Key = 'svchello'; Group = 'services'; Glyph = [char]0xE928; Restart = $true; Default = $false
+       Get = { Test-ServicesOff $serviceGroups.hello }; Set = { param($on) Set-ServicesOff $serviceGroups.hello $on } }
+    @{ Key = 'svcscanner'; Group = 'services'; Glyph = [char]0xE722; Restart = $true; Default = $false
+       Get = { Test-ServicesOff $serviceGroups.scanner }; Set = { param($on) Set-ServicesOff $serviceGroups.scanner $on } }
+    @{ Key = 'svchotspot'; Group = 'services'; Glyph = [char]0xE88A; Restart = $true; Default = $false
+       Get = { Test-ServicesOff $serviceGroups.hotspot }; Set = { param($on) Set-ServicesOff $serviceGroups.hotspot $on } }
+    @{ Key = 'svcnotify'; Group = 'services'; Glyph = [char]0xEA8F; Restart = $true; Default = $false
+       Get = { Test-ServicesOff $serviceGroups.notify }; Set = { param($on) Set-ServicesOff $serviceGroups.notify $on } }
+    @{ Key = 'svccdp'; Group = 'services'; Glyph = [char]0xE8EA; Restart = $true; Default = $false
+       Get = { Test-ServicesOff $serviceGroups.cdp }; Set = { param($on) Set-ServicesOff $serviceGroups.cdp $on } }
     # The same two values as the AtlasOS scripts "Enable VBS" / "Disable VBS" (AtlasOS 0.4.1 for Windows 10 has no such scripts)
     @{ Key = 'vbs'; Group = 'system'; Glyph = [char]0xE72E; Restart = $true
        Get = { (Get-RegValue $hvciKey 'Enabled') -eq 1 }
@@ -1598,7 +1630,7 @@ $tweaks = @(
 
 # One gray heading and one grouped list per section (Gaming is in the XAML)
 $tweakLists = @{ gaming = $ui.TweaksList }
-foreach ($g in 'latency', 'network', 'graphics', 'system') {
+foreach ($g in 'latency', 'network', 'graphics', 'system', 'services') {
     $head = New-Text (T "tw.group.$g") 13 'SemiBold' "t:tw.group.$g"
     $head.Style = $window.FindResource('Section')
     $card = New-Object System.Windows.Controls.Border

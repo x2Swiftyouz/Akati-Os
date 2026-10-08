@@ -3,7 +3,8 @@
 ## v1.4.1
 
 ### Added
-- Setup option **Turn off more unused services** (ticked, on the Microsoft Store page): maps, phone, smart card, payments and NFC, wallet, parental controls, retail demo, Windows Insider, AllJoyn, fax, media sharing and recommended troubleshooting. Switch in Akati OS Center > Tweaks to turn them off or back to the Windows defaults
+- Setup option **Turn off more unused services** (ticked, on the Microsoft Store page): maps, phone, smart card, payments and NFC, wallet, parental controls, retail demo, Windows Insider, AllJoyn, fax, media sharing and recommended troubleshooting. Switch in Akati OS Center > Tweaks to turn them off or back to the Windows defaults. Also WAP Push, Remote Desktop, WinRM, smart card certificates, Hyper-V guest services and the Edge updaters
+- Akati OS Center > Tweaks > **Services**: switches for Xbox services, IP Helper, Windows Hello biometrics, scanners and cameras (WIA), Mobile hotspot, the notification service and Connected Devices (not changed during setup)
 - Game boost > **Anti-cheat mode**: Valorant mode turns Memory integrity (HVCI) on, FiveM mode turns it off, shows the current state and offers a restart
 - **Akati OS icon next to the clock** (setup option on the Notifications page, ticked; switch in Tweaks): CPU and RAM when you point at it, a menu with your apps and tools, and the **automatic Game boost**: it starts when a game from My games opens and stops when the game closes (Game boost page)
 - **Search everything with Ctrl+K** (or the search field in the sidebar): pages, settings, gaming apps, your games and actions such as free up RAM, flush DNS or start Game boost, in English and Thai

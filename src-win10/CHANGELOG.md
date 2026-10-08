@@ -1,6 +1,6 @@
 # Changelog: Akati OS for Windows 10
 
-## v1.4.1
+## v1.5.0
 
 ### Added
 - **Performance widget**: a small bar on top of other windows and borderless games with CPU, RAM, GPU, GPU temperature (NVIDIA) and ping. Open it from the icon next to the clock or Tweaks > System; drag to move, right-click to close; it comes back at sign-in while it was open

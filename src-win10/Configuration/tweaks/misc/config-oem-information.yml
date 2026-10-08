@@ -14,7 +14,7 @@ actions:
       # Shows in Settings
       Set-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\OEMInformation' -Name 'Model' -Value $reportedVer -Force
       # Used by the Akati OS update checker
-      New-Item 'HKLM:\SOFTWARE\AkatiOS' -Force | Out-Null
+      if (!(Test-Path 'HKLM:\SOFTWARE\AkatiOS')) { New-Item 'HKLM:\SOFTWARE\AkatiOS' -Force | Out-Null }
       Set-ItemProperty 'HKLM:\SOFTWARE\AkatiOS' -Name 'Version' -Value $version -Force
       Set-ItemProperty 'HKLM:\SOFTWARE\AkatiOS' -Name 'Edition' -Value 'Windows 10' -Force
       # Shows in winver

@@ -40,17 +40,33 @@ function Write-TrayLog([string]$text) {
     } catch { }
 }
 
+# The signed-in user the task is for. AME Wizard can run this as SYSTEM (USERNAME is then the computer
+# account, for example "PC$"), so the user is taken from Windows (console user, else the owner of Explorer)
+function Get-SignedInUser {
+    if ([Security.Principal.WindowsIdentity]::GetCurrent().User.Value -ne 'S-1-5-18' -and $env:USERNAME -notlike '*$') {
+        return "$env:USERDOMAIN\$env:USERNAME"
+    }
+    $user = (Get-CimInstance Win32_ComputerSystem -ErrorAction SilentlyContinue).UserName
+    if ($user) { return $user }
+    foreach ($p in @(Get-CimInstance Win32_Process -Filter "Name='explorer.exe'" -ErrorAction SilentlyContinue)) {
+        $owner = Invoke-CimMethod -InputObject $p -MethodName GetOwner -ErrorAction SilentlyContinue
+        if ($owner.User) { return "$($owner.Domain)\$($owner.User)" }
+    }
+    throw 'No signed-in user found'
+}
+
 if ($Install) {
     try {
         Set-Wanted 1
         # At sign-in, as this user with normal rights, running as long as the user is signed in
         $action = New-ScheduledTaskAction -Execute $ps -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$PSCommandPath`""
-        $trigger = New-ScheduledTaskTrigger -AtLogOn -User "$env:USERDOMAIN\$env:USERNAME"
-        $principal = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive -RunLevel Limited
+        $user = Get-SignedInUser
+        $trigger = New-ScheduledTaskTrigger -AtLogOn -User $user
+        $principal = New-ScheduledTaskPrincipal -UserId $user -LogonType Interactive -RunLevel Limited
         $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit ([TimeSpan]::Zero) -MultipleInstances IgnoreNew
         Register-ScheduledTask -TaskPath $taskPath -TaskName $taskName -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force -ErrorAction Stop | Out-Null
         Start-ScheduledTask -TaskPath $taskPath -TaskName $taskName -ErrorAction SilentlyContinue
-        Write-TrayLog 'installed'
+        Write-TrayLog "installed for $user"
         exit 0
     } catch {
         Write-TrayLog "install failed: $($_.Exception.Message)"
@@ -126,7 +142,7 @@ $menu.Add_Opening({
     [void]$menu.Items.Add($apps)
     [void]$menu.Items.Add('-')
     [void](& $add $(if (Test-Boost) { T 'boostOn' } else { T 'boostOff' }) { Start-Hidden $menuScript '-Action boost' })
-    $auto = & $add (T 'auto') { $on = !((Get-Setting 'AutoBoost') -eq 1); New-Item -Path $userKey -Force -ErrorAction SilentlyContinue | Out-Null; Set-ItemProperty -Path $userKey -Name AutoBoost -Value $(if ($on) { 1 } else { 0 }) }
+    $auto = & $add (T 'auto') { $on = !((Get-Setting 'AutoBoost') -eq 1); if (!(Test-Path $userKey)) { New-Item -Path $userKey -Force -ErrorAction SilentlyContinue | Out-Null }; Set-ItemProperty -Path $userKey -Name AutoBoost -Value $(if ($on) { 1 } else { 0 }) }
     $auto.Checked = (Get-Setting 'AutoBoost') -eq 1
     [void](& $add (T 'clean') { Start-Hidden $center '-Page cleaner' })
     [void](& $add (T 'ping') { Start-Hidden $center '-Page boost -Ping' })

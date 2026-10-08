@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Pack each playbook into dist\ (zip, password "malte") and write dist\SHA256SUMS.txt:
+    Pack each playbook into dist\ (7z archive, password "malte", as the AME Wizard docs describe) and write dist\SHA256SUMS.txt:
       src\        -> dist\AkatiOS-Win11_v<version>.apbx  (Windows 11)
       src-win10\  -> dist\AkatiOS-Win10_v<version>.apbx  (Windows 10)
     The version is read from each playbook.conf <Version>.
@@ -81,7 +81,7 @@ function Build-Playbook([string]$srcName, [string]$prefix) {
     $out = Join-Path $dist "${prefix}_v$version.apbx"
     Push-Location $src
     try {
-        & $7z a -tzip -mx1 "-p$password" -y $out '.\*' | Out-Null
+        & $7z a -t7z "-p$password" -y $out '.\*' | Out-Null
         if ($LASTEXITCODE -ne 0) { throw "7-Zip failed with exit code $LASTEXITCODE" }
     }
     finally { Pop-Location }

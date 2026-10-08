@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Pack each playbook into dist/ (zip, password "malte") and write dist/SHA256SUMS.txt:
+# Pack each playbook into dist/ (7z archive, password "malte", as the AME Wizard docs describe) and write dist/SHA256SUMS.txt:
 #   src/        -> dist/AkatiOS-Win11_v<version>.apbx  (Windows 11)
 #   src-win10/  -> dist/AkatiOS-Win10_v<version>.apbx  (Windows 10)
 # The version is read from each playbook.conf <Version>.
@@ -49,13 +49,10 @@ build_one() {
 
     # 4. Pack (contents of the source folder at the archive root)
     local OUT="${PREFIX}_v${VERSION}.apbx"
-    if command -v 7z >/dev/null; then
-        (cd "$SRC" && 7z a -tzip -mx1 -p"$PASSWORD" -y "$DIST/$OUT" . >/dev/null)
-    elif command -v zip >/dev/null; then
-        (cd "$SRC" && zip -q -r -X -P "$PASSWORD" "$DIST/$OUT" .)
-    else
-        echo "error: need 7z or zip" >&2; exit 1
-    fi
+    local SEVENZIP
+    SEVENZIP="$(command -v 7z || command -v 7zz || command -v 7za || true)"
+    [[ -n "$SEVENZIP" ]] || { echo "error: need 7-Zip (7z, 7zz or 7za; Debian/Ubuntu: apt install 7zip)" >&2; exit 1; }
+    (cd "$SRC" && "$SEVENZIP" a -t7z -p"$PASSWORD" -y "$DIST/$OUT" . >/dev/null)
 
     # 5. Checksum (sha256sum format)
     (cd "$DIST" && sha256sum -- "$OUT" >> SHA256SUMS.txt)

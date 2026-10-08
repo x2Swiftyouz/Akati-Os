@@ -18,6 +18,7 @@
 - Setup page **Notifications and Game Bar** (both ticked by default): turns off Windows notifications and Xbox Game Bar (Win+G, background clip recording, controller button). Both can be turned on again in Windows Settings; Game Mode is not changed
 
 ### Changed
+- The `.apbx` files are 7z archives (password `malte`) as the AME Wizard docs describe, instead of zip archives. They are also about a quarter smaller
 - Ctrl+K search: names come before descriptions, and a word only matches at the start of a word, so "ram" finds Free up RAM first and no longer finds settings that only mention "frame"
 - New Akati OS logo: a white peak with a play arrow on a purple to pink tile, the same in AME Wizard (`playbook.png`), Akati OS Center, the shortcuts, the icon next to the clock, the desktop menu and the default account picture. Drawn from code by `tools/make-assets.py logos`
 - The Windows 11 file is now `AkatiOS-Win11_v<version>.apbx` and shows as **AkatiOS11** / "Akati OS v<version> for Windows 11" in AME Wizard, so it is clear which file is for Windows 11 and which for Windows 10 (`AkatiOS-Win10_v<version>.apbx`, **AkatiOS10**). The README has a table of which file to use

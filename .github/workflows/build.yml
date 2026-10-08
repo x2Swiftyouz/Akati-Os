@@ -140,6 +140,17 @@ jobs:
           & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $script -Remove
           if (Test-Path $root) { Write-Host "::error::-Remove left the menu"; exit 1 }
 
+      - name: Check the tray hotkeys compile
+        shell: powershell
+        run: |
+          $tray = Get-Content -Raw -Encoding UTF8 src\Executables\AtlasModules\AkatiCenter\AkatiTray.ps1
+          $code = [regex]::Match($tray, "(?s)@'\r?\n(using System;.*?)\r?\n'@").Groups[1].Value
+          if (!$code) { Write-Host "::error::No hotkey code found in AkatiTray.ps1"; exit 1 }
+          Add-Type -ReferencedAssemblies System.Windows.Forms -TypeDefinition $code
+          $h = New-Object AkatiHotkeys
+          Write-Host "Ctrl+Alt+B registered: $($h.Add(1, 0x42))"
+          $h.Dispose()
+
       - name: Render Akati OS Center screenshots
         shell: powershell
         run: |

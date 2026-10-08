@@ -1288,9 +1288,25 @@ function Stop-Boost {
     Remove-Item -Path $boostKey -Recurse -Force -ErrorAction SilentlyContinue
 }
 
+# Game boost started: a short sound and the icon grows and settles (can be turned off)
+$ui.BoostSound.IsChecked = (Get-RegValue $settingsKey 'BoostSound') -ne 0
+$ui.BoostSound.Add_Click({ Save-Setting BoostSound ([int][bool]$this.IsChecked) })
+function Show-BoostEffect {
+    if (!$ui.BoostSound.IsChecked) { return }
+    try {
+        $wav = Join-Path $windir 'AtlasModules\Other\AkatiOS\Sounds\akatios-connect.wav'
+        if (Test-Path $wav) { (New-Object System.Media.SoundPlayer $wav).Play() }
+    } catch { }
+    $scale = New-Object System.Windows.Media.ScaleTransform 1, 1
+    $ui.BoostIcon.RenderTransformOrigin = '0.5,0.5'; $ui.BoostIcon.RenderTransform = $scale
+    $grow = New-Object System.Windows.Media.Animation.DoubleAnimation 1, 1.25, ([TimeSpan]::FromMilliseconds(180))
+    $grow.AutoReverse = $true; $grow.RepeatBehavior = New-Object System.Windows.Media.Animation.RepeatBehavior 2
+    $scale.BeginAnimation([System.Windows.Media.ScaleTransform]::ScaleXProperty, $grow)
+    $scale.BeginAnimation([System.Windows.Media.ScaleTransform]::ScaleYProperty, $grow)
+}
 $ui.BoostButton.Add_Click({
     try {
-        if (Test-Boost) { Stop-Boost; Set-Status (T 'status.boostoff') } else { Start-Boost; Set-Status (T 'status.booston') }
+        if (Test-Boost) { Stop-Boost; Set-Status (T 'status.boostoff') } else { Start-Boost; Set-Status (T 'status.booston'); Show-BoostEffect }
     } catch { Set-Status $_.Exception.Message }
     Update-BoostCard
     Request-MenuUpdate
@@ -1617,6 +1633,15 @@ $tweaks = @(
     @{ Key = 'tray'; Group = 'system'; Glyph = [char]0xE7C4; Async = $true
        Get = { [bool](Get-ScheduledTask -TaskPath '\AkatiOS\' -TaskName 'Akati OS tray' -ErrorAction SilentlyContinue) }
        Work = { param($on, $script) & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path (Split-Path $script) 'AkatiTray.ps1') $(if ($on) { '-Install' } else { '-Remove' }) } }
+    # Read by the icon next to the clock (AkatiTray.ps1), which is restarted to pick up the change
+    @{ Key = 'hotkeys'; Group = 'system'; Glyph = [char]0xE765; Default = $true
+       Get = { (Get-RegValue $settingsKey 'Hotkeys') -ne 0 }
+       Set = { param($on)
+               Save-Setting Hotkeys ([int]$on)
+               if (Get-ScheduledTask -TaskPath '\AkatiOS\' -TaskName 'Akati OS tray' -ErrorAction SilentlyContinue) {
+                   Stop-ScheduledTask -TaskPath '\AkatiOS\' -TaskName 'Akati OS tray' -ErrorAction SilentlyContinue
+                   Start-ScheduledTask -TaskPath '\AkatiOS\' -TaskName 'Akati OS tray' -ErrorAction SilentlyContinue
+               } } }
     @{ Key = 'startdelay'; Group = 'system'; Glyph = [char]0xE823; Default = $true
        Get = { (Get-RegValue $serializeKey 'StartupDelayInMSec') -ne 0 }
        Set = { param($on)
@@ -1935,16 +1960,43 @@ function Set-GameOption([string]$path, [string]$kind, [bool]$on) {
         }
     }
 }
+# Game profile, in HKCU\Software\AkatiOS\Center\GameProfiles as "<path>|<name>":
+#   boost = 1: Play starts Game boost first
+#   core0 = 1: the icon next to the clock keeps the game off CPU 0 (where Windows handles most interrupts)
+#   hvci  = 1 / 0: the game needs Memory integrity on (Valorant) / off (FiveM); Play offers to switch it
+$profilesKey = "$settingsKey\GameProfiles"
+function Get-GameProfile([string]$path, [string]$name) { Get-RegValue $profilesKey "$path|$name" }
+function Set-GameProfile([string]$path, [string]$name, $value) {
+    if (!(Test-Path $profilesKey)) { New-Item -Path $profilesKey -Force | Out-Null }
+    if ($null -eq $value) { Remove-ItemProperty -Path $profilesKey -Name "$path|$name" -ErrorAction SilentlyContinue }
+    else { Set-ItemProperty -Path $profilesKey -Name "$path|$name" -Value ([int]$value) -Type DWord -Force }
+}
+function Get-HvciText($value) { T $(switch ($value) { 1 { 'games.hvci.on' } 0 { 'games.hvci.off' } default { 'games.hvci.any' } }) }
+# Play: Memory integrity as the game needs it, Game boost if wanted, then the game, as the user (not elevated)
+function Start-Game([string]$path) {
+    $name = [IO.Path]::GetFileNameWithoutExtension($path)
+    $need = Get-GameProfile $path 'hvci'
+    if ($null -ne $need -and ([bool]$need) -ne ((Get-RegValue $hvciKey 'Enabled') -eq 1)) {
+        $ask = (T 'games.hvciask') -f $name, (T $(if ($need) { 'games.on' } else { 'games.off' }))
+        if ([System.Windows.MessageBox]::Show($ask, 'Akati OS Center', 'YesNo', 'Question') -eq 'Yes') { Set-AntiCheat ([bool]$need); return }
+    }
+    if ((Get-GameProfile $path 'boost') -eq 1 -and !(Test-Boost)) {
+        try { Start-Boost; Show-BoostEffect } catch { }
+        Update-BoostCard
+    }
+    Start-Process explorer.exe -ArgumentList "`"$path`""
+    Set-Status ((T 'status.gamestarted') -f $name)
+}
 function Show-Games {
     $ui.GamesList.Children.Clear()
     $paths = @(if (Test-Path $gamesKey) { (Get-Item $gamesKey).Property })
     # Defender exclusions are read once per refresh (null when Defender is off)
     $exclusions = try { @((Get-MpPreference -ErrorAction Stop).ExclusionPath) } catch { $null }
     foreach ($path in $paths) {
-        $right = New-Object System.Windows.Controls.StackPanel; $right.Orientation = 'Horizontal'
+        $chips = New-Object System.Windows.Controls.WrapPanel; $chips.Margin = '0,6,0,0'
         foreach ($kind in 'cpu', 'gpu', 'defender') {
             $chip = New-Object System.Windows.Controls.CheckBox
-            $chip.Style = $window.FindResource('Chip'); $chip.Content = T "games.$kind"; $chip.Margin = '0,0,6,0'; $chip.VerticalAlignment = 'Center'
+            $chip.Style = $window.FindResource('Chip'); $chip.Content = T "games.$kind"; $chip.Margin = '0,0,6,6'
             $chip.Tag = @{ Path = $path; Kind = $kind }
             $chip.IsChecked = Get-GameOption $path $kind $exclusions
             if ($kind -eq 'defender' -and $null -eq $exclusions) { $chip.IsEnabled = $false; $chip.ToolTip = T 'games.nodefender' }
@@ -1952,14 +2004,44 @@ function Show-Games {
                 $t = $this.Tag
                 try { Set-GameOption $t.Path $t.Kind ([bool]$this.IsChecked) } catch { $this.IsChecked = !$this.IsChecked; Set-Status $_.Exception.Message }
             })
-            [void]$right.Children.Add($chip)
+            [void]$chips.Children.Add($chip)
         }
+        foreach ($kind in 'boost', 'core0') {
+            $chip = New-Object System.Windows.Controls.CheckBox
+            $chip.Style = $window.FindResource('Chip'); $chip.Content = T "games.$kind"; $chip.Margin = '0,0,6,6'; $chip.ToolTip = T "games.$kind.tip"
+            $chip.Tag = @{ Path = $path; Kind = $kind }
+            $chip.IsChecked = (Get-GameProfile $path $kind) -eq 1
+            $chip.Add_Click({ $t = $this.Tag; Set-GameProfile $t.Path $t.Kind $(if ($this.IsChecked) { 1 } else { $null }) })
+            [void]$chips.Children.Add($chip)
+        }
+        # Memory integrity: any > on > off > any
+        $hv = New-Object System.Windows.Controls.Button
+        $hv.Style = $window.FindResource('Pill'); $hv.Padding = '10,3'; $hv.Margin = '0,0,6,6'; $hv.FontSize = 12
+        $hv.Content = Get-HvciText (Get-GameProfile $path 'hvci'); $hv.Tag = $path; $hv.ToolTip = T 'games.hvci.tip'
+        $hv.Add_Click({
+            $now = Get-GameProfile $this.Tag 'hvci'
+            $next = switch ($now) { 1 { 0 } 0 { $null } default { 1 } }
+            Set-GameProfile $this.Tag 'hvci' $next
+            $this.Content = Get-HvciText $next
+        })
+        [void]$chips.Children.Add($hv)
+
+        $right = New-Object System.Windows.Controls.StackPanel; $right.Orientation = 'Horizontal'
+        $play = New-Object System.Windows.Controls.Button
+        $play.Style = $window.FindResource('PillAccent'); $play.Padding = '14,5'; $play.Tag = $path
+        $pc = New-Object System.Windows.Controls.StackPanel; $pc.Orientation = 'Horizontal'
+        $pg = New-Text ([string][char]0xE768) 11; $pg.Style = $window.FindResource('Glyph'); $pg.Margin = '0,0,6,0'; $pg.VerticalAlignment = 'Center'
+        [void]$pc.Children.Add($pg); [void]$pc.Children.Add((New-Text (T 'games.play') 13 'SemiBold'))
+        $play.Content = $pc
+        $play.Add_Click({ Start-Game $this.Tag })
+        [void]$right.Children.Add($play)
         $remove = New-Object System.Windows.Controls.Button
         $remove.Style = $window.FindResource('Bare'); $remove.Padding = '7'; $remove.Margin = '4,0,0,0'; $remove.ToolTip = T 'games.remove'; $remove.Tag = $path
         $x = New-Text ([string][char]0xE711) 12; $x.Style = $window.FindResource('Glyph'); $remove.Content = $x
         $remove.Add_Click({
             $path = $this.Tag
             foreach ($kind in 'cpu', 'gpu', 'defender') { try { Set-GameOption $path $kind $false } catch { } }
+            foreach ($kind in 'boost', 'core0', 'hvci') { Set-GameProfile $path $kind $null }
             Remove-ItemProperty -Path $gamesKey -Name $path -ErrorAction SilentlyContinue
             Set-Status ((T 'status.gameremoved') -f [IO.Path]::GetFileNameWithoutExtension($path))
             Show-Games
@@ -1970,6 +2052,8 @@ function Show-Games {
         if (!$name) { $name = [IO.Path]::GetFileNameWithoutExtension($path) }
         $row = New-Row ([string][char]0xE7FC) $name $null $right $null
         $row.Sub.Text = Split-Path $path -Parent
+        $panel = $row.Sub.Parent
+        $panel.Children.Insert($panel.Children.IndexOf($row.Sub) + 1, $chips)
         $icon = Get-FileIcon @($path)
         if ($icon) { Set-RowIcon $row $icon }
         [void]$ui.GamesList.Children.Add($row.Row)
@@ -1977,11 +2061,7 @@ function Show-Games {
     $ui.GamesEmpty.Visibility = if ($paths.Count) { 'Collapsed' } else { 'Visible' }
     Update-Separators $ui.GamesList
 }
-$ui.GameAddButton.Add_Click({
-    $dialog = New-Object Microsoft.Win32.OpenFileDialog
-    $dialog.Title = T 'games.pick'; $dialog.Filter = 'Games (*.exe)|*.exe'
-    if (!$dialog.ShowDialog($window)) { return }
-    $path = $dialog.FileName
+function Add-Game([string]$path) {
     if (!(Test-Path $gamesKey)) { New-Item -Path $gamesKey -Force | Out-Null }
     Set-ItemProperty -Path $gamesKey -Name $path -Value 1 -Type DWord -Force
     # High priority and the dedicated GPU at once; skipping Defender is the user's choice
@@ -1989,6 +2069,66 @@ $ui.GameAddButton.Add_Click({
     Set-Status ((T 'status.gameadded') -f [IO.Path]::GetFileNameWithoutExtension($path))
     Show-Games
     Request-MenuUpdate
+}
+
+# FiveM: installed per user in %LOCALAPPDATA%\FiveM
+$fivemDir = Join-Path $env:LOCALAPPDATA 'FiveM'
+$fivemExe = Join-Path $fivemDir 'FiveM.exe'
+$fivemData = Join-Path $fivemDir 'FiveM.app\data'
+function Update-Fivem {
+    $found = Test-Path -LiteralPath $fivemExe
+    $ui.FivemState.Text = if ($found) { (T 'fivem.found') -f $fivemDir } else { T 'fivem.none' }
+    foreach ($b in $ui.FivemClear, $ui.FivemOpen, $ui.FivemAdd) { $b.IsEnabled = $found }
+    $ui.FivemServerHint.Visibility = if ($ui.FivemServer.Text) { 'Collapsed' } else { 'Visible' }
+}
+$ui.FivemServer.Text = [string](Get-RegValue $settingsKey 'FivemServer')
+$ui.FivemServer.Add_TextChanged({ $ui.FivemServerHint.Visibility = if ($this.Text) { 'Collapsed' } else { 'Visible' } })
+$ui.FivemOpen.Add_Click({ Start-Process explorer.exe -ArgumentList "`"$fivemDir`"" })
+$ui.FivemAdd.Add_Click({ Add-Game $fivemExe; Set-Status (T 'fivem.added') })
+# The cache folders FiveM rebuilds by itself; game files, settings and saved data stay
+$ui.FivemClear.Add_Click({
+    if (Get-Process -Name 'FiveM*' -ErrorAction SilentlyContinue) { Set-Status (T 'fivem.running'); return }
+    $bytes = 0
+    foreach ($name in 'cache', 'server-cache', 'server-cache-priv') {
+        $dir = Join-Path $fivemData $name
+        if (!(Test-Path -LiteralPath $dir)) { continue }
+        $bytes += [double](Get-ChildItem -LiteralPath $dir -Recurse -File -Force -ErrorAction SilentlyContinue | Measure-Object Length -Sum).Sum
+        Remove-Item -LiteralPath $dir -Recurse -Force -ErrorAction SilentlyContinue
+    }
+    Set-Status ((T 'fivem.cleared') -f (Format-Size $bytes))
+})
+# Connection time: TCP connect to the server (FiveM uses port 30120 when none is given), the average of 3 tries
+$ui.FivemPing.Add_Click({
+    $server = $ui.FivemServer.Text.Trim()
+    if (!$server) { return }
+    Save-Setting FivemServer $server
+    $ui.FivemPing.IsEnabled = $false; $ui.FivemResult.Text = '...'
+    Start-Work {
+        param($server)
+        $hostName, $port = $server -split ':', 2
+        if (!$port) { $port = 30120 }
+        $times = foreach ($i in 1..3) {
+            $client = New-Object System.Net.Sockets.TcpClient
+            $watch = [Diagnostics.Stopwatch]::StartNew()
+            try {
+                $wait = $client.BeginConnect($hostName, [int]$port, $null, $null)
+                if ($wait.AsyncWaitHandle.WaitOne(3000) -and $client.Connected) { [int]$watch.ElapsedMilliseconds }
+            } catch { } finally { $client.Close() }
+        }
+        if ($times) { [int](($times | Measure-Object -Average).Average) } else { -1 }
+    } @($server) {
+        param($r, $server)
+        $ms = Get-LastOutput $r
+        $ui.FivemResult.Text = if ($ms -ge 0) { (T 'fivem.result') -f $server, $ms } else { (T 'fivem.fail') -f $server }
+        $ui.FivemPing.IsEnabled = $true
+    } $server
+})
+Update-Fivem
+$ui.GameAddButton.Add_Click({
+    $dialog = New-Object Microsoft.Win32.OpenFileDialog
+    $dialog.Title = T 'games.pick'; $dialog.Filter = 'Games (*.exe)|*.exe'
+    if (!$dialog.ShowDialog($window)) { return }
+    Add-Game $dialog.FileName
 })
 Show-Games
 
@@ -2420,7 +2560,7 @@ $ui.UpdateButton.Add_Click({ if ($this.Tag -eq 'open') { Start-Process $script:r
 $ui.QuickUpdate.Add_Click({ $ui.NavAbout.IsChecked = $true; Start-UpdateCheck })
 $ui.QuickBoost.Add_Click({
     try {
-        if (Test-Boost) { Stop-Boost; Set-Status (T 'status.boostoff') } else { Start-Boost; Set-Status (T 'status.booston') }
+        if (Test-Boost) { Stop-Boost; Set-Status (T 'status.boostoff') } else { Start-Boost; Set-Status (T 'status.booston'); Show-BoostEffect }
     } catch { Set-Status $_.Exception.Message }
     Update-BoostCard; Update-Chips
 })

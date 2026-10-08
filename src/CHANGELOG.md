@@ -3,6 +3,10 @@
 ## v1.4.1
 
 ### Added
+- **My games, one click to play**: each game has a **Play** button and its own profile: start Game boost first, keep the game off CPU 0 (the icon next to the clock does it while the game runs) and the Memory integrity setting it needs (on for Valorant, off for FiveM; Play offers to switch and restart)
+- Game boost > **FiveM**: finds FiveM, clears its cache folders (game files and settings stay), opens its folder, adds it to My games, and tests the connection time to your server (IP or IP:port)
+- Icon next to the clock: **Anti-cheat mode** and **Power plan** submenus, and keys that work in games: **Ctrl+Alt+B** starts or stops Game boost, **Ctrl+Alt+R** frees up RAM (switch in Tweaks > System). Automatic Game boost also notices the FiveM game process
+- Starting Game boost plays a short sound and the icon pulses (can be turned off on the Game boost page)
 - Setup option **Turn off more unused services** (ticked, on the Microsoft Store page): maps, phone, smart card, payments and NFC, wallet, parental controls, retail demo, Windows Insider, AllJoyn, fax, media sharing and recommended troubleshooting. Switch in Akati OS Center > Tweaks to turn them off or back to the Windows defaults. Also WAP Push, Remote Desktop, WinRM, smart card certificates, Hyper-V guest services and the Edge updaters
 - Akati OS Center > Tweaks > **Services**: switches for Xbox services, IP Helper, Windows Hello biometrics, scanners and cameras (WIA), Mobile hotspot, the notification service and Connected Devices (not changed during setup)
 - Game boost > **Anti-cheat mode**: Valorant mode turns Memory integrity (HVCI) on, FiveM mode turns it off, shows the current state and offers a restart

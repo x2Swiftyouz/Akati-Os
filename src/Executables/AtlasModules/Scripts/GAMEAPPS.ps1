@@ -164,7 +164,7 @@ if ($AtSignIn) {
 $doneKey = 'HKCU:\Software\AkatiOS\InstalledAtSignIn'
 function Remove-SignInTask {
     if (!$FromTask -or !(Test-Installed)) { return }
-    New-Item -Path $doneKey -Force -ErrorAction SilentlyContinue | Out-Null
+    if (!(Test-Path $doneKey)) { New-Item -Path $doneKey -Force -ErrorAction SilentlyContinue | Out-Null }
     Set-ItemProperty -Path $doneKey -Name $App -Value 1 -Type DWord -ErrorAction SilentlyContinue
 }
 if ($FromTask -and (Get-ItemProperty -Path $doneKey -Name $App -ErrorAction SilentlyContinue)) { exit 0 }

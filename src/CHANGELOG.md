@@ -27,6 +27,8 @@
 - The System settings page is now part of **Tweaks**: gaming switches on top, then every AtlasOS setting with search and the restore point. Ctrl+1 to Ctrl+7 switch pages, Ctrl+F opens the search in Tweaks
 
 ### Fixed
+- The Akati OS icon next to the clock and the desktop menu task were not set up during setup: AME Wizard runs that step as SYSTEM, so the task was registered for the computer account ("No mapping between account names and security IDs"). The tasks are now registered for the signed-in user
+- Settings of Akati OS Center (language, My games, automatic Game boost) were erased when a desktop menu item ran with administrator rights or when automatic Game boost was switched in the tray menu; the setup also erased the "icon wanted" mark when it wrote the version. Existing registry keys are no longer recreated
 - Setup on Windows builds without `fthsvc.dll` (seen on imOS 10) showed "There was a problem starting fthsvc.dll". The Fault Tolerant Heap reset now only runs when the file exists; FTH is still turned off
 - The Akati OS icon next to the clock was sometimes not set up by AME Wizard (seen on imOS 10), so it did not start after sign-in. Setup now also marks it as wanted, and Akati OS Center sets it up again when it opens. Errors of the setup go to `%ProgramData%\AkatiOS\AkatiTray.log`
 - The Storage card in Akati OS Center was empty on Windows builds where WMI returns drives without a size (seen on imOS 10). Drives are now read with .NET

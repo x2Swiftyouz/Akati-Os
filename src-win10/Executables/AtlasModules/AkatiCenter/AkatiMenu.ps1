@@ -134,9 +134,24 @@ function Build-Menu {
     Set-ItemProperty -Path "$key\command" -Name '(default)' -Value "$centerCmd -Page gaming"
 }
 
+# The signed-in user the task is for. AME Wizard can run this as SYSTEM (USERNAME is then the computer
+# account, for example "PC$"), so the user is taken from Windows (console user, else the owner of Explorer)
+function Get-SignedInUser {
+    if ([Security.Principal.WindowsIdentity]::GetCurrent().User.Value -ne 'S-1-5-18' -and $env:USERNAME -notlike '*$') {
+        return "$env:USERDOMAIN\$env:USERNAME"
+    }
+    $user = (Get-CimInstance Win32_ComputerSystem -ErrorAction SilentlyContinue).UserName
+    if ($user) { return $user }
+    foreach ($p in @(Get-CimInstance Win32_Process -Filter "Name='explorer.exe'" -ErrorAction SilentlyContinue)) {
+        $owner = Invoke-CimMethod -InputObject $p -MethodName GetOwner -ErrorAction SilentlyContinue
+        if ($owner.User) { return "$($owner.Domain)\$($owner.User)" }
+    }
+    throw 'No signed-in user found'
+}
+
 # The task that runs the items needing administrator rights, for the signed-in user, without a UAC prompt
 function Register-MenuTask {
-    $user = "$env:USERDOMAIN\$env:USERNAME"
+    $user = Get-SignedInUser
     $action = New-ScheduledTaskAction -Execute $ps -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$PSCommandPath`" -Elevated"
     $principal = New-ScheduledTaskPrincipal -UserId $user -LogonType Interactive -RunLevel Highest
     $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Minutes 2) -MultipleInstances IgnoreNew
@@ -145,7 +160,7 @@ function Register-MenuTask {
 
 # Runs an item through the task and waits for its message
 function Invoke-Elevated([string]$item) {
-    New-Item -Path $userKey -Force -ErrorAction SilentlyContinue | Out-Null
+    if (!(Test-Path $userKey)) { New-Item -Path $userKey -Force -ErrorAction SilentlyContinue | Out-Null }
     Set-ItemProperty -Path $userKey -Name MenuAction -Value $item
     Remove-ItemProperty -Path $userKey -Name MenuResult -ErrorAction SilentlyContinue
     & schtasks.exe /run /tn "$taskPath$taskName" *> $null

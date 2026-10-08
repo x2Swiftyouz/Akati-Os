@@ -2167,6 +2167,99 @@ function Add-Game([string]$path) {
     Request-MenuUpdate
 }
 
+# FPS test: PresentMon by Intel (downloaded once from its GitHub releases, only if signed by Intel) records
+# the frame times of the game for 30 seconds. Average FPS and the 1% low (the 99th percentile frame time)
+$presentMonDir = Join-Path $env:ProgramData 'AkatiOS\PresentMon'
+function Get-RunningGame {
+    foreach ($path in @(if (Test-Path $gamesKey) { (Get-Item $gamesKey).Property })) {
+        $name = [IO.Path]::GetFileNameWithoutExtension($path)
+        $names = @($name); if ($name -eq 'FiveM') { $names += 'FiveM_*GTAProcess' }
+        $p = Get-Process -Name $names -ErrorAction SilentlyContinue | Sort-Object WorkingSet64 -Descending | Select-Object -First 1
+        if ($p) { return @{ Path = $path; Name = $name; Exe = "$($p.ProcessName).exe" } }
+    }
+}
+$fpsWork = {
+    param($dir, $exe, $seconds)
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    $pm = Join-Path $dir 'PresentMon.exe'
+    try {
+        if (!(Test-Path $pm)) {
+            New-Item -ItemType Directory -Path $dir -Force | Out-Null
+            $rel = Invoke-RestMethod -Uri 'https://api.github.com/repos/GameTechDev/PresentMon/releases/latest' -Headers @{ 'User-Agent' = 'AkatiOS-Center' } -UseBasicParsing -TimeoutSec 30
+            $asset = @($rel.assets | Where-Object { $_.name -match '^PresentMon-[\d.]+-x64\.exe$' })[0]
+            if (!$asset) { return @{ Error = 'fps.nodownload' } }
+            $tmp = Join-Path $dir 'download.tmp'
+            Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $tmp -UseBasicParsing -TimeoutSec 120
+            $sig = Get-AuthenticodeSignature -FilePath $tmp
+            if ($sig.Status -ne 'Valid' -or $sig.SignerCertificate.Subject -notlike '*Intel Corporation*') { Remove-Item $tmp -Force; return @{ Error = 'fps.signature' } }
+            Move-Item $tmp $pm -Force
+        }
+    } catch { return @{ Error = 'fps.nodownload' } }
+    $csv = Join-Path $dir 'last.csv'
+    Remove-Item $csv -Force -ErrorAction SilentlyContinue
+    $pmArgs = "--process_name `"$exe`" --output_file `"$csv`" --timed $seconds --terminate_after_timed --no_console_stats --stop_existing_session --session_name AkatiOS"
+    Start-Process -FilePath $pm -ArgumentList $pmArgs -WindowStyle Hidden -Wait
+    if (!(Test-Path $csv)) { return @{ Error = 'fps.nodata' } }
+    $rows = @(Import-Csv $csv)
+    if (!$rows.Count) { return @{ Error = 'fps.nodata' } }
+    # PresentMon 1.x calls the frame time MsBetweenPresents, 2.x FrameTime
+    $names = $rows[0].PSObject.Properties.Name
+    $col = @('FrameTime', 'MsBetweenPresents', 'MsBetweenAppStart') | Where-Object { $names -contains $_ } | Select-Object -First 1
+    if (!$col) { return @{ Error = 'fps.nodata' } }
+    $ft = New-Object System.Collections.Generic.List[double]
+    foreach ($r in $rows) { $v = 0.0; if ([double]::TryParse($r.$col, [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$v) -and $v -gt 0 -and $v -lt 1000) { $ft.Add($v) } }
+    if ($ft.Count -lt 30) { return @{ Error = 'fps.nodata' } }
+    $avgMs = ($ft | Measure-Object -Average).Average
+    $sorted = @($ft | Sort-Object)
+    $p99 = $sorted[[Math]::Min($sorted.Count - 1, [int][Math]::Floor($sorted.Count * 0.99))]
+    @{ Avg = [int][Math]::Round(1000 / $avgMs); Low = [int][Math]::Round(1000 / $p99); Frames = $ft.Count }
+}
+# Results: "time|game|avg|1% low|boost", newest first, the last 12
+function Show-FpsResults {
+    $ui.FpsList.Children.Clear()
+    $c = [Globalization.CultureInfo]::GetCultureInfo($(if ($lang -eq 'th') { 'th-TH' } else { 'en-US' }))
+    $list = @(Get-RegValue $settingsKey 'FpsResults' | Where-Object { $_ })
+    foreach ($item in $list) {
+        $time, $name, $avg, $low, $boost = $item -split '\|'
+        $when = try { [datetime]::ParseExact($time, 's', [Globalization.CultureInfo]::InvariantCulture).ToString('d MMM HH:mm', $c) } catch { $time }
+        $text = (T 'fps.result') -f $name, $avg, $low, (T $(if ($boost -eq '1') { 'fps.boost.on' } else { 'fps.boost.off' })), $when
+        # Compared with the newest result of the same game with Game boost the other way
+        $other = $list | Where-Object { ($_ -split '\|')[1] -eq $name -and ($_ -split '\|')[4] -ne $boost } | Select-Object -First 1
+        if ($other -and $item -eq ($list | Where-Object { ($_ -split '\|')[1] -eq $name } | Select-Object -First 1)) {
+            $o = [double](($other -split '\|')[2])
+            if ($o -gt 0) {
+                $diff = [int][Math]::Round(100 * ([double]$avg - $o) / $o)
+                $text += ' · ' + ((T $(if ($boost -eq '1') { 'fps.diff.boost' } else { 'fps.diff.noboost' })) -f $(if ($diff -ge 0) { "+$diff" } else { "$diff" }))
+            }
+        }
+        $tb = New-Text $text 13; $tb.Margin = '0,4,0,0'
+        [void]$ui.FpsList.Children.Add($tb)
+    }
+}
+$ui.FpsStart.Add_Click({
+    $g = Get-RunningGame
+    if (!$g) { $ui.FpsState.Text = T 'fps.nogame'; return }
+    $ui.FpsStart.IsEnabled = $false
+    $ui.FpsState.Text = (T 'fps.running') -f $g.Name
+    Set-Status $ui.FpsState.Text $true
+    Start-Work $fpsWork @($presentMonDir, $g.Exe, 30) {
+        param($r, $g)
+        $ui.FpsStart.IsEnabled = $true
+        $res = Get-LastOutput $r
+        if ($res -isnot [hashtable] -or $res.Error) {
+            $ui.FpsState.Text = T $(if ($res -is [hashtable] -and $res.Error) { $res.Error } else { 'fps.nodata' }); Set-Status $ui.FpsState.Text; return
+        }
+        $entry = '{0}|{1}|{2}|{3}|{4}' -f (Get-Date).ToString('s'), $g.Name, $res.Avg, $res.Low, [int](Test-Boost)
+        $list = @($entry) + @(Get-RegValue $settingsKey 'FpsResults' | Where-Object { $_ })
+        if (!(Test-Path $settingsKey)) { New-Item -Path $settingsKey -Force | Out-Null }
+        Set-ItemProperty -Path $settingsKey -Name FpsResults -Value ([string[]]@($list | Select-Object -First 12)) -Type MultiString -Force
+        $ui.FpsState.Text = (T 'fps.done') -f $res.Frames
+        Set-Status ((T 'fps.result.short') -f $g.Name, $res.Avg, $res.Low)
+        Show-FpsResults
+    } $g
+})
+Show-FpsResults
+
 # FiveM: installed per user in %LOCALAPPDATA%\FiveM
 $fivemDir = Join-Path $env:LOCALAPPDATA 'FiveM'
 $fivemExe = Join-Path $fivemDir 'FiveM.exe'
@@ -3699,6 +3792,7 @@ function Update-Language {
     Request-MenuUpdate
     if ($ui.WhatsNew.Visibility -eq 'Visible') { Show-WhatsNew }
     if ($ui.Tour.Visibility -eq 'Visible') { Show-TourStep }
+    Show-FpsResults
     if ($script:doctorResult) { Update-Score }
     Update-AutoClean
     Update-ThemeCards

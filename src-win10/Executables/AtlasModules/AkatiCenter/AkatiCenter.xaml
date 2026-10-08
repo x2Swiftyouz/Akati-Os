@@ -980,6 +980,20 @@
                                     </WrapPanel>
                                 </StackPanel>
                             </Border>
+                            <!-- FPS test: PresentMon (Intel) measures the game that runs, to compare with and without Game boost -->
+                            <Border Style="{StaticResource Card}" Margin="0,0,0,16">
+                                <StackPanel>
+                                    <DockPanel>
+                                        <Button x:Name="FpsStart" DockPanel.Dock="Right" Style="{StaticResource PillAccent}" Margin="12,0,0,0" Padding="16,6" VerticalAlignment="Top" Tag="t:fps.start" Content="Measure 30 s"/>
+                                        <StackPanel>
+                                            <TextBlock Tag="t:fps.title" Text="FPS test" Style="{StaticResource CardTitle}"/>
+                                            <TextBlock Tag="t:fps.sub" Text="Start a game from My games, play normally, then press Measure. Run it once with Game boost and once without to see the difference." Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </DockPanel>
+                                    <TextBlock x:Name="FpsState" Text="" Style="{StaticResource Muted}" Margin="0,8,0,0" TextWrapping="Wrap"/>
+                                    <StackPanel x:Name="FpsList" Margin="0,6,0,0"/>
+                                </StackPanel>
+                            </Border>
                             <!-- FiveM: cache, folder, My games and the connection time to a server -->
                             <Border Style="{StaticResource Card}" Margin="0,0,0,16">
                                 <StackPanel>

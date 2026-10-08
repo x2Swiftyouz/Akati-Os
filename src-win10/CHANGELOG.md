@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Added
+- Game boost > **FPS test**: measures the game from My games that runs for 30 seconds (average FPS and 1% low) and compares with and without Game boost. Uses PresentMon by Intel, downloaded once from its GitHub releases and run only when signed by Intel (it reads the frame times from Windows, nothing is injected into the game)
 - **Akati Score** (0-100) on the Health page and the Dashboard: Akati Doctor, startup apps, memory in use, ping and free space, with what would raise it
 - **Play time** of each game in My games (counted by the icon next to the clock) and when you last played it
 - Cleaner: **Clean automatically every week** (Sundays at 12:00, or when the PC is on next; task `\AkatiOS\Akati OS clean`)

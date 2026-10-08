@@ -4,7 +4,7 @@
 
 ### Changed
 - Akati OS Center no longer closes when a click runs into an error (seen with Ctrl+K > a setting > Enter): the error shows in the status bar and goes to `%ProgramData%\AkatiOS\AkatiCenter.log`, which the problem report includes
-- Light by day / dark at night (Akati OS Center By time and the Windows switch) follows a time zone changed while the app runs; the last page and the window position are saved at once, not only when the window is closed
+- Light by day / dark at night (Akati OS Center By time and the Windows switch) follows a time zone changed while the app runs; the window position is saved a moment after the window was moved, not only when it is closed
 - After an update, Akati OS Center restarts the icon next to the clock when it still runs the old version (new features of the icon, such as play time, work without signing in again)
 - Turning on the weekly automatic clean shows why when Windows does not create the task (also in `%ProgramData%\AkatiOS\AkatiClean.log`)
 - Akati OS Center is split into one file per page, and `tools/test-logic.ps1` tests the score, FPS, size, color and search functions in CI (PowerShell 7 and 5.1)
@@ -17,7 +17,7 @@
 - Cleaner: **Clean automatically every week** (Sundays at 12:00, or when the PC is on next; task `\AkatiOS\Akati OS clean`)
 - **Tour** after the welcome (and F1 or About > Take the tour): five short steps through the main pages
 - Akati OS Center look **By time** (light from 7:00 to 19:00), and Tweaks > Windows look > **Windows light by day, dark at night**
-- Akati OS Center remembers where its window was and the last page
+- Akati OS Center remembers where its window was
 - Keyboard: an accent ring shows the focused button or switch, Tab moves between them, arrow keys move in the sidebar, Ctrl+Tab / Ctrl+Shift+Tab switch pages, F1 starts the tour
 - The icon next to the clock tells you once when a new Akati OS version is out (checked a minute after sign-in and then twice a day; switch: Tweaks > System > Tell me about new versions), and shows it at the top of its menu
 - GitHub issue forms for bugs and ideas (English and Thai); GitHub issues in Akati OS Center opens them

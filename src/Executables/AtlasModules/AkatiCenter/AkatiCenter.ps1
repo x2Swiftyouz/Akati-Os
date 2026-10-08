@@ -268,8 +268,6 @@ $script:page = 'dashboard'
 function Get-PageId([string]$p) { [Globalization.CultureInfo]::InvariantCulture.TextInfo.ToTitleCase($p) }
 function Show-Page([string]$name) {
     $script:page = $name
-    # Saved at once, so the next start opens it even when the app did not close normally
-    if (!$Screenshot) { Save-Setting LastPage $name }
     foreach ($p in $pages) {
         $el = $ui["Page$(Get-PageId $p)"]
         if ($p -ne $name) { $el.Visibility = 'Collapsed'; continue }
@@ -708,9 +706,6 @@ Update-Clock
 Update-Chips
 Set-Status (T 'ready')
 # Started from the desktop menu: open that page (and start the ping test)
-# The last page opens when the window has loaded (before that, the sidebar buttons are not one group yet)
-$script:startPage = [string](Get-RegValue $settingsKey 'LastPage')
-if ($Page -or $Screenshot -or $script:startPage -notin $pages -or !(Get-RegValue $settingsKey 'Welcomed')) { $script:startPage = $null }
 # The saved position when it is still on a screen (screens can change)
 $wx = Get-RegValue $settingsKey 'WindowX'; $wy = Get-RegValue $settingsKey 'WindowY'
 $desk = [System.Windows.SystemParameters]
@@ -797,7 +792,6 @@ $timer.Add_Tick({
 })
 $window.Add_ContentRendered({ Close-Splash; $window.Activate() })
 $window.Add_Loaded({
-    if ($script:startPage) { $ui["Nav$(Get-PageId $script:startPage)"].IsChecked = $true }
     # Akati OS checks GitHub once when the window opens (one request, nothing is downloaded)
     Start-UpdateCheck
     # Icon next to the clock: wanted (setup option or Tweaks) but its sign-in task is missing, as after some
@@ -826,7 +820,6 @@ $window.Add_Closing({
     if ($Screenshot) { return }
     try {
         if (!$script:full -and $window.WindowState -eq 'Normal') { Save-Setting WindowX ([int]$window.Left); Save-Setting WindowY ([int]$window.Top) }
-        Save-Setting LastPage $script:page
     } catch { }
 })
 $window.Add_Closed({

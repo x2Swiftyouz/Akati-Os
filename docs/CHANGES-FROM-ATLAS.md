@@ -33,7 +33,7 @@ W11 = Windows 11 playbook, W10 = Windows 10 playbook.
 | File | In | Change |
 |---|---|---|
 | `playbook.conf` | W11, W10 | Name (`AkatiOS11` / `AkatiOS10`), title, version, own UniqueId, descriptions, own Git and install guide links, AtlasOS website/donate/Git links removed, "Learn more" links point to [OPTIONS.md](OPTIONS.md); `IsChecked` defaults; anti-cheat warnings; Remove Microsoft Store page (no gaming app pages: apps are installed from Akati OS Center). W11: `UpgradableFrom` removed, build 26300 added, OOBE text. W10: build 19045 only, Windows 10 end of support warning |
-| `playbook.png`, `Executables/user.png` | W11, W10 | Akati OS images |
+| `playbook.png`, `Executables/user.png` | W11, W10 | Akati OS logo (drawn by `tools/make-assets.py logos`) |
 | `Configuration/custom.yml` | W11, W10 | Runs `tweaks\misc\akati-extras.yml` after `atlas\start.yml`, and `tweaks\misc\akati-services.yml` after all other tasks. W11: one status text |
 | `Configuration/atlas/start.yml` | W11 | One status text; the optional Atlas Toolbox install is removed |
 | `Configuration/tweaks/misc/config-oem-information.yml` | W11, W10 | Shows "Akati OS" version, AtlasOS support links removed, writes the version to `HKLM\SOFTWARE\AkatiOS` (used by the update checker) |
@@ -70,7 +70,7 @@ What the user sees says Akati OS, not AtlasOS. The credit to AtlasOS (GPL-3.0) s
 | `Executables/AtlasModules/Wallpapers/akatios-*.png` | Wallpapers and lock screen (Aurora, Sunset, Ocean and Mist are drawn by `tools/make-assets.py`) |
 | `Executables/AtlasModules/Other/AkatiOS/Cursors/` | Akati OS arrow and busy cursors (`.cur`, `.ani`), drawn by `tools/make-assets.py`. Only used when the user picks them in Akati OS Center |
 | `Executables/AtlasModules/Other/AkatiOS/Sounds/` | Akati OS system sounds (`.wav`), made by `tools/make-assets.py`. Only used when the user picks them in Akati OS Center |
-| `Executables/AtlasModules/Other/akatios-folder.ico` | Icon of the Akati OS Center shortcuts |
+| `Executables/AtlasModules/Other/akatios-folder.ico` | Icon of the Akati OS Center shortcuts, the tray icon and the desktop menu; the Akati OS logo, drawn by `tools/make-assets.py logos` (same as `AkatiCenter/logo.png`) |
 | `README.md`, `CHANGELOG.md`, `CREDITS.txt` | Documentation and credits |
 
 ## Gaming tweaks (registry)

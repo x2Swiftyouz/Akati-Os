@@ -1782,26 +1782,32 @@ $ui.TweaksReset.Add_Click({
 # Game boost > Anti-cheat mode: Valorant (Vanguard) can ask for Memory integrity (HVCI) on, FiveM needs it
 # off. The buttons use the Core isolation tweak; Windows changes it at the next start.
 $vbsTweak = $tweaks | Where-Object { $_.Key -eq 'vbs' }
+# $true / $false while Windows runs; $null when Windows cannot report it (the DeviceGuard WMI provider is
+# missing on some trimmed builds, for example imOS 10: "Provider load failure")
 function Test-HvciRunning {
     try { 2 -in @((Get-CimInstance -Namespace 'root\Microsoft\Windows\DeviceGuard' -ClassName Win32_DeviceGuard -ErrorAction Stop).SecurityServicesRunning) }
-    catch { $false }
+    catch { $null }
 }
 function Update-AntiCheat {
     $wanted = (Get-RegValue $hvciKey 'Enabled') -eq 1
     $text = if ($wanted) { T 'ac.on' } else { T 'ac.off' }
     if ($Screenshot) { $ui.AcState.Text = $text; return }
-    if ($wanted -ne (Test-HvciRunning)) { $text += '  ·  ' + (T 'ac.pending') }
+    $running = Test-HvciRunning
+    if ($null -ne $running -and $wanted -ne $running) { $text += '  ·  ' + (T 'ac.pending') }
     $ui.AcState.Text = $text
 }
 function Set-AntiCheat([bool]$on) {
-    if ((Get-RegValue $hvciKey 'Enabled') -ne [int]$on) {
+    $changed = ((Get-RegValue $hvciKey 'Enabled') -eq 1) -ne $on
+    if ($changed) {
         $vbsTweak.Toggle.IsChecked = $on
         Invoke-Tweak $vbsTweak $on
     }
     Update-AntiCheat
-    if (!$Screenshot -and $on -ne (Test-HvciRunning)) {
-        if ([System.Windows.MessageBox]::Show((T 'ac.restartask'), 'Akati OS Center', 'YesNo', 'Question') -eq 'Yes') { Restart-Computer -Force }
-    }
+    if ($Screenshot) { return }
+    # A restart is needed when what runs differs; when Windows cannot tell, when the setting just changed
+    $running = Test-HvciRunning
+    $ask = if ($null -ne $running) { $on -ne $running } else { $changed }
+    if ($ask -and [System.Windows.MessageBox]::Show((T 'ac.restartask'), 'Akati OS Center', 'YesNo', 'Question') -eq 'Yes') { Restart-Computer -Force }
 }
 $ui.AcValorant.Add_Click({ Set-AntiCheat $true })
 $ui.AcFiveM.Add_Click({ Set-AntiCheat $false })

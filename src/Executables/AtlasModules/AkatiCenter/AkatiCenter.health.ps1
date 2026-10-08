@@ -91,12 +91,17 @@ function Show-Doctor($r) {
     $ui.DoctorSummary.Text = $(if ($bad) { (T 'doc.issues') -f $bad } else { T 'doc.allgood' }) + ' · ' + ((T 'doc.checked') -f (Get-Date).ToString('HH:mm'))
 }
 # Akati Score (0-100): Akati Doctor 40, startup apps 15, memory in use 15, ping 15, free space 15
+# Startup apps that are on: counted in the background every 2 minutes (reading the shortcuts is slow),
+# with the same functions as the Game boost page
 function Get-StartupOnCount {
+    if ($Screenshot) { return 3 }
     if (!$script:startupAt -or (Get-Date) -gt $script:startupAt) {
-        $script:startupAt = (Get-Date).AddMinutes(1)
-        $script:startupOn = try { @(Get-StartupItems | Where-Object { Test-StartupOn $_ }).Count } catch { 0 }
+        $script:startupAt = (Get-Date).AddMinutes(2)
+        $code = "param(`$approvedRoot)`r`n" + (@('Get-RegValue', 'Get-StartupItems', 'Test-StartupOn') | ForEach-Object { "function $_ {`r`n$((Get-Command $_).Definition)`r`n}" }) -join "`r`n"
+        $code += "`r`n@(Get-StartupItems | Where-Object { Test-StartupOn `$_ }).Count"
+        Start-Work ([scriptblock]::Create($code)) @($approvedRoot) { param($r) $n = Get-LastOutput $r; if ($n -is [int]) { $script:startupOn = $n } } $null
     }
-    $script:startupOn
+    if ($null -eq $script:startupOn) { 3 } else { $script:startupOn }
 }
 function Get-AkatiScore {
     $r = $script:doctorResult

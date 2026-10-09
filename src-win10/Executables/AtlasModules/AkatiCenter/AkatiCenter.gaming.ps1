@@ -552,7 +552,7 @@ $ui.GpuAmd.Add_Click({ Start-Process 'https://www.amd.com/en/support/download/dr
 $ui.GpuIntel.Add_Click({ Start-Process 'https://www.intel.com/content/www/us/en/download-center/home.html' })
 
 # Screen refresh rate and the standby memory list (Windows API)
-Add-Type -TypeDefinition @'
+Import-Code 'Perf' @'
 using System;
 using System.Runtime.InteropServices;
 namespace AkatiOS {

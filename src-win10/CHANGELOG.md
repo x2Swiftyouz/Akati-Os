@@ -1,5 +1,11 @@
 # Changelog: Akati OS for Windows 10
 
+## Unreleased
+
+### Changed
+- Akati OS Center opens faster: its Windows API helpers are compiled once and kept (in `AkatiCenter\cache`, which only administrators can change) instead of at every start; the wallpaper pictures come from small thumbnails and each picture is decoded once; the PC details on the Dashboard are read in the background
+- Akati OS Center writes how long each part took to open to `%ProgramData%\AkatiOS\AkatiCenter-startup.log` (the problem report includes it)
+
 ## v1.7.1
 
 ### Changed

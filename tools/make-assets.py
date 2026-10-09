@@ -339,10 +339,24 @@ def make_logos():
     print('logos: playbook.png, logo.png, user.png, akatios-folder.ico')
 
 
+def make_thumbs():
+    # 480 px wide JPEGs of the wallpapers for Akati OS Center (its Get-Image uses them for small pictures), kept in
+    # AkatiCenter\thumbs and not in the Wallpapers folder, which the Windows slideshow shows completely
+    for tree in TREES:
+        src = os.path.join(tree, 'Executables', 'AtlasModules', 'Wallpapers')
+        dst = os.path.join(tree, 'Executables', 'AtlasModules', 'AkatiCenter', 'thumbs')
+        os.makedirs(dst, exist_ok=True)
+        for f in sorted(os.listdir(src)):
+            if f.endswith('.png'):
+                im = Image.open(os.path.join(src, f)).convert('RGB')
+                im.resize((480, round(im.height * 480 / im.width)), Image.LANCZOS).save(os.path.join(dst, f[:-4] + '.jpg'), quality=85, optimize=True)
+    print('thumbs: AkatiCenter/thumbs')
+
+
 if __name__ == '__main__':
-    # python3 tools/make-assets.py [wallpapers] [more] [cursors] [sounds] [logos]  (nothing: all; more: only the OLED and Ember wallpapers)
+    # python3 tools/make-assets.py [wallpapers] [more] [cursors] [sounds] [logos] [thumbs]  (nothing: all; more: only the OLED and Ember wallpapers)
     import sys
-    parts = sys.argv[1:] or ['wallpapers', 'cursors', 'sounds', 'logos']
+    parts = sys.argv[1:] or ['wallpapers', 'cursors', 'sounds', 'logos', 'thumbs']
     if 'wallpapers' in parts:
         make_wallpapers()
     if 'wallpapers' in parts or 'more' in parts:
@@ -353,3 +367,5 @@ if __name__ == '__main__':
         make_sounds()
     if 'logos' in parts:
         make_logos()
+    if 'thumbs' in parts or 'wallpapers' in parts or 'more' in parts:
+        make_thumbs()

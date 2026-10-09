@@ -33,7 +33,7 @@ Options guide: https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/OPTIONS.md
 ## Install
 
 1. Back up your files. This playbook cannot be fully undone. To go back, reinstall Windows.
-2. Download `AkatiOS-Win10_v1.7.4.apbx` and `SHA256SUMS.txt` from https://github.com/x2Swiftyouz/Akati-Os/releases and check the hash.
+2. Download `AkatiOS-Win10_v1.7.5.apbx` and `SHA256SUMS.txt` from https://github.com/x2Swiftyouz/Akati-Os/releases and check the hash.
 3. Open AME Wizard and drag the `.apbx` file into it.
 4. Follow the setup pages.
 

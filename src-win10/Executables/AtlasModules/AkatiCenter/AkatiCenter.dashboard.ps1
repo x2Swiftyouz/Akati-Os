@@ -154,6 +154,13 @@ function Update-Spark([string]$key, [double]$value) {
     $pts = New-Object System.Windows.Media.PointCollection
     for ($i = 0; $i -lt $h.Count; $i++) { $pts.Add((New-Object System.Windows.Point ($w - ($h.Count - 1 - $i) * $w / 39), (36 - 34 * $h[$i] / 100))) }
     $ui["${key}Line"].Points = $pts
+    # The area under the line, filled with the accent color (see-through)
+    $area = New-Object System.Windows.Media.PointCollection
+    if ($pts.Count) {
+        foreach ($pt in $pts) { $area.Add($pt) }
+        $area.Add((New-Object System.Windows.Point $pts[$pts.Count - 1].X, 38)); $area.Add((New-Object System.Windows.Point $pts[0].X, 38))
+    }
+    $ui["${key}Fill"].Points = $area
 }
 
 function Format-Speed([double]$bytesPerSec) {
@@ -164,10 +171,10 @@ function Format-Speed([double]$bytesPerSec) {
 }
 
 function Update-Stats {
-    $ui.CpuValue.Text = "$($stats.Cpu)%"; $ui.CpuBar.Value = $stats.Cpu
-    $ui.RamValue.Text = "$($stats.Ram)%"; $ui.RamBar.Value = $stats.Ram
+    if (!(Test-Counting $ui.CpuValue)) { $ui.CpuValue.Text = "$($stats.Cpu)%" }; $ui.CpuBar.Value = $stats.Cpu
+    if (!(Test-Counting $ui.RamValue)) { $ui.RamValue.Text = "$($stats.Ram)%" }; $ui.RamBar.Value = $stats.Ram
     if ($stats.RamTotal) { $ui.RamDetail.Text = '{0} / {1}' -f (Format-Size $stats.RamUsed), (Format-Size $stats.RamTotal) }
-    if ($stats.Gpu -ge 0) { $ui.GpuValue.Text = "$($stats.Gpu)%"; $ui.GpuBar.Value = $stats.Gpu } else { $ui.GpuValue.Text = '-'; $ui.GpuBar.Value = 0 }
+    if ($stats.Gpu -ge 0) { if (!(Test-Counting $ui.GpuValue)) { $ui.GpuValue.Text = "$($stats.Gpu)%" }; $ui.GpuBar.Value = $stats.Gpu } else { $ui.GpuValue.Text = '-'; $ui.GpuBar.Value = 0 }
     Set-Level $ui.CpuValue $ui.CpuBar $stats.Cpu
     Set-Level $ui.RamValue $ui.RamBar $stats.Ram
     Set-Level $ui.GpuValue $ui.GpuBar ([Math]::Max(0, $stats.Gpu))
@@ -333,3 +340,69 @@ function Update-DesktopMenu {
     Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$menuScript`" -Install" -WindowStyle Hidden
 }
 
+# ---------------------------------------------------------------------------------------------
+# Customize dashboard: each card can be hidden and moved. Saved as DashLayout, for example
+# "usage,hero,-chips,..." (a "-" in front = hidden); cards missing from it (new ones) go last.
+# ---------------------------------------------------------------------------------------------
+$dashCards = [ordered]@{ hero = 'DashHero'; chips = 'StatusChips'; specs = 'DashSpecs'; usage = 'UsageGrid'; storage = 'DashStorage'; top = 'DashTop'; quick = 'DashQuick' }
+$dashGlyphs = @{ hero = [char]0xE80F; chips = [char]0xE8FD; specs = [char]0xE950; usage = [char]0xE9D9; storage = [char]0xEDA2; top = [char]0xE9F5; quick = [char]0xE945 }
+function Get-DashLayout {
+    $list = New-Object System.Collections.ArrayList
+    foreach ($part in ([string](Get-RegValue $settingsKey 'DashLayout')).Split(',')) {
+        $key = $part.Trim().TrimStart('-')
+        if ($dashCards.Contains($key) -and !($list | Where-Object { $_.Key -eq $key })) { [void]$list.Add(@{ Key = $key; Shown = !$part.Trim().StartsWith('-') }) }
+    }
+    foreach ($key in $dashCards.Keys) { if (!($list | Where-Object { $_.Key -eq $key })) { [void]$list.Add(@{ Key = $key; Shown = $true }) } }
+    return , $list
+}
+function Set-DashLayout($list, [switch]$Save) {
+    # The cards first, in this order; the edit button and the editor stay after them
+    for ($i = 0; $i -lt $list.Count; $i++) {
+        $el = $ui[$dashCards[$list[$i].Key]]
+        $ui.DashPanel.Children.Remove($el)
+        $ui.DashPanel.Children.Insert($i, $el)
+        $el.Visibility = if ($list[$i].Shown) { 'Visible' } else { 'Collapsed' }
+    }
+    if ($Save) { Save-Setting DashLayout (($list | ForEach-Object { $(if ($_.Shown) { '' } else { '-' }) + $_.Key }) -join ',') }
+}
+function Show-DashEditor {
+    $list = Get-DashLayout
+    $ui.DashEditList.Children.Clear()
+    for ($i = 0; $i -lt $list.Count; $i++) {
+        $item = $list[$i]
+        $right = New-Object System.Windows.Controls.StackPanel
+        $right.Orientation = 'Horizontal'
+        foreach ($move in @(@{ Glyph = [char]0xE70E; By = -1 }, @{ Glyph = [char]0xE70D; By = 1 })) {
+            $b = New-Object System.Windows.Controls.Button
+            $b.Style = $window.FindResource('Pill'); $b.Padding = '9,5'; $b.Margin = '0,0,6,0'
+            $g = New-Text ([string]$move.Glyph) 12; $g.Style = $window.FindResource('Glyph'); $b.Content = $g
+            $b.Tag = @{ Index = $i; By = $move.By }
+            $b.IsEnabled = ($i + $move.By) -ge 0 -and ($i + $move.By) -lt $list.Count
+            $b.Add_Click({
+                $l = Get-DashLayout; $a = $this.Tag.Index; $z = $a + $this.Tag.By
+                $tmp = $l[$a]; $l[$a] = $l[$z]; $l[$z] = $tmp
+                Set-DashLayout $l -Save; Show-DashEditor
+            })
+            [void]$right.Children.Add($b)
+        }
+        $sw = New-Object System.Windows.Controls.CheckBox
+        $sw.Style = $window.FindResource('Switch'); $sw.Margin = '6,0,0,0'; $sw.IsChecked = $item.Shown; $sw.Tag = $item.Key
+        $sw.Add_Click({
+            $l = Get-DashLayout
+            foreach ($x in $l) { if ($x.Key -eq $this.Tag) { $x.Shown = [bool]$this.IsChecked } }
+            Set-DashLayout $l -Save
+        })
+        [void]$right.Children.Add($sw)
+        $row = New-Row ([string]$dashGlyphs[$item.Key]) (T "dash.card.$($item.Key)") "t:dash.card.$($item.Key)" $right $null
+        $row.Sub.Visibility = 'Collapsed'
+        [void]$ui.DashEditList.Children.Add($row.Row)
+    }
+    Update-Separators $ui.DashEditList
+}
+$ui.DashEdit.Add_Click({ Show-DashEditor; $ui.DashEditor.Visibility = 'Visible'; $ui.DashEditBar.Visibility = 'Collapsed'; $ui.DashEditor.BringIntoView() })
+$ui.DashDone.Add_Click({ $ui.DashEditor.Visibility = 'Collapsed'; $ui.DashEditBar.Visibility = 'Visible' })
+$ui.DashReset.Add_Click({
+    Remove-ItemProperty -Path $settingsKey -Name DashLayout -ErrorAction SilentlyContinue
+    Set-DashLayout (Get-DashLayout); Show-DashEditor
+})
+if (!$Screenshot) { Set-DashLayout (Get-DashLayout) }

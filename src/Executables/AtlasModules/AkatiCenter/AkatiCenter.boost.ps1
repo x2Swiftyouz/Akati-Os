@@ -12,6 +12,10 @@ $boostKey = 'HKCU:\Software\AkatiOS\Center\Boost'
 $toastKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\PushNotifications'
 # Background apps that are safe to close while playing (never game launchers or browsers)
 $boostCandidates = 'OneDrive', 'Teams', 'ms-teams', 'Spotify', 'PhoneExperienceHost', 'Dropbox', 'GoogleDriveFS', 'Skype'
+# Services that work in the background and can wait until the game is closed: search indexing, SysMain (prefetch),
+# printing and the downloads of Windows Update. Only stopped (the start type stays), started again at Stop; they start
+# as usual after a restart too. None of them is used by anti-cheats.
+$boostServices = 'WSearch', 'SysMain', 'Spooler', 'wuauserv', 'BITS', 'DoSvc'
 $powerSchemes = @(
     '11111111-1111-1111-1111-111111111111'   # Akati OS Power Scheme (Maximum Performance)
     'e9a42b02-d5df-448d-aa00-03f14749eb61'   # Ultimate Performance
@@ -31,14 +35,14 @@ function Update-BoostCard {
         $ui.BoostButton.Content = T 'boost.stop'
         $ui.BoostButton.Style = $window.FindResource('Secondary')
         $ui.BoostIcon.SetResourceReference([System.Windows.Controls.Border]::BackgroundProperty, 'AccentGradient')
-        foreach ($c in 'BoostPower', 'BoostApps', 'BoostNotify') { $ui[$c].IsEnabled = $false }
+        foreach ($c in 'BoostPower', 'BoostApps', 'BoostNotify', 'BoostServices') { $ui[$c].IsEnabled = $false }
     } else {
         $ui.BoostState.Text = T 'boost.off'
         $ui.BoostState.Foreground = $window.FindResource('MutedBrush')
         $ui.BoostButton.Content = T 'boost.start'
         $ui.BoostButton.Style = $window.FindResource('Primary')
         $ui.BoostIcon.SetResourceReference([System.Windows.Controls.Border]::BackgroundProperty, 'Fill')
-        foreach ($c in 'BoostPower', 'BoostApps', 'BoostNotify') { $ui[$c].IsEnabled = $true }
+        foreach ($c in 'BoostPower', 'BoostApps', 'BoostNotify', 'BoostServices') { $ui[$c].IsEnabled = $true }
     }
 }
 
@@ -85,6 +89,14 @@ function Start-Boost {
             $key.Close()
         } catch { $failed += 'notify' }
     }
+    if ($ui.BoostServices.IsChecked) {
+        try {
+            # sc.exe returns at once (the service stops in the background); only running services are noted
+            $paused = @(Get-Service -Name $boostServices -ErrorAction SilentlyContinue | Where-Object { $_.Status -eq 'Running' } | ForEach-Object { $_.Name })
+            foreach ($n in $paused) { & sc.exe stop $n | Out-Null }
+            if ($paused.Count) { Set-ItemProperty -Path $boostKey -Name PausedServices -Value ([string[]]$paused) -Type MultiString }
+        } catch { $failed += 'services' }
+    }
     if ($ui.BoostMemory.IsChecked) {
         # The standby list fills up again by itself, so there is nothing to undo at Stop
         try { if ([AkatiOS.Perf]::PurgeStandbyList() -ne 0) { $failed += 'memory' } } catch { $failed += 'memory' }
@@ -115,6 +127,7 @@ function Stop-Boost {
             $key.Close()
         }
     } catch { }
+    foreach ($n in @(Get-RegValue $boostKey 'PausedServices')) { if ($n) { & sc.exe start $n | Out-Null } }
     # Open the closed apps again. explorer.exe starts them as the signed-in user, not elevated like this window.
     foreach ($path in @(Get-RegValue $boostKey 'Closed')) {
         if ($path -and (Test-Path -LiteralPath $path)) { Start-Process explorer.exe -ArgumentList "`"$path`"" }

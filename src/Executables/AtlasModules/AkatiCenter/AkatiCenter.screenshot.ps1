@@ -12,6 +12,14 @@ if ($Screenshot) {
     Write-Host 'Startup timing:'; $script:marks | ForEach-Object { Write-Host "  $_" }
     New-Item -ItemType Directory -Path $Screenshot -Force | Out-Null
     $stats.Run = $false
+    # A minute of sample usage for the lines in the CPU and RAM cards (CI takes one sample only)
+    $size = New-Object System.Windows.Size $window.Width, $window.Height
+    $window.Content.Measure($size); $window.Content.Arrange((New-Object System.Windows.Rect $size)); $window.Content.UpdateLayout()
+    for ($i = 0; $i -lt 39; $i++) {
+        Update-Spark 'Cpu' (14 + 9 * [Math]::Sin($i / 3.0) + 5 * [Math]::Sin($i * 1.7))
+        Update-Spark 'Ram' (34 + 3 * [Math]::Sin($i / 6.0))
+        Update-Spark 'Gpu' (55 + 20 * [Math]::Sin($i / 4.0))
+    }
     & $statsSample $stats
     # Sample ping: the CI runner is far from Singapore
     $stats.Ping = 18

@@ -46,6 +46,7 @@ $serviceGroups = @{
     cdp      = @{ CDPSvc = 2 }
 }
 $servicesKey = 'HKLM:\SYSTEM\CurrentControlSet\Services'
+$edgePolicyKey = 'HKLM:\SOFTWARE\Policies\Microsoft\Edge'
 function Test-ServicesOff($group) {
     $found = @($group.Keys | Where-Object { Test-Path "$servicesKey\$_" })
     $found.Count -gt 0 -and !($found | Where-Object { (Get-RegValue "$servicesKey\$_" 'Start') -ne 4 })
@@ -157,6 +158,16 @@ $tweaks = @(
        Get = { Test-ServicesOff $serviceGroups.notify }; Set = { param($on) Set-ServicesOff $serviceGroups.notify $on } }
     @{ Key = 'svccdp'; Group = 'services'; Glyph = [char]0xE8EA; Restart = $true; Default = $false
        Get = { Test-ServicesOff $serviceGroups.cdp }; Set = { param($on) Set-ServicesOff $serviceGroups.cdp $on } }
+    # Microsoft Edge keeps running after its last window is closed (background mode) and starts with Windows to open
+    # faster (startup boost). The two Edge policies turn both off; removing them gives the Edge defaults back.
+    @{ Key = 'edgebg'; Group = 'services'; Glyph = [char]0xE774; Default = $false
+       Get = { (Get-RegValue $edgePolicyKey 'StartupBoostEnabled') -eq 0 -and (Get-RegValue $edgePolicyKey 'BackgroundModeEnabled') -eq 0 }
+       Set = { param($on)
+               if ($on) {
+                   if (!(Test-Path $edgePolicyKey)) { New-Item -Path $edgePolicyKey -Force | Out-Null }
+                   Set-ItemProperty -Path $edgePolicyKey -Name StartupBoostEnabled -Value 0 -Type DWord -Force
+                   Set-ItemProperty -Path $edgePolicyKey -Name BackgroundModeEnabled -Value 0 -Type DWord -Force
+               } else { Remove-ItemProperty -Path $edgePolicyKey -Name StartupBoostEnabled, BackgroundModeEnabled -ErrorAction SilentlyContinue } } }
     # The same two values as the AtlasOS scripts "Enable VBS" / "Disable VBS" (AtlasOS 0.4.1 for Windows 10 has no such scripts)
     @{ Key = 'vbs'; Group = 'system'; Glyph = [char]0xE72E; Restart = $true
        Get = { (Get-RegValue $hvciKey 'Enabled') -eq 1 }

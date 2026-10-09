@@ -713,8 +713,9 @@
 
                     <!-- Dashboard -->
                     <ScrollViewer x:Name="PageDashboard" VerticalScrollBarVisibility="Auto">
-                        <StackPanel>
-                            <Grid Margin="0,0,0,12" Height="150">
+                        <!-- The cards can be hidden and moved (Customize dashboard): DashPanel children before DashEditBar -->
+                        <StackPanel x:Name="DashPanel">
+                            <Grid x:Name="DashHero" Margin="0,0,0,12" Height="150">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="16"/>
@@ -756,7 +757,7 @@
 
                             <WrapPanel x:Name="StatusChips" Margin="0,0,0,12"/>
 
-                            <Border Style="{StaticResource Card}" Padding="18,12" Margin="0,0,0,16">
+                            <Border x:Name="DashSpecs" Style="{StaticResource Card}" Padding="18,12" Margin="0,0,0,16">
                                 <WrapPanel x:Name="SpecsPanel">
                                     <StackPanel Orientation="Horizontal" Margin="0,0,28,0"><TextBlock Text="CPU" Style="{StaticResource Label}" Margin="0,0,8,0" VerticalAlignment="Center"/><TextBlock x:Name="CpuName" Text="-" FontWeight="SemiBold"/></StackPanel>
                                     <StackPanel Orientation="Horizontal" Margin="0,0,28,0"><TextBlock Text="GPU" Style="{StaticResource Label}" Margin="0,0,8,0" VerticalAlignment="Center"/><TextBlock x:Name="GpuName" Text="-" FontWeight="SemiBold"/></StackPanel>
@@ -772,6 +773,7 @@
                                             <TextBlock x:Name="CpuValue" Text="0%" FontSize="28" FontWeight="Bold" HorizontalAlignment="Right"/>
                                         </Grid>
                                         <Canvas x:Name="CpuSpark" Height="38" Margin="0,8,0,0" ClipToBounds="True">
+                                            <Polygon x:Name="CpuFill" Fill="{DynamicResource Accent2}" Opacity="0.14"/>
                                             <Polyline x:Name="CpuLine" Stroke="{DynamicResource Accent2}" StrokeThickness="1.6" StrokeLineJoin="Round"/>
                                         </Canvas>
                                         <ProgressBar x:Name="CpuBar" Style="{StaticResource Meter}" Margin="0,6,0,0"/>
@@ -784,6 +786,7 @@
                                             <TextBlock x:Name="RamValue" Text="0%" FontSize="28" FontWeight="Bold" HorizontalAlignment="Right"/>
                                         </Grid>
                                         <Canvas x:Name="RamSpark" Height="38" Margin="0,8,0,0" ClipToBounds="True">
+                                            <Polygon x:Name="RamFill" Fill="{DynamicResource Accent2}" Opacity="0.14"/>
                                             <Polyline x:Name="RamLine" Stroke="{DynamicResource Accent2}" StrokeThickness="1.6" StrokeLineJoin="Round"/>
                                         </Canvas>
                                         <ProgressBar x:Name="RamBar" Style="{StaticResource Meter}" Margin="0,6,0,0"/>
@@ -797,6 +800,7 @@
                                             <TextBlock x:Name="GpuValue" Text="0%" FontSize="28" FontWeight="Bold" HorizontalAlignment="Right"/>
                                         </Grid>
                                         <Canvas x:Name="GpuSpark" Height="38" Margin="0,8,0,0" ClipToBounds="True">
+                                            <Polygon x:Name="GpuFill" Fill="{DynamicResource Accent2}" Opacity="0.14"/>
                                             <Polyline x:Name="GpuLine" Stroke="{DynamicResource Accent2}" StrokeThickness="1.6" StrokeLineJoin="Round"/>
                                         </Canvas>
                                         <ProgressBar x:Name="GpuBar" Style="{StaticResource Meter}" Margin="0,6,0,0"/>
@@ -804,7 +808,7 @@
                                 </Border>
                             </UniformGrid>
 
-                            <UniformGrid Columns="2" Margin="-8,0,-8,16">
+                            <UniformGrid x:Name="DashStorage" Columns="2" Margin="-8,0,-8,16">
                                 <Border Style="{StaticResource Card}" Margin="8,0">
                                     <StackPanel>
                                         <TextBlock Tag="t:disk.title" Text="Storage" Style="{StaticResource CardTitle}" Margin="0,0,0,10"/>
@@ -827,6 +831,7 @@
                             </UniformGrid>
 
                             <!-- Busiest apps, by CPU or by memory (segmented control like macOS) -->
+                            <StackPanel x:Name="DashTop">
                             <DockPanel Margin="0,0,0,8">
                                 <Border DockPanel.Dock="Right" Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="7" Padding="2">
                                     <StackPanel Orientation="Horizontal">
@@ -843,8 +848,9 @@
                                     <Border Style="{StaticResource Shimmer}" Width="300" HorizontalAlignment="Left"/>
                                 </StackPanel>
                             </Border>
+                            </StackPanel>
 
-                            <Border Style="{StaticResource Card}" Margin="0,0,0,16">
+                            <Border x:Name="DashQuick" Style="{StaticResource Card}" Margin="0,0,0,16">
                                 <StackPanel>
                                     <TextBlock Tag="t:quick" Text="Quick actions" Style="{StaticResource CardTitle}" Margin="0,0,0,14"/>
                                     <UniformGrid Columns="4" Margin="-5,0">
@@ -873,6 +879,25 @@
                                             </StackPanel>
                                         </Button>
                                     </UniformGrid>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Customize dashboard: show or hide each card and change the order -->
+                            <DockPanel x:Name="DashEditBar" Margin="0,0,0,16" LastChildFill="False">
+                                <Button x:Name="DashEdit" DockPanel.Dock="Right" Style="{StaticResource Pill}">
+                                    <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE70F;" FontSize="13" Margin="0,0,8,0"/><TextBlock Tag="t:dash.edit" Text="Customize dashboard"/></StackPanel>
+                                </Button>
+                            </DockPanel>
+                            <Border x:Name="DashEditor" Style="{StaticResource Card}" Padding="8" Margin="0,0,0,16" Visibility="Collapsed">
+                                <StackPanel>
+                                    <DockPanel Margin="10,4,10,8">
+                                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                            <Button x:Name="DashReset" Style="{StaticResource Pill}" Margin="0,0,8,0"><TextBlock Tag="t:dash.reset" Text="Reset"/></Button>
+                                            <Button x:Name="DashDone" Style="{StaticResource PillAccent}"><TextBlock Tag="t:dash.done" Text="Done"/></Button>
+                                        </StackPanel>
+                                        <TextBlock Tag="t:dash.title" Text="Cards on the dashboard" Style="{StaticResource CardTitle}" VerticalAlignment="Center"/>
+                                    </DockPanel>
+                                    <StackPanel x:Name="DashEditList"/>
                                 </StackPanel>
                             </Border>
                         </StackPanel>
@@ -946,6 +971,7 @@
                                     <CheckBox x:Name="BoostPower" Style="{StaticResource Tick}" IsChecked="True" Margin="0,4"><TextBlock Tag="t:boost.power" Text="Switch to the highest performance power plan"/></CheckBox>
                                     <CheckBox x:Name="BoostApps" Style="{StaticResource Tick}" IsChecked="True" Margin="0,4"><TextBlock x:Name="BoostAppsText" Tag="t:boost.apps" Text="Close background apps" TextWrapping="Wrap"/></CheckBox>
                                     <CheckBox x:Name="BoostNotify" Style="{StaticResource Tick}" IsChecked="True" Margin="0,4"><TextBlock Tag="t:boost.notify" Text="Turn off notifications"/></CheckBox>
+                                    <CheckBox x:Name="BoostServices" Style="{StaticResource Tick}" IsChecked="True" Margin="0,4"><TextBlock Tag="t:boost.services" Text="Pause background services until the game is closed" TextWrapping="Wrap"/></CheckBox>
                                     <CheckBox x:Name="BoostMemory" Style="{StaticResource Tick}" IsChecked="True" Margin="0,4"><TextBlock Tag="t:boost.memory" Text="Free up standby memory" TextWrapping="Wrap"/></CheckBox>
                                     <Border Height="1" Background="{DynamicResource Line}" Margin="0,10,0,8"/>
                                     <CheckBox x:Name="BoostAuto" Style="{StaticResource Tick}" Margin="0,4"><TextBlock Tag="t:boost.auto" Text="Start Game boost by itself when a game from My games opens" TextWrapping="Wrap"/></CheckBox>
@@ -1364,7 +1390,7 @@
             <!-- Welcome (first start) -->
             <Grid x:Name="Welcome" Grid.ColumnSpan="2" Visibility="Collapsed">
                 <Border Background="#D8000000" CornerRadius="14"/>
-                <Border Style="{StaticResource Card}" Width="560" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="32,28">
+                <Border Style="{StaticResource Card}" Width="600" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="32,28">
                     <StackPanel>
                         <Image x:Name="WelcomeLogo" Width="56" Height="56" HorizontalAlignment="Left"/>
                         <TextBlock Tag="t:welcome.title" Text="Welcome to Akati OS" FontSize="26" FontWeight="Bold" Margin="0,14,0,4"/>
@@ -1380,9 +1406,27 @@
                                 <Button x:Name="WelcomeId" Style="{StaticResource Secondary}" Content="Bahasa Indonesia"/>
                             </StackPanel>
                         </Grid>
+                        <!-- Main game: added to My games with Game boost when it is installed (Set-MainGame) -->
                         <Grid Margin="0,0,0,14">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                             <Border Width="30" Height="30" CornerRadius="15" Background="{DynamicResource AccentGradient}" Margin="0,0,14,0"><TextBlock Text="2" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,12,0">
+                                <TextBlock Tag="t:welcome.game" Text="Your main game" FontWeight="SemiBold"/>
+                                <TextBlock Tag="t:welcome.game.d" Text="Game boost starts with it" Style="{StaticResource Muted}" FontSize="12" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <Border Grid.Column="2" Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="7" Padding="2" VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton x:Name="MainGameValorant" Style="{StaticResource Segment}" GroupName="MainGame" Content="Valorant"/>
+                                    <RadioButton x:Name="MainGameFivem" Style="{StaticResource Segment}" GroupName="MainGame" Content="FiveM"/>
+                                    <RadioButton x:Name="MainGameCs2" Style="{StaticResource Segment}" GroupName="MainGame" Content="CS2"/>
+                                    <RadioButton x:Name="MainGameFortnite" Style="{StaticResource Segment}" GroupName="MainGame" Content="Fortnite"/>
+                                    <RadioButton x:Name="MainGameOther" Style="{StaticResource Segment}" GroupName="MainGame" Tag="t:welcome.other" Content="Other"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                        <Grid Margin="0,0,0,14">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <Border Width="30" Height="30" CornerRadius="15" Background="{DynamicResource AccentGradient}" Margin="0,0,14,0"><TextBlock Text="3" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                 <TextBlock Tag="t:welcome.apps" Text="Install your gaming apps" FontWeight="SemiBold"/>
                                 <TextBlock Tag="t:welcome.apps.d" Text="Steam, Discord, Epic and more" Style="{StaticResource Muted}" FontSize="12"/>
@@ -1391,7 +1435,7 @@
                         </Grid>
                         <Grid Margin="0,0,0,24">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                            <Border Width="30" Height="30" CornerRadius="15" Background="{DynamicResource AccentGradient}" Margin="0,0,14,0"><TextBlock Text="3" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
+                            <Border Width="30" Height="30" CornerRadius="15" Background="{DynamicResource AccentGradient}" Margin="0,0,14,0"><TextBlock Text="4" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                 <TextBlock Tag="t:welcome.look" Text="Pick a theme and accent color" FontWeight="SemiBold"/>
                                 <TextBlock Tag="t:welcome.look.d" Text="Dark, light or slideshow" Style="{StaticResource Muted}" FontSize="12"/>

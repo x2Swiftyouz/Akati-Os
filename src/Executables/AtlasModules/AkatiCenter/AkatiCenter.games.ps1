@@ -160,6 +160,39 @@ function Add-Game([string]$path) {
     Request-MenuUpdate
 }
 
+# Welcome > Your main game: where each game installs by default (Steam games in any Steam library)
+function Find-MainGame([string]$key) {
+    $paths = switch ($key) {
+        'valorant' { @('C:\Riot Games\VALORANT\live\VALORANT.exe') }
+        'fivem'    { @((Join-Path $env:LOCALAPPDATA 'FiveM\FiveM.exe')) }
+        'fortnite' { @((Join-Path ${env:ProgramFiles} 'Epic Games\Fortnite\FortniteGame\Binaries\Win64\FortniteClient-Win64-Shipping.exe')) }
+        'cs2' {
+            $steam = Get-RegValue 'HKCU:\Software\Valve\Steam' 'SteamPath'
+            $libs = @(if ($steam) { $steam })
+            $vdf = if ($steam) { Join-Path $steam 'steamapps\libraryfolders.vdf' }
+            if ($vdf -and (Test-Path -LiteralPath $vdf)) {
+                foreach ($m in [regex]::Matches((Get-Content -LiteralPath $vdf -Raw), '"path"\s+"([^"]+)"')) { $libs += $m.Groups[1].Value -replace '\\\\', '\' }
+            }
+            @($libs | ForEach-Object { Join-Path $_ 'steamapps\common\Counter-Strike Global Offensive\game\bin\win64\cs2.exe' })
+        }
+        default { @() }
+    }
+    foreach ($p in $paths) { if ($p -and (Test-Path -LiteralPath $p)) { return (Resolve-Path -LiteralPath $p).Path } }
+    return $null
+}
+# Adds the main game to My games with Game boost on Play, and starts Game boost by itself when it opens.
+# FiveM needs Memory integrity off, so Play offers to switch it (the other games leave it as it is).
+function Set-MainGame([string]$key) {
+    $path = Find-MainGame $key
+    if (!$path) { Set-Status (T 'status.maingame.none'); return }
+    Add-Game $path
+    Set-GameProfile $path 'boost' 1
+    if ($key -eq 'fivem') { Set-GameProfile $path 'hvci' 0 }
+    Save-Setting AutoBoost 1; $ui.BoostAuto.IsChecked = $true
+    Show-Games
+    Set-Status ((T 'status.maingame') -f [IO.Path]::GetFileNameWithoutExtension($path))
+}
+
 # FPS test: PresentMon by Intel (downloaded once from its GitHub releases, only if signed by Intel) records
 # the frame times of the game for 30 seconds. Average FPS and the 1% low (the 99th percentile frame time)
 $presentMonDir = Join-Path $env:ProgramData 'AkatiOS\PresentMon'

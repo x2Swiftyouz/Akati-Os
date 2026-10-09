@@ -392,7 +392,9 @@ function Update-SystemFilter {
     }
 }
 $ui.SystemSearch.Add_TextChanged({ Update-SystemFilter })
-Show-SystemList
+# Hundreds of AtlasOS scripts: the list is built once the window is shown and idle, not before it opens
+if ($Screenshot) { Show-SystemList }
+else { $window.Add_ContentRendered({ [void]$window.Dispatcher.BeginInvoke([Action]{ if (!$ui.SystemList.Children.Count) { Show-SystemList } }, [System.Windows.Threading.DispatcherPriority]::ApplicationIdle) }) }
 
 # ---------------------------------------------------------------------------------------------
 # Problem report: one zip on the desktop with the Akati OS logs and PC details

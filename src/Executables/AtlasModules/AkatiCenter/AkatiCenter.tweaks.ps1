@@ -73,7 +73,7 @@ $tweaks = @(
        Set = { param($on)
                if (!(Test-Path 'HKCU:\Software\Microsoft\GameBar')) { New-Item -Path 'HKCU:\Software\Microsoft\GameBar' -Force | Out-Null }
                Set-ItemProperty -Path 'HKCU:\Software\Microsoft\GameBar' -Name AutoGameModeEnabled -Value $(if ($on) { 1 } else { 0 }) -Type DWord -Force } }
-    @{ Key = 'maxperf'; Glyph = [char]0xE945
+    @{ Key = 'maxperf'; Glyph = [char]0xE945; Async = $true
        Script = @{ Folder = '3. General Configuration\Power-saving'; On = 'Disable Power-saving*.cmd'; Off = 'Default Power-saving*.cmd' }
        Get = { [string](powercfg /getactivescheme) -match '11111111-1111-1111-1111-111111111111' } }
     @{ Key = 'store'; Glyph = [char]0xE719; Slow = $true; Async = $true
@@ -353,20 +353,31 @@ function Format-Code([scriptblock]$block) {
     if ($indent) { $lines = @($lines[0].Trim()) + @($lines | Select-Object -Skip 1 | ForEach-Object { if ($_.Length -ge $indent) { $_.Substring($indent) } else { $_.TrimStart() } }) }
     ($lines -join "`r`n").Trim()
 }
+# The code box is made the first time the link is clicked (40 boxes at start made the Tweaks page slow to build)
 function Add-Details($row, [string]$code) {
     $link = New-Text (T 'tw.details') 12 'Normal' 't:tw.details'
     $link.SetResourceReference([System.Windows.Controls.TextBlock]::ForegroundProperty, 'Accent2')
     $link.Cursor = 'Hand'; $link.Margin = '0,4,0,0'; $link.HorizontalAlignment = 'Left'
-    $box = New-Object System.Windows.Controls.TextBox
-    $box.Text = $code; $box.IsReadOnly = $true; $box.FontFamily = 'Cascadia Mono, Consolas'; $box.FontSize = 11
-    $box.TextWrapping = 'Wrap'; $box.Margin = '0,6,16,2'; $box.Padding = '8,6'; $box.BorderThickness = '0'; $box.Visibility = 'Collapsed'
-    $box.SetResourceReference([System.Windows.Controls.Control]::BackgroundProperty, 'Field')
-    $box.SetResourceReference([System.Windows.Controls.Control]::ForegroundProperty, 'Text2')
-    $link.DataContext = $box
-    $link.Add_MouseLeftButtonUp({ $b = $this.DataContext; $b.Visibility = if ($b.Visibility -eq 'Visible') { 'Collapsed' } else { 'Visible' } })
+    $link.DataContext = $code
+    $link.Add_MouseLeftButtonUp({ [void](Switch-Details $this) })
     $panel = $row.Sub.Parent
-    $at = $panel.Children.IndexOf($row.Sub) + 1
-    $panel.Children.Insert($at, $box); $panel.Children.Insert($at, $link)
+    $panel.Children.Insert($panel.Children.IndexOf($row.Sub) + 1, $link)
+}
+# Shows or hides the code under a "What it changes" link (makes the box the first time); returns the box
+function Switch-Details($link) {
+    $b = $link.DataContext
+    if ($b -is [string]) {
+        $box = New-Object System.Windows.Controls.TextBox
+        $box.Text = $b; $box.IsReadOnly = $true; $box.FontFamily = 'Cascadia Mono, Consolas'; $box.FontSize = 11
+        $box.TextWrapping = 'Wrap'; $box.Margin = '0,6,16,2'; $box.Padding = '8,6'; $box.BorderThickness = '0'; $box.Visibility = 'Collapsed'
+        $box.SetResourceReference([System.Windows.Controls.Control]::BackgroundProperty, 'Field')
+        $box.SetResourceReference([System.Windows.Controls.Control]::ForegroundProperty, 'Text2')
+        $panel = $link.Parent
+        $panel.Children.Insert($panel.Children.IndexOf($link) + 1, $box)
+        $link.DataContext = $box; $b = $box
+    }
+    $b.Visibility = if ($b.Visibility -eq 'Visible') { 'Collapsed' } else { 'Visible' }
+    $b
 }
 
 foreach ($tw in $tweaks) {
@@ -403,6 +414,7 @@ foreach ($tw in $tweaks) {
     $tw.Row = $row.Row
     [void]$tweakLists[$group].Children.Add($row.Row)
 }
+Add-Mark 'Tweaks > switches built'
 
 # DNS: Automatic / Cloudflare / Google on the connected network adapters (IPv4 and IPv6)
 $dnsServers = @{
@@ -471,7 +483,8 @@ $tweakLists['graphics'].Children.Insert(0, $refreshRow.Row)
 Update-RefreshRow
 
 # Memory compression: the advice depends on the RAM of this PC
-$ramGb = try { [Math]::Round((Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory / 1GB) } catch { 0 }
+# Without WMI (the first WMI query of the app takes about a second)
+$ramGb = try { Add-Type -AssemblyName Microsoft.VisualBasic; [Math]::Round((New-Object Microsoft.VisualBasic.Devices.ComputerInfo).TotalPhysicalMemory / 1GB) } catch { 0 }
 function Update-TweakHints {
     $mc = $tweaks | Where-Object { $_.Key -eq 'memcomp' }
     if (!$mc.Sub) { return }

@@ -18,6 +18,7 @@ if ($Screenshot) {
     # Sample PC details: these screenshots go on the website and in the README, not the CI runner's name and Windows Server
     $ui.EditionText.Text = 'Windows 11'; $ui.AboutVersion.Text = "$version  ·  Windows 11"
     $ui.PcName.Text = 'GAMING-PC'; $ui.OsLine.Text = 'Windows 11 Pro  ·  25H2'
+    $ui.CpuName.Text = 'AMD Ryzen 7 7800X3D 8-Core Processor'; $ui.GpuName.Text = 'NVIDIA GeForce RTX 4070'
     function Save-Shot([string]$file) {
         $size = New-Object System.Windows.Size $window.Width, $window.Height
         $rootEl.Measure($size)

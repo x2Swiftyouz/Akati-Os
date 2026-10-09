@@ -93,7 +93,7 @@ Open an [issue](../../issues/new/choose) and attach the problem report from Akat
 2. Download the `.apbx` for your Windows version and `SHA256SUMS.txt` from [Releases](../../releases/latest).
 3. Check the hash in PowerShell. The value must match the line for your file in `SHA256SUMS.txt`:
    ```powershell
-   (Get-FileHash .\AkatiOS-Win11_v1.7.1.apbx -Algorithm SHA256).Hash.ToLower()
+   (Get-FileHash .\AkatiOS-Win11_v1.7.2.apbx -Algorithm SHA256).Hash.ToLower()
    Get-Content .\SHA256SUMS.txt
    ```
 4. Open AME Wizard and drag the `.apbx` file into it.
@@ -131,8 +131,8 @@ Every push also builds the playbook on GitHub Actions. The `.apbx` is under **Ar
 2. Run the checklist in [docs/TESTING.md](docs/TESTING.md).
 3. Merge to `main`, then tag and push:
    ```
-   git tag v1.7.1
-   git push origin v1.7.1
+   git tag v1.7.2
+   git push origin v1.7.2
    ```
    Or without git: Actions > Build playbook > Run workflow, branch `main`, tick **Publish release**.
 4. GitHub Actions checks the versions, builds both `.apbx` files and publishes the release with `SHA256SUMS.txt`. Release notes come from `src/CHANGELOG.md`.

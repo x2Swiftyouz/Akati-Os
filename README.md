@@ -4,6 +4,8 @@
 
 Personal Windows 11 playbook for [AME Wizard](https://ameliorated.io), focused on gaming performance, privacy, debloat and a custom theme.
 
+Website: **https://x2swiftyouz.github.io/Akati-Os/** · English · ไทย · Tiếng Việt · Bahasa Indonesia
+
 Akati OS is based on [AtlasOS](https://github.com/Atlas-OS/Atlas) v0.5.0 (Windows 11) and v0.4.1 (Windows 10), and is licensed under GPL-3.0. It is **not** an official AtlasOS project. Every change from AtlasOS is listed in [docs/CHANGES-FROM-ATLAS.md](docs/CHANGES-FROM-ATLAS.md).
 
 > ℹ️ AME Wizard labeled Akati OS v1.5.0 and older as "Malicious" because their `playbook.conf` had a `ProductCode` value. Ameliorated told us to remove it, and it is removed since v1.6.0. AME Wizard now shows Akati OS as **Unverified**: Ameliorated only verifies playbooks of creators with a large userbase, and an unverified playbook works exactly the same (no functional difference, as Ameliorated confirmed). The full source is here and every change is listed in [docs/CHANGES-FROM-ATLAS.md](docs/CHANGES-FROM-ATLAS.md).
@@ -34,6 +36,22 @@ Akati OS คือ playbook สำหรับ Windows 11 เน้นเล่�
 - Windows ที่ถูกปรับแต่งมาแล้ว เช่น imOS 10 ก็ยังเป็น Windows 10 ใช้ไฟล์ Win10 (ยังไม่ได้ทดสอบเต็มรูปแบบ บางขั้นอาจไม่ผ่านเพราะ Windows ตัวนั้นลบบางส่วนออกไปแล้ว)
 - ใช้ผิดไฟล์ AME Wizard จะขึ้น "Requirements not met: This Windows build is not supported by this Playbook" ไม่มีอะไรพัง ให้เปลี่ยนไปใช้ไฟล์ที่ถูก
 - build อื่น เช่น Windows 10 21H2 (19044) หรือ Windows 11 23H2 (22631) ใช้ไม่ได้ทั้ง 2 ไฟล์
+
+## Tiếng Việt
+
+Akati OS là playbook miễn phí cho AME Wizard, tập trung vào chơi game: ít tác vụ chạy nền hơn, cài đặt tối ưu cho game, và Akati OS Center (có tiếng Việt) để tăng tốc game, kiểm tra sức khỏe máy, cài ứng dụng game và đổi giao diện. Dựa trên AtlasOS (GPL-3.0), không phải dự án chính thức của AtlasOS.
+
+- Tải tệp `.apbx` ở trang [Releases](../../releases/latest): Windows 11 dùng `AkatiOS-Win11_v<phiên bản>.apbx`, Windows 10 22H2 dùng `AkatiOS-Win10_v<phiên bản>.apbx`. Kiểm tra SHA256 với `SHA256SUMS.txt`.
+- **Sao lưu dữ liệu trước**, playbook không thể hoàn tác hoàn toàn. Hãy thử trong máy ảo trước.
+- AME Wizard hiển thị "Unverified" là bình thường: Ameliorated chỉ xác minh playbook có rất nhiều người dùng, và không có khác biệt nào khi sử dụng.
+
+## Bahasa Indonesia
+
+Akati OS adalah playbook gratis untuk AME Wizard yang fokus untuk gaming: lebih sedikit proses di latar belakang, pengaturan yang disetel untuk game, dan Akati OS Center (ada bahasa Indonesia) untuk Game Boost, cek kesehatan PC, aplikasi gaming, dan tampilan Windows. Berbasis AtlasOS (GPL-3.0), bukan proyek resmi AtlasOS.
+
+- Unduh file `.apbx` di halaman [Releases](../../releases/latest): Windows 11 pakai `AkatiOS-Win11_v<versi>.apbx`, Windows 10 22H2 pakai `AkatiOS-Win10_v<versi>.apbx`. Cek SHA256 dengan `SHA256SUMS.txt`.
+- **Cadangkan file Anda dulu**, playbook tidak bisa dibatalkan sepenuhnya. Coba dulu di mesin virtual.
+- AME Wizard menampilkan "Unverified" itu normal: Ameliorated hanya memverifikasi playbook dengan pengguna yang sangat banyak, dan tidak ada perbedaan fungsi.
 
 ## Requirements
 

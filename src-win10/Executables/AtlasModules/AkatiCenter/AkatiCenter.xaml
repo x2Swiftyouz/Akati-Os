@@ -1,4 +1,4 @@
-<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Akati OS Center" Width="1120" Height="700" MinWidth="860" MinHeight="560"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
@@ -1295,6 +1295,9 @@
                                         <TextBlock Text="Akati OS" FontSize="26" FontWeight="Bold"/>
                                         <TextBlock x:Name="AboutVersion" Text="v1.6.0" Style="{StaticResource Muted}"/>
                                         <TextBlock x:Name="UpdateStatus" Text="" Margin="0,6,0,0" TextWrapping="Wrap"/>
+                                        <Button x:Name="UpdateDownload" Style="{StaticResource PillAccent}" HorizontalAlignment="Left" Margin="0,10,0,0" Padding="14,5" Visibility="Collapsed">
+                                            <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE896;" FontSize="12" Margin="0,0,8,0"/><TextBlock Tag="t:update.download" Text="Download the update"/></StackPanel>
+                                        </Button>
                                     </StackPanel>
                                     <Button x:Name="UpdateButton" Grid.Column="2" Style="{StaticResource Primary}" VerticalAlignment="Center">
                                         <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE895;" FontSize="13" Margin="0,0,8,0"/><TextBlock Tag="t:quick.update" Text="Check for updates"/></StackPanel>

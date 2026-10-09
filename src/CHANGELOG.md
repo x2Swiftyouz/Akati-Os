@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- About: **Download the update** when a new version is out: the .apbx for this Windows goes to Downloads, is checked against SHA256SUMS.txt of the release (deleted when it does not match), and the folder opens with how to install it in AME Wizard
+- Akati Doctor checks that Windows is activated, with a button to the Windows activation settings (Akati OS does not change the activation)
+- The icon next to the clock, the desktop menu and the performance widget in Vietnamese and Indonesian too
+
 ## v1.6.0
 
 ### Added

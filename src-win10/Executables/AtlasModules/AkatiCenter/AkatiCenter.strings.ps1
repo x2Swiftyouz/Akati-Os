@@ -2,6 +2,13 @@
 # Every language must have the same keys as English (tools/test-center.ps1 checks it in CI).
 $strings = @{
     en = @{
+        'update.download' = 'Download the update'
+        'update.downloading' = 'Downloading {0}...'
+        'update.downloaded' = 'Downloaded and checked: {0}'
+        'update.badhash' = 'The download does not match SHA256SUMS.txt of the release, so it was deleted'
+        'update.dlfail' = 'The download did not work: {0}'
+        'update.howto' = "{0} is in your Downloads folder and its SHA256 matches the release.`n`nTo update: back up your files, open AME Wizard and drag the file into it. Your Akati OS Center settings stay."
+        'doc.activation.ok' = 'Windows is activated'; 'doc.activation.bad' = 'Windows is not activated'; 'doc.fix.activation' = 'Activation settings'
         'admin' = 'Administrator mode'; 'menu' = 'MENU'
         'nav.dashboard' = 'Dashboard'; 'nav.gaming' = 'Gaming apps'; 'nav.tweaks' = 'Tweaks'
         'nav.cleaner' = 'Cleaner'; 'nav.appearance' = 'Appearance'; 'nav.about' = 'About'
@@ -277,6 +284,13 @@ $strings = @{
         'lang' = 'English'
     }
     th = @{
+        'update.download' = 'ดาวน์โหลดอัปเดต'
+        'update.downloading' = 'กำลังดาวน์โหลด {0}...'
+        'update.downloaded' = 'ดาวน์โหลดและตรวจแล้ว: {0}'
+        'update.badhash' = 'ไฟล์ที่ดาวน์โหลดไม่ตรงกับ SHA256SUMS.txt ของ release จึงลบทิ้ง'
+        'update.dlfail' = 'ดาวน์โหลดไม่สำเร็จ: {0}'
+        'update.howto' = "{0} อยู่ในโฟลเดอร์ Downloads และค่า SHA256 ตรงกับ release แล้ว`n`nวิธีอัปเดต: สำรองไฟล์ก่อน เปิด AME Wizard แล้วลากไฟล์นี้เข้าไป การตั้งค่า Akati OS Center ยังอยู่ครบ"
+        'doc.activation.ok' = 'Windows Activate แล้ว'; 'doc.activation.bad' = 'Windows ยังไม่ได้ Activate'; 'doc.fix.activation' = 'ตั้งค่า Activation'
         'admin' = 'โหมดผู้ดูแลระบบ'; 'menu' = 'เมนู'
         'nav.dashboard' = 'แดชบอร์ด'; 'nav.gaming' = 'แอปเกม'; 'nav.tweaks' = 'ปรับแต่ง'
         'nav.cleaner' = 'ล้างไฟล์ขยะ'; 'nav.appearance' = 'ธีม'; 'nav.about' = 'เกี่ยวกับ'
@@ -553,6 +567,13 @@ $strings = @{
     }
     # Vietnamese (translated from English; corrections welcome in a GitHub issue)
     vi = @{
+        'update.download' = 'Tải bản cập nhật'
+        'update.downloading' = 'Đang tải {0}...'
+        'update.downloaded' = 'Đã tải và kiểm tra: {0}'
+        'update.badhash' = 'Tệp tải về không khớp với SHA256SUMS.txt của bản phát hành nên đã bị xóa'
+        'update.dlfail' = 'Tải về không thành công: {0}'
+        'update.howto' = "{0} nằm trong thư mục Downloads và SHA256 khớp với bản phát hành.`n`nĐể cập nhật: sao lưu tệp của bạn, mở AME Wizard và kéo tệp vào. Cài đặt Akati OS Center vẫn được giữ."
+        'doc.activation.ok' = 'Windows đã được kích hoạt'; 'doc.activation.bad' = 'Windows chưa được kích hoạt'; 'doc.fix.activation' = 'Cài đặt kích hoạt'
         'autoclean.failed' = 'Không bật được dọn dẹp tự động: {0}'
         'ac.fivem' = 'Chế độ FiveM'
         'ac.off' = 'Tính toàn vẹn bộ nhớ: tắt (chế độ FiveM)'
@@ -1152,6 +1173,13 @@ $strings = @{
     }
     # Indonesian (translated from English; corrections welcome in a GitHub issue)
     id = @{
+        'update.download' = 'Unduh pembaruan'
+        'update.downloading' = 'Mengunduh {0}...'
+        'update.downloaded' = 'Sudah diunduh dan dicek: {0}'
+        'update.badhash' = 'Unduhan tidak cocok dengan SHA256SUMS.txt rilis, jadi dihapus'
+        'update.dlfail' = 'Unduhan gagal: {0}'
+        'update.howto' = "{0} ada di folder Downloads dan SHA256-nya cocok dengan rilis.`n`nUntuk memperbarui: cadangkan file Anda, buka AME Wizard lalu seret file ini ke dalamnya. Pengaturan Akati OS Center tetap ada."
+        'doc.activation.ok' = 'Windows sudah diaktivasi'; 'doc.activation.bad' = 'Windows belum diaktivasi'; 'doc.fix.activation' = 'Pengaturan aktivasi'
         'autoclean.failed' = 'Pembersihan otomatis tidak bisa diaktifkan: {0}'
         'ac.fivem' = 'Mode FiveM'
         'ac.off' = 'Integritas memori: mati (mode FiveM)'

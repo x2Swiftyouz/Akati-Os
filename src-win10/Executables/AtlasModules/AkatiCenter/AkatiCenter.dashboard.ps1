@@ -149,6 +149,10 @@ function Update-Spark([string]$key, [double]$value) {
     $h = $script:history[$key]
     [void]$h.Add([Math]::Max(0, [Math]::Min(100, $value)))
     while ($h.Count -gt 40) { $h.RemoveAt(0) }
+    Show-Spark $key
+}
+function Show-Spark([string]$key) {
+    $h = $script:history[$key]
     $canvas = $ui["${key}Spark"]
     $w = if ($canvas.ActualWidth -gt 0) { $canvas.ActualWidth } else { 220 }
     $pts = New-Object System.Windows.Media.PointCollection
@@ -162,6 +166,8 @@ function Update-Spark([string]$key, [double]$value) {
     }
     $ui["${key}Fill"].Points = $area
 }
+# Drawn again for the new width when the window is resized (and at the first layout)
+foreach ($k in 'Cpu', 'Ram', 'Gpu') { $ui["${k}Spark"].Add_SizeChanged({ Show-Spark $this.Name.Substring(0, 3) }) }
 
 function Format-Speed([double]$bytesPerSec) {
     if ($bytesPerSec -lt 0) { return '-' }

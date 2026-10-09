@@ -70,7 +70,13 @@ function Update-AutoClean {
         $ui.AutoCleanSub.Text = (T 'autoclean.last') -f $when, (Format-Size ([double](Get-RegValue $settingsKey 'AutoCleanBytes')))
     } else { $ui.AutoCleanSub.Text = T 'autoclean.sub' }
 }
-$ui.AutoCleanToggle.IsChecked = !$Screenshot -and [bool](Get-ScheduledTask -TaskPath '\AkatiOS\' -TaskName 'Akati OS clean' -ErrorAction SilentlyContinue)
+# Read in the background: the Task Scheduler module takes about half a second to load
+$ui.AutoCleanToggle.IsChecked = $false
+if (!$Screenshot) {
+    $ui.AutoCleanToggle.IsEnabled = $false
+    Start-Work { [bool](Get-ScheduledTask -TaskPath '\AkatiOS\' -TaskName 'Akati OS clean' -ErrorAction SilentlyContinue) } @() {
+        param($r) $ui.AutoCleanToggle.IsChecked = (Get-LastOutput $r) -eq $true; $ui.AutoCleanToggle.IsEnabled = $true } $null
+}
 $ui.AutoCleanToggle.Add_Click({
     $on = [bool]$this.IsChecked
     Start-Work { param($file, $on) (& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $file $(if ($on) { '-RegisterTask' } else { '-RemoveTask' }) 2>&1 | Out-String).Trim() } @((Join-Path $appDir 'AkatiClean.ps1'), $on) {

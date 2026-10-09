@@ -6,7 +6,7 @@ Personal Windows 11 playbook for [AME Wizard](https://ameliorated.io), focused o
 
 Akati OS is based on [AtlasOS](https://github.com/Atlas-OS/Atlas) v0.5.0 (Windows 11) and v0.4.1 (Windows 10), and is licensed under GPL-3.0. It is **not** an official AtlasOS project. Every change from AtlasOS is listed in [docs/CHANGES-FROM-ATLAS.md](docs/CHANGES-FROM-ATLAS.md).
 
-> ⚠️ AME Wizard currently labels Akati OS as "Malicious". It is not meant to be: the full source is here and every change is listed in [docs/CHANGES-FROM-ATLAS.md](docs/CHANGES-FROM-ATLAS.md). Ameliorated is being contacted; see the release notes.
+> ℹ️ AME Wizard labeled Akati OS v1.5.0 and older as "Malicious" because their `playbook.conf` had a `ProductCode` value. Ameliorated told us to remove it, and it is removed since v1.6.0. AME Wizard now shows Akati OS as **Unverified**: Ameliorated only verifies playbooks of creators with a large userbase, and an unverified playbook works exactly the same (no functional difference, as Ameliorated confirmed). The full source is here and every change is listed in [docs/CHANGES-FROM-ATLAS.md](docs/CHANGES-FROM-ATLAS.md).
 
 > ⚠️ Back up your files first. A playbook cannot be fully undone: to go back, reinstall Windows. Test in a virtual machine first.
 
@@ -75,7 +75,7 @@ Open an [issue](../../issues/new/choose) and attach the problem report from Akat
 2. Download the `.apbx` for your Windows version and `SHA256SUMS.txt` from [Releases](../../releases/latest).
 3. Check the hash in PowerShell. The value must match the line for your file in `SHA256SUMS.txt`:
    ```powershell
-   (Get-FileHash .\AkatiOS-Win11_v1.5.0.apbx -Algorithm SHA256).Hash.ToLower()
+   (Get-FileHash .\AkatiOS-Win11_v1.6.0.apbx -Algorithm SHA256).Hash.ToLower()
    Get-Content .\SHA256SUMS.txt
    ```
 4. Open AME Wizard and drag the `.apbx` file into it.
@@ -113,8 +113,8 @@ Every push also builds the playbook on GitHub Actions. The `.apbx` is under **Ar
 2. Run the checklist in [docs/TESTING.md](docs/TESTING.md).
 3. Merge to `main`, then tag and push:
    ```
-   git tag v1.5.0
-   git push origin v1.5.0
+   git tag v1.6.0
+   git push origin v1.6.0
    ```
    Or without git: Actions > Build playbook > Run workflow, branch `main`, tick **Publish release**.
 4. GitHub Actions checks the versions, builds both `.apbx` files and publishes the release with `SHA256SUMS.txt`. Release notes come from `src/CHANGELOG.md`.

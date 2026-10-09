@@ -386,6 +386,8 @@ $ui.ReportButton.Add_Click({
         $lines += '', 'Gaming apps:', $appState
         $lines | Set-Content -Path (Join-Path $work 'system.txt') -Encoding UTF8
         if (Test-Path $logs) { Copy-Item -Path (Join-Path $logs '*.log') -Destination $work -ErrorAction SilentlyContinue }
+        # Logs of Akati OS Center, the icon next to the clock and the automatic clean
+        Copy-Item -Path (Join-Path $env:ProgramData 'AkatiOS\*.log') -Destination $work -ErrorAction SilentlyContinue
         # No personal data: remove the user name and the PC name from every file
         foreach ($f in Get-ChildItem -LiteralPath $work -File) {
             $text = [IO.File]::ReadAllText($f.FullName)

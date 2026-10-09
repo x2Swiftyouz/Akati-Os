@@ -1,6 +1,6 @@
 # Changelog: Akati OS for Windows 10
 
-## Unreleased
+## v1.7.0
 
 ### Added
 - Akati Doctor checks the screen refresh rate (with a button to use the highest) and the RAM speed: when the RAM runs slower than it can, it shows how to turn on XMP (Intel) or EXPO (AMD) in the BIOS (not on laptops)

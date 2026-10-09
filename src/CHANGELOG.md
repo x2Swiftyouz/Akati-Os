@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v1.7.3
 
 ### Changed
 - Akati OS Center opens faster again: the "What it changes" boxes on the Tweaks page are made when first opened, the list of AtlasOS scripts (System settings) is built once the window is shown, and the RAM size and the power plan switch are read without slowing the start

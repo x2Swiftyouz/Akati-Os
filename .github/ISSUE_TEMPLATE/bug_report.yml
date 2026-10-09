@@ -21,7 +21,7 @@ body:
     id: version
     attributes:
       label: Akati OS version / เวอร์ชัน
-      placeholder: v1.7.2 (Akati OS Center > About)
+      placeholder: v1.7.3 (Akati OS Center > About)
     validations:
       required: true
   - type: dropdown

@@ -325,6 +325,7 @@ $numberText = { param($v) [string][int][Math]::Round($v) }
 
 function Show-Page([string]$name) {
     $script:page = $name
+    if ($name -eq 'tweaks') { Initialize-Tweaks }
     foreach ($p in $pages) {
         $el = $ui["Page$(Get-PageId $p)"]
         if ($p -ne $name) { $el.Visibility = 'Collapsed'; continue }
@@ -454,6 +455,7 @@ function Show-Element([string]$page, $element) {
     }, 'Background')
 }
 function Get-SpotlightItems {
+    Initialize-Tweaks
     $items = New-Object System.Collections.ArrayList
     # Name: the title and other names of the item (both languages, keywords); Desc: its description
     $add = { param($text, $search, $sub, $glyph, $action, $data, $desc)
@@ -645,7 +647,9 @@ function Update-Language {
     Update-AntiCheat
     if ($script:doctorResult) { Show-Doctor $script:doctorResult }
     if ($script:healthResult) { Show-HealthInfo $script:healthResult }
-    Show-History; Update-WuState; Update-TempText; Update-Fivem
+    # The history needs the switches, which are made when first needed: only for the Health page on screen
+    if ($script:page -eq 'health') { Show-History }
+    Update-WuState; Update-TempText; Update-Fivem
     Set-Compact $script:compact
     if ($stats.Top) { Show-TopApps }
     foreach ($a in $apps) { if ($a.State -ne 'install') { Update-AppRow $a } }

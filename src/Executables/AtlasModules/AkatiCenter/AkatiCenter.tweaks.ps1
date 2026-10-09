@@ -380,41 +380,48 @@ function Switch-Details($link) {
     $b
 }
 
-foreach ($tw in $tweaks) {
-    if ($tw.Win11 -and $build -lt 22000) { continue }
-    $toggle = New-Object System.Windows.Controls.CheckBox
-    $toggle.Style = $window.FindResource('Switch')
-    $row = New-Row ([string]$tw.Glyph) (T "tw.$($tw.Key)") "t:tw.$($tw.Key)" $toggle "t:tw.$($tw.Key).d"
-    $row.Sub.Text = T "tw.$($tw.Key).d"
-    $tw.Toggle = $toggle; $tw.Sub = $row.Sub
-    $code = if ($tw.Script) { "AtlasDesktop\$($tw.Script.Folder)\$($tw.Script.On)`r`nAtlasDesktop\$($tw.Script.Folder)\$($tw.Script.Off)" }
-            elseif ($tw.Work) { Format-Code $tw.Work } elseif ($tw.Set) { Format-Code $tw.Set } else { '' }
-    if ($code) { Add-Details $row $code }
-    if ($tw.Async -and !$Screenshot) {
-        # Slow to read (modules, Store, network): read in the background, the switch is filled in when done.
-        # These Get blocks use only cmdlets, no variables of this script.
-        $toggle.IsEnabled = $false
-        Start-Work $tw.Get @() {
-            param($r, $t)
-            $value = Get-LastOutput $r
-            if ($value -is [bool]) { $t.Toggle.IsChecked = $value; $t.Toggle.IsEnabled = $true }
-            Update-TweakHints
-        } $tw
-    } else {
-        try { $toggle.IsChecked = [bool](& $tw.Get) } catch { $toggle.IsEnabled = $false }
+# The switches are made the first time something needs them (the Tweaks page, Ctrl+K, the history, backup,
+# Akati Doctor, the anti-cheat buttons), not when the app starts: 45 rows took about a second.
+function Initialize-Tweaks {
+    if ($script:tweaksBuilt) { return }
+    $script:tweaksBuilt = $true
+    foreach ($tw in $tweaks) {
+        if ($tw.Win11 -and $build -lt 22000) { continue }
+        $toggle = New-Object System.Windows.Controls.CheckBox
+        $toggle.Style = $window.FindResource('Switch')
+        $row = New-Row ([string]$tw.Glyph) (T "tw.$($tw.Key)") "t:tw.$($tw.Key)" $toggle "t:tw.$($tw.Key).d"
+        $row.Sub.Text = T "tw.$($tw.Key).d"
+        $tw.Toggle = $toggle; $tw.Sub = $row.Sub
+        $code = if ($tw.Script) { "AtlasDesktop\$($tw.Script.Folder)\$($tw.Script.On)`r`nAtlasDesktop\$($tw.Script.Folder)\$($tw.Script.Off)" }
+                elseif ($tw.Work) { Format-Code $tw.Work } elseif ($tw.Set) { Format-Code $tw.Set } else { '' }
+        if ($code) { Add-Details $row $code }
+        if ($tw.Async -and !$Screenshot) {
+            # Slow to read (modules, Store, network): read in the background, the switch is filled in when done.
+            # These Get blocks use only cmdlets, no variables of this script.
+            $toggle.IsEnabled = $false
+            Start-Work $tw.Get @() {
+                param($r, $t)
+                $value = Get-LastOutput $r
+                if ($value -is [bool]) { $t.Toggle.IsChecked = $value; $t.Toggle.IsEnabled = $true }
+                Update-TweakHints
+            } $tw
+        } else {
+            try { $toggle.IsChecked = [bool](& $tw.Get) } catch { $toggle.IsEnabled = $false }
+        }
+        $toggle.Tag = $tw
+        $toggle.Add_Click({
+            $t = $this.Tag; $on = [bool]$this.IsChecked
+            Invoke-Tweak $t $on
+            Add-History $t.Key $on
+            Show-Toast ((T $(if ($on) { 'toast.on' } else { 'toast.off' })) -f (T "tw.$($t.Key)")) @{ Tweak = $t; Before = !$on }
+        })
+        $group = if ($tw.Group) { $tw.Group } else { 'gaming' }
+        $tw.Row = $row.Row
+        [void]$tweakLists[$group].Children.Add($row.Row)
     }
-    $toggle.Tag = $tw
-    $toggle.Add_Click({
-        $t = $this.Tag; $on = [bool]$this.IsChecked
-        Invoke-Tweak $t $on
-        Add-History $t.Key $on
-        Show-Toast ((T $(if ($on) { 'toast.on' } else { 'toast.off' })) -f (T "tw.$($t.Key)")) @{ Tweak = $t; Before = !$on }
-    })
-    $group = if ($tw.Group) { $tw.Group } else { 'gaming' }
-    $tw.Row = $row.Row
-    [void]$tweakLists[$group].Children.Add($row.Row)
+    foreach ($list in $tweakLists.Values) { Update-Separators $list }
+    Update-TweakHints
 }
-Add-Mark 'Tweaks > switches built'
 
 # DNS: Automatic / Cloudflare / Google on the connected network adapters (IPv4 and IPv6)
 $dnsServers = @{
@@ -491,8 +498,8 @@ function Update-TweakHints {
     $hint = if (!$mc.Toggle.IsEnabled) { T 'tw.memcomp.nosysmain' } elseif ($ramGb -ge 16) { (T 'tw.memcomp.off') -f $ramGb } else { (T 'tw.memcomp.on') -f $ramGb }
     $mc.Sub.Text = (T 'tw.memcomp.d') + ' ' + $hint
 }
-Update-TweakHints
 foreach ($list in $tweakLists.Values) { Update-Separators $list }
+if ($Screenshot) { Initialize-Tweaks }
 
 # Reset: every tweak that has a Windows default (Default) goes back to it, and DNS to Automatic
 $ui.TweaksReset.Add_Click({
@@ -525,6 +532,7 @@ function Update-AntiCheat {
     $ui.AcState.Text = $text
 }
 function Set-AntiCheat([bool]$on) {
+    Initialize-Tweaks
     $changed = ((Get-RegValue $hvciKey 'Enabled') -eq 1) -ne $on
     if ($changed) {
         $vbsTweak.Toggle.IsChecked = $on

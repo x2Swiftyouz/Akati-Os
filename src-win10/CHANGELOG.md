@@ -1,6 +1,6 @@
 # Changelog: Akati OS for Windows 10
 
-## Unreleased
+## v1.7.4
 
 ### Changed
 - Akati OS Center opens about a second faster: the switches of the Tweaks page are made the first time they are needed (the Tweaks page, Ctrl+K, the change history, backup, Akati Doctor or the anti-cheat buttons)

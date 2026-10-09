@@ -10,7 +10,7 @@ Add-Mark 'Dashboard'
 
 
 $akati = Get-ItemProperty -Path 'HKLM:\SOFTWARE\AkatiOS' -ErrorAction SilentlyContinue
-$version = if ($akati.Version) { $akati.Version } else { 'v1.7.3' }
+$version = if ($akati.Version) { $akati.Version } else { 'v1.7.4' }
 $build = [Environment]::OSVersion.Version.Build
 $edition = if ($akati.Edition) { $akati.Edition } elseif ($build -ge 22000) { 'Windows 11' } else { 'Windows 10' }
 $ui.VersionBig.Text = $version

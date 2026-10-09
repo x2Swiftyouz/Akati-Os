@@ -807,8 +807,9 @@ if ($build -ge 22000) {
     } catch { }
 }
 # Windows 10: the desktop shows blurred through the window (the blur of the Windows 10 Start menu and taskbar).
-# Only when "Transparency effects" is on in Windows. Windows 10 windows have square corners, so the window does too
-# (the blur fills the whole window rectangle). If Windows refuses it, the window keeps its solid background.
+# Only when "Transparency effects" is on in Windows. The blur fills the window shape, so the window gets a rounded
+# shape (window region) that matches the rounded border; without it the corners turn square. If Windows refuses
+# the blur, the window keeps its solid background.
 elseif (!$Screenshot -and (Get-RegValue 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize' 'EnableTransparency') -ne 0) {
     try {
         Add-Type -TypeDefinition @'
@@ -830,19 +831,43 @@ namespace AkatiOS {
                 return SetWindowCompositionAttribute(hwnd, ref data) != 0;
             } finally { Marshal.FreeHGlobal(ptr); }
         }
+        [DllImport("gdi32.dll")] static extern IntPtr CreateRoundRectRgn(int x1, int y1, int x2, int y2, int w, int h);
+        [DllImport("gdi32.dll")] static extern bool DeleteObject(IntPtr obj);
+        [DllImport("user32.dll")] static extern int SetWindowRgn(IntPtr hwnd, IntPtr rgn, bool redraw);
+        // Rounded window shape in pixels (diameter 0 = the whole rectangle); Windows owns the region once it is set
+        public static bool Round(IntPtr hwnd, int width, int height, int diameter) {
+            IntPtr rgn = diameter > 0 ? CreateRoundRectRgn(0, 0, width + 1, height + 1, diameter, diameter) : IntPtr.Zero;
+            if (SetWindowRgn(hwnd, rgn, true) != 0) return true;
+            if (rgn != IntPtr.Zero) DeleteObject(rgn);
+            return false;
+        }
     }
 }
 '@
-        $window.Add_SourceInitialized({
-            $hwnd = (New-Object System.Windows.Interop.WindowInteropHelper $window).Handle
-            if ([AkatiOS.Blur]::Enable($hwnd)) {
+        # The rounded shape follows the size (full screen: no corners). Square corners when Windows refuses the shape.
+        function Set-BlurCorners {
+            if (!$script:blurHwnd) { return }
+            $src = [System.Windows.PresentationSource]::FromVisual($window)
+            $scale = if ($src) { $src.CompositionTarget.TransformToDevice.M11 } else { 1 }
+            $w = if ($window.ActualWidth -gt 0) { $window.ActualWidth } else { $window.Width }
+            $h = if ($window.ActualHeight -gt 0) { $window.ActualHeight } else { $window.Height }
+            $d = if ($script:full) { 0 } else { [int][Math]::Round(2 * $script:corner.TopLeft * $scale) }
+            if (![AkatiOS.Blur]::Round($script:blurHwnd, [int][Math]::Round($w * $scale), [int][Math]::Round($h * $scale), $d)) {
                 $ui.RootBorder.CornerRadius = New-Object System.Windows.CornerRadius 0
                 $ui.Sidebar.CornerRadius = New-Object System.Windows.CornerRadius 0
                 $script:corner = $ui.RootBorder.CornerRadius
+            }
+        }
+        $window.Add_SourceInitialized({
+            $hwnd = (New-Object System.Windows.Interop.WindowInteropHelper $window).Handle
+            if ([AkatiOS.Blur]::Enable($hwnd)) {
                 $script:micaHwnd = $hwnd
+                $script:blurHwnd = $hwnd
                 Set-CenterLook $script:look
+                Set-BlurCorners
             }
         })
+        $window.Add_SizeChanged({ Set-BlurCorners })
     } catch { }
 }
 

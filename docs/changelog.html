@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Changelog · Akati OS</title>
+<meta name="description" content="What changed in each Akati OS release: the free gaming playbook for AME Wizard, based on AtlasOS.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Akati OS">
+<meta property="og:title" content="Akati OS changelog">
+<meta property="og:description" content="What changed in each Akati OS release: the free gaming playbook for AME Wizard, based on AtlasOS.">
+<meta property="og:url" content="https://x2swiftyouz.github.io/Akati-Os/changelog.html">
+<meta property="og:image" content="https://x2swiftyouz.github.io/Akati-Os/images/social-preview.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta property="og:image:alt" content="Akati OS logo with the text: Free gaming playbook for AME Wizard">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://x2swiftyouz.github.io/Akati-Os/images/social-preview.png">
+<meta name="theme-color" content="#0f0d14" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f6f4fa" media="(prefers-color-scheme: light)">
+<link rel="canonical" href="https://x2swiftyouz.github.io/Akati-Os/changelog.html">
+<link rel="icon" type="image/png" href="images/logo.png">
+<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+<style>
+  :root {
+    --bg: #0f0d14; --bg2: #17141e; --card: #1d1a26; --line: #2c2838; --text: #f4f2f8; --muted: #a6a1b3;
+    --accent: #a35cf0; --accent2: #e559a9; --good: #5fd38d;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) { --bg: #f6f4fa; --bg2: #ffffff; --card: #ffffff; --line: #e3dfeb; --text: #1d1a24; --muted: #625d70; }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 "Segoe UI Variable Text", "Segoe UI", "Leelawadee UI", system-ui, sans-serif; overflow-wrap: break-word; }
+  a { color: var(--accent); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
+  nav { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--bg) 85%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+  nav .wrap { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; min-height: 56px; }
+  nav .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; text-decoration: none; color: var(--text); }
+  nav .brand img { width: 28px; height: 28px; }
+  nav .links { margin-left: auto; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+  nav .links a { color: var(--muted); text-decoration: none; font-size: 14px; }
+  nav .links a:hover, nav .links a[aria-current] { color: var(--text); }
+  .lang { display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; flex-shrink: 0; }
+  .lang button { background: none; border: 0; color: var(--muted); padding: 4px 10px; cursor: pointer; font: inherit; font-size: 13px; }
+  .lang button.on { background: var(--accent); color: #fff; }
+  header.hero { padding: 72px 0 48px; background: radial-gradient(60% 80% at 80% 0%, color-mix(in srgb, var(--accent) 30%, transparent), transparent), radial-gradient(50% 70% at 0% 100%, color-mix(in srgb, var(--accent2) 22%, transparent), transparent); }
+  .hero h1 { font-size: clamp(36px, 7vw, 64px); line-height: 1.05; margin: 0 0 16px; letter-spacing: -1px; }
+  .hero h1 span { background: linear-gradient(90deg, var(--accent), var(--accent2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero p.lead { font-size: 19px; color: var(--muted); max-width: 640px; margin: 0 0 28px; }
+  .buttons { display: flex; gap: 12px; flex-wrap: wrap; }
+  .btn { display: inline-flex; flex-direction: column; padding: 12px 20px; border-radius: 12px; text-decoration: none; font-weight: 600; border: 1px solid var(--line); color: var(--text); background: var(--card); }
+  .btn small { font-weight: 400; color: var(--muted); font-size: 12px; }
+  .btn.primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; border: 0; }
+  .btn.primary small { color: #f3e8ff; }
+  .dlcount { margin: 14px 0 0; font-size: 14px; color: var(--muted); }
+  .dlcount b { color: var(--text); }
+  .note { font-size: 13px; color: var(--muted); margin-top: 14px; }
+  .shot { margin-top: 40px; border-radius: 16px; border: 1px solid var(--line); width: 100%; height: auto; box-shadow: 0 30px 80px rgba(0,0,0,.35); }
+  section { padding: 56px 0; }
+  section h2 { font-size: 30px; margin: 0 0 8px; }
+  section p.sub { color: var(--muted); margin: 0 0 28px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+  .card h3 { margin: 0 0 6px; font-size: 16px; }
+  .card p { margin: 0; color: var(--muted); font-size: 14px; }
+  .card .ic { font-size: 22px; margin-bottom: 8px; }
+  .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr)); gap: 14px; }
+  .gallery figure { margin: 0; }
+  .gallery img { width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--line); }
+  .gallery figcaption { color: var(--muted); font-size: 13px; margin-top: 6px; }
+  ol.steps { padding-left: 20px; }
+  ol.steps li { margin-bottom: 10px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  td, th { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--bg2); }
+  .tablewrap { overflow-x: auto; }
+  details { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; margin-bottom: 10px; }
+  details summary { cursor: pointer; font-weight: 600; }
+  details p { color: var(--muted); margin: 10px 0 0; }
+  code { background: var(--bg2); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; font-size: 13px; }
+  footer { border-top: 1px solid var(--line); padding: 28px 0 40px; color: var(--muted); font-size: 13px; }
+  [data-l]:not(.show) { display: none; }
+  @media (max-width: 640px) {
+    nav .wrap { gap: 4px 12px; padding-top: 8px; padding-bottom: 8px; }
+    nav .lang { order: 2; margin-left: auto; }
+    nav .links { order: 3; width: 100%; margin-left: 0; gap: 4px 16px; }
+    nav .links a.hide-s { display: none; }
+    .lang button { padding: 4px 9px; font-size: 12px; }
+    header.hero { padding-top: 44px; }
+  }
+  header.hero.small { padding: 56px 0 24px; }
+  section.releases { padding: 8px 0 56px; }
+  .rel { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px 22px; margin-bottom: 16px; }
+  .rel-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; margin-bottom: 4px; }
+  .rel-head h2 { font-size: 24px; margin: 0; }
+  .rel-head h2 a { color: var(--text); text-decoration: none; }
+  .rel-head h2 a:hover { color: var(--accent); }
+  .rel-date { color: var(--muted); font-size: 14px; }
+  .badge { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; }
+  .badge.pre { background: var(--bg2); color: var(--muted); border: 1px solid var(--line); }
+  .rel-body h3 { font-size: 16px; margin: 18px 0 6px; }
+  .rel-body h4 { font-size: 15px; margin: 14px 0 4px; }
+  .rel-body p { margin: 8px 0; color: var(--muted); }
+  .rel-body ul { margin: 6px 0; padding-left: 22px; }
+  .rel-body li { margin-bottom: 6px; }
+  .rel-body pre { background: var(--bg2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; overflow-x: auto; font-size: 13px; }
+  .rel-body pre code { background: none; border: 0; padding: 0; }
+  .rel-body code { overflow-wrap: anywhere; }
+  .rel-link { margin: 12px 0 0; font-size: 14px; }
+  .status { color: var(--muted); }
+</style>
+</head>
+<body>
+<nav>
+  <div class="wrap">
+    <a class="brand" href="./"><img src="images/logo.png" alt="" width="28" height="28">Akati OS</a>
+    <div class="links">
+      <a class="hide-s" href="./#features"><span data-l="en">Features</span><span data-l="th">ฟีเจอร์</span><span data-l="vi">Tính năng</span><span data-l="id">Fitur</span></a>
+      <a class="hide-s" href="./#install"><span data-l="en">Install</span><span data-l="th">วิธีติดตั้ง</span><span data-l="vi">Cài đặt</span><span data-l="id">Instal</span></a>
+      <a class="hide-s" href="./#faq">FAQ</a>
+      <a href="changelog.html" aria-current="page"><span data-l="en">Changelog</span><span data-l="th">ประวัติเวอร์ชัน</span><span data-l="vi">Nhật ký thay đổi</span><span data-l="id">Catatan rilis</span></a>
+      <a href="https://github.com/x2Swiftyouz/Akati-Os">GitHub</a>
+    </div>
+    <div class="lang" role="group" aria-label="Language">
+      <button data-set="en" lang="en">EN</button><button data-set="th" lang="th">ไทย</button><button data-set="vi" lang="vi">VI</button><button data-set="id" lang="id">ID</button>
+    </div>
+  </div>
+</nav>
+
+<header class="hero small">
+  <div class="wrap">
+    <h1><span data-l="en">Changelog</span><span data-l="th">ประวัติเวอร์ชัน</span><span data-l="vi">Nhật ký thay đổi</span><span data-l="id">Catatan rilis</span></h1>
+    <p class="lead" data-l="en">What changed in each Akati OS release. The release notes are written in English.</p>
+    <p class="lead" data-l="th">สิ่งที่เปลี่ยนในแต่ละเวอร์ชันของ Akati OS บันทึกการเปลี่ยนแปลงเขียนเป็นภาษาอังกฤษ</p>
+    <p class="lead" data-l="vi">Những thay đổi trong từng phiên bản Akati OS. Ghi chú phát hành được viết bằng tiếng Anh.</p>
+    <p class="lead" data-l="id">Apa yang berubah di setiap rilis Akati OS. Catatan rilis ditulis dalam bahasa Inggris.</p>
+    <div class="buttons">
+      <a class="btn primary" href="./"><span data-l="en">Download Akati OS</span><span data-l="th">ดาวน์โหลด Akati OS</span><span data-l="vi">Tải Akati OS</span><span data-l="id">Unduh Akati OS</span><small>Windows 11 · Windows 10</small></a>
+    </div>
+  </div>
+</header>
+
+<section class="releases">
+  <div class="wrap">
+    <div id="status">
+      <p class="status" id="loading"><span data-l="en">Loading releases…</span><span data-l="th">กำลังโหลด…</span><span data-l="vi">Đang tải…</span><span data-l="id">Memuat…</span></p>
+      <p class="status" id="failed" hidden>
+        <span data-l="en">The release list could not be loaded right now. See all releases on <a href="https://github.com/x2Swiftyouz/Akati-Os/releases">GitHub</a>.</span>
+        <span data-l="th">โหลดรายการเวอร์ชันไม่ได้ในตอนนี้ ดูทุกเวอร์ชันได้ที่ <a href="https://github.com/x2Swiftyouz/Akati-Os/releases">GitHub</a></span>
+        <span data-l="vi">Hiện không tải được danh sách phiên bản. Xem tất cả phiên bản trên <a href="https://github.com/x2Swiftyouz/Akati-Os/releases">GitHub</a>.</span>
+        <span data-l="id">Daftar rilis tidak bisa dimuat sekarang. Lihat semua rilis di <a href="https://github.com/x2Swiftyouz/Akati-Os/releases">GitHub</a>.</span>
+      </p>
+    </div>
+    <noscript><p class="status">See all releases on <a href="https://github.com/x2Swiftyouz/Akati-Os/releases">GitHub</a>.</p></noscript>
+    <div id="list"></div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    Akati OS · GPL-3.0 · <a href="https://github.com/x2Swiftyouz/Akati-Os">Source</a> ·
+    <a href="https://github.com/x2Swiftyouz/Akati-Os/releases">GitHub Releases</a> ·
+    <a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/CHANGES-FROM-ATLAS.md">Changes from AtlasOS</a> ·
+    Based on <a href="https://github.com/Atlas-OS/Atlas">AtlasOS</a>, not an official AtlasOS project. AME Wizard by Ameliorated.
+  </div>
+</footer>
+
+<script>
+  (function () {
+    // Language: the browser language when it is one of these, remembered when changed
+    var LANGS = ['en', 'th', 'vi', 'id'];
+    var saved = null;
+    try { saved = localStorage.getItem('akati-lang'); } catch (e) {}
+    function browserLang() {
+      var list = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language || ''];
+      for (var i = 0; i < list.length; i++) {
+        var p = String(list[i] || '').toLowerCase().slice(0, 2);
+        if (LANGS.indexOf(p) >= 0) return p;
+      }
+      return 'en';
+    }
+    var lang = LANGS.indexOf(saved) >= 0 ? saved : browserLang();
+    function set(l) {
+      lang = l;
+      document.documentElement.lang = l;
+      document.querySelectorAll('[data-l]').forEach(function (el) { el.classList.toggle('show', el.getAttribute('data-l') === l); });
+      document.querySelectorAll('[data-set]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-set') === l); b.setAttribute('aria-pressed', b.getAttribute('data-set') === l ? 'true' : 'false'); });
+    }
+    document.querySelectorAll('[data-set]').forEach(function (b) {
+      b.addEventListener('click', function () { set(b.getAttribute('data-set')); try { localStorage.setItem('akati-lang', lang); } catch (e) {} });
+    });
+    set(lang);
+
+    // Releases from GitHub (cached for 10 minutes in this tab, shared with the home page)
+    var API = 'https://api.github.com/repos/x2Swiftyouz/Akati-Os/releases?per_page=100';
+    function releases() {
+      try {
+        var c = JSON.parse(sessionStorage.getItem('akati-releases'));
+        if (c && Array.isArray(c.d) && Date.now() - c.t < 600000) return Promise.resolve(c.d);
+      } catch (e) {}
+      if (!window.fetch) return Promise.reject(new Error('no fetch'));
+      return fetch(API).then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      }).then(function (data) {
+        if (!Array.isArray(data)) throw new Error('bad data');
+        var list = data.filter(function (r) { return r && !r.draft; }).map(function (r) {
+          return { tag_name: r.tag_name, name: r.name, prerelease: !!r.prerelease, published_at: r.published_at, html_url: r.html_url, body: r.body || '',
+            assets: (r.assets || []).map(function (a) { return { name: a.name, download_count: a.download_count || 0, browser_download_url: a.browser_download_url }; }) };
+        });
+        try { sessionStorage.setItem('akati-releases', JSON.stringify({ t: Date.now(), d: list })); } catch (e) {}
+        return list;
+      });
+    }
+
+    // Small Markdown renderer: headings, lists, **bold**, `code`, [links](url) and ``` code blocks.
+    // Everything is HTML-escaped first, so the release text cannot add its own markup.
+    function esc(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+    function inline(s) {
+      return s.split(/(`[^`]+`)/).map(function (part, i) {
+        if (i % 2) return '<code>' + part.slice(1, -1) + '</code>';
+        return part
+          .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+          .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" rel="noopener">$1</a>');
+      }).join('');
+    }
+    function markdown(src) {
+      var lines = esc(src).replace(/\r\n?/g, '\n').split('\n');
+      var out = [], para = [], list = false, code = null;
+      function flushPara() { if (para.length) { out.push('<p>' + inline(para.join(' ')) + '</p>'); para = []; } }
+      function closeList() { if (list) { out.push('</ul>'); list = false; } }
+      lines.forEach(function (line) {
+        if (code) {
+          if (/^\s*```/.test(line)) { out.push('<pre><code>' + code.join('\n') + '</code></pre>'); code = null; }
+          else code.push(line);
+          return;
+        }
+        var m;
+        if (/^\s*```/.test(line)) { flushPara(); closeList(); code = []; return; }
+        if ((m = /^(#{1,6})\s+(.*?)\s*#*\s*$/.exec(line))) {
+          flushPara(); closeList();
+          var tag = m[1].length >= 4 ? 'h4' : 'h3';
+          out.push('<' + tag + '>' + inline(m[2]) + '</' + tag + '>');
+          return;
+        }
+        if ((m = /^\s*[-*+]\s+(.*)$/.exec(line))) {
+          flushPara();
+          if (!list) { out.push('<ul>'); list = true; }
+          out.push('<li>' + inline(m[1]) + '</li>');
+          return;
+        }
+        if (!line.trim()) { flushPara(); closeList(); return; }
+        if (list && /^\s+\S/.test(line)) { out[out.length - 1] = out[out.length - 1].replace(/<\/li>$/, ' ' + inline(line.trim()) + '</li>'); return; }
+        closeList();
+        para.push(line.trim());
+      });
+      if (code) out.push('<pre><code>' + code.join('\n') + '</code></pre>');
+      flushPara(); closeList();
+      return out.join('\n');
+    }
+
+    var BADGE = {
+      latest: { en: 'Latest', th: 'ล่าสุด', vi: 'Mới nhất', id: 'Terbaru' },
+      pre: { en: 'Pre-release', th: 'รุ่นทดลอง', vi: 'Bản thử nghiệm', id: 'Pra-rilis' },
+      link: { en: 'Downloads and SHA256 on GitHub', th: 'ไฟล์และ SHA256 บน GitHub', vi: 'Tệp tải và SHA256 trên GitHub', id: 'Unduhan dan SHA256 di GitHub' }
+    };
+    function words(key) {
+      return LANGS.map(function (l) { return '<span data-l="' + l + '">' + esc(BADGE[key][l]) + '</span>'; }).join('');
+    }
+    function dates(iso) {
+      var d = new Date(iso);
+      if (!iso || isNaN(d)) return '';
+      return LANGS.map(function (l) {
+        var s;
+        try { s = d.toLocaleDateString(l, { year: 'numeric', month: 'long', day: 'numeric' }); } catch (e) { s = iso.slice(0, 10); }
+        return '<span data-l="' + l + '">' + esc(s) + '</span>';
+      }).join('');
+    }
+    function safeUrl(u) { return /^https:\/\/github\.com\//.test(u || '') ? u : 'https://github.com/x2Swiftyouz/Akati-Os/releases'; }
+
+    releases().then(function (list) {
+      if (!list.length) throw new Error('empty');
+      var latest = list.filter(function (r) { return !r.prerelease; })[0];
+      var html = list.map(function (r) {
+        var body = String(r.body || '').split(/^##\s*Download/m)[0].trim();
+        var url = safeUrl(r.html_url);
+        return '<article class="rel" id="' + esc(r.tag_name) + '">' +
+          '<div class="rel-head"><h2><a href="' + esc(url) + '">' + esc(r.tag_name) + '</a></h2>' +
+          (r === latest ? '<span class="badge">' + words('latest') + '</span>' : '') +
+          (r.prerelease ? '<span class="badge pre">' + words('pre') + '</span>' : '') +
+          '<span class="rel-date">' + dates(r.published_at) + '</span></div>' +
+          '<div class="rel-body">' + markdown(body) + '</div>' +
+          '<p class="rel-link"><a href="' + esc(url) + '">' + words('link') + '</a></p>' +
+          '</article>';
+      }).join('\n');
+      document.getElementById('list').innerHTML = html;
+      document.getElementById('status').hidden = true;
+      set(lang);
+      if (location.hash) { var t = document.getElementById(decodeURIComponent(location.hash.slice(1))); if (t) t.scrollIntoView(); }
+    }).catch(function () {
+      document.getElementById('loading').hidden = true;
+      document.getElementById('failed').hidden = false;
+    });
+  })();
+</script>
+</body>
+</html>

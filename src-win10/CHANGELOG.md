@@ -1,5 +1,18 @@
 # Changelog: Akati OS for Windows 10
 
+## v1.7.0
+
+### Added
+- Akati Doctor checks the screen refresh rate (with a button to use the highest) and the RAM speed: when the RAM runs slower than it can, it shows how to turn on XMP (Intel) or EXPO (AMD) in the BIOS (not on laptops)
+- Game boost can pause background services until it stops: search indexing, SysMain, printing and the Windows Update downloads (only stopped, started again at Stop; none of them is used by anti-cheats)
+- Tweaks > Services: **Stop Microsoft Edge in the background** (no startup boost, no running after the last window is closed)
+- Dashboard: **Customize dashboard** hides cards and changes their order; the CPU, RAM and GPU lines are filled; the numbers count up when the page opens (also the Akati Score)
+- Welcome: **Your main game** (Valorant, FiveM, CS2, Fortnite): when it is installed it goes to My games with Game boost, which then starts by itself when the game opens
+- Windows 10: the desktop shows blurred through Akati OS Center when Transparency effects is on in Windows
+
+### Changed
+- Cleaner > GPU shader caches also cleans the NVIDIA caches in LocalLow and ProgramData and the AMD Vulkan and DXC caches
+
 ## v1.6.1
 
 ### Added

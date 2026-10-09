@@ -33,9 +33,14 @@ $cleanItems = @(
     @{ Key = 'browser'; Glyph = [char]0xE774; Off = $true
        Folders = @((Join-Path $env:LOCALAPPDATA 'BraveSoftware\Brave-Browser\User Data\*\Cache\Cache_Data'), (Join-Path $env:LOCALAPPDATA 'Microsoft\Edge\User Data\*\Cache\Cache_Data'),
                    (Join-Path $env:LOCALAPPDATA 'Google\Chrome\User Data\*\Cache\Cache_Data'), (Join-Path $env:LOCALAPPDATA 'Mozilla\Firefox\Profiles\*\cache2')) }
+    # Shader caches of DirectX and the graphics drivers: the games build them again (the first minutes stutter a little),
+    # which fixes stutter and graphics errors after a driver update
     @{ Key = 'shaders'; Glyph = [char]0xE7F4; Off = $true
        Folders = @((Join-Path $env:LOCALAPPDATA 'D3DSCache'), (Join-Path $env:LOCALAPPDATA 'NVIDIA\DXCache'), (Join-Path $env:LOCALAPPDATA 'NVIDIA\GLCache'),
-                   (Join-Path $env:LOCALAPPDATA 'AMD\DxCache'), (Join-Path $env:LOCALAPPDATA 'AMD\GLCache'), (Join-Path $env:LOCALAPPDATA 'Intel\ShaderCache')) }
+                   (Join-Path $env:USERPROFILE 'AppData\LocalLow\NVIDIA\PerDriverVersion\DXCache'), (Join-Path $env:USERPROFILE 'AppData\LocalLow\NVIDIA\PerDriverVersion\GLCache'),
+                   (Join-Path $env:ProgramData 'NVIDIA Corporation\NV_Cache'),
+                   (Join-Path $env:LOCALAPPDATA 'AMD\DxCache'), (Join-Path $env:LOCALAPPDATA 'AMD\DxcCache'), (Join-Path $env:LOCALAPPDATA 'AMD\GLCache'),
+                   (Join-Path $env:LOCALAPPDATA 'AMD\VkCache'), (Join-Path $env:LOCALAPPDATA 'Intel\ShaderCache')) }
     @{ Key = 'recycle'; Glyph = [char]0xE74D; Recycle = $true }
 )
 

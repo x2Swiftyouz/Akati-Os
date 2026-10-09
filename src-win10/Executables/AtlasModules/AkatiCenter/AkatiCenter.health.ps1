@@ -11,7 +11,7 @@ $getCulture = { Get-LangCulture }
 $orange = (New-Object System.Windows.Media.BrushConverter).ConvertFromString('#FF9F0A')
 
 # Akati Doctor: each check is $true when fine. Runs in the background (no functions of this script)
-$doctorChecks = 'tray', 'menu', 'power', 'disk', 'restart', 'hvci', 'devices', 'crash', 'activation'
+$doctorChecks = 'tray', 'menu', 'power', 'refresh', 'xmp', 'disk', 'restart', 'hvci', 'devices', 'crash', 'activation'
 $doctorWork = {
     $r = @{}
     $wanted = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\AkatiOS' -Name TrayIcon -ErrorAction SilentlyContinue).TrayIcon -eq 1
@@ -43,6 +43,26 @@ $doctorWork = {
         $win = Get-CimInstance SoftwareLicensingProduct -Filter "ApplicationID='55c92734-d682-4d71-983e-d6ec3f16059f' AND PartialProductKey IS NOT NULL" -ErrorAction Stop | Select-Object -First 1
         $r.activation = $win.LicenseStatus -eq 1
     } catch { $r.activation = $true }
+    # Checks this PC cannot answer are left out of the list
+    $r.skip = @()
+    # Screen refresh rate: the highest the primary screen can do at its resolution ([AkatiOS.Perf], from the Game boost part)
+    try { $r.hzNow = [AkatiOS.Perf]::Current()[2]; $r.hzMax = [AkatiOS.Perf]::MaxHz() } catch { $r.hzNow = 0; $r.hzMax = 0 }
+    if ($r.hzNow -le 1 -or $r.hzMax -le 1) { $r.skip += 'refresh' }
+    $r.refresh = $r.hzNow -ge $r.hzMax
+    # RAM speed against the speed the modules report (SMBIOS): lower means XMP (Intel) or EXPO (AMD) is off in the BIOS.
+    # Not on laptops (their RAM runs as the maker set it) and not when Windows reports no speed (virtual machines).
+    # Some BIOSes report the configured speed at half (MHz instead of MT/s): that counts as unknown.
+    $r.xmp = $true
+    try {
+        $mods = @(Get-CimInstance Win32_PhysicalMemory -ErrorAction Stop | Where-Object { $_.Speed -gt 0 -and $_.ConfiguredClockSpeed -gt 0 })
+        $laptop = @(@((Get-CimInstance Win32_SystemEnclosure -ErrorAction SilentlyContinue).ChassisTypes) | Where-Object { $_ -in 8, 9, 10, 14, 30, 31, 32 }).Count -gt 0
+        if ($mods.Count -and !$laptop) {
+            $r.ramNow = [int]($mods | Measure-Object -Property ConfiguredClockSpeed -Minimum).Minimum
+            $r.ramMax = [int]($mods | Measure-Object -Property Speed -Minimum).Minimum
+            if ([Math]::Abs(2 * $r.ramNow - $r.ramMax) -le $r.ramMax * 0.05) { $r.skip += 'xmp' }
+            else { $r.xmp = $r.ramNow -ge $r.ramMax * 0.97 }
+        } else { $r.skip += 'xmp' }
+    } catch { $r.skip += 'xmp' }
     $r
 }
 # Startup time (Diagnostics-Performance log) and crashes of the last 30 days
@@ -70,9 +90,11 @@ function Show-Doctor($r) {
     if ($r -isnot [hashtable]) { $ui.DoctorSummary.Text = T 'doc.failed'; return }
     $bad = 0
     foreach ($k in $doctorChecks) {
+        if ($k -in @($r.skip)) { continue }
         $ok = [bool]$r[$k]
         if (!$ok) { $bad++ }
-        $arg = switch ($k) { 'disk' { $r.diskFree } 'devices' { $r.devicesBad } 'crash' { $r.crashCount } default { '' } }
+        $arg = switch ($k) { 'disk' { $r.diskFree } 'devices' { $r.devicesBad } 'crash' { $r.crashCount }
+                             'refresh' { , @($r.hzNow, $r.hzMax) } 'xmp' { , @($r.ramNow, $r.ramMax) } default { '' } }
         $right = New-Object System.Windows.Controls.Border
         if (!$ok) {
             $right = New-Object System.Windows.Controls.Button
@@ -111,7 +133,7 @@ function Get-StartupOnCount {
 function Get-AkatiScore {
     $r = $script:doctorResult
     if ($r -isnot [hashtable]) { return $null }
-    $issues = @($doctorChecks | Where-Object { !$r[$_] }).Count
+    $issues = @($doctorChecks | Where-Object { !$r[$_] -and $_ -notin @($r.skip) }).Count
     Get-ScorePoints $issues (Get-StartupOnCount) $stats.Ram $stats.Ping ([int]$r.diskFree)
 }
 function Get-ScoreBrush([int]$s) {
@@ -120,7 +142,9 @@ function Get-ScoreBrush([int]$s) {
 function Update-Score {
     $s = Get-AkatiScore
     if (!$s) { return }
-    $ui.ScoreValue.Text = [string]$s.Score
+    # The first score counts up; later ones (memory and ping change it) are set at once
+    if ($ui.ScoreValue.Text -notmatch '^\d+$') { Start-CountUp $ui.ScoreValue $s.Score $numberText 900 }
+    elseif (!(Test-Counting $ui.ScoreValue)) { $ui.ScoreValue.Text = [string]$s.Score }
     $ui.ScoreValue.Foreground = Get-ScoreBrush $s.Score
     $ui.ScoreTitle.Text = T $(if ($s.Score -ge 85) { 'score.great' } elseif ($s.Score -ge 65) { 'score.good' } else { 'score.low' })
     $ui.ScoreTips.Children.Clear()
@@ -148,6 +172,14 @@ function Invoke-DoctorFix([string]$k) {
         'devices' { Start-Process devmgmt.msc }
         'crash' { $ui.CrashList.BringIntoView() }
         'activation' { Start-Process 'ms-settings:activation' }
+        'refresh' {
+            $max = $script:doctorResult.hzMax
+            $result = try { [AkatiOS.Perf]::SetHz($max) } catch { -1 }
+            if ($result -eq 0) { Set-Status ((T 'status.refresh') -f $max) } else { Set-Status ((T 'status.refreshfail') -f $result) }
+            Update-RefreshRow; Update-Chips; Start-Health
+        }
+        # The BIOS setting cannot be changed from Windows: how to turn it on
+        'xmp' { [void][System.Windows.MessageBox]::Show((T 'doc.xmp.howto'), 'Akati OS Center', 'OK', 'Information') }
     }
 }
 function Show-HealthInfo($r) {

@@ -266,6 +266,31 @@ Add-Mark 'Navigation, title bar, language'
 $pages = 'dashboard', 'gaming', 'boost', 'tweaks', 'health', 'cleaner', 'appearance', 'about'
 $script:page = 'dashboard'
 function Get-PageId([string]$p) { [Globalization.CultureInfo]::InvariantCulture.TextInfo.ToTitleCase($p) }
+# Numbers count up from 0 when a page opens (Akati Score, usage): ease-out over about 0.7 s.
+# Code that updates the same text waits while it counts (Test-Counting).
+$script:countUps = @{}
+function Start-CountUp($box, [double]$to, [scriptblock]$format, [int]$ms = 700) {
+    if (!$box) { return }
+    $old = $script:countUps[$box.Name]
+    if ($old) { $old.Stop(); $script:countUps.Remove($box.Name) }
+    if ($Screenshot) { $box.Text = & $format $to; return }
+    $t = New-Object System.Windows.Threading.DispatcherTimer
+    $t.Interval = [TimeSpan]::FromMilliseconds(16)
+    $t.Tag = @{ Box = $box; To = $to; Format = $format; Start = Get-Date; Ms = $ms }
+    $t.Add_Tick({
+        $s = $this.Tag
+        $p = [Math]::Min(1, ((Get-Date) - $s.Start).TotalMilliseconds / $s.Ms)
+        $s.Box.Text = & $s.Format ($s.To * (1 - [Math]::Pow(1 - $p, 3)))
+        if ($p -ge 1) { $this.Stop(); $script:countUps.Remove($s.Box.Name) }
+    })
+    $script:countUps[$box.Name] = $t
+    $box.Text = & $format 0
+    $t.Start()
+}
+function Test-Counting($box) { $script:countUps.ContainsKey($box.Name) }
+$percentText = { param($v) '{0}%' -f [int][Math]::Round($v) }
+$numberText = { param($v) [string][int][Math]::Round($v) }
+
 function Show-Page([string]$name) {
     $script:page = $name
     foreach ($p in $pages) {
@@ -291,7 +316,12 @@ function Show-Page([string]$name) {
     if (!$script:statusBusy) { Set-Status (T 'ready') }
     if ($name -eq 'cleaner' -and $ui.CleanTotal.Text -eq '-') { Start-Scan }
     if ($name -eq 'boost') { Update-BoostCard }
+    if ($name -eq 'dashboard') {
+        Start-CountUp $ui.CpuValue $stats.Cpu $percentText; Start-CountUp $ui.RamValue $stats.Ram $percentText
+        if ($stats.Gpu -ge 0) { Start-CountUp $ui.GpuValue $stats.Gpu $percentText }
+    }
     if ($name -eq 'health') {
+        if ($ui.ScoreValue.Text -match '^\d+$') { Start-CountUp $ui.ScoreValue ([int]$ui.ScoreValue.Text) $numberText 900 }
         if (!$script:healthLoaded) { $script:healthLoaded = $true; Start-Health }
         Show-History; Update-WuState; Update-TempText
     }
@@ -616,7 +646,13 @@ $ui.WelcomeVi.Add_Click({ Set-AppLanguage 'vi' })
 $ui.WelcomeId.Add_Click({ Set-AppLanguage 'id' })
 $ui.WelcomeApps.Add_Click({ Close-Welcome; $ui.NavGaming.IsChecked = $true })
 $ui.WelcomeLook.Add_Click({ Close-Welcome; $ui.NavAppearance.IsChecked = $true })
-$ui.WelcomeDone.Add_Click({ Close-Welcome; if (!(Get-RegValue $settingsKey 'TourDone')) { Start-Tour } })
+foreach ($g in 'Valorant', 'Fivem', 'Cs2', 'Fortnite', 'Other') { $ui["MainGame$g"].Add_Checked({ Save-Setting MainGame $this.Name.Substring(8).ToLowerInvariant() }) }
+$ui.WelcomeDone.Add_Click({
+    Close-Welcome
+    $main = [string](Get-RegValue $settingsKey 'MainGame')
+    if ($main -and $main -ne 'other') { Set-MainGame $main }
+    if (!(Get-RegValue $settingsKey 'TourDone')) { Start-Tour }
+})
 
 # Tour: five short steps, each on its page
 $tourPages = 'dashboard', 'boost', 'health', 'tweaks', 'dashboard'
@@ -764,6 +800,45 @@ if ($build -ge 22000) {
             $mica = 2
             if ([AkatiOS.Native]::DwmSetWindowAttribute($hwnd, 38, [ref]$mica, 4) -eq 0) {
                 # See-through backgrounds of the current look (Set-CenterLook)
+                $script:micaHwnd = $hwnd
+                Set-CenterLook $script:look
+            }
+        })
+    } catch { }
+}
+# Windows 10: the desktop shows blurred through the window (the blur of the Windows 10 Start menu and taskbar).
+# Only when "Transparency effects" is on in Windows. Windows 10 windows have square corners, so the window does too
+# (the blur fills the whole window rectangle). If Windows refuses it, the window keeps its solid background.
+elseif (!$Screenshot -and (Get-RegValue 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize' 'EnableTransparency') -ne 0) {
+    try {
+        Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+namespace AkatiOS {
+    public static class Blur {
+        [StructLayout(LayoutKind.Sequential)] struct AccentPolicy { public int State, Flags, Color, Animation; }
+        [StructLayout(LayoutKind.Sequential)] struct CompositionData { public int Attribute; public IntPtr Data; public int Size; }
+        [DllImport("user32.dll")] static extern int SetWindowCompositionAttribute(IntPtr hwnd, ref CompositionData data);
+        // ACCENT_ENABLE_BLURBEHIND (3) through WCA_ACCENT_POLICY (19); true when Windows took it
+        public static bool Enable(IntPtr hwnd) {
+            AccentPolicy accent = new AccentPolicy(); accent.State = 3;
+            int size = Marshal.SizeOf(accent);
+            IntPtr ptr = Marshal.AllocHGlobal(size);
+            try {
+                Marshal.StructureToPtr(accent, ptr, false);
+                CompositionData data = new CompositionData(); data.Attribute = 19; data.Data = ptr; data.Size = size;
+                return SetWindowCompositionAttribute(hwnd, ref data) != 0;
+            } finally { Marshal.FreeHGlobal(ptr); }
+        }
+    }
+}
+'@
+        $window.Add_SourceInitialized({
+            $hwnd = (New-Object System.Windows.Interop.WindowInteropHelper $window).Handle
+            if ([AkatiOS.Blur]::Enable($hwnd)) {
+                $ui.RootBorder.CornerRadius = New-Object System.Windows.CornerRadius 0
+                $ui.Sidebar.CornerRadius = New-Object System.Windows.CornerRadius 0
+                $script:corner = $ui.RootBorder.CornerRadius
                 $script:micaHwnd = $hwnd
                 Set-CenterLook $script:look
             }

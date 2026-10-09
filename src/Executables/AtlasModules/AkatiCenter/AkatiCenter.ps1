@@ -126,7 +126,17 @@ $xaml.SelectNodes('//*[@*[local-name()="Name"]]') | ForEach-Object {
     if ($name) { $ui[$name] = $window.FindName($name) }
 }
 
+# Pictures are decoded once per size. Small sizes of the wallpapers come from AkatiCenter\thumbs (480 px wide JPEGs
+# made by tools/make-assets.py), so the Appearance page does not decode ten full-size wallpapers when the app starts.
+# (Not in the Wallpapers folder: the Windows slideshow shows every picture under it.)
+$script:images = @{}
 function Get-Image([string]$path, [int]$decodeWidth = 0) {
+    $key = "$path|$decodeWidth"
+    if ($script:images.ContainsKey($key)) { return $script:images[$key] }
+    if ($decodeWidth -gt 0 -and $decodeWidth -le 480 -and (Split-Path $path) -eq $wallpapers) {
+        $thumb = Join-Path (Join-Path $appDir 'thumbs') ([IO.Path]::GetFileNameWithoutExtension($path) + '.jpg')
+        if (Test-Path -LiteralPath $thumb) { $path = $thumb }
+    }
     if (!(Test-Path -LiteralPath $path)) { return $null }
     $img = New-Object System.Windows.Media.Imaging.BitmapImage
     $img.BeginInit()
@@ -135,7 +145,29 @@ function Get-Image([string]$path, [int]$decodeWidth = 0) {
     $img.UriSource = New-Object System.Uri $path
     $img.EndInit()
     $img.Freeze()
+    $script:images[$key] = $img
     return $img
+}
+
+# C# helpers (Windows API) are compiled once and kept in the cache folder next to this script, instead of every
+# start (each compile takes about half a second). The folder is under the Windows folder, where only administrators
+# can write, so nobody else can swap the DLL this elevated app loads. The file name holds a hash of the source, so a
+# new version compiles again. When the folder cannot be written, the code is compiled in memory as before.
+$codeCache = Join-Path $appDir 'cache'
+function Import-Code([string]$name, [string]$source) {
+    $sha = [Security.Cryptography.SHA256]::Create()
+    $hash = -join @($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($source))[0..7] | ForEach-Object { $_.ToString('x2') })
+    $dll = Join-Path $codeCache "$name-$hash.dll"
+    # Not in screenshot mode: CI runs from the source folder, which the build packs into the playbook
+    if (!$Screenshot -and !(Test-Path -LiteralPath $dll)) {
+        try {
+            if (!(Test-Path -LiteralPath $codeCache)) { New-Item -ItemType Directory -Path $codeCache -Force | Out-Null }
+            Get-ChildItem -LiteralPath $codeCache -Filter "$name-*.dll" -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
+            Add-Type -TypeDefinition $source -OutputAssembly $dll -OutputType Library -ErrorAction Stop
+        } catch { }
+    }
+    if (!$Screenshot -and (Test-Path -LiteralPath $dll)) { try { Add-Type -Path $dll -ErrorAction Stop; return } catch { } }
+    Add-Type -TypeDefinition $source
 }
 
 $logoPath = Join-Path $appDir 'logo.png'
@@ -812,7 +844,7 @@ if ($build -ge 22000) {
 # the blur, the window keeps its solid background.
 elseif (!$Screenshot -and (Get-RegValue 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize' 'EnableTransparency') -ne 0) {
     try {
-        Add-Type -TypeDefinition @'
+        Import-Code 'Blur' @'
 using System;
 using System.Runtime.InteropServices;
 namespace AkatiOS {
@@ -890,7 +922,16 @@ $timer.Add_Tick({
         if (!$script:full -and $window.WindowState -eq 'Normal') { Save-Setting WindowX ([int]$window.Left); Save-Setting WindowY ([int]$window.Top) }
     }
 })
-$window.Add_ContentRendered({ Close-Splash; $window.Activate() })
+$window.Add_ContentRendered({
+    Close-Splash; $window.Activate()
+    # How long each part took on this PC: %ProgramData%\AkatiOS\AkatiCenter-startup.log (the problem report includes it)
+    Add-Mark 'Window shown'
+    try {
+        $dir = Join-Path $env:ProgramData 'AkatiOS'
+        if (!(Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
+        Set-Content -Path (Join-Path $dir 'AkatiCenter-startup.log') -Value (@("$(Get-Date -Format s)  Akati OS $version  build $build") + @($script:marks)) -Encoding UTF8
+    } catch { }
+})
 $window.Add_Loaded({
     # Akati OS checks GitHub once when the window opens (one request, nothing is downloaded)
     Start-UpdateCheck

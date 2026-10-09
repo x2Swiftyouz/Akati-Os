@@ -10,7 +10,7 @@ Add-Mark 'Dashboard'
 
 
 $akati = Get-ItemProperty -Path 'HKLM:\SOFTWARE\AkatiOS' -ErrorAction SilentlyContinue
-$version = if ($akati.Version) { $akati.Version } else { 'v1.7.1' }
+$version = if ($akati.Version) { $akati.Version } else { 'v1.7.2' }
 $build = [Environment]::OSVersion.Version.Build
 $edition = if ($akati.Edition) { $akati.Edition } elseif ($build -ge 22000) { 'Windows 11' } else { 'Windows 10' }
 $ui.VersionBig.Text = $version
@@ -19,15 +19,29 @@ $ui.AboutVersion.Text = "$version  ·  $edition"
 $ui.FooterVersion.Text = "Akati OS $version"
 $ui.PcName.Text = $env:COMPUTERNAME
 
-try {
-    $os = Get-CimInstance Win32_OperatingSystem
-    $cv = Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion'
-    $ui.OsLine.Text = "$($os.Caption)  ·  $($cv.DisplayVersion)  ·  Build $($cv.CurrentBuild).$($cv.UBR)"
-    $ui.CpuName.Text = ((Get-CimInstance Win32_Processor | Select-Object -First 1).Name -replace '\s+', ' ').Trim()
-    $gpus = Get-CimInstance Win32_VideoController | Where-Object { $_.Name -notmatch 'Basic Display|Remote' }
-    $ui.GpuName.Text = if ($gpus) { ($gpus | Select-Object -First 1).Name } else { (Get-CimInstance Win32_VideoController | Select-Object -First 1).Name }
-    $ui.RamName.Text = Format-Size ([double]$os.TotalVisibleMemorySize * 1KB)
-} catch { }
+# Windows, CPU, graphics card and RAM: read in the background (the first WMI query takes about a second)
+$specWork = {
+    $r = @{}
+    try {
+        $os = Get-CimInstance Win32_OperatingSystem
+        $cv = Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion'
+        $r.Os = "$($os.Caption)  ·  $($cv.DisplayVersion)  ·  Build $($cv.CurrentBuild).$($cv.UBR)"
+        $r.Ram = [double]$os.TotalVisibleMemorySize * 1KB
+        $r.Cpu = ((Get-CimInstance Win32_Processor | Select-Object -First 1).Name -replace '\s+', ' ').Trim()
+        $all = @(Get-CimInstance Win32_VideoController)
+        $gpu = @($all | Where-Object { $_.Name -notmatch 'Basic Display|Remote' } | Select-Object -First 1)
+        $r.Gpu = if ($gpu.Count) { $gpu[0].Name } else { @($all | Select-Object -First 1)[0].Name }
+    } catch { }
+    $r
+}
+function Show-Specs($r) {
+    if ($r -isnot [hashtable]) { return }
+    if ($r.Os) { $ui.OsLine.Text = $r.Os }
+    if ($r.Cpu) { $ui.CpuName.Text = $r.Cpu }
+    if ($r.Gpu) { $ui.GpuName.Text = $r.Gpu }
+    if ($r.Ram) { $ui.RamName.Text = Format-Size $r.Ram }
+}
+if ($Screenshot) { Show-Specs (& $specWork) } else { Start-Work $specWork @() { param($r) Show-Specs (Get-LastOutput $r) } $null }
 
 # Storage: every local drive with a bar
 function Show-Disks {

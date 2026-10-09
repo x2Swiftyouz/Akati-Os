@@ -51,6 +51,7 @@ function Start-UpdateCheck {
             $ui.UpdateStatus.Foreground = $window.FindResource('Accent2')
             $ui.UpdateButton.Content = T 'update.open'
             $ui.UpdateButton.Tag = 'open'
+            $ui.UpdateDownload.Tag = $release.tag_name; $ui.UpdateDownload.Visibility = 'Visible'
         } else {
             $msg = (T 'update.latest') -f $release.tag_name
             $ui.UpdateStatus.Foreground = $window.FindResource('Good')
@@ -62,6 +63,45 @@ function Start-UpdateCheck {
 }
 $ui.UpdateButton.Add_Click({ if ($this.Tag -eq 'open') { Start-Process $script:releaseUrl } else { Start-UpdateCheck } })
 $ui.QuickUpdate.Add_Click({ $ui.NavAbout.IsChecked = $true; Start-UpdateCheck })
+# Download the update: the .apbx for this Windows into Downloads, checked against SHA256SUMS.txt of the release.
+# AME Wizard installs it (Akati OS Center cannot run a playbook itself)
+$ui.UpdateDownload.Add_Click({
+    $tag = [string]$this.Tag
+    $name = 'AkatiOS-{0}_{1}.apbx' -f $(if ($build -ge 22000) { 'Win11' } else { 'Win10' }), $tag
+    $this.IsEnabled = $false
+    Set-Status ((T 'update.downloading') -f $name) $true
+    Start-Work {
+        param($repo, $tag, $name)
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        $ProgressPreference = 'SilentlyContinue'
+        $base = "https://github.com/$repo/releases/download/$tag"
+        $file = Join-Path (Join-Path $env:USERPROFILE 'Downloads') $name
+        try {
+            $sums = (Invoke-WebRequest -Uri "$base/SHA256SUMS.txt" -UseBasicParsing -TimeoutSec 30).Content
+            if ($sums -is [byte[]]) { $sums = [Text.Encoding]::UTF8.GetString($sums) }
+            $line = @($sums -split "`n" | Where-Object { $_ -match [regex]::Escape($name) })[0]
+            $expected = if ($line) { ($line.Trim() -split '\s+')[0].ToLowerInvariant() } else { '' }
+            if (!$expected) { return @{ Error = 'update.badhash' } }
+            Invoke-WebRequest -Uri "$base/$name" -OutFile $file -UseBasicParsing -TimeoutSec 900
+            if ((Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash.ToLowerInvariant() -ne $expected) {
+                Remove-Item -LiteralPath $file -Force -ErrorAction SilentlyContinue
+                return @{ Error = 'update.badhash' }
+            }
+            @{ File = $file }
+        } catch { @{ Error = 'update.dlfail'; Message = $_.Exception.Message } }
+    } @($repo, $tag, $name) {
+        param($r, $name)
+        $ui.UpdateDownload.IsEnabled = $true
+        $res = Get-LastOutput $r
+        if ($res -isnot [hashtable] -or $res.Error) {
+            $key = if ($res -is [hashtable] -and $res.Error) { $res.Error } else { 'update.dlfail' }
+            Set-Status ((T $key) -f $(if ($res -is [hashtable]) { $res.Message } else { '' })); return
+        }
+        Set-Status ((T 'update.downloaded') -f $name)
+        Start-Process explorer.exe -ArgumentList "/select,`"$($res.File)`""
+        [void][System.Windows.MessageBox]::Show(((T 'update.howto') -f $name), 'Akati OS Center', 'OK', 'Information')
+    } $name
+})
 $ui.QuickBoost.Add_Click({
     try {
         if (Test-Boost) { Stop-Boost; Set-Status (T 'status.boostoff') } else { Start-Boost; Set-Status (T 'status.booston'); Show-BoostEffect }

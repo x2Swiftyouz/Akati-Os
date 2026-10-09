@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+- Windows 10: Akati OS Center keeps its rounded corners with the blur (the window gets a rounded shape); square corners only when Windows refuses the shape
+
 ## v1.7.0
 
 ### Added

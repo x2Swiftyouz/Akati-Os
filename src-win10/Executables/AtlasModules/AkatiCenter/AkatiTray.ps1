@@ -59,15 +59,19 @@ function Get-SignedInUser {
 }
 
 if ($Install) {
+    # Each step goes to the log, so a setup that stops here shows where
+    Write-TrayLog 'install: start'
     try {
         Set-Wanted 1
         # At sign-in, as this user with normal rights, running as long as the user is signed in
         $action = New-ScheduledTaskAction -Execute $ps -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$PSCommandPath`""
         $user = Get-SignedInUser
+        Write-TrayLog "install: registering the task for $user"
         $trigger = New-ScheduledTaskTrigger -AtLogOn -User $user
         $principal = New-ScheduledTaskPrincipal -UserId $user -LogonType Interactive -RunLevel Limited
         $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit ([TimeSpan]::Zero) -MultipleInstances IgnoreNew
         Register-ScheduledTask -TaskPath $taskPath -TaskName $taskName -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force -ErrorAction Stop | Out-Null
+        Write-TrayLog 'install: starting the icon'
         Start-ScheduledTask -TaskPath $taskPath -TaskName $taskName -ErrorAction SilentlyContinue
         Write-TrayLog "installed for $user"
         exit 0

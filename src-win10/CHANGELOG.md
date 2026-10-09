@@ -1,5 +1,10 @@
 # Changelog: Akati OS for Windows 10
 
+## Unreleased
+
+### Fixed
+- Setup in AME Wizard no longer waits for the icon next to the clock: once registering its task hung and setup stopped there. Each step of it is written to `%ProgramData%\AkatiOS\AkatiTray.log`; if the task is missing, Akati OS Center (and Akati Doctor) registers it again
+
 ## v1.7.2
 
 ### Changed

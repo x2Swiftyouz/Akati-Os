@@ -11,7 +11,7 @@ $getCulture = { Get-LangCulture }
 $orange = (New-Object System.Windows.Media.BrushConverter).ConvertFromString('#FF9F0A')
 
 # Akati Doctor: each check is $true when fine. Runs in the background (no functions of this script)
-$doctorChecks = 'tray', 'menu', 'power', 'disk', 'restart', 'hvci', 'devices', 'crash'
+$doctorChecks = 'tray', 'menu', 'power', 'disk', 'restart', 'hvci', 'devices', 'crash', 'activation'
 $doctorWork = {
     $r = @{}
     $wanted = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\AkatiOS' -Name TrayIcon -ErrorAction SilentlyContinue).TrayIcon -eq 1
@@ -38,6 +38,11 @@ $doctorWork = {
     $r.devices = $r.devicesBad -eq 0
     $r.crashCount = @(Get-WinEvent -FilterHashtable @{ LogName = 'System'; Id = 1001; ProviderName = 'Microsoft-Windows-WER-SystemErrorReporting'; StartTime = (Get-Date).AddDays(-7) } -ErrorAction SilentlyContinue).Count
     $r.crash = $r.crashCount -eq 0
+    # Windows activation (LicenseStatus 1 = licensed); Akati OS does not change it
+    try {
+        $win = Get-CimInstance SoftwareLicensingProduct -Filter "ApplicationID='55c92734-d682-4d71-983e-d6ec3f16059f' AND PartialProductKey IS NOT NULL" -ErrorAction Stop | Select-Object -First 1
+        $r.activation = $win.LicenseStatus -eq 1
+    } catch { $r.activation = $true }
     $r
 }
 # Startup time (Diagnostics-Performance log) and crashes of the last 30 days
@@ -142,6 +147,7 @@ function Invoke-DoctorFix([string]$k) {
         }
         'devices' { Start-Process devmgmt.msc }
         'crash' { $ui.CrashList.BringIntoView() }
+        'activation' { Start-Process 'ms-settings:activation' }
     }
 }
 function Show-HealthInfo($r) {

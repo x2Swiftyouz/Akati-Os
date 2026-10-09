@@ -112,8 +112,26 @@ $texts = @{
         tipKeys = 'Ctrl+Alt+B บูสต์เกม · Ctrl+Alt+R ล้าง RAM'
         update = 'Akati OS {0} ออกแล้ว'; updateTip = 'คลิกเพื่อดูว่ามีอะไรใหม่และวิธีอัปเดต'
     }
+    vi = @{
+        tip = 'Akati OS · CPU {0}% · RAM {1}%'; open = 'Mở Akati OS Center'; freeram = 'Giải phóng RAM'; apps = 'Ứng dụng của tôi'
+        boostOn = 'Dừng Tăng tốc game'; boostOff = 'Bắt đầu Tăng tốc game'; auto = 'Tăng tốc game tự động'; clean = 'Dọn tệp rác'
+        ping = 'Kiểm tra ping'; flushdns = 'Xóa bộ nhớ đệm DNS'; quit = 'Ẩn biểu tượng này đến lần đăng nhập sau'; more = 'Ứng dụng game...'
+        ac = 'Chế độ chống gian lận'; acValorant = 'Valorant (bật Core isolation)'; acFivem = 'FiveM (tắt Core isolation)'
+        acNote = 'Có hiệu lực sau khi khởi động lại'; power = 'Gói nguồn'; widget = 'Tiện ích hiệu năng'
+        tipKeys = 'Ctrl+Alt+B Tăng tốc game · Ctrl+Alt+R Giải phóng RAM'
+        update = 'Đã có Akati OS {0}'; updateTip = 'Nhấn để xem có gì mới và cách cập nhật.'
+    }
+    id = @{
+        tip = 'Akati OS · CPU {0}% · RAM {1}%'; open = 'Buka Akati OS Center'; freeram = 'Kosongkan RAM'; apps = 'Aplikasi saya'
+        boostOn = 'Hentikan Game Boost'; boostOff = 'Mulai Game Boost'; auto = 'Game Boost otomatis'; clean = 'Bersihkan file sampah'
+        ping = 'Tes ping'; flushdns = 'Hapus cache DNS'; quit = 'Sembunyikan ikon ini sampai login berikutnya'; more = 'Aplikasi gaming...'
+        ac = 'Mode anti-cheat'; acValorant = 'Valorant (Core isolation aktif)'; acFivem = 'FiveM (Core isolation mati)'
+        acNote = 'Berlaku setelah restart'; power = 'Rencana daya'; widget = 'Widget performa'
+        tipKeys = 'Ctrl+Alt+B Game Boost · Ctrl+Alt+R Kosongkan RAM'
+        update = 'Akati OS {0} sudah tersedia'; updateTip = 'Klik untuk melihat yang baru dan cara memperbarui.'
+    }
 }
-function T([string]$key) { $l = (Get-ItemProperty -Path $userKey -Name Language -ErrorAction SilentlyContinue).Language; if ($l -notin 'en', 'th') { $l = 'en' }; $texts[$l][$key] }
+function T([string]$key) { $l = (Get-ItemProperty -Path $userKey -Name Language -ErrorAction SilentlyContinue).Language; if (!$texts.ContainsKey([string]$l)) { $l = 'en' }; $texts[$l][$key] }
 
 function Start-Hidden([string]$file, [string]$arguments) {
     Start-Process -FilePath $ps -ArgumentList "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$file`" $arguments" -WindowStyle Hidden

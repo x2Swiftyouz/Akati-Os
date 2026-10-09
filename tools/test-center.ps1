@@ -32,6 +32,20 @@ foreach ($l in @($strings.Keys | Where-Object { $_ -ne 'en' })) {
     }
 }
 
+# The icon next to the clock and the desktop menu have their own small text tables: same keys in every language
+foreach ($file in 'AkatiTray.ps1', 'AkatiMenu.ps1') {
+    $text = Get-Content -Raw -Encoding UTF8 (Join-Path $center $file)
+    $tables = @{}
+    foreach ($m in [regex]::Matches($text, '(?ms)^    (\w\w) = @\{(.*?)^    \}')) {
+        $tables[$m.Groups[1].Value] = @([regex]::Matches($m.Groups[2].Value, "(\w+) = '") | ForEach-Object { $_.Groups[1].Value } | Sort-Object)
+    }
+    if (!$tables.ContainsKey('en')) { Fail "$file has no English texts"; continue }
+    foreach ($l in $strings.Keys) {
+        if (!$tables.ContainsKey($l)) { Fail "$file has no '$l' texts"; continue }
+        if (($tables[$l] -join ',') -ne ($tables['en'] -join ',')) { Fail "$file '$l' texts have other keys than English" }
+    }
+}
+
 # Keys used by the code and the window
 # AkatiCenter.ps1 and its parts (AkatiCenter.<page>.ps1, AkatiClean.ps1), not the texts
 $ps1 = (Get-ChildItem -LiteralPath $center -Filter '*.ps1' | Where-Object { $_.Name -like 'AkatiCenter*' -or $_.Name -eq 'AkatiClean.ps1' } |

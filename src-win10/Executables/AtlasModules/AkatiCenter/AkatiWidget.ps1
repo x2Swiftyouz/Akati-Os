@@ -71,16 +71,23 @@ $window.Add_MouseLeftButtonDown({
     Save-Setting WidgetX ([int]$window.Left); Save-Setting WidgetY ([int]$window.Top)
 })
 
-$lang = if ((Get-Setting 'Language') -eq 'th') { 'th' } else { 'en' }
+$widgetTexts = @{
+    en = @{ open = 'Open Akati OS Center'; close = 'Close widget' }
+    th = @{ open = 'เปิด Akati OS Center'; close = 'ปิดวิดเจ็ต' }
+    vi = @{ open = 'Mở Akati OS Center'; close = 'Đóng tiện ích' }
+    id = @{ open = 'Buka Akati OS Center'; close = 'Tutup widget' }
+}
+$lang = [string](Get-Setting 'Language')
+if (!$widgetTexts.ContainsKey($lang)) { $lang = 'en' }
 $menu = New-Object System.Windows.Controls.ContextMenu
 $open = New-Object System.Windows.Controls.MenuItem
-$open.Header = if ($lang -eq 'th') { 'เปิด Akati OS Center' } else { 'Open Akati OS Center' }
+$open.Header = $widgetTexts[$lang].open
 $open.Add_Click({
     $ps = Join-Path ([Environment]::GetFolderPath('Windows')) 'System32\WindowsPowerShell\v1.0\powershell.exe'
     Start-Process -FilePath $ps -ArgumentList "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$(Join-Path $PSScriptRoot 'AkatiCenter.ps1')`"" -WindowStyle Hidden
 })
 $close = New-Object System.Windows.Controls.MenuItem
-$close.Header = if ($lang -eq 'th') { 'ปิดวิดเจ็ต' } else { 'Close widget' }
+$close.Header = $widgetTexts[$lang].close
 $close.Add_Click({ Save-Setting Widget 0; $window.Close() })
 [void]$menu.Items.Add($open); [void]$menu.Items.Add($close)
 $window.ContextMenu = $menu

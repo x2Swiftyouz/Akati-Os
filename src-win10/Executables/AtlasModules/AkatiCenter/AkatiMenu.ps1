@@ -49,6 +49,24 @@ $texts = @{
         boostStarted = 'เปิดบูสต์เกมแล้ว'; boostStopped = 'ปิดบูสต์เกมแล้ว'
         hvciOn = 'โหมด Valorant: เปิด Memory integrity หลังรีสตาร์ต'; hvciOff = 'โหมด FiveM: ปิด Memory integrity หลังรีสตาร์ต'
     }
+    vi = @{
+        root = 'Akati OS'; freeram = 'Giải phóng RAM'; center = 'Mở Akati OS Center'; apps = 'Ứng dụng của tôi'; appsmore = 'Ứng dụng game...'
+        boostOn = 'Dừng Tăng tốc game'; boostOff = 'Bắt đầu Tăng tốc game'; clean = 'Dọn tệp rác'; flushdns = 'Xóa bộ nhớ đệm DNS'
+        explorer = 'Khởi động lại Explorer'; ping = 'Kiểm tra ping'; bios = 'Khởi động lại vào BIOS (UEFI)'
+        freed = 'Đã giải phóng {0} RAM'; dnsdone = 'Đã xóa bộ nhớ đệm DNS'; biosask = 'Khởi động lại ngay và mở cài đặt BIOS (UEFI)? Hãy lưu công việc trước.'
+        biosfail = 'Máy này không thể khởi động lại vào BIOS từ Windows (cần UEFI).'; failed = 'Không thành công: {0}'
+        boostStarted = 'Đã bật Tăng tốc game'; boostStopped = 'Đã tắt Tăng tốc game'
+        hvciOn = 'Chế độ Valorant: bật Memory integrity sau khi khởi động lại'; hvciOff = 'Chế độ FiveM: tắt Memory integrity sau khi khởi động lại'
+    }
+    id = @{
+        root = 'Akati OS'; freeram = 'Kosongkan RAM'; center = 'Buka Akati OS Center'; apps = 'Aplikasi saya'; appsmore = 'Aplikasi gaming...'
+        boostOn = 'Hentikan Game Boost'; boostOff = 'Mulai Game Boost'; clean = 'Bersihkan file sampah'; flushdns = 'Hapus cache DNS'
+        explorer = 'Restart Explorer'; ping = 'Tes ping'; bios = 'Restart ke BIOS (UEFI)'
+        freed = 'RAM {0} dikosongkan'; dnsdone = 'Cache DNS dihapus'; biosask = 'Restart sekarang dan buka pengaturan BIOS (UEFI)? Simpan pekerjaan Anda dulu.'
+        biosfail = 'PC ini tidak bisa restart ke BIOS dari Windows (perlu UEFI).'; failed = 'Gagal: {0}'
+        boostStarted = 'Game Boost aktif'; boostStopped = 'Game Boost mati'
+        hvciOn = 'Mode Valorant: Memory integrity aktif setelah restart'; hvciOff = 'Mode FiveM: Memory integrity mati setelah restart'
+    }
 }
 if (!$texts.ContainsKey($lang)) { $lang = 'en' }
 function T([string]$key) { $texts[$lang][$key] }

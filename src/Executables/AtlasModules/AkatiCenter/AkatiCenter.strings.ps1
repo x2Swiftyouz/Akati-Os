@@ -2,6 +2,7 @@
 # Every language must have the same keys as English (tools/test-center.ps1 checks it in CI).
 $strings = @{
     en = @{
+        'doc.activation.ok' = 'Windows is activated'; 'doc.activation.bad' = 'Windows is not activated'; 'doc.fix.activation' = 'Activation settings'
         'admin' = 'Administrator mode'; 'menu' = 'MENU'
         'nav.dashboard' = 'Dashboard'; 'nav.gaming' = 'Gaming apps'; 'nav.tweaks' = 'Tweaks'
         'nav.cleaner' = 'Cleaner'; 'nav.appearance' = 'Appearance'; 'nav.about' = 'About'
@@ -277,6 +278,7 @@ $strings = @{
         'lang' = 'English'
     }
     th = @{
+        'doc.activation.ok' = 'Windows Activate แล้ว'; 'doc.activation.bad' = 'Windows ยังไม่ได้ Activate'; 'doc.fix.activation' = 'ตั้งค่า Activation'
         'admin' = 'โหมดผู้ดูแลระบบ'; 'menu' = 'เมนู'
         'nav.dashboard' = 'แดชบอร์ด'; 'nav.gaming' = 'แอปเกม'; 'nav.tweaks' = 'ปรับแต่ง'
         'nav.cleaner' = 'ล้างไฟล์ขยะ'; 'nav.appearance' = 'ธีม'; 'nav.about' = 'เกี่ยวกับ'
@@ -553,6 +555,7 @@ $strings = @{
     }
     # Vietnamese (translated from English; corrections welcome in a GitHub issue)
     vi = @{
+        'doc.activation.ok' = 'Windows đã được kích hoạt'; 'doc.activation.bad' = 'Windows chưa được kích hoạt'; 'doc.fix.activation' = 'Cài đặt kích hoạt'
         'autoclean.failed' = 'Không bật được dọn dẹp tự động: {0}'
         'ac.fivem' = 'Chế độ FiveM'
         'ac.off' = 'Tính toàn vẹn bộ nhớ: tắt (chế độ FiveM)'
@@ -1152,6 +1155,7 @@ $strings = @{
     }
     # Indonesian (translated from English; corrections welcome in a GitHub issue)
     id = @{
+        'doc.activation.ok' = 'Windows sudah diaktivasi'; 'doc.activation.bad' = 'Windows belum diaktivasi'; 'doc.fix.activation' = 'Pengaturan aktivasi'
         'autoclean.failed' = 'Pembersihan otomatis tidak bisa diaktifkan: {0}'
         'ac.fivem' = 'Mode FiveM'
         'ac.off' = 'Integritas memori: mati (mode FiveM)'

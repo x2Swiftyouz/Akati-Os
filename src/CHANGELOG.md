@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- Akati Doctor checks that Windows is activated, with a button to the Windows activation settings (Akati OS does not change the activation)
+- The icon next to the clock, the desktop menu and the performance widget in Vietnamese and Indonesian too
+
 ## v1.6.0
 
 ### Added

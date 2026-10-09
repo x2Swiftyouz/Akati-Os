@@ -13,6 +13,8 @@ if ($Screenshot) {
     New-Item -ItemType Directory -Path $Screenshot -Force | Out-Null
     $stats.Run = $false
     & $statsSample $stats
+    # Sample ping: the CI runner is far from Singapore
+    $stats.Ping = 18
     Update-Stats
     $rootEl = $window.Content
     # Sample PC details: these screenshots go on the website and in the README, not the CI runner's name and Windows Server

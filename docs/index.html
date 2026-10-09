@@ -93,7 +93,7 @@
     <p class="lead" data-l="th">Playbook สำหรับเล่นเกม ใช้กับ AME Wizard ฟรี ลดสิ่งที่ทำงานเบื้องหลัง ตั้งค่าให้เหมาะกับเกม และมี Akati OS Center แอปเดียวที่รวมบูสต์เกม ตรวจสุขภาพเครื่อง แอปเกม และหน้าตา Windows</p>
     <div class="buttons">
       <a class="btn primary" id="dl11" href="https://github.com/x2Swiftyouz/Akati-Os/releases/latest">Windows 11<small id="v11">24H2 · 25H2 · 26H2</small></a>
-      <a class="btn" id="dl10" href="https://github.com/x2Swiftyouz/Akati-Os/releases/latest">Windows 10<small>22H2</small></a>
+      <a class="btn" id="dl10" href="https://github.com/x2Swiftyouz/Akati-Os/releases/latest">Windows 10<small id="v10">22H2</small></a>
       <a class="btn" href="https://github.com/x2Swiftyouz/Akati-Os/releases/latest"><span data-l="en">All files and SHA256</span><span data-l="th">ไฟล์ทั้งหมดและ SHA256</span><small>GitHub Releases</small></a>
     </div>
     <p class="note" data-l="en">Back up your files first and try it in a virtual machine. A playbook cannot be fully undone. Based on AtlasOS (GPL-3.0), not an official AtlasOS project.</p>
@@ -227,6 +227,7 @@
         if (/^AkatiOS-Win10_.*\.apbx$/.test(a.name)) { document.getElementById('dl10').href = a.browser_download_url; }
       });
       document.getElementById('v11').textContent = rel.tag_name + ' · 24H2 · 25H2 · 26H2';
+      document.getElementById('v10').textContent = rel.tag_name + ' · 22H2';
     })
     .catch(function () {});
 </script>

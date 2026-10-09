@@ -13,8 +13,14 @@ if ($Screenshot) {
     New-Item -ItemType Directory -Path $Screenshot -Force | Out-Null
     $stats.Run = $false
     & $statsSample $stats
+    # Sample ping: the CI runner is far from Singapore
+    $stats.Ping = 18
     Update-Stats
     $rootEl = $window.Content
+    # Sample PC details: these screenshots go on the website and in the README, not the CI runner's name and Windows Server
+    $ui.EditionText.Text = 'Windows 11'; $ui.AboutVersion.Text = "$version  ·  Windows 11"
+    $ui.PcName.Text = 'GAMING-PC'; $ui.OsLine.Text = 'Windows 11 Pro  ·  25H2'
+    $ui.CpuName.Text = 'AMD Ryzen 7 7800X3D 8-Core Processor'; $ui.GpuName.Text = 'NVIDIA GeForce RTX 4070'
     function Save-Shot([string]$file) {
         $size = New-Object System.Windows.Size $window.Width, $window.Height
         $rootEl.Measure($size)
@@ -30,6 +36,7 @@ if ($Screenshot) {
     foreach ($l in 'en', 'th') {
         $script:lang = $l
         Update-Language
+        $ui.UpdateHint.Text = (T 'update.latest') -f $version; $ui.UpdateDot.Fill = $window.FindResource('Good')
         foreach ($p in $pages) {
             $ui["Nav$(Get-PageId $p)"].IsChecked = $true
             Show-Page $p
@@ -100,6 +107,7 @@ if ($Screenshot) {
     foreach ($l in 'vi', 'id') {
         $script:lang = $l
         Update-Language
+        $ui.UpdateHint.Text = (T 'update.latest') -f $version; $ui.UpdateDot.Fill = $window.FindResource('Good')
         foreach ($p in 'dashboard', 'boost', 'health', 'tweaks') { $ui["Nav$(Get-PageId $p)"].IsChecked = $true; Show-Page $p; Save-Shot "$p-$l.png" }
         $ui.Welcome.Visibility = 'Visible'; Save-Shot "welcome-$l.png"; $ui.Welcome.Visibility = 'Collapsed'
     }

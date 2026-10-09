@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v1.6.1
 
 ### Added
 - About: **Download the update** when a new version is out: the .apbx for this Windows goes to Downloads, is checked against SHA256SUMS.txt of the release (deleted when it does not match), and the folder opens with how to install it in AME Wizard

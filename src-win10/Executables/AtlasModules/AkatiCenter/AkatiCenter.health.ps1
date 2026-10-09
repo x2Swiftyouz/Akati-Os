@@ -162,6 +162,7 @@ function Invoke-DoctorFix([string]$k) {
         }
         'menu' { Update-DesktopMenu; Start-Health }
         'power' {
+            Initialize-Tweaks
             $t = $tweaks | Where-Object { $_.Key -eq 'maxperf' } | Select-Object -First 1
             if ($t -and $t.Toggle) { $t.Toggle.IsChecked = $true; Invoke-Tweak $t $true; Add-History $t.Key $true }
         }
@@ -262,6 +263,7 @@ function Add-History([string]$key, [bool]$on) {
     if ($script:page -eq 'health') { Show-History }
 }
 function Show-History {
+    Initialize-Tweaks
     $ui.HistoryList.Children.Clear()
     $c = & $getCulture
     foreach ($item in @(Get-RegValue $settingsKey 'History' | Where-Object { $_ })) {
@@ -288,6 +290,7 @@ $ui.HistoryClear.Add_Click({ Remove-ItemProperty -Path $settingsKey -Name Histor
 
 # Backup: settings of Akati OS Center, My games with their profiles and the state of every switch, in one JSON file
 $ui.BackupSave.Add_Click({
+    Initialize-Tweaks
     $d = New-Object Microsoft.Win32.SaveFileDialog
     $d.Filter = 'Akati OS backup (*.json)|*.json'; $d.FileName = "AkatiOS-backup-$(Get-Date -Format yyyy-MM-dd).json"
     if (!$d.ShowDialog($window)) { return }
@@ -307,6 +310,7 @@ $ui.BackupSave.Add_Click({
     } catch { Set-Status $_.Exception.Message }
 })
 $ui.BackupLoad.Add_Click({
+    Initialize-Tweaks
     $d = New-Object Microsoft.Win32.OpenFileDialog
     $d.Filter = 'Akati OS backup (*.json)|*.json'
     if (!$d.ShowDialog($window)) { return }

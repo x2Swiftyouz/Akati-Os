@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.7.4
+
+### Changed
+- Akati OS Center opens about a second faster: the switches of the Tweaks page are made the first time they are needed (the Tweaks page, Ctrl+K, the change history, backup, Akati Doctor or the anti-cheat buttons)
+
+### Fixed
+- Setup in AME Wizard: the icon next to the clock is registered in its own background process (`AkatiTray.ps1 -Setup`), so setup neither waits for it nor reports "PowerShellAction failed" for it (v1.7.3 did not wait, which AME Wizard counted as a failure and retried ten times)
+
 ## v1.7.3
 
 ### Changed

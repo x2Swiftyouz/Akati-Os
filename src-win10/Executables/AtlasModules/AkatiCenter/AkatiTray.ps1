@@ -10,11 +10,14 @@
     their profile get every CPU except CPU 0. Ctrl+Alt+B starts or stops Game boost and Ctrl+Alt+R frees
     up RAM (unless "Hotkeys" is 0).
     -Install   (administrator) registers the sign-in task for this user and starts the icon now.
+    -Setup     (administrator, used by the playbook) starts -Install in its own hidden process and returns at once,
+               so setup in AME Wizard never waits for the Task Scheduler (it once hung there for minutes).
     -Remove    (administrator) stops the icon and removes the task.
 #>
 param (
     [switch]$Install,
-    [switch]$Remove
+    [switch]$Remove,
+    [switch]$Setup
 )
 
 $windir     = [Environment]::GetFolderPath('Windows')
@@ -58,6 +61,14 @@ function Get-SignedInUser {
     throw 'No signed-in user found'
 }
 
+if ($Setup) {
+    # Start-Process (ShellExecute) does not pass this process' output handles on, so AME Wizard does not wait for it
+    try {
+        Start-Process -FilePath $ps -ArgumentList "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$PSCommandPath`" -Install" -WindowStyle Hidden
+        Write-TrayLog 'setup: install started in the background'
+    } catch { Write-TrayLog "setup failed: $($_.Exception.Message)" }
+    exit 0
+}
 if ($Install) {
     # Each step goes to the log, so a setup that stops here shows where
     Write-TrayLog 'install: start'

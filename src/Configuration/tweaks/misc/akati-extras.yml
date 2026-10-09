@@ -64,11 +64,12 @@ actions:
     # Akati OS icon next to the clock (option, ticked by default): AkatiTray.ps1 registers its sign-in task
     # (this user, normal rights). It shows CPU and RAM, a menu with apps and tools, and runs the automatic Game boost
     # Marks the icon as wanted first: if the task is not registered here, Akati OS Center registers it when it opens.
-    # Setup does not wait for it: once the task registration hung and the whole setup stopped there (v1.7.2 on
-    # Windows 10). Every step is written to %ProgramData%\AkatiOS\AkatiTray.log.
+    # -Setup starts the registration in its own process and returns at once: once the registration hung and the whole
+    # setup stopped there (v1.7.2 on Windows 10). (wait: false is no way out: AME Wizard then sees no exit code and
+    # retries ten times.) Every step is written to %ProgramData%\AkatiOS\AkatiTray.log.
   - !registryValue: {path: 'HKLM\SOFTWARE\AkatiOS', value: 'TrayIcon', data: '1', type: REG_DWORD, option: 'tray-icon'}
   - !powerShell:
-    command: '& (Join-Path ([Environment]::GetFolderPath(''Windows'')) ''AtlasModules\AkatiCenter\AkatiTray.ps1'') -Install'
+    command: '& (Join-Path ([Environment]::GetFolderPath(''Windows'')) ''AtlasModules\AkatiCenter\AkatiTray.ps1'') -Setup'
     runas: currentUserElevated
-    wait: false
+    wait: true
     option: 'tray-icon'

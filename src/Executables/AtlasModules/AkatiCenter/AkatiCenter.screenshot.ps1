@@ -105,8 +105,8 @@ if ($Screenshot) {
         Open-Spotlight; $ui.SpotlightBox.Text = 'dns'; Save-Shot "spotlight-$l.png"; Close-Spotlight
         # Narrow sidebar, restart bar, the message after a change and one "What it changes" box open
         Set-Compact $true; $ui.RestartBar.Visibility = 'Visible'; Show-Toast ((T 'toast.on') -f (T 'tw.timer')) @{}
-        $box = @($tweaks | Where-Object { $_.Key -eq 'timer' } | ForEach-Object { $_.Sub.Parent.Children } | Where-Object { $_ -is [System.Windows.Controls.TextBox] })[0]
-        if ($box) { $box.Visibility = 'Visible' }
+        $link = @($tweaks | Where-Object { $_.Key -eq 'timer' } | ForEach-Object { $_.Sub.Parent.Children } | Where-Object { $_.Tag -eq 't:tw.details' })[0]
+        $box = if ($link) { Switch-Details $link }
         $ui.NavTweaks.IsChecked = $true; Save-Shot "extras-$l.png"
         Start-Tour; $script:tourStep = 1; Show-TourStep; Save-Shot "tour-$l.png"; $ui.Tour.Visibility = 'Collapsed'
         Set-Compact $false; $ui.RestartBar.Visibility = 'Collapsed'; $ui.Toast.Visibility = 'Collapsed'; if ($box) { $box.Visibility = 'Collapsed' }

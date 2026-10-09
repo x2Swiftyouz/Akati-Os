@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.7.3
+
+### Changed
+- Akati OS Center opens faster again: the "What it changes" boxes on the Tweaks page are made when first opened, the list of AtlasOS scripts (System settings) is built once the window is shown, and the RAM size and the power plan switch are read without slowing the start
+
+### Fixed
+- Setup in AME Wizard no longer waits for the icon next to the clock: once registering its task hung and setup stopped there. Each step of it is written to `%ProgramData%\AkatiOS\AkatiTray.log`; if the task is missing, Akati OS Center (and Akati Doctor) registers it again
+
 ## v1.7.2
 
 ### Changed

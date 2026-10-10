@@ -689,6 +689,9 @@
                         <RadioButton x:Name="NavCleaner" Style="{StaticResource Nav}">
                             <StackPanel Orientation="Horizontal"><Border Style="{StaticResource NavIcon}" Background="#FF453A"><TextBlock Style="{StaticResource NavGlyph}" Text="&#xE74D;"/></Border><TextBlock Tag="t:nav.cleaner" Text="Cleaner"/></StackPanel>
                         </RadioButton>
+                        <RadioButton x:Name="NavUninstall" Style="{StaticResource Nav}">
+                            <StackPanel Orientation="Horizontal"><Border Style="{StaticResource NavIcon}" Background="#FF6482"><TextBlock Style="{StaticResource NavGlyph}" Text="&#xE74C;"/></Border><TextBlock Tag="t:nav.uninstall" Text="Uninstaller"/></StackPanel>
+                        </RadioButton>
                         <RadioButton x:Name="NavAppearance" Style="{StaticResource Nav}">
                             <StackPanel Orientation="Horizontal"><Border Style="{StaticResource NavIcon}" Background="#BF5AF2"><TextBlock Style="{StaticResource NavGlyph}" Text="&#xE771;"/></Border><TextBlock Tag="t:nav.appearance" Text="Appearance"/></StackPanel>
                         </RadioButton>
@@ -761,7 +764,7 @@
                                             <TextBlock Style="{StaticResource Glyph}" Text="&#xE946;" FontSize="13" Foreground="{DynamicResource Accent2}" Margin="0,0,8,0"/>
                                             <TextBlock Tag="t:version" Text="Akati OS version" Style="{StaticResource Label}" VerticalAlignment="Center"/>
                                         </StackPanel>
-                                        <TextBlock x:Name="VersionBig" Text="v1.9.0" FontSize="30" FontWeight="Bold" Margin="0,8,0,0"/>
+                                        <TextBlock x:Name="VersionBig" Text="v1.10.0" FontSize="30" FontWeight="Bold" Margin="0,8,0,0"/>
                                         <TextBlock x:Name="EditionText" Text="Windows 11" Style="{StaticResource Muted}"/>
                                         <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
                                             <Ellipse x:Name="UpdateDot" Width="7" Height="7" Fill="{DynamicResource MutedBrush}" Margin="0,0,7,0" VerticalAlignment="Center"/>
@@ -1064,6 +1067,71 @@
                                     <TextBlock x:Name="GamesEmpty" Tag="t:games.empty" Text="No games added yet." Style="{StaticResource Muted}" Margin="14,8"/>
                                 </StackPanel>
                             </Border>
+                            <!-- CPU balance and process rules: done by the icon next to the clock (AkatiTray.ps1), set here (AkatiCenter.rules.ps1) -->
+                            <Border Style="{StaticResource Card}" Padding="8" Margin="0,0,0,16">
+                                <StackPanel Margin="14,8,14,8">
+                                    <DockPanel>
+                                        <CheckBox x:Name="BalanceOn" DockPanel.Dock="Right" Style="{StaticResource Switch}" VerticalAlignment="Top"/>
+                                        <StackPanel Margin="0,0,12,0">
+                                            <TextBlock Tag="t:bal.title" Text="CPU balance" Style="{StaticResource CardTitle}"/>
+                                            <TextBlock Tag="t:bal.sub" Text="When an app in the background takes too much CPU, it gets a lower priority until it calms down, so the game and the window in front stay smooth. Its own priority comes back by itself." Style="{StaticResource Muted}" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </DockPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                        <TextBlock Tag="t:bal.limit" Text="Step in above" Style="{StaticResource Muted}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                        <Border Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="7" Padding="2">
+                                            <StackPanel Orientation="Horizontal">
+                                                <RadioButton x:Name="BalLimit20" Style="{StaticResource Segment}" GroupName="BalLimit" Content="20%"/>
+                                                <RadioButton x:Name="BalLimit30" Style="{StaticResource Segment}" GroupName="BalLimit" Content="30%" IsChecked="True"/>
+                                                <RadioButton x:Name="BalLimit50" Style="{StaticResource Segment}" GroupName="BalLimit" Content="50%"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <TextBlock Tag="t:bal.limit2" Text="of the whole CPU" Style="{StaticResource Muted}" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                                    </StackPanel>
+                                    <TextBlock x:Name="BalTray" Tag="t:bal.notray" Text="The icon next to the clock does this: turn it on in Tweaks > System." Foreground="#FF9F0A" TextWrapping="Wrap" Margin="0,8,0,0" Visibility="Collapsed"/>
+                                    <TextBlock x:Name="BalLogHead" Tag="t:bal.log" Text="RECENTLY" Style="{StaticResource Label}" Margin="0,12,0,4" Visibility="Collapsed"/>
+                                    <StackPanel x:Name="BalLog"/>
+                                    <Border Height="1" Background="{DynamicResource Line}" Margin="0,14,0,12"/>
+                                    <DockPanel>
+                                        <Button x:Name="RuleAdd" DockPanel.Dock="Right" Style="{StaticResource PillAccent}" VerticalAlignment="Top">
+                                            <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE710;" FontSize="12" Margin="0,0,8,0"/><TextBlock Tag="t:rules.add" Text="Add rule"/></StackPanel>
+                                        </Button>
+                                        <StackPanel Margin="0,0,12,0">
+                                            <TextBlock Tag="t:rules.title" Text="Process rules" Style="{StaticResource CardTitle}"/>
+                                            <TextBlock Tag="t:rules.sub" Text="A priority and the processors an app may use, set every time it starts. For apps of this user; apps that run as administrator are left as they are." Style="{StaticResource Muted}" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </DockPanel>
+                                    <Border x:Name="RulePanel" Background="{DynamicResource Field}" CornerRadius="8" Padding="12,10" Margin="0,10,0,4" Visibility="Collapsed">
+                                        <StackPanel>
+                                            <TextBlock Tag="t:rules.pick" Text="Pick a running app, or type the name of its .exe" FontWeight="SemiBold"/>
+                                            <WrapPanel x:Name="RuleApps" Margin="0,8,0,4"/>
+                                            <Grid Margin="0,0,0,10">
+                                                <TextBox x:Name="RuleName" Background="{DynamicResource CardBg}" Foreground="{DynamicResource Text2}" CaretBrush="{DynamicResource Text2}" BorderBrush="{DynamicResource Line}" Padding="8,6" VerticalContentAlignment="Center"/>
+                                                <TextBlock x:Name="RuleNameHint" Tag="t:rules.name" Text="App name, for example chrome" Foreground="{DynamicResource MutedBrush}" Margin="10,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                                            </Grid>
+                                            <TextBlock Tag="t:rules.prio" Text="PRIORITY" Style="{StaticResource Label}" Margin="0,0,0,4"/>
+                                            <Border Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="7" Padding="2" HorizontalAlignment="Left">
+                                                <WrapPanel>
+                                                    <RadioButton x:Name="RulePrioKeep" Style="{StaticResource Segment}" GroupName="RulePrio" Tag="t:rules.prio.keep" Content="Keep" IsChecked="True"/>
+                                                    <RadioButton x:Name="RulePrioIdle" Style="{StaticResource Segment}" GroupName="RulePrio" Tag="t:rules.prio.Idle" Content="Low"/>
+                                                    <RadioButton x:Name="RulePrioBelowNormal" Style="{StaticResource Segment}" GroupName="RulePrio" Tag="t:rules.prio.BelowNormal" Content="Below normal"/>
+                                                    <RadioButton x:Name="RulePrioNormal" Style="{StaticResource Segment}" GroupName="RulePrio" Tag="t:rules.prio.Normal" Content="Normal"/>
+                                                    <RadioButton x:Name="RulePrioAboveNormal" Style="{StaticResource Segment}" GroupName="RulePrio" Tag="t:rules.prio.AboveNormal" Content="Above normal"/>
+                                                    <RadioButton x:Name="RulePrioHigh" Style="{StaticResource Segment}" GroupName="RulePrio" Tag="t:rules.prio.High" Content="High"/>
+                                                </WrapPanel>
+                                            </Border>
+                                            <TextBlock Tag="t:rules.cpus" Text="PROCESSORS (NONE TICKED: ALL)" Style="{StaticResource Label}" Margin="0,10,0,4"/>
+                                            <WrapPanel x:Name="RuleCpus"/>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,6,0,0">
+                                                <Button x:Name="RuleCancel" Style="{StaticResource Pill}" Margin="0,0,8,0"><TextBlock Tag="t:cancel" Text="Cancel"/></Button>
+                                                <Button x:Name="RuleSave" Style="{StaticResource PillAccent}"><TextBlock Tag="t:rules.save" Text="Save rule"/></Button>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+                                    <StackPanel x:Name="RuleList" Margin="0,8,0,0"/>
+                                    <TextBlock x:Name="RuleEmpty" Tag="t:rules.empty" Text="No rules yet." Style="{StaticResource Muted}" Margin="0,8,0,0"/>
+                                </StackPanel>
+                            </Border>
                             <!-- Anti-cheat mode: Memory integrity (HVCI) on for Valorant, off for FiveM -->
                             <Border Style="{StaticResource Card}" Margin="0,0,0,16">
                                 <StackPanel>
@@ -1164,6 +1232,94 @@
                             </Border>
                             <!-- More sections (latency, network, graphics, memory), filled by AkatiCenter.ps1 -->
                             <StackPanel x:Name="TweakGroups"/>
+                            <!-- Interrupts: MSI mode, MSI limit, priority and CPU affinity of each PCI device (AkatiCenter.irq.ps1) -->
+                            <TextBlock Tag="t:irq.section" Text="Interrupts (advanced)" Style="{StaticResource Section}"/>
+                            <Border Style="{StaticResource Card}" Padding="8" Margin="0,0,0,22">
+                                <StackPanel>
+                                    <DockPanel Margin="14,8,14,6">
+                                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
+                                            <Border x:Name="IrqHt" Background="{DynamicResource Fill}" CornerRadius="5" Padding="7,2" Margin="0,0,8,0" VerticalAlignment="Center" Visibility="Collapsed">
+                                                <TextBlock x:Name="IrqHtText" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Accent2}"/>
+                                            </Border>
+                                            <Button x:Name="IrqUndoAll" Style="{StaticResource Pill}" Margin="0,0,8,0" Visibility="Collapsed"><TextBlock Tag="t:irq.undoall" Text="Undo all"/></Button>
+                                            <Button x:Name="IrqShow" Style="{StaticResource PillAccent}"><TextBlock x:Name="IrqShowText" Tag="t:irq.show" Text="Show devices"/></Button>
+                                        </StackPanel>
+                                        <StackPanel Margin="0,0,12,0">
+                                            <TextBlock Tag="t:irq.title" Text="MSI mode and CPU affinity" Style="{StaticResource CardTitle}"/>
+                                            <TextBlock Tag="t:irq.sub" Text="How each PCI device signals the CPU, and which processors handle it. Windows reads these when the device starts, so a restart is needed after a change." Style="{StaticResource Muted}" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </DockPanel>
+                                    <StackPanel x:Name="IrqPanel" Visibility="Collapsed" Margin="14,4,14,6">
+                                        <!-- How to get back when a device stops working -->
+                                        <Border Background="#33FF9F0A" BorderBrush="#66FF9F0A" BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="0,0,0,12">
+                                            <DockPanel>
+                                                <TextBlock Style="{StaticResource Glyph}" Text="&#xE7BA;" Foreground="#FF9F0A" FontSize="16" Margin="0,1,10,0" VerticalAlignment="Top"/>
+                                                <StackPanel>
+                                                    <TextBlock Tag="t:irq.warn" Text="If a device stops working after the restart" FontWeight="SemiBold"/>
+                                                    <TextBlock Tag="t:irq.warn.d" Text="Start Windows in Safe Mode (hold Shift while you click Restart, then Troubleshoot > Advanced options > Startup Settings), open Akati OS Center and press Undo on that device or Undo all. Every device is backed up before its first change." TextWrapping="Wrap" FontSize="12" Margin="0,3,0,0"/>
+                                                </StackPanel>
+                                            </DockPanel>
+                                        </Border>
+                                        <!-- Core benchmark: which logical processors get the most work done with the fewest interruptions -->
+                                        <Border Background="{DynamicResource Field}" CornerRadius="8" Padding="12,10" Margin="0,0,0,12">
+                                            <StackPanel>
+                                                <DockPanel>
+                                                    <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <Button x:Name="IrqBench" Style="{StaticResource PillAccent}" Margin="0,0,8,0"><TextBlock Tag="t:irq.bench" Text="Benchmark"/></Button>
+                                                        <Border Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="7" Padding="2" VerticalAlignment="Center">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <RadioButton x:Name="IrqRounds3" Style="{StaticResource Segment}" GroupName="IrqRounds" Content="3"/>
+                                                                <RadioButton x:Name="IrqRounds5" Style="{StaticResource Segment}" GroupName="IrqRounds" Content="5" IsChecked="True"/>
+                                                                <RadioButton x:Name="IrqRounds10" Style="{StaticResource Segment}" GroupName="IrqRounds" Content="10"/>
+                                                            </StackPanel>
+                                                        </Border>
+                                                        <TextBlock Tag="t:irq.rounds" Text="rounds" Style="{StaticResource Muted}" VerticalAlignment="Center" Margin="8,0,14,0"/>
+                                                    </StackPanel>
+                                                    <TextBlock x:Name="IrqBenchState" Tag="t:irq.bench.ready" Text="Press Benchmark: about half a minute, nothing is changed." VerticalAlignment="Center" TextWrapping="Wrap" FontWeight="SemiBold"/>
+                                                </DockPanel>
+                                                <TextBlock Tag="t:irq.bench.d" Text="A small piece of work runs on one logical processor at a time, in a new random order each round. CPU 0 is never suggested: Windows uses it for much of its own work." Style="{StaticResource Muted}" FontSize="12" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                                                <WrapPanel x:Name="IrqCores" Margin="0,8,0,0"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <TextBlock x:Name="IrqHint" Tag="t:irq.hint" Text="After the benchmark, press Suggested on a device to fill in its settings, then Apply." Style="{StaticResource Muted}" FontSize="12" Margin="2,0,0,6" TextWrapping="Wrap"/>
+                                        <StackPanel x:Name="IrqList"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                            <!-- Win32PrioritySeparation: how CPU time is shared between the window in front and the rest (AkatiCenter.priority.ps1) -->
+                            <Border Style="{StaticResource Card}" Padding="8" Margin="0,0,0,22">
+                                <StackPanel Margin="14,8,14,8">
+                                    <DockPanel>
+                                        <Button x:Name="W32Measure" DockPanel.Dock="Right" Style="{StaticResource Pill}" VerticalAlignment="Top" Margin="12,0,0,0">
+                                            <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE916;" FontSize="12" Margin="0,0,8,0"/><TextBlock Tag="t:w32.measure" Text="Measure"/></StackPanel>
+                                        </Button>
+                                        <StackPanel>
+                                            <TextBlock Tag="t:w32.title" Text="CPU time for the window in front" Style="{StaticResource CardTitle}"/>
+                                            <TextBlock Tag="t:w32.sub" Text="Win32PrioritySeparation: how Windows shares CPU time between the window in front (your game) and everything else. A new value works at once, no restart." Style="{StaticResource Muted}" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </DockPanel>
+                                    <TextBlock x:Name="W32Now" FontWeight="SemiBold" Margin="0,12,0,0" TextWrapping="Wrap"/>
+                                    <TextBlock x:Name="W32Desc" Style="{StaticResource Muted}" FontSize="12" TextWrapping="Wrap" Margin="0,2,0,10"/>
+                                    <WrapPanel x:Name="W32Values"/>
+                                    <TextBlock x:Name="W32MeasureText" TextWrapping="Wrap" Margin="0,6,0,0" Visibility="Collapsed"/>
+                                    <Border Height="1" Background="{DynamicResource Line}" Margin="0,14,0,12"/>
+                                    <TextBlock Tag="t:w32.compare" Text="Compare values on this PC" FontWeight="SemiBold"/>
+                                    <TextBlock Tag="t:w32.compare.d" Text="A busy program in the background shares one processor with this window. For each value, in a new random order each round, it measures how much of the processor this window gets and how fast its thread wakes up. Your value is put back at the end. Keep this window in front while it runs." Style="{StaticResource Muted}" FontSize="12" TextWrapping="Wrap" Margin="0,2,0,8"/>
+                                    <WrapPanel x:Name="W32Pick"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                        <Border Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="7" Padding="2" VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal">
+                                                <RadioButton x:Name="W32Rounds3" Style="{StaticResource Segment}" GroupName="W32Rounds" Content="3" IsChecked="True"/>
+                                                <RadioButton x:Name="W32Rounds6" Style="{StaticResource Segment}" GroupName="W32Rounds" Content="6"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <TextBlock Tag="t:irq.rounds" Text="rounds" Style="{StaticResource Muted}" VerticalAlignment="Center" Margin="8,0,12,0"/>
+                                        <Button x:Name="W32Run" Style="{StaticResource PillAccent}" VerticalAlignment="Center"><TextBlock Tag="t:w32.run" Text="Run comparison"/></Button>
+                                        <TextBlock x:Name="W32State" Style="{StaticResource Muted}" VerticalAlignment="Center" Margin="12,0,0,0" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                    <StackPanel x:Name="W32Results" Margin="0,10,0,0"/>
+                                </StackPanel>
+                            </Border>
                             <TextBlock Tag="t:tweaks.system" Text="System" Style="{StaticResource Section}"/>
                             <TextBlock Tag="t:system.sub" Text="All Windows settings of Akati OS. A button applies that option; scripts open in a window that explains what they change." Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,4,0,14"/>
                             <Border Style="{StaticResource Card}" Padding="14,10" Margin="0,0,0,16">
@@ -1289,6 +1445,69 @@
                     </ScrollViewer>
 
                     <!-- Cleaner -->
+                    <!-- Uninstaller: every installed program and Store app; leftovers after an uninstall (AkatiCenter.uninstall.ps1) -->
+                    <ScrollViewer x:Name="PageUninstall" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
+                        <StackPanel>
+                            <TextBlock Tag="t:uninst.sub" Text="The programs and Store apps on this PC. Uninstall runs the program's own uninstaller, then looks for the folders, shortcuts and registry keys it left behind. Nothing is removed before you see the list: files go to the Recycle Bin and registry keys are saved as .reg files first." Style="{StaticResource Muted}" Margin="0,4,0,14" TextWrapping="Wrap"/>
+                            <DockPanel Margin="0,0,0,10">
+                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
+                                    <TextBlock x:Name="UninstCount" Style="{StaticResource Muted}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                    <Button x:Name="UninstRefresh" Style="{StaticResource Pill}" Padding="9,5" ToolTip="Refresh"><TextBlock Style="{StaticResource Glyph}" Text="&#xE72C;" FontSize="12"/></Button>
+                                </StackPanel>
+                                <Grid>
+                                    <TextBox x:Name="UninstSearch" Background="{DynamicResource Field}" Foreground="{DynamicResource Text2}" CaretBrush="{DynamicResource Text2}" BorderBrush="{DynamicResource Line}" Padding="32,7,8,7" VerticalContentAlignment="Center"/>
+                                    <TextBlock Style="{StaticResource Glyph}" Text="&#xE721;" FontSize="13" Foreground="{DynamicResource MutedBrush}" Margin="11,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                                    <TextBlock x:Name="UninstSearchHint" Tag="t:uninst.search" Text="Search programs or publishers" Foreground="{DynamicResource MutedBrush}" Margin="33,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                                </Grid>
+                            </DockPanel>
+                            <DockPanel Margin="0,0,0,12">
+                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <CheckBox x:Name="UninstQuiet" Style="{StaticResource Tick}" VerticalAlignment="Center" Margin="0,0,14,0"><TextBlock Tag="t:uninst.quiet" Text="Quiet uninstall when possible"/></CheckBox>
+                                    <Border Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="7" Padding="2">
+                                        <StackPanel Orientation="Horizontal">
+                                            <RadioButton x:Name="UninstSortName" Style="{StaticResource Segment}" GroupName="UninstSort" Tag="t:uninst.sort.name" Content="Name" IsChecked="True"/>
+                                            <RadioButton x:Name="UninstSortSize" Style="{StaticResource Segment}" GroupName="UninstSort" Tag="t:uninst.sort.size" Content="Size"/>
+                                            <RadioButton x:Name="UninstSortDate" Style="{StaticResource Segment}" GroupName="UninstSort" Tag="t:uninst.sort.date" Content="Date"/>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                                <Border Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="7" Padding="2" HorizontalAlignment="Left">
+                                    <StackPanel Orientation="Horizontal">
+                                        <RadioButton x:Name="UninstShowAll" Style="{StaticResource Segment}" GroupName="UninstShow" Content="All" IsChecked="True"/>
+                                        <RadioButton x:Name="UninstShowPrograms" Style="{StaticResource Segment}" GroupName="UninstShow" Content="Programs"/>
+                                        <RadioButton x:Name="UninstShowStore" Style="{StaticResource Segment}" GroupName="UninstShow" Content="Store apps"/>
+                                    </StackPanel>
+                                </Border>
+                            </DockPanel>
+                            <!-- After an uninstall: what the program left behind, ticked, removed only when asked -->
+                            <Border x:Name="UninstLeft" Style="{StaticResource Card}" Margin="0,0,0,14" Visibility="Collapsed" BorderBrush="{DynamicResource Accent2}">
+                                <StackPanel>
+                                    <DockPanel Margin="0,0,0,8">
+                                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
+                                            <Button x:Name="UninstLeftKeep" Style="{StaticResource Pill}" Margin="0,0,8,0"><TextBlock Tag="t:uninst.left.keep" Text="Keep them"/></Button>
+                                            <Button x:Name="UninstLeftRemove" Style="{StaticResource PillAccent}"><TextBlock Tag="t:uninst.left.remove" Text="Remove selected"/></Button>
+                                        </StackPanel>
+                                        <StackPanel Margin="0,0,12,0">
+                                            <TextBlock x:Name="UninstLeftTitle" Style="{StaticResource CardTitle}" TextWrapping="Wrap"/>
+                                            <TextBlock Tag="t:uninst.left.d" Text="Folders and shortcuts go to the Recycle Bin; registry keys are saved as .reg files in ProgramData\AkatiOS\Backups before they are removed." Style="{StaticResource Muted}" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </DockPanel>
+                                    <StackPanel x:Name="UninstLeftList"/>
+                                </StackPanel>
+                            </Border>
+                            <DockPanel x:Name="UninstBatch" Margin="0,0,0,10" Visibility="Collapsed">
+                                <Button x:Name="UninstSelected" DockPanel.Dock="Right" Style="{StaticResource PillAccent}"><TextBlock x:Name="UninstSelectedText" Text=""/></Button>
+                                <TextBlock Tag="t:uninst.batch.d" Text="The ticked programs are uninstalled one after another." Style="{StaticResource Muted}" VerticalAlignment="Center"/>
+                            </DockPanel>
+                            <Border Style="{StaticResource Card}" Padding="0" Margin="0,0,0,16">
+                                <StackPanel>
+                                    <StackPanel x:Name="UninstList"/>
+                                    <TextBlock x:Name="UninstEmpty" Tag="t:uninst.loading" Text="Reading the programs..." Style="{StaticResource Muted}" Margin="16,12"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+
                     <ScrollViewer x:Name="PageCleaner" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
                         <StackPanel>
                             <TextBlock Tag="t:cleaner.title" Text="Cleaner" FontSize="24" FontWeight="Bold" Visibility="Collapsed"/>
@@ -1430,7 +1649,7 @@
                                     <Image x:Name="AboutLogo" Width="72" Height="72" Margin="0,0,20,0"/>
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock Text="Akati OS" FontSize="26" FontWeight="Bold"/>
-                                        <TextBlock x:Name="AboutVersion" Text="v1.9.0" Style="{StaticResource Muted}"/>
+                                        <TextBlock x:Name="AboutVersion" Text="v1.10.0" Style="{StaticResource Muted}"/>
                                         <TextBlock x:Name="UpdateStatus" Text="" Margin="0,6,0,0" TextWrapping="Wrap"/>
                                         <Button x:Name="UpdateDownload" Style="{StaticResource PillAccent}" HorizontalAlignment="Left" Margin="0,10,0,0" Padding="14,5" Visibility="Collapsed">
                                             <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE896;" FontSize="12" Margin="0,0,8,0"/><TextBlock Tag="t:update.download" Text="Download the update"/></StackPanel>

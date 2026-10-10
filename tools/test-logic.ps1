@@ -61,5 +61,28 @@ $h = Update-ScoreHistory @('2026-10-01=70', 'bad', '2026-10-02=75') '2026-10-03'
 Check 'score history keep' ($h -join ',') '2026-10-02=75,2026-10-03=90'
 Check 'score history empty' ((Update-ScoreHistory $null '2026-10-03' 88) -join ',') '2026-10-03=88'
 
+# Interrupts
+Check 'irq modes' (Get-IrqModes 7) 'LB, MSI, MSI-X'
+Check 'irq modes lb' (Get-IrqModes 1) 'LB'
+Check 'cpu mask' (ConvertTo-CpuMask @(2, 4)) 20
+Check 'cpu mask high' (ConvertTo-CpuMask @(63)) ([uint64]9223372036854775808)
+Check 'cpu mask back' ((ConvertFrom-CpuMask 20) -join ',') '2,4'
+Check 'best cores' ((Get-BestCores @(9, 5, 8, 7) $false) -join ',') '2,3,1'
+Check 'best cores ht' ((Get-BestCores @(9, 9, 5, 8, 7, 6) $true) -join ',') '3,4'
+
+# Win32PrioritySeparation
+$ps = Get-PrioritySeparation 0x26
+Check 'w32 0x26' ('{0} {1} {2}' -f $ps.Quantum, $ps.Fixed, $ps.Boost) 'short False 2'
+$ps = Get-PrioritySeparation 0x18
+Check 'w32 0x18' ('{0} {1} {2}' -f $ps.Quantum, $ps.Fixed, $ps.Boost) 'long True 0'
+$ps = Get-PrioritySeparation 2
+Check 'w32 default bits' ('{0} {1} {2}' -f $ps.Quantum, $ps.Fixed, $ps.Boost) 'short False 2'
+
+# Uninstaller names
+Check 'base 7zip' (Get-ProgramBaseName '7-Zip 21.07 (x64 edition)') '7-Zip'
+Check 'base plain' (Get-ProgramBaseName 'Brave') 'Brave'
+Check 'base version dash' (Get-ProgramBaseName 'Microsoft Visual C++ 2010  x64 Redistributable - 10.0.40219') 'Microsoft Visual C++ 2010  x64 Redistributable'
+Check 'base bitness' (Get-ProgramBaseName 'Notepad++ (64-bit x64)') 'Notepad++'
+
 Write-Host "$script:count checks, $script:failed failed"
 if ($script:failed) { exit 1 }

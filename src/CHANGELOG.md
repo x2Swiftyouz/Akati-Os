@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v1.8.0
 
 ### Added
 - Dashboard: a "This week" card with what was cleaned (by hand and by the weekly clean), the Game boost time and sessions, and the Akati Score compared with last week; it can be hidden or moved like the other cards

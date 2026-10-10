@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v1.10.0
 
 ### Added
 - Tweaks > Interrupts (advanced): MSI mode, MSI limit, interrupt priority and CPU affinity of each PCI device (graphics card, network, USB, audio, storage)

@@ -4,7 +4,7 @@ description: Configures OEM information to show the Akati OS version
 actions:
   - !powerShell:
     command: |
-      $version = 'v1.9.0'
+      $version = 'v1.10.0'
 
       Write-Output 'Setting boot entry name...'
       bcdedit /set description """Akati OS $(('10', '11')[[int]([System.Environment]::OSVersion.Version.Build -ge 22000)]) $version"""

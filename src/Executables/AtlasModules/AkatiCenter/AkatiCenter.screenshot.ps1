@@ -135,6 +135,19 @@ if ($Screenshot) {
     Set-CenterAccent $accents[1]; $ui.NavGaming.IsChecked = $true; Save-Shot 'accent-blue.png'
     Set-CenterAccent $accents[6]; $ui.NavBoost.IsChecked = $true; Save-Shot 'accent-orange.png'
     Set-CenterAccent $accents[0]
+    # Sidebar numbers, the keyboard shortcuts, Choose apps, Find my games and the share picture
+    $script:navBadges['Gaming'] = 2; $script:navBadges['Health'] = 1; Update-NavBadges
+    $ui.NavBoost.IsChecked = $true
+    Show-BoostApps; $ui.BoostAppsPanel.Visibility = 'Visible'
+    Show-GameScan @(@{ Name = 'Counter-Strike 2'; Path = 'D:\SteamLibrary\steamapps\common\Counter-Strike Global Offensive\game\bin\win64\cs2.exe'; Store = 'Steam' }
+                    @{ Name = 'Fortnite'; Path = 'C:\Program Files\Epic Games\Fortnite\FortniteGame\Binaries\Win64\FortniteClient-Win64-Shipping.exe'; Store = 'Epic Games' })
+    $sv = $ui.PageBoost; $sv.UpdateLayout(); $sv.ScrollToVerticalOffset(0); $sv.UpdateLayout(); Save-Shot 'boost-en-choose.png'
+    $top = $ui.GameScanPanel.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
+    $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 140)); $sv.UpdateLayout(); Save-Shot 'boost-en-scan.png'
+    $sv.ScrollToVerticalOffset(0); $ui.BoostAppsPanel.Visibility = 'Collapsed'; $ui.GameScanPanel.Visibility = 'Collapsed'
+    Show-Keys; Save-Shot 'keys-en.png'; $ui.Keys.Visibility = 'Collapsed'
+    try { [void](Save-ScoreCard (Join-Path $Screenshot 'share-card.png')) } catch { Write-Host "Share picture failed: $($_.Exception.Message)" }
+    $script:navBadges['Gaming'] = 0; $script:navBadges['Health'] = 0; Update-NavBadges
     # The light look
     Set-CenterLook 'light'
     foreach ($p in 'dashboard', 'gaming', 'tweaks') { $ui["Nav$(Get-PageId $p)"].IsChecked = $true; Save-Shot "light-$p.png" }

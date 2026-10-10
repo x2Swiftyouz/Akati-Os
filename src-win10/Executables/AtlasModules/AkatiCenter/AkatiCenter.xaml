@@ -403,6 +403,15 @@
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource Accent}"/>
                                 <Setter TargetName="Bd" Property="Background" Value="{DynamicResource Fill}"/>
+                                <!-- Grows a little under the mouse -->
+                                <Trigger.EnterActions><BeginStoryboard><Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="Press" Storyboard.TargetProperty="ScaleX" To="1.03" Duration="0:0:0.15"/>
+                                    <DoubleAnimation Storyboard.TargetName="Press" Storyboard.TargetProperty="ScaleY" To="1.03" Duration="0:0:0.15"/>
+                                </Storyboard></BeginStoryboard></Trigger.EnterActions>
+                                <Trigger.ExitActions><BeginStoryboard><Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="Press" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.15"/>
+                                    <DoubleAnimation Storyboard.TargetName="Press" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.15"/>
+                                </Storyboard></BeginStoryboard></Trigger.ExitActions>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="Bd" Property="Opacity" Value="0.5"/>
@@ -1004,7 +1013,17 @@
                                     </Grid>
                                     <Border Height="1" Background="{DynamicResource Line}" Margin="0,16,0,12"/>
                                     <CheckBox x:Name="BoostPower" Style="{StaticResource Tick}" IsChecked="True" Margin="0,4"><TextBlock Tag="t:boost.power" Text="Switch to the highest performance power plan"/></CheckBox>
-                                    <CheckBox x:Name="BoostApps" Style="{StaticResource Tick}" IsChecked="True" Margin="0,4"><TextBlock x:Name="BoostAppsText" Tag="t:boost.apps" Text="Close background apps" TextWrapping="Wrap"/></CheckBox>
+                                    <DockPanel>
+                                        <Button x:Name="BoostAppsEdit" DockPanel.Dock="Right" Style="{StaticResource Pill}" Padding="10,3" FontSize="12" VerticalAlignment="Center" Margin="8,0,0,0"><TextBlock Tag="t:boost.choose" Text="Choose apps"/></Button>
+                                        <CheckBox x:Name="BoostApps" Style="{StaticResource Tick}" IsChecked="True" Margin="0,4"><TextBlock x:Name="BoostAppsText" Tag="t:boost.apps" Text="Close background apps" TextWrapping="Wrap"/></CheckBox>
+                                    </DockPanel>
+                                    <!-- The apps Game boost closes: the usual ones and any app running now -->
+                                    <Border x:Name="BoostAppsPanel" Background="{DynamicResource Field}" CornerRadius="8" Padding="12,10,12,6" Margin="26,4,0,6" Visibility="Collapsed">
+                                        <StackPanel>
+                                            <TextBlock Tag="t:boost.choose.d" Text="Ticked apps are closed when Game boost starts and opened again when it stops. Apps running now are listed too." Style="{StaticResource Muted}" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                                            <WrapPanel x:Name="BoostAppsChips"/>
+                                        </StackPanel>
+                                    </Border>
                                     <CheckBox x:Name="BoostNotify" Style="{StaticResource Tick}" IsChecked="True" Margin="0,4"><TextBlock Tag="t:boost.notify" Text="Turn off notifications"/></CheckBox>
                                     <CheckBox x:Name="BoostServices" Style="{StaticResource Tick}" IsChecked="True" Margin="0,4"><TextBlock Tag="t:boost.services" Text="Pause background services until the game is closed" TextWrapping="Wrap"/></CheckBox>
                                     <CheckBox x:Name="BoostMemory" Style="{StaticResource Tick}" IsChecked="True" Margin="0,4"><TextBlock Tag="t:boost.memory" Text="Free up standby memory" TextWrapping="Wrap"/></CheckBox>
@@ -1020,11 +1039,27 @@
                                         <Button x:Name="GameAddButton" DockPanel.Dock="Right" Style="{StaticResource PillAccent}" VerticalAlignment="Top">
                                             <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE710;" FontSize="12" Margin="0,0,8,0"/><TextBlock Tag="t:games.add" Text="Add game"/></StackPanel>
                                         </Button>
+                                        <Button x:Name="GameScanButton" DockPanel.Dock="Right" Style="{StaticResource Pill}" VerticalAlignment="Top" Margin="0,0,8,0">
+                                            <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE721;" FontSize="12" Margin="0,0,8,0"/><TextBlock Tag="t:games.scan" Text="Find my games"/></StackPanel>
+                                        </Button>
                                         <StackPanel Margin="0,0,12,0">
                                             <TextBlock Tag="t:games.title" Text="My games" Style="{StaticResource CardTitle}"/>
                                             <TextBlock Tag="t:games.sub" Text="Settings for each game." Style="{StaticResource Muted}" Margin="0,4,0,0"/>
                                         </StackPanel>
                                     </DockPanel>
+                                    <!-- Games found in Steam, Epic Games, Riot and Battle.net: tick and add -->
+                                    <Border x:Name="GameScanPanel" Background="{DynamicResource Field}" CornerRadius="8" Padding="12,10" Margin="14,4,14,10" Visibility="Collapsed">
+                                        <StackPanel>
+                                            <DockPanel Margin="0,0,0,6">
+                                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                                    <Button x:Name="GameScanCancel" Style="{StaticResource Pill}" Padding="12,4" Margin="0,0,8,0"><TextBlock Tag="t:cancel" Text="Cancel"/></Button>
+                                                    <Button x:Name="GameScanAdd" Style="{StaticResource PillAccent}" Padding="12,4"><TextBlock Tag="t:games.scan.add" Text="Add selected"/></Button>
+                                                </StackPanel>
+                                                <TextBlock x:Name="GameScanTitle" Text="" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                            </DockPanel>
+                                            <StackPanel x:Name="GameScanList"/>
+                                        </StackPanel>
+                                    </Border>
                                     <StackPanel x:Name="GamesList"/>
                                     <TextBlock x:Name="GamesEmpty" Tag="t:games.empty" Text="No games added yet." Style="{StaticResource Muted}" Margin="14,8"/>
                                 </StackPanel>
@@ -1188,6 +1223,9 @@
                             <DockPanel Margin="0,4,0,18">
                                 <Button x:Name="DoctorRun" DockPanel.Dock="Right" Style="{StaticResource Pill}" VerticalAlignment="Top" Margin="12,0,0,0">
                                     <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE72C;" FontSize="12" Margin="0,0,8,0"/><TextBlock Tag="t:doc.run" Text="Check again"/></StackPanel>
+                                </Button>
+                                <Button x:Name="ScoreShare" DockPanel.Dock="Right" Style="{StaticResource Pill}" VerticalAlignment="Top" Margin="12,0,0,0">
+                                    <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE72D;" FontSize="12" Margin="0,0,8,0"/><TextBlock Tag="t:score.share" Text="Share score"/></StackPanel>
                                 </Button>
                                 <TextBlock x:Name="DoctorSummary" Text="-" Style="{StaticResource Muted}" TextWrapping="Wrap"/>
                             </DockPanel>
@@ -1546,6 +1584,18 @@
                         <TextBlock x:Name="WhatsNewTitle" Text="What's new" FontSize="24" FontWeight="Bold" Margin="0,0,0,16"/>
                         <StackPanel x:Name="WhatsNewList"/>
                         <Button x:Name="WhatsNewDone" Style="{StaticResource Primary}" Tag="t:new.done" Content="Continue" HorizontalAlignment="Right" MinWidth="140" Margin="0,18,0,0"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Keyboard shortcuts (the ? key) -->
+            <Grid x:Name="Keys" Grid.ColumnSpan="2" Visibility="Collapsed">
+                <Border x:Name="KeysDim" Background="#B0000000" CornerRadius="14"/>
+                <Border Style="{StaticResource Card}" Width="560" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="28,24">
+                    <StackPanel>
+                        <TextBlock Tag="t:keys.title" Text="Keyboard shortcuts" FontSize="22" FontWeight="Bold" Margin="0,0,0,14"/>
+                        <StackPanel x:Name="KeysList"/>
+                        <Button x:Name="KeysDone" Style="{StaticResource Primary}" Tag="t:new.done" Content="Continue" HorizontalAlignment="Right" MinWidth="140" Margin="0,16,0,0"/>
                     </StackPanel>
                 </Border>
             </Grid>

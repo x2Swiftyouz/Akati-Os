@@ -46,7 +46,16 @@ $serviceGroups = @{
     hotspot  = @{ SharedAccess = 3 }
     notify   = @{ WpnService = 2 }
     cdp      = @{ CDPSvc = 2 }
+    print    = [ordered]@{ Spooler = 2; PrintNotify = 3 }
+    bluetooth = [ordered]@{ bthserv = 3; BTAGService = 3; BthAvctpSvc = 3 }
 }
+# Printing and Bluetooth are offered only on PCs without a printer or a Bluetooth adapter (or when they are off already).
+# Microsoft Print to PDF, XPS, OneNote and Fax are not real printers.
+function Test-RealPrinter {
+    @(Get-ChildItem -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Print\Printers' -ErrorAction SilentlyContinue |
+        Where-Object { $_.PSChildName -notmatch '^(Microsoft Print to PDF|Microsoft XPS Document Writer|Fax|OneNote.*|Send To OneNote.*)$' }).Count -gt 0
+}
+function Test-Bluetooth { @(Get-CimInstance Win32_PnPEntity -Filter "PNPClass='Bluetooth'" -ErrorAction SilentlyContinue).Count -gt 0 }
 $servicesKey = 'HKLM:\SYSTEM\CurrentControlSet\Services'
 $edgePolicyKey = 'HKLM:\SOFTWARE\Policies\Microsoft\Edge'
 function Test-ServicesOff($group) {
@@ -160,6 +169,12 @@ $tweaks = @(
        Get = { Test-ServicesOff $serviceGroups.notify }; Set = { param($on) Set-ServicesOff $serviceGroups.notify $on } }
     @{ Key = 'svccdp'; Group = 'services'; Glyph = [char]0xE8EA; Restart = $true; Default = $false
        Get = { Test-ServicesOff $serviceGroups.cdp }; Set = { param($on) Set-ServicesOff $serviceGroups.cdp $on } }
+    @{ Key = 'svcprint'; Group = 'services'; Glyph = [char]0xE749; Restart = $true; Default = $false
+       Show = { !(Test-RealPrinter) -or (Test-ServicesOff $serviceGroups.print) }
+       Get = { Test-ServicesOff $serviceGroups.print }; Set = { param($on) Set-ServicesOff $serviceGroups.print $on } }
+    @{ Key = 'svcbt'; Group = 'services'; Glyph = [char]0xE702; Restart = $true; Default = $false
+       Show = { !(Test-Bluetooth) -or (Test-ServicesOff $serviceGroups.bluetooth) }
+       Get = { Test-ServicesOff $serviceGroups.bluetooth }; Set = { param($on) Set-ServicesOff $serviceGroups.bluetooth $on } }
     # Microsoft Edge keeps running after its last window is closed (background mode) and starts with Windows to open
     # faster (startup boost). The two Edge policies turn both off; removing them gives the Edge defaults back.
     @{ Key = 'edgebg'; Group = 'services'; Glyph = [char]0xE774; Default = $false
@@ -389,6 +404,7 @@ function Initialize-Tweaks {
     $script:tweaksBuilt = $true
     foreach ($tw in $tweaks) {
         if ($tw.Win11 -and $build -lt 22000) { continue }
+        if ($tw.Show -and !$Screenshot -and !(try { & $tw.Show } catch { $true })) { continue }
         $toggle = New-Object System.Windows.Controls.CheckBox
         $toggle.Style = $window.FindResource('Switch')
         $row = New-Row ([string]$tw.Glyph) (T "tw.$($tw.Key)") "t:tw.$($tw.Key)" $toggle "t:tw.$($tw.Key).d"

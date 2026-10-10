@@ -12,6 +12,12 @@ $boostKey = 'HKCU:\Software\AkatiOS\Center\Boost'
 $toastKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\PushNotifications'
 # Background apps that are safe to close while playing (never game launchers or browsers)
 $boostCandidates = 'OneDrive', 'Teams', 'ms-teams', 'Spotify', 'PhoneExperienceHost', 'Dropbox', 'GoogleDriveFS', 'Skype'
+# The user can change the list (Choose apps): saved as BoostClose (process names); "-" alone means none
+function Get-BoostApps {
+    $saved = (Get-ItemProperty -Path 'HKCU:\Software\AkatiOS\Center' -Name BoostClose -ErrorAction SilentlyContinue).BoostClose
+    if ($null -eq $saved) { return $boostCandidates }
+    @($saved | Where-Object { $_ -and $_ -ne '-' })
+}
 # Services that work in the background and can wait until the game is closed: search indexing, SysMain (prefetch),
 # printing and the downloads of Windows Update. Only stopped (the start type stays), started again at Stop; they start
 # as usual after a restart too. None of them is used by anti-cheats.
@@ -38,7 +44,8 @@ function Update-BoostLast {
 }
 function Update-BoostCard {
     Update-BoostLast
-    $running = @(Get-Process -Name $boostCandidates -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name -Unique)
+    $names = @(Get-BoostApps)
+    $running = @(if ($names.Count) { Get-Process -Name $names -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name -Unique })
     $ui.BoostAppsText.Text = if ($running.Count) { (T 'boost.apps') + ' (' + ($running -join ', ') + ')' } else { (T 'boost.apps') + ' (' + (T 'boost.noapps') + ')' }
     if (Test-Boost) {
         $since = Get-RegValue $boostKey 'Since'
@@ -47,14 +54,15 @@ function Update-BoostCard {
         $ui.BoostButton.Content = T 'boost.stop'
         $ui.BoostButton.Style = $window.FindResource('Secondary')
         $ui.BoostIcon.SetResourceReference([System.Windows.Controls.Border]::BackgroundProperty, 'AccentGradient')
-        foreach ($c in 'BoostPower', 'BoostApps', 'BoostNotify', 'BoostServices') { $ui[$c].IsEnabled = $false }
+        foreach ($c in 'BoostPower', 'BoostApps', 'BoostNotify', 'BoostServices', 'BoostAppsEdit') { $ui[$c].IsEnabled = $false }
+        $ui.BoostAppsPanel.Visibility = 'Collapsed'
     } else {
         $ui.BoostState.Text = T 'boost.off'
         $ui.BoostState.Foreground = $window.FindResource('MutedBrush')
         $ui.BoostButton.Content = T 'boost.start'
         $ui.BoostButton.Style = $window.FindResource('Primary')
         $ui.BoostIcon.SetResourceReference([System.Windows.Controls.Border]::BackgroundProperty, 'Fill')
-        foreach ($c in 'BoostPower', 'BoostApps', 'BoostNotify', 'BoostServices') { $ui[$c].IsEnabled = $true }
+        foreach ($c in 'BoostPower', 'BoostApps', 'BoostNotify', 'BoostServices', 'BoostAppsEdit') { $ui[$c].IsEnabled = $true }
     }
 }
 
@@ -81,7 +89,8 @@ function Start-Boost {
     if ($ui.BoostApps.IsChecked) {
         try {
             $closed = @()
-            foreach ($p in Get-Process -Name $boostCandidates -ErrorAction SilentlyContinue) {
+            $names = @(Get-BoostApps)
+            foreach ($p in @(if ($names.Count) { Get-Process -Name $names -ErrorAction SilentlyContinue })) {
                 $path = try { $p.Path } catch { $null }
                 if ($p.Name -eq 'OneDrive' -and $path) { & $path /shutdown } else { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue }
                 if ($path -and $closed -notcontains $path) { $closed += $path }
@@ -192,11 +201,44 @@ function Show-BoostEffect {
 }
 $ui.BoostButton.Add_Click({
     try {
-        if (Test-Boost) { Stop-Boost; Set-Status (T 'status.boostoff') } else { Start-Boost; Set-Status (T 'status.booston'); Show-BoostEffect }
+        if (Test-Boost) { Stop-Boost; Set-Status (T 'status.boostoff') }
+        else {
+            Start-Boost; Show-BoostEffect
+            # On a laptop without its charger Windows holds the CPU and GPU back whatever the power plan says
+            Set-Status ((T 'status.booston') + $(if (Test-OnBattery) { ' · ' + (T 'boost.battery') } else { '' }))
+        }
     } catch { Set-Status $_.Exception.Message }
     Update-BoostCard
     Request-MenuUpdate
 })
+function Test-OnBattery { try { [bool]@(Get-CimInstance Win32_Battery -ErrorAction Stop | Where-Object { $_.BatteryStatus -eq 1 }).Count } catch { $false } }
+
+# Choose apps: the apps in the list and the apps with a window now, as chips. Windows parts, Akati OS and the
+# games in My games are not offered.
+$boostNever = 'explorer', 'powershell', 'pwsh', 'ApplicationFrameHost', 'SystemSettings', 'TextInputHost', 'ShellExperienceHost', 'StartMenuExperienceHost',
+              'SearchHost', 'SearchApp', 'LockApp', 'Taskmgr', 'mmc', 'conhost', 'dwm', 'cmd', 'WindowsTerminal', 'OpenConsole', 'ctfmon', 'sihost'
+function Show-BoostApps {
+    $ui.BoostAppsChips.Children.Clear()
+    $chosen = @(Get-BoostApps)
+    $games = @(if (Test-Path $gamesKey) { (Get-Item $gamesKey).Property | ForEach-Object { [IO.Path]::GetFileNameWithoutExtension($_) } })
+    $open = @(Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne 0 } | ForEach-Object { $_.ProcessName })
+    $names = @(@($chosen) + @($boostCandidates) + @($open) | Where-Object { $_ -and $_ -notin $boostNever -and $_ -notin $games } | Sort-Object -Unique)
+    foreach ($n in $names) {
+        $chip = New-Object System.Windows.Controls.CheckBox
+        $chip.Style = $window.FindResource('Chip'); $chip.Content = $n; $chip.Margin = '0,0,6,6'; $chip.IsChecked = $n -in $chosen
+        $chip.Add_Click({
+            $list = @($ui.BoostAppsChips.Children | Where-Object { $_.IsChecked } | ForEach-Object { [string]$_.Content })
+            Save-Setting BoostClose ([string[]]$(if ($list.Count) { $list } else { @('-') }))
+            Update-BoostCard
+        })
+        [void]$ui.BoostAppsChips.Children.Add($chip)
+    }
+}
+$ui.BoostAppsEdit.Add_Click({
+    if ($ui.BoostAppsPanel.Visibility -eq 'Visible') { $ui.BoostAppsPanel.Visibility = 'Collapsed'; return }
+    Show-BoostApps; $ui.BoostAppsPanel.Visibility = 'Visible'
+})
+
 # Automatic Game boost: the tray app (AkatiTray.ps1) watches for the games in My games
 $ui.BoostAuto.IsChecked = (Get-RegValue 'HKCU:\Software\AkatiOS\Center' 'AutoBoost') -eq 1
 $ui.BoostAuto.Add_Click({ Save-Setting AutoBoost $(if ($this.IsChecked) { 1 } else { 0 }) })

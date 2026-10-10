@@ -285,6 +285,7 @@ function Start-Uninstall($app) {
 
 function Update-AppsToolbar {
     $count = @($apps | Where-Object { $_.HasUpdate -and $_.State -eq 'idle' }).Count
+    $script:navBadges['Gaming'] = @($apps | Where-Object { $_.HasUpdate }).Count; Update-NavBadges
     $ui.UpdateAllButton.IsEnabled = $count -gt 0
     $ui.UpdateAllText.Text = if ($count) { (T 'apps.updatecount') -f $count } else { T 'apps.updateall' }
     $ui.StarterButton.IsEnabled = [bool]@($apps | Where-Object { $_.Key -in 'Steam', 'Discord' -and $_.State -eq 'idle' -and !(Test-App $_) }).Count

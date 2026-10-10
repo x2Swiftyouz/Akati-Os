@@ -11,7 +11,7 @@ $getCulture = { Get-LangCulture }
 $orange = (New-Object System.Windows.Media.BrushConverter).ConvertFromString('#FF9F0A')
 
 # Akati Doctor: each check is $true when fine. Runs in the background (no functions of this script)
-$doctorChecks = 'tray', 'menu', 'power', 'refresh', 'xmp', 'disk', 'restart', 'hvci', 'devices', 'crash', 'activation'
+$doctorChecks = 'tray', 'menu', 'power', 'battery', 'refresh', 'xmp', 'disk', 'restart', 'hvci', 'devices', 'crash', 'activation'
 $doctorWork = {
     $r = @{}
     $wanted = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\AkatiOS' -Name TrayIcon -ErrorAction SilentlyContinue).TrayIcon -eq 1
@@ -45,6 +45,12 @@ $doctorWork = {
     } catch { $r.activation = $true }
     # Checks this PC cannot answer are left out of the list
     $r.skip = @()
+    # Laptops: on battery Windows holds the CPU and GPU back (BatteryStatus 1 = discharging); desktops have no battery
+    $r.battery = $true
+    try {
+        $bat = @(Get-CimInstance Win32_Battery -ErrorAction Stop)
+        if ($bat.Count) { $r.battery = !@($bat | Where-Object { $_.BatteryStatus -eq 1 }).Count } else { $r.skip += 'battery' }
+    } catch { $r.skip += 'battery' }
     # Screen refresh rate: the highest the primary screen can do at its resolution ([AkatiOS.Perf], from the Game boost part)
     try { $r.hzNow = [AkatiOS.Perf]::Current()[2]; $r.hzMax = [AkatiOS.Perf]::MaxHz() } catch { $r.hzNow = 0; $r.hzMax = 0 }
     if ($r.hzNow -le 1 -or $r.hzMax -le 1) { $r.skip += 'refresh' }
@@ -114,6 +120,7 @@ function Show-Doctor($r) {
     $row.Sub.Text = T 'doc.repair.d'
     [void]$ui.DoctorList.Children.Add($row.Row)
     Update-Separators $ui.DoctorList
+    $script:navBadges['Health'] = $bad; Update-NavBadges
     Update-Score
     $ui.DoctorSummary.Text = $(if ($bad) { (T 'doc.issues') -f $bad } else { T 'doc.allgood' }) + ' · ' + ((T 'doc.checked') -f (Get-Date).ToString('HH:mm'))
 }
@@ -174,6 +181,7 @@ function Invoke-DoctorFix([string]$k) {
         'devices' { Start-Process devmgmt.msc }
         'crash' { $ui.CrashList.BringIntoView() }
         'activation' { Start-Process 'ms-settings:activation' }
+        'battery' { Start-Process 'ms-settings:powersleep' }
         'refresh' {
             $max = $script:doctorResult.hzMax
             $result = try { [AkatiOS.Perf]::SetHz($max) } catch { -1 }
@@ -346,3 +354,79 @@ $ui.BackupLoad.Add_Click({
     Set-Status ((T 'backup.restored') -f $changed)
 })
 
+# ---------------------------------------------------------------------------------------------
+# Share score: a 1200 x 630 picture of the Akati Score and the PC (no PC or user name), saved to
+# Pictures\Akati OS and copied to the clipboard, ready to paste in Discord or a chat
+# ---------------------------------------------------------------------------------------------
+function New-ScoreCard {
+    $brush = { param($hex) [System.Windows.Media.SolidColorBrush]::new([System.Windows.Media.ColorConverter]::ConvertFromString($hex)) }
+    $card = New-Object System.Windows.Controls.Border
+    $card.Width = 1200; $card.Height = 630
+    # A Border has no font of its own: the texts inside take the font of the window through TextElement
+    [System.Windows.Documents.TextElement]::SetFontFamily($card, $window.FontFamily)
+    $card.Background = [System.Windows.Media.LinearGradientBrush]::new([System.Windows.Media.ColorConverter]::ConvertFromString('#1E1230'), [System.Windows.Media.ColorConverter]::ConvertFromString('#0E0E12'), 45)
+    $grid = New-Object System.Windows.Controls.Grid
+    # Soft glow in the accent color behind the score
+    $glow = New-Object System.Windows.Shapes.Ellipse
+    $glow.Width = 620; $glow.Height = 620; $glow.HorizontalAlignment = 'Left'; $glow.VerticalAlignment = 'Center'; $glow.Margin = '-120,0,0,0'
+    $glow.Fill = $window.FindResource('Accent2'); $glow.Opacity = 0.16
+    $glow.Effect = New-Object System.Windows.Media.Effects.BlurEffect -Property @{ Radius = 160 }
+    [void]$grid.Children.Add($glow)
+    $cols = New-Object System.Windows.Controls.Grid; $cols.Margin = '80,70'
+    foreach ($w in '420', '*') { $c = New-Object System.Windows.Controls.ColumnDefinition; $c.Width = $w; $cols.ColumnDefinitions.Add($c) }
+    # Left: logo, score, title
+    $left = New-Object System.Windows.Controls.StackPanel; $left.VerticalAlignment = 'Center'
+    $brand = New-Object System.Windows.Controls.StackPanel; $brand.Orientation = 'Horizontal'
+    $logo = New-Object System.Windows.Controls.Image; $logo.Source = Get-Image $logoPath 128; $logo.Width = 48; $logo.Height = 48; $logo.Margin = '0,0,14,0'
+    $name = New-Text 'AKATI OS' 30 'Bold'; $name.Foreground = & $brush '#FFFFFF'; $name.VerticalAlignment = 'Center'
+    [void]$brand.Children.Add($logo); [void]$brand.Children.Add($name)
+    $score = New-Text $ui.ScoreValue.Text 190 'Bold'; $score.Foreground = $ui.ScoreValue.Foreground; $score.Margin = '0,10,0,-20'
+    $label = New-Text 'AKATI SCORE' 22 'SemiBold'; $label.Foreground = & $brush '#B9B9C2'
+    $title = New-Text $ui.ScoreTitle.Text 28 'SemiBold'; $title.Foreground = & $brush '#FFFFFF'; $title.Margin = '0,10,0,0'
+    foreach ($x in $brand, $score, $label, $title) { [void]$left.Children.Add($x) }
+    # Right: the PC
+    $right = New-Object System.Windows.Controls.StackPanel; $right.VerticalAlignment = 'Center'; $right.Margin = '40,0,0,0'
+    [System.Windows.Controls.Grid]::SetColumn($right, 1)
+    $rows = @(@('CPU', $ui.CpuName.Text), @('GPU', $ui.GpuName.Text), @('RAM', $ui.RamName.Text), @('Windows', $ui.OsLine.Text), @('Ping', $ui.NetPing.Text))
+    foreach ($r in $rows) {
+        if (!$r[1] -or $r[1] -eq '-') { continue }
+        $k = New-Text $r[0].ToUpperInvariant() 16 'SemiBold'; $k.Foreground = & $brush '#9A8CB8'; $k.Margin = '0,14,0,2'
+        $v = New-Text $r[1] 26 'SemiBold'; $v.Foreground = & $brush '#F5F5F7'; $v.TextTrimming = 'CharacterEllipsis'; $v.TextWrapping = 'NoWrap'
+        [void]$right.Children.Add($k); [void]$right.Children.Add($v)
+    }
+    $foot = New-Text ("Akati OS $version  ·  " + (Get-Date).ToString('d MMM yyyy', (Get-LangCulture))) 16; $foot.Foreground = & $brush '#8E8E96'; $foot.Margin = '0,26,0,0'
+    [void]$right.Children.Add($foot)
+    [void]$cols.Children.Add($left); [void]$cols.Children.Add($right)
+    [void]$grid.Children.Add($cols)
+    # Accent line along the bottom
+    $line = New-Object System.Windows.Controls.Border; $line.Height = 8; $line.VerticalAlignment = 'Bottom'
+    $line.Background = $window.FindResource('AccentGradient')
+    [void]$grid.Children.Add($line)
+    $card.Child = $grid
+    $size = New-Object System.Windows.Size 1200, 630
+    $card.Measure($size); $card.Arrange((New-Object System.Windows.Rect $size)); $card.UpdateLayout()
+    $bmp = New-Object System.Windows.Media.Imaging.RenderTargetBitmap 1200, 630, 96, 96, ([System.Windows.Media.PixelFormats]::Pbgra32)
+    $bmp.Render($card)
+    $bmp.Freeze()
+    $bmp
+}
+function Save-ScoreCard([string]$file) {
+    $bmp = New-ScoreCard
+    $enc = New-Object System.Windows.Media.Imaging.PngBitmapEncoder
+    $enc.Frames.Add([System.Windows.Media.Imaging.BitmapFrame]::Create($bmp))
+    $fs = [IO.File]::Create($file)
+    try { $enc.Save($fs) } finally { $fs.Close() }
+    $bmp
+}
+$ui.ScoreShare.Add_Click({
+    if ($ui.ScoreValue.Text -notmatch '^\d+$') { Set-Status (T 'score.share.wait'); return }
+    try {
+        $dir = Join-Path ([Environment]::GetFolderPath('MyPictures')) 'Akati OS'
+        if (!(Test-Path -LiteralPath $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
+        $file = Join-Path $dir ('Akati Score {0}.png' -f (Get-Date).ToString('yyyy-MM-dd HHmm'))
+        $bmp = Save-ScoreCard $file
+        try { [System.Windows.Clipboard]::SetImage($bmp) } catch { }
+        Start-Process explorer.exe -ArgumentList "/select,`"$file`""
+        Set-Status (T 'score.share.done')
+    } catch { Set-Status $_.Exception.Message }
+})

@@ -277,6 +277,27 @@ function Receive-Work {
     }
 }
 
+# Numbers on the sidebar: app updates on Gaming apps, Akati Doctor findings on Health (hidden at 0 and in the narrow sidebar)
+$script:navBadges = @{ Gaming = 0; Health = 0 }
+function Update-NavBadges {
+    foreach ($page in @($script:navBadges.Keys)) {
+        $panel = $ui["Nav$page"].Content
+        if ($panel.Children.Count -lt 3) {
+            $badge = New-Object System.Windows.Controls.Border
+            $badge.MinWidth = 18; $badge.Height = 18; $badge.CornerRadius = 9; $badge.Padding = '5,0'; $badge.Margin = '8,0,0,0'; $badge.VerticalAlignment = 'Center'
+            $badge.SetResourceReference([System.Windows.Controls.Border]::BackgroundProperty, 'Accent')
+            $num = New-Object System.Windows.Controls.TextBlock
+            $num.FontSize = 11; $num.FontWeight = 'SemiBold'; $num.Foreground = [System.Windows.Media.Brushes]::White; $num.HorizontalAlignment = 'Center'; $num.VerticalAlignment = 'Center'
+            $badge.Child = $num
+            [void]$panel.Children.Add($badge)
+        }
+        $n = [int]$script:navBadges[$page]
+        $b = $panel.Children[2]
+        $b.Child.Text = if ($n -gt 9) { '9+' } else { [string]$n }
+        $b.Visibility = if ($n -gt 0 -and !$script:compact) { 'Visible' } else { 'Collapsed' }
+    }
+}
+
 # ---------------------------------------------------------------------------------------------
 # The pages, one file each (dot-sourced: they share this script's variables and functions)
 # ---------------------------------------------------------------------------------------------
@@ -487,6 +508,8 @@ function Get-SpotlightItems {
     & $add (T 'act.update') (Get-Both 'act.update') (T 'spot.action') ([char]0xE895) { param($d) $ui.NavAbout.IsChecked = $true; Start-UpdateCheck } $null
     & $add (T 'act.lang') (Get-Both 'act.lang') (T 'spot.action') ([char]0xE774) { param($d) $keys = @($languages.Keys); Set-AppLanguage $keys[([array]::IndexOf($keys, $lang) + 1) % $keys.Count] } $null
     & $add (T 'act.report') (Get-Both 'act.report') (T 'spot.action') ([char]0xE7BA) { param($d) $ui.ReportButton.RaiseEvent((New-Object System.Windows.RoutedEventArgs ([System.Windows.Controls.Primitives.ButtonBase]::ClickEvent))) } $null
+    & $add (T 'keys.title') ((Get-Both 'keys.title') + ' keyboard hotkeys') (T 'spot.action') ([char]0xE765) { param($d) Show-Keys } $null
+    & $add (T 'games.scan') (Get-Both 'games.scan') (T 'spot.action') ([char]0xE721) { param($d) $ui.NavBoost.IsChecked = $true; $ui.GameScanButton.RaiseEvent((New-Object System.Windows.RoutedEventArgs ([System.Windows.Controls.Primitives.ButtonBase]::ClickEvent))) } $null
     return $items
 }
 function Update-SpotSelection {
@@ -629,6 +652,7 @@ function Set-Compact([bool]$on) {
         $b.ToolTip = if ($on) { $label.Text } else { $null }
     }
     $ui.SidebarToggle.ToolTip = T $(if ($on) { 'side.wide' } else { 'side.narrow' })
+    Update-NavBadges
 }
 $ui.SidebarToggle.Add_Click({ Set-Compact (!$script:compact); Save-Setting Compact ([int]$script:compact) })
 Set-Compact ((Get-RegValue $settingsKey 'Compact') -eq 1 -and !$Screenshot)
@@ -695,6 +719,30 @@ $ui.WelcomeDone.Add_Click({
     if (!(Get-RegValue $settingsKey 'TourDone')) { Start-Tour }
 })
 
+# Keyboard shortcuts (the ? key, or Ctrl+K > Keyboard shortcuts)
+$keyList = @(
+    @('Ctrl + K', 'keys.search'), @('Ctrl + 1 ... 8', 'keys.pages'), @('Ctrl + Tab', 'keys.next'), @('Ctrl + F', 'keys.find'),
+    @('Ctrl +  /  Ctrl -  /  Ctrl 0', 'keys.zoom'), @('F1', 'keys.tour'), @('Esc', 'keys.esc'), @('?', 'keys.keys'),
+    @('Ctrl + Alt + B', 'keys.boost'), @('Ctrl + Alt + R', 'keys.ram')
+)
+function Show-Keys {
+    $ui.KeysList.Children.Clear()
+    foreach ($k in $keyList) {
+        $row = New-Object System.Windows.Controls.DockPanel; $row.Margin = '0,0,0,8'
+        $chip = New-Object System.Windows.Controls.Border
+        $chip.CornerRadius = 6; $chip.Padding = '8,3'; $chip.MinWidth = 190; $chip.Margin = '0,0,14,0'
+        $chip.SetResourceReference([System.Windows.Controls.Border]::BackgroundProperty, 'Fill')
+        $kt = New-Text $k[0] 13 'SemiBold'; $kt.FontFamily = 'Consolas'; $chip.Child = $kt
+        [System.Windows.Controls.DockPanel]::SetDock($chip, 'Left')
+        $d = New-Text (T $k[1]) 13; $d.VerticalAlignment = 'Center'
+        [void]$row.Children.Add($chip); [void]$row.Children.Add($d)
+        [void]$ui.KeysList.Children.Add($row)
+    }
+    $ui.Keys.Visibility = 'Visible'
+}
+$ui.KeysDone.Add_Click({ $ui.Keys.Visibility = 'Collapsed' })
+$ui.KeysDim.Add_MouseLeftButtonDown({ $ui.Keys.Visibility = 'Collapsed' })
+
 # Tour: five short steps, each on its page
 $tourPages = 'dashboard', 'boost', 'health', 'tweaks', 'dashboard'
 $script:tourStep = -1
@@ -725,8 +773,13 @@ $window.Add_PreviewKeyDown({
     $ctrl = ([System.Windows.Input.Keyboard]::Modifiers -band [System.Windows.Input.ModifierKeys]::Control) -ne 0
     $key = [string]$e.Key
     if ($key -eq 'F1') { Start-Tour; $e.Handled = $true; return }
+    # ?: the keyboard shortcuts (not while typing in a text box)
+    if ($key -eq 'OemQuestion' -and [System.Windows.Input.Keyboard]::FocusedElement -isnot [System.Windows.Controls.TextBox] -and $ui.Welcome.Visibility -ne 'Visible') {
+        Show-Keys; $e.Handled = $true; return
+    }
     if ($key -eq 'Escape') {
-        if ($ui.Tour.Visibility -eq 'Visible') { Stop-Tour; $e.Handled = $true }
+        if ($ui.Keys.Visibility -eq 'Visible') { $ui.Keys.Visibility = 'Collapsed'; $e.Handled = $true }
+        elseif ($ui.Tour.Visibility -eq 'Visible') { Stop-Tour; $e.Handled = $true }
         elseif ($ui.Welcome.Visibility -eq 'Visible') { Close-Welcome; $e.Handled = $true }
         elseif ($ui.WhatsNew.Visibility -eq 'Visible') { $ui.WhatsNew.Visibility = 'Collapsed'; Save-Setting LastVersion $version; $e.Handled = $true }
         elseif ($ui.SystemSearch.Text) { $ui.SystemSearch.Text = ''; $e.Handled = $true }
@@ -812,6 +865,8 @@ if (!$Screenshot) {
     $doctorTimer.Add_Tick({
         $doctorTimer.Stop()
         if (!$script:doctorResult) { Start-Work $doctorWork @() { param($r) Show-Doctor (Get-LastOutput $r); Update-Chips } $null }
+        # App updates, for the number on Gaming apps (once; the page does it too when opened first)
+        if (!$script:appsChecked) { $script:appsChecked = $true; Start-AppUpdateCheck $true }
     })
     $doctorTimer.Start()
 }

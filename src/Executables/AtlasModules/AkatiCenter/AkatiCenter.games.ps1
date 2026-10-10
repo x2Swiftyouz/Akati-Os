@@ -8,16 +8,21 @@
 #   High priority: Image File Execution Options\<exe>\PerfOptions CpuPriorityClass = 3
 #   Dedicated GPU: DirectX\UserGpuPreferences <path> = GpuPreference=2;
 #   Skip Defender: Defender exclusion for the game folder
-# The list itself is kept in HKCU\Software\AkatiOS\Center\Games. Removing a game undoes all three.
+#   Network priority: a QoS policy that marks the game's traffic DSCP 46 (only routers that read DSCP use it)
+# The list itself is kept in HKCU\Software\AkatiOS\Center\Games. Removing a game undoes all of them.
 # ---------------------------------------------------------------------------------------------
 Add-Mark 'Game boost > My games'
 $gamesKey = 'HKCU:\Software\AkatiOS\Center\Games'
 $ifeoKey = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options'
+# QoS policies in the registry (like Group Policy); "Do not use NLA" makes Windows use them on home PCs too
+$qosKey = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\QoS'
+function Get-QosKey([string]$path) { Join-Path $qosKey "Akati OS $(Split-Path $path -Leaf)" }
 function Get-GameOption([string]$path, [string]$kind, $exclusions) {
     switch ($kind) {
         'cpu' { return (Get-RegValue "$ifeoKey\$(Split-Path $path -Leaf)\PerfOptions" 'CpuPriorityClass') -eq 3 }
         'gpu' { return (Get-RegValue $dxKey $path) -match 'GpuPreference=2' }
         'defender' { return @($exclusions) -contains (Split-Path $path -Parent) }
+        'qos' { return Test-Path -LiteralPath (Get-QosKey $path) }
     }
 }
 function Set-GameOption([string]$path, [string]$kind, [bool]$on) {
@@ -34,6 +39,20 @@ function Set-GameOption([string]$path, [string]$kind, [bool]$on) {
         'defender' {
             if ($on) { Add-MpPreference -ExclusionPath (Split-Path $path -Parent) -ErrorAction Stop }
             else { Remove-MpPreference -ExclusionPath (Split-Path $path -Parent) -ErrorAction SilentlyContinue }
+        }
+        'qos' {
+            $k = Get-QosKey $path
+            if ($on) {
+                New-Item -Path $k -Force | Out-Null
+                $values = [ordered]@{ 'Version' = '1.0'; 'Application Name' = (Split-Path $path -Leaf); 'Protocol' = '*'; 'Local Port' = '*'; 'Local IP' = '*'
+                                      'Local IP Prefix Length' = '*'; 'Remote Port' = '*'; 'Remote IP' = '*'; 'Remote IP Prefix Length' = '*'; 'DSCP Value' = '46'; 'Throttle Rate' = '-1' }
+                foreach ($n in $values.Keys) { Set-ItemProperty -LiteralPath $k -Name $n -Value $values[$n] -Type String -Force }
+                $nla = 'HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\QoS'
+                if (!(Test-Path $nla)) { New-Item -Path $nla -Force | Out-Null }
+                Set-ItemProperty -Path $nla -Name 'Do not use NLA' -Value '1' -Type String -Force
+            } else { Remove-Item -LiteralPath $k -Recurse -Force -ErrorAction SilentlyContinue }
+            # Windows reads the policies again with a Group Policy refresh
+            Start-Process gpupdate.exe -ArgumentList '/target:computer /force' -WindowStyle Hidden
         }
     }
 }
@@ -71,9 +90,10 @@ function Show-Games {
     $exclusions = try { @((Get-MpPreference -ErrorAction Stop).ExclusionPath) } catch { $null }
     foreach ($path in $paths) {
         $chips = New-Object System.Windows.Controls.WrapPanel; $chips.Margin = '0,6,0,0'
-        foreach ($kind in 'cpu', 'gpu', 'defender') {
+        foreach ($kind in 'cpu', 'gpu', 'defender', 'qos') {
             $chip = New-Object System.Windows.Controls.CheckBox
             $chip.Style = $window.FindResource('Chip'); $chip.Content = T "games.$kind"; $chip.Margin = '0,0,6,6'
+            if ($kind -eq 'qos') { $chip.ToolTip = T 'games.qos.tip' }
             $chip.Tag = @{ Path = $path; Kind = $kind }
             $chip.IsChecked = Get-GameOption $path $kind $exclusions
             if ($kind -eq 'defender' -and $null -eq $exclusions) { $chip.IsEnabled = $false; $chip.ToolTip = T 'games.nodefender' }
@@ -118,6 +138,7 @@ function Show-Games {
         $remove.Add_Click({
             $path = $this.Tag
             foreach ($kind in 'cpu', 'gpu', 'defender') { try { Set-GameOption $path $kind $false } catch { } }
+            if (Get-GameOption $path 'qos') { try { Set-GameOption $path 'qos' $false } catch { } }
             foreach ($kind in 'boost', 'core0', 'hvci') { Set-GameProfile $path $kind $null }
             Remove-ItemProperty -Path $gamesKey -Name $path -ErrorAction SilentlyContinue
             Set-Status ((T 'status.gameremoved') -f [IO.Path]::GetFileNameWithoutExtension($path))
@@ -150,15 +171,109 @@ function Show-Games {
     $ui.GamesEmpty.Visibility = if ($paths.Count) { 'Collapsed' } else { 'Visible' }
     Update-Separators $ui.GamesList
 }
-function Add-Game([string]$path) {
+function Add-Game([string]$path, [switch]$Quiet) {
     if (!(Test-Path $gamesKey)) { New-Item -Path $gamesKey -Force | Out-Null }
     Set-ItemProperty -Path $gamesKey -Name $path -Value 1 -Type DWord -Force
     # High priority and the dedicated GPU at once; skipping Defender is the user's choice
     foreach ($kind in 'cpu', 'gpu') { try { Set-GameOption $path $kind $true } catch { } }
+    if ($Quiet) { return }
     Set-Status ((T 'status.gameadded') -f [IO.Path]::GetFileNameWithoutExtension($path))
     Show-Games
     Request-MenuUpdate
 }
+
+# Find my games: games installed with Steam, Epic Games, Riot and Battle.net (Blizzard), read in the background.
+# Epic and Riot say which .exe starts the game; for Steam and Blizzard it is the biggest .exe in the game folder
+# that is not an installer, a crash reporter or an anti-cheat.
+$gameScanWork = {
+    param([string[]]$have)
+    $found = [ordered]@{}
+    $skip = 'unins|setup|install|crash|report|redist|vc_?redist|dxsetup|directx|helper|easyanticheat|eac_|battleye|beservice|prereq|dotnet|cleanup|notification|overlay|unitycrashhandler|cefprocess|webhelper|dedicated|server'
+    function Add-Found([string]$name, [string]$exe, [string]$store) {
+        if (!$exe -or !(Test-Path -LiteralPath $exe -PathType Leaf)) { return }
+        $exe = (Resolve-Path -LiteralPath $exe).Path
+        if ($have -contains $exe -or $found.Contains($exe.ToLowerInvariant())) { return }
+        $found[$exe.ToLowerInvariant()] = @{ Name = $name; Path = $exe; Store = $store }
+    }
+    function Get-MainExe([string]$dir) {
+        if (!$dir -or !(Test-Path -LiteralPath $dir)) { return $null }
+        $file = Get-ChildItem -LiteralPath $dir -Filter *.exe -Recurse -Depth 4 -File -ErrorAction SilentlyContinue |
+            Where-Object { $_.BaseName -notmatch $skip } | Sort-Object Length -Descending | Select-Object -First 1
+        if ($file) { $file.FullName }
+    }
+    # Steam: every library in libraryfolders.vdf, one appmanifest per game
+    $steam = (Get-ItemProperty -Path 'HKCU:\Software\Valve\Steam' -Name SteamPath -ErrorAction SilentlyContinue).SteamPath
+    if ($steam) {
+        $libs = @($steam -replace '/', '\')
+        $vdf = Join-Path $steam 'steamapps\libraryfolders.vdf'
+        if (Test-Path -LiteralPath $vdf) { foreach ($m in [regex]::Matches((Get-Content -LiteralPath $vdf -Raw), '"path"\s+"([^"]+)"')) { $libs += $m.Groups[1].Value -replace '\\\\', '\' } }
+        foreach ($lib in @($libs | Select-Object -Unique)) {
+            foreach ($acf in @(Get-ChildItem -Path (Join-Path $lib 'steamapps\appmanifest_*.acf') -ErrorAction SilentlyContinue)) {
+                $text = Get-Content -LiteralPath $acf.FullName -Raw -ErrorAction SilentlyContinue
+                if ($text -notmatch '"name"\s+"([^"]+)"') { continue }; $name = $Matches[1]
+                if ($name -match 'Steamworks|Redistributable|Proton|Steam Linux|SteamVR|Soundtrack|Dedicated Server|SDK') { continue }
+                if ($text -notmatch '"installdir"\s+"([^"]+)"') { continue }
+                Add-Found $name (Get-MainExe (Join-Path $lib "steamapps\common\$($Matches[1])")) 'Steam'
+            }
+        }
+    }
+    # Epic Games: the launcher keeps a manifest per game with the .exe it starts
+    foreach ($item in @(Get-ChildItem -Path (Join-Path $env:ProgramData 'Epic\EpicGamesLauncher\Data\Manifests\*.item') -ErrorAction SilentlyContinue)) {
+        try {
+            $m = Get-Content -LiteralPath $item.FullName -Raw | ConvertFrom-Json
+            if ($m.LaunchExecutable -and $m.InstallLocation -and !$m.bIsIncompleteInstall) { Add-Found $m.DisplayName (Join-Path $m.InstallLocation $m.LaunchExecutable) 'Epic Games' }
+        } catch { }
+    }
+    # Riot: VALORANT and League of Legends, in the folders the Riot Client installed them to
+    $riotRoots = @(Join-Path $env:SystemDrive 'Riot Games')
+    foreach ($y in @(Get-ChildItem -Path (Join-Path $env:ProgramData 'Riot Games\Metadata') -Recurse -Filter '*.product_settings.yaml' -ErrorAction SilentlyContinue)) {
+        foreach ($m in [regex]::Matches((Get-Content -LiteralPath $y.FullName -Raw -ErrorAction SilentlyContinue), 'product_install_full_path:\s*"?([^"\r\n]+)"?')) { $riotRoots += Split-Path ($m.Groups[1].Value.Trim() -replace '/', '\') -Parent }
+    }
+    foreach ($root in @($riotRoots | Select-Object -Unique)) {
+        Add-Found 'VALORANT' (Join-Path $root 'VALORANT\live\VALORANT.exe') 'Riot'
+        Add-Found 'League of Legends' (Join-Path $root 'League of Legends\Game\League of Legends.exe') 'Riot'
+    }
+    # Blizzard games (Battle.net) in Apps & features
+    foreach ($root in 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall', 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall') {
+        foreach ($key in @(Get-ChildItem -Path $root -ErrorAction SilentlyContinue)) {
+            $e = Get-ItemProperty -LiteralPath $key.PSPath -ErrorAction SilentlyContinue
+            if ($e.Publisher -notlike 'Blizzard*' -or $e.DisplayName -like 'Battle.net*' -or !$e.InstallLocation) { continue }
+            Add-Found $e.DisplayName (Get-MainExe $e.InstallLocation) 'Battle.net'
+        }
+    }
+    , @($found.Values)
+}
+function Show-GameScan($list) {
+    $ui.GameScanList.Children.Clear()
+    $list = @($list | Where-Object { $_ -is [hashtable] } | Sort-Object { $_.Name })
+    $ui.GameScanTitle.Text = if ($list.Count) { (T 'games.scan.found') -f $list.Count } else { T 'games.scan.none' }
+    $ui.GameScanAdd.Visibility = if ($list.Count) { 'Visible' } else { 'Collapsed' }
+    foreach ($g in $list) {
+        $check = New-Object System.Windows.Controls.CheckBox
+        $check.Style = $window.FindResource('Tick'); $check.IsChecked = $true; $check.Tag = $g.Path; $check.Margin = '0,3'
+        $text = New-Object System.Windows.Controls.StackPanel
+        [void]$text.Children.Add((New-Text "$($g.Name)  ·  $($g.Store)" 13 'SemiBold'))
+        $sub = New-Text $g.Path 11; $sub.Foreground = $window.FindResource('MutedBrush'); $sub.TextTrimming = 'CharacterEllipsis'; $sub.TextWrapping = 'NoWrap'
+        [void]$text.Children.Add($sub)
+        $check.Content = $text
+        [void]$ui.GameScanList.Children.Add($check)
+    }
+    $ui.GameScanPanel.Visibility = 'Visible'
+}
+$ui.GameScanButton.Add_Click({
+    $ui.GameScanButton.IsEnabled = $false
+    Set-Status (T 'games.scan.busy') $true
+    $have = [string[]]@(if (Test-Path $gamesKey) { (Get-Item $gamesKey).Property })
+    Start-Work $gameScanWork @(, $have) { param($r) $ui.GameScanButton.IsEnabled = $true; Set-Status (T 'ready'); Show-GameScan @($r | ForEach-Object { $_ }) } $null
+})
+$ui.GameScanCancel.Add_Click({ $ui.GameScanPanel.Visibility = 'Collapsed' })
+$ui.GameScanAdd.Add_Click({
+    $paths = @($ui.GameScanList.Children | Where-Object { $_.IsChecked } | ForEach-Object { [string]$_.Tag })
+    foreach ($p in $paths) { Add-Game $p -Quiet }
+    $ui.GameScanPanel.Visibility = 'Collapsed'
+    Show-Games; Request-MenuUpdate
+    Set-Status ((T 'games.scan.added') -f $paths.Count)
+})
 
 # Welcome > Your main game: where each game installs by default (Steam games in any Steam library)
 function Find-MainGame([string]$key) {

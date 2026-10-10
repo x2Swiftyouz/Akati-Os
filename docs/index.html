@@ -30,319 +30,657 @@
 </script>
 <style>
   :root {
-    --bg: #0f0d14; --bg2: #17141e; --card: #1d1a26; --line: #2c2838; --text: #f4f2f8; --muted: #a6a1b3;
-    --accent: #a35cf0; --accent2: #e559a9; --good: #5fd38d; --link: #b98af5; --on: #8346d6; --shadow: rgba(0,0,0,.35);
+    --bg: #0f0d14; --bg2: #16131d; --card: #1a1723; --line: #2a2636; --line2: #3a3449; --text: #f4f2f8; --muted: #a6a1b3;
+    --accent: #a35cf0; --accent2: #e559a9; --good: #5fd38d; --link: #b98af5; --pink: #f08cc4; --on: #8346d6;
+    --shadow: rgba(0,0,0,.55); --glow: .5; --grid: rgba(255,255,255,.04); --nav: rgba(15,13,20,.72);
     color-scheme: dark;
   }
   @media (prefers-color-scheme: light) {
-    :root:not([data-theme="dark"]) { --bg: #f6f4fa; --bg2: #ffffff; --card: #ffffff; --line: #e3dfeb; --text: #1d1a24; --muted: #625d70; --good: #1b7a43; --link: #7a3fc8; --shadow: rgba(40,20,70,.14); color-scheme: light; }
+    :root:not([data-theme="dark"]) { --bg: #f6f4fa; --bg2: #efebf6; --card: #ffffff; --line: #e3dfeb; --line2: #d5cfe1; --text: #1d1a24; --muted: #5f5a6d; --good: #1b7a43; --link: #7a3fc8; --pink: #b42a78; --shadow: rgba(50,25,90,.2); --glow: .28; --grid: rgba(70,35,130,.06); --nav: rgba(246,244,250,.78); color-scheme: light; }
   }
-  :root[data-theme="light"] { --bg: #f6f4fa; --bg2: #ffffff; --card: #ffffff; --line: #e3dfeb; --text: #1d1a24; --muted: #625d70; --good: #1b7a43; --link: #7a3fc8; --shadow: rgba(40,20,70,.14); color-scheme: light; }
+  :root[data-theme="light"] { --bg: #f6f4fa; --bg2: #efebf6; --card: #ffffff; --line: #e3dfeb; --line2: #d5cfe1; --text: #1d1a24; --muted: #5f5a6d; --good: #1b7a43; --link: #7a3fc8; --pink: #b42a78; --shadow: rgba(50,25,90,.2); --glow: .28; --grid: rgba(70,35,130,.06); --nav: rgba(246,244,250,.78); color-scheme: light; }
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
-  html { scroll-behavior: smooth; }
-  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 "Segoe UI Variable Text", "Segoe UI", "Leelawadee UI", system-ui, sans-serif; overflow-wrap: break-word; }
+  html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 "Segoe UI Variable Text", "Segoe UI", "Leelawadee UI", system-ui, sans-serif; overflow-wrap: break-word; -webkit-font-smoothing: antialiased; }
+  h1, h2, h3 { font-family: "Segoe UI Variable Display", "Segoe UI", "Leelawadee UI", system-ui, sans-serif; }
   a { color: var(--link); }
-  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
-  nav { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--bg) 85%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
-  nav .wrap { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; min-height: 56px; }
-  nav .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; text-decoration: none; color: var(--text); }
-  nav .brand img { width: 28px; height: 28px; }
-  nav .links { margin-left: auto; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
-  nav .links a { color: var(--muted); text-decoration: none; font-size: 14px; }
-  nav .links a:hover, nav .links a[aria-current] { color: var(--text); }
-  .lang { display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; flex-shrink: 0; }
-  .lang button { background: none; border: 0; color: var(--muted); padding: 4px 10px; cursor: pointer; font: inherit; font-size: 13px; }
+  img { max-width: 100%; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+  button:focus-visible, a:focus-visible, summary:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
+  [data-l]:not(.show) { display: none; }
+  .i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+  /* Navbar */
+  nav.top { position: sticky; top: 0; z-index: 50; background: var(--nav); -webkit-backdrop-filter: saturate(160%) blur(16px); backdrop-filter: saturate(160%) blur(16px); border-bottom: 1px solid transparent; transition: border-color .3s; }
+  nav.top.scrolled, nav.top.open { border-bottom-color: var(--line); }
+  .nav-in { display: flex; align-items: center; gap: 20px; height: 64px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 17px; text-decoration: none; color: var(--text); flex: none; }
+  .brand img { width: 30px; height: 30px; }
+  .links { display: flex; align-items: center; gap: 2px; margin: 0 auto; }
+  .links a { padding: 7px 12px; border-radius: 10px; color: var(--muted); text-decoration: none; font-size: 14.5px; font-weight: 500; white-space: nowrap; }
+  .links a:hover, .links a[aria-current] { color: var(--text); background: color-mix(in srgb, var(--text) 7%, transparent); }
+  .tools { display: flex; align-items: center; gap: 10px; flex: none; }
+  .lang { display: flex; border: 1px solid var(--line2); border-radius: 10px; overflow: hidden; flex-shrink: 0; }
+  .lang button { background: none; border: 0; color: var(--muted); padding: 5px 10px; cursor: pointer; font: inherit; font-size: 13px; }
+  .lang button:hover { color: var(--text); }
   .lang button.on { background: var(--on); color: #fff; }
-  .theme { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 30px; flex-shrink: 0; padding: 0; border: 1px solid var(--line); border-radius: 8px; background: none; color: var(--muted); cursor: pointer; }
-  .theme:hover { color: var(--text); }
+  .theme, .menu { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; flex-shrink: 0; padding: 0; border: 1px solid var(--line2); border-radius: 10px; background: none; color: var(--muted); cursor: pointer; }
+  .theme:hover, .menu:hover { color: var(--text); }
   .theme svg { width: 16px; height: 16px; }
   .theme .sun { display: none; }
   .theme.to-light .sun { display: block; }
   .theme.to-light .moon { display: none; }
-  button:focus-visible, a:focus-visible, summary:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
-  header.hero { padding: 72px 0 48px; background: radial-gradient(60% 80% at 80% 0%, color-mix(in srgb, var(--accent) 30%, transparent), transparent), radial-gradient(50% 70% at 0% 100%, color-mix(in srgb, var(--accent2) 22%, transparent), transparent); }
-  .hero h1 { font-size: clamp(36px, 7vw, 64px); line-height: 1.05; margin: 0 0 16px; letter-spacing: -1px; }
-  .hero h1 span { background: linear-gradient(90deg, var(--accent), var(--accent2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .hero p.lead { font-size: 19px; color: var(--muted); max-width: 640px; margin: 0 0 28px; }
-  .buttons { display: flex; gap: 12px; flex-wrap: wrap; }
-  .btn { display: inline-flex; flex-direction: column; padding: 12px 20px; border-radius: 12px; text-decoration: none; font-weight: 600; border: 1px solid var(--line); color: var(--text); background: var(--card); }
-  .btn small { font-weight: 400; color: var(--muted); font-size: 12px; }
-  .btn.primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; border: 0; }
-  .btn.primary small { color: #f3e8ff; }
-  .dlcount { margin: 14px 0 0; font-size: 14px; color: var(--muted); }
-  .dlcount b { color: var(--text); }
-  .note { font-size: 13px; color: var(--muted); margin-top: 14px; }
-  .shot { margin-top: 40px; border-radius: 16px; border: 1px solid var(--line); width: 100%; height: auto; box-shadow: 0 30px 80px var(--shadow); }
-  section { padding: 56px 0; }
-  section h2 { font-size: 30px; margin: 0 0 8px; }
-  section p.sub { color: var(--muted); margin: 0 0 28px; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
-  .card h3 { margin: 0 0 6px; font-size: 16px; }
-  .card p { margin: 0; color: var(--muted); font-size: 14px; }
-  .card .ic { font-size: 22px; margin-bottom: 8px; }
-  .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr)); gap: 14px; }
-  .gallery figure { margin: 0; }
-  .gallery img { width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--line); }
-  .gallery figcaption { color: var(--muted); font-size: 13px; margin-top: 6px; }
-  ol.steps { padding-left: 20px; }
-  ol.steps li { margin-bottom: 10px; }
-  table { border-collapse: collapse; width: 100%; font-size: 14px; }
-  td, th { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
-  th { background: var(--bg2); }
-  .tablewrap { overflow-x: auto; }
-  .req { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; margin: 0 0 18px; }
-  .req h3 { margin: 0 0 6px; font-size: 16px; }
-  .req ul { margin: 0; padding-left: 20px; color: var(--muted); font-size: 14px; }
-  .req li { margin-bottom: 4px; }
-  ol.guide { list-style: none; counter-reset: step; padding: 0; margin: 18px 0 0; display: grid; gap: 12px; }
-  ol.guide > li { counter-increment: step; position: relative; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px 16px 64px; min-width: 0; }
-  ol.guide > li::before { content: counter(step); position: absolute; left: 18px; top: 15px; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: #fff; background: linear-gradient(135deg, var(--accent), var(--accent2)); }
-  ol.guide h3 { margin: 2px 0 4px; font-size: 16px; }
-  ol.guide p { margin: 0 0 6px; color: var(--muted); font-size: 14px; }
+  .menu { display: none; }
+  .btn-nav { padding: 7px 16px; border-radius: 10px; font-size: 14px; font-weight: 600; color: #fff; text-decoration: none; background: linear-gradient(135deg, var(--accent), var(--accent2)); white-space: nowrap; }
+  .btn-nav:hover { filter: brightness(1.08); }
+
+  /* Buttons */
+  .btn { display: inline-flex; align-items: center; gap: 12px; padding: 14px 22px; border-radius: 14px; text-decoration: none; font-weight: 600; line-height: 1.25; text-align: left; border: 1px solid var(--line2); color: var(--text); background: var(--card); transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+  .btn:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--accent) 50%, var(--line2)); }
+  .btn .t { display: flex; flex-direction: column; }
+  .btn small { font-weight: 400; font-size: 12px; color: var(--muted); }
+  .btn.primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; border: 0; box-shadow: 0 14px 34px -12px color-mix(in srgb, var(--accent) 80%, transparent); }
+  .btn.primary small { color: rgba(255,255,255,.86); }
+  .btn.primary:hover { box-shadow: 0 18px 40px -12px color-mix(in srgb, var(--accent2) 80%, transparent); }
+  .btn.sm { padding: 8px 14px; border-radius: 11px; font-size: 14px; gap: 8px; background: transparent; }
+  .btn.sm .i { width: 16px; height: 16px; }
+  .buttons { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+  .btn { position: relative; }
+  .btn.sm .t { flex-direction: row; align-items: baseline; gap: 8px; }
+  .rec { position: absolute; top: -11px; right: 12px; padding: 1px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; line-height: 1.6; white-space: nowrap; color: #2a1450; background: #fff; box-shadow: 0 4px 14px -4px rgba(40,10,80,.5); }
+  .btn.sm .rec { display: none; }
+
+  /* What's new (latest release from GitHub) */
+  .news { max-width: 900px; margin: 0 auto; background: var(--card); border: 1px solid var(--line); border-radius: 22px; padding: 30px 32px; }
+  .news-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin-bottom: 6px; }
+  .news-tag { font-size: 30px; font-weight: 800; letter-spacing: -.02em; }
+  .news-date { color: var(--muted); font-size: 14px; }
+  .news-badge { font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; }
+  .news-body { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 4px 32px; }
+  .news-body h3 { font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--link); margin: 18px 0 8px; }
+  .news-body ul { margin: 0; padding-left: 20px; color: var(--muted); font-size: 14.5px; }
+  .news-body li { margin-bottom: 6px; }
+  .news-body li::marker { color: var(--accent); }
+  .news-foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px 20px; margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 14px; color: var(--muted); }
+  .news-foot a { font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+  .news-foot .i { width: 16px; height: 16px; }
+
+  /* Hero */
+  .hero { position: relative; isolation: isolate; overflow: hidden; padding: 84px 0 0; text-align: center; }
+  .hero::before { content: ""; position: absolute; inset: 0; z-index: -2; pointer-events: none; background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px); background-size: 56px 56px; -webkit-mask-image: radial-gradient(70% 55% at 50% 0%, #000 25%, transparent 80%); mask-image: radial-gradient(70% 55% at 50% 0%, #000 25%, transparent 80%); }
+  .hero::after { content: ""; position: absolute; z-index: -2; pointer-events: none; left: 50%; top: -320px; width: 1200px; height: 760px; transform: translateX(-50%); opacity: var(--glow); background: radial-gradient(closest-side at 38% 50%, var(--accent), transparent), radial-gradient(closest-side at 66% 55%, var(--accent2), transparent); filter: blur(40px); }
+  .pill { display: inline-flex; align-items: center; gap: 10px; max-width: 100%; padding: 5px 14px 5px 5px; border-radius: 999px; border: 1px solid var(--line2); background: color-mix(in srgb, var(--card) 70%, transparent); color: var(--text); text-decoration: none; font-size: 14px; transition: border-color .2s; }
+  .pill:hover { border-color: color-mix(in srgb, var(--accent) 60%, var(--line2)); }
+  .pill-tag { padding: 2px 10px; border-radius: 999px; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; font-weight: 600; font-size: 12px; flex: none; }
+  .pill .i { width: 15px; height: 15px; color: var(--muted); }
+  .hero h1 { font-size: clamp(42px, 7.6vw, 92px); line-height: 1.02; letter-spacing: -.035em; font-weight: 800; margin: 26px auto 22px; max-width: 980px; }
+  .grad { background: linear-gradient(100deg, var(--accent) 10%, var(--accent2) 90%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero p.lead { font-size: clamp(17px, 1.9vw, 20px); color: var(--muted); max-width: 700px; margin: 0 auto 34px; }
+  .alt { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; align-items: center; margin-top: 16px; }
+  .alt .btn.sm { flex-direction: row; }
+  .note { font-size: 13px; color: var(--muted); margin: 20px auto 0; max-width: 680px; }
+  .showcase { position: relative; max-width: 1060px; margin: 64px auto 0; padding-bottom: 88px; }
+  .showcase::before { content: ""; position: absolute; z-index: -1; inset: 8% 6% 22%; border-radius: 50%; background: linear-gradient(120deg, var(--accent), var(--accent2)); filter: blur(90px); opacity: var(--glow); }
+  .showcase img { display: block; width: 100%; height: auto; border-radius: 14px; border: 1px solid var(--line2); box-shadow: 0 50px 110px -30px var(--shadow); }
+  @keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+  .rise { animation: rise .8s cubic-bezier(.2,.7,.2,1) both; animation-delay: calc(var(--d, 0) * 90ms); }
+
+  /* Stats */
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; }
+  .stat { background: var(--card); padding: 28px 20px; text-align: center; }
+  .stat-v { font-size: clamp(28px, 3.4vw, 40px); font-weight: 800; letter-spacing: -.02em; line-height: 1.15; }
+  .stat-l { color: var(--muted); font-size: 14px; margin-top: 6px; }
+
+  /* Sections */
+  section { padding: 112px 0; }
+  .head { text-align: center; max-width: 780px; margin: 0 auto 64px; }
+  .eyebrow { display: inline-block; font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--link); margin-bottom: 12px; }
+  h2 { font-size: clamp(30px, 4.4vw, 52px); line-height: 1.08; letter-spacing: -.03em; font-weight: 800; margin: 0 0 16px; }
+  .sub { color: var(--muted); font-size: 18px; margin: 0; }
+  html[lang="th"] h1, html[lang="th"] h2, html[lang="th"] h3 { letter-spacing: 0; line-height: 1.3; }
+  html[lang="th"] .eyebrow { letter-spacing: .02em; }
+
+  /* Feature rows */
+  .feat { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 72px; align-items: center; }
+  .feat + .feat { margin-top: 136px; }
+  .feat.rev .feat-txt { order: 2; }
+  .feat.rev { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
+  .feat-txt h3 { font-size: clamp(26px, 3vw, 38px); line-height: 1.12; letter-spacing: -.025em; font-weight: 800; margin: 0 0 16px; }
+  .feat-txt p { color: var(--muted); font-size: 17px; margin: 0 0 24px; }
+  .new { display: inline-block; vertical-align: middle; margin-left: 8px; padding: 1px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: .02em; text-transform: none; color: var(--pink); background: color-mix(in srgb, var(--accent2) 16%, transparent); border: 1px solid color-mix(in srgb, var(--accent2) 35%, transparent); }
+  ul.checks { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+  ul.checks li { position: relative; padding-left: 34px; }
+  ul.checks li::before { content: ""; position: absolute; left: 0; top: .18em; width: 22px; height: 22px; border-radius: 50%; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6.5 12.5l3.5 3.5 7.5-8' fill='none' stroke='%23fff' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 14px no-repeat, linear-gradient(135deg, var(--accent), var(--accent2)); }
+  .frame { position: relative; isolation: isolate; }
+  .frame::before { content: ""; position: absolute; z-index: -1; inset: 10% 8%; border-radius: 50%; background: var(--accent); filter: blur(80px); opacity: var(--glow); }
+  .feat.rev .frame::before { background: var(--accent2); }
+  .frame img { display: block; width: 100%; height: auto; border-radius: 14px; border: 1px solid var(--line2); box-shadow: 0 34px 90px -28px var(--shadow); }
+
+  /* Cards */
+  .more { margin-top: 136px; }
+  .more h3.more-h { text-align: center; font-size: clamp(24px, 2.6vw, 32px); letter-spacing: -.02em; margin: 0 0 32px; }
+  .cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+  .card { padding: 26px; border-radius: 18px; background: var(--card); border: 1px solid var(--line); transition: border-color .25s ease, transform .25s ease; }
+  .card:hover { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); transform: translateY(-3px); }
+  .ic { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; margin-bottom: 18px; color: var(--link); background: color-mix(in srgb, var(--accent) 15%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent); }
+  .ic .i { width: 22px; height: 22px; }
+  .card h4 { margin: 0 0 8px; font-size: 17px; }
+  .card p { margin: 0; color: var(--muted); font-size: 14.5px; }
+
+  /* Install */
+  .alt-bg { background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--bg2) 70%, transparent) 12%, color-mix(in srgb, var(--bg2) 70%, transparent) 88%, transparent); }
+  .install { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 40px; align-items: start; }
+  .install-side { position: sticky; top: 92px; display: grid; gap: 16px; }
+  .box { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 22px 24px; }
+  .box h3 { margin: 0 0 10px; font-size: 18px; }
+  .box ul { margin: 0; padding-left: 20px; color: var(--muted); font-size: 14.5px; }
+  .box li { margin-bottom: 6px; }
+  ol.guide { list-style: none; counter-reset: step; padding: 0; margin: 0; display: grid; gap: 12px; }
+  ol.guide > li { counter-increment: step; position: relative; background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 18px 22px 18px 70px; min-width: 0; }
+  ol.guide > li::before { content: counter(step); position: absolute; left: 20px; top: 17px; width: 32px; height: 32px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: #fff; background: linear-gradient(135deg, var(--accent), var(--accent2)); }
+  ol.guide h3 { margin: 3px 0 6px; font-size: 17px; }
+  ol.guide p { margin: 0 0 6px; color: var(--muted); font-size: 14.5px; }
   ol.guide p:last-child { margin-bottom: 0; }
   pre.cmd { margin: 8px 0; background: var(--bg2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; overflow-x: auto; font-size: 13px; line-height: 1.5; }
   pre.cmd code { background: none; border: 0; padding: 0; white-space: pre; }
-  table.compare { min-width: 640px; }
+  code { background: var(--bg2); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; font-size: 13px; }
+
+  /* Tables */
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 18px; background: var(--card); }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  td, th { padding: 12px 14px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  th { background: var(--bg2); font-weight: 600; }
+  table.files td:first-of-type { color: var(--muted); }
+  table.compare { min-width: 680px; }
   table.compare th:not(:first-child), table.compare td:not(:first-child) { width: 22%; }
-  table.compare th.me { background: color-mix(in srgb, var(--accent) 22%, var(--bg2)); }
+  table.compare th.me { background: color-mix(in srgb, var(--accent) 24%, var(--bg2)); }
   table.compare td.me { background: color-mix(in srgb, var(--accent) 8%, var(--card)); }
   table.compare .yes { color: var(--good); font-weight: 700; }
   table.compare .no { color: var(--muted); }
-  #compare .note { margin-top: 12px; }
-  details { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; margin-bottom: 10px; }
-  details summary { cursor: pointer; font-weight: 600; }
-  details p { color: var(--muted); margin: 10px 0 0; }
-  code { background: var(--bg2); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; font-size: 13px; }
-  footer { border-top: 1px solid var(--line); padding: 28px 0 40px; color: var(--muted); font-size: 13px; }
-  [data-l]:not(.show) { display: none; }
+  #compare .note { margin: 16px 0 0; max-width: none; }
+
+  /* FAQ */
+  .faq { max-width: 860px; margin: 0 auto; }
+  details { background: var(--card); border: 1px solid var(--line); border-radius: 16px; margin-bottom: 12px; transition: border-color .2s; }
+  details[open] { border-color: var(--line2); }
+  details summary { list-style: none; cursor: pointer; font-weight: 600; padding: 18px 56px 18px 22px; position: relative; }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::after { content: ""; position: absolute; right: 22px; top: 50%; width: 14px; height: 14px; margin-top: -7px; color: var(--muted); background: linear-gradient(currentColor, currentColor) center / 14px 2px no-repeat, linear-gradient(currentColor, currentColor) center / 2px 14px no-repeat; transition: transform .25s ease; }
+  details[open] summary::after { transform: rotate(45deg); }
+  details p { color: var(--muted); margin: 0 22px 16px; }
+
+  /* Call to action band */
+  .cta-sec { padding: 24px 0 112px; }
+  .cta { position: relative; isolation: isolate; overflow: hidden; border-radius: 28px; padding: 80px 32px; text-align: center; color: #fff; background: linear-gradient(120deg, #5b2bb8 0%, #8f4ae6 40%, #d4509c 100%); }
+  .cta::before { content: ""; position: absolute; inset: 0; z-index: -1; background: radial-gradient(40% 70% at 15% 0%, rgba(255,255,255,.22), transparent 70%), radial-gradient(40% 80% at 90% 100%, rgba(255,160,220,.3), transparent 70%); }
+  .cta::after { content: ""; position: absolute; inset: 0; z-index: -1; background-image: linear-gradient(rgba(255,255,255,.07) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.07) 1px, transparent 1px); background-size: 44px 44px; -webkit-mask-image: radial-gradient(60% 80% at 50% 50%, #000, transparent); mask-image: radial-gradient(60% 80% at 50% 50%, #000, transparent); }
+  .cta h2 { color: #fff; }
+  .cta p { color: rgba(255,255,255,.9); font-size: 18px; max-width: 620px; margin: 0 auto 32px; }
+  .cta .btn { border: 1px solid rgba(255,255,255,.45); background: rgba(255,255,255,.12); color: #fff; }
+  .cta .btn small { color: rgba(255,255,255,.85); }
+  .cta .btn.white { background: #fff; color: #3a1a6e; border-color: #fff; box-shadow: 0 16px 40px -14px rgba(30,0,60,.6); }
+  .cta .btn.white small { color: #6b5a86; }
+  .cta a { color: #fff; }
+
+  /* Footer */
+  footer { border-top: 1px solid var(--line); padding: 64px 0 36px; color: var(--muted); font-size: 14px; }
+  .fgrid { display: grid; grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr)); gap: 40px; }
+  .fgrid h4 { color: var(--text); font-size: 14px; margin: 4px 0 14px; }
+  .fgrid ul { list-style: none; padding: 0; margin: 0; }
+  .fgrid li { margin-bottom: 10px; }
+  .fgrid a { color: var(--muted); text-decoration: none; }
+  .fgrid a:hover { color: var(--text); }
+  .fgrid a.brand { color: var(--text); }
+  .fbrand p { margin: 14px 0 0; max-width: 340px; }
+  .fbrand .credit { font-size: 13px; }
+  .fbrand .credit a { color: var(--link); text-decoration: underline; }
+  .fbottom { margin-top: 48px; padding-top: 22px; border-top: 1px solid var(--line); font-size: 13px; }
+
+  /* Reveal on scroll (only when the script runs and motion is allowed) */
+  .anim .rv { transition: opacity .8s ease, transform .8s cubic-bezier(.2,.7,.2,1); transition-delay: calc(var(--d, 0) * 80ms); }
+  .anim .rv:not(.in) { opacity: 0; transform: translateY(28px); }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .rise { animation: none; }
+    .anim .rv, .anim .rv:not(.in) { opacity: 1; transform: none; transition: none; }
+    .btn, .card { transition: none; }
+    .btn:hover, .card:hover { transform: none; }
+  }
+
+  @media (max-width: 1100px) {
+    .menu { display: inline-flex; }
+    .tools { margin-left: auto; }
+    .links { display: none; position: absolute; top: 64px; left: 0; right: 0; margin: 0; flex-direction: column; align-items: stretch; gap: 2px; padding: 8px 16px 16px; background: var(--bg); border-bottom: 1px solid var(--line); box-shadow: 0 24px 40px -20px var(--shadow); }
+    nav.top.open .links { display: flex; }
+    .links a { padding: 11px 12px; font-size: 16px; }
+    .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 900px) {
+    .feat, .feat.rev { grid-template-columns: minmax(0, 1fr); gap: 36px; }
+    .feat.rev .feat-txt { order: 0; }
+    .feat + .feat, .more { margin-top: 96px; }
+    .install { grid-template-columns: minmax(0, 1fr); }
+    .install-side { position: static; }
+    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .fgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .fbrand { grid-column: 1 / -1; }
+  }
   @media (max-width: 640px) {
-    nav .wrap { gap: 4px 12px; padding-top: 8px; padding-bottom: 8px; }
-    nav .lang { order: 2; margin-left: auto; }
-    nav .theme { order: 2; }
-    nav .links { order: 3; width: 100%; margin-left: 0; gap: 4px 16px; }
-    nav .links a.hide-s { display: none; }
-    .lang button { padding: 4px 9px; font-size: 12px; }
-    header.hero { padding-top: 44px; }
-    ol.guide > li { padding: 14px 14px 14px 54px; }
-    ol.guide > li::before { left: 14px; top: 13px; }
+    .wrap { padding: 0 16px; }
+    .nav-in { gap: 8px; height: 60px; }
+    .links { top: 60px; }
+    .brand { font-size: 16px; gap: 8px; }
+    .brand img { width: 28px; height: 28px; }
+    .tools { gap: 6px; }
+    .btn-nav { display: none; }
+    .lang button { padding: 5px 7px; font-size: 12px; }
+    .theme, .menu { width: 32px; height: 32px; }
+    .hero { padding-top: 48px; }
+    .hero h1 { margin-top: 20px; }
+    .hero .buttons .btn { width: 100%; justify-content: center; }
+    .showcase { margin-top: 44px; padding-bottom: 56px; }
+    section { padding: 80px 0; }
+    .head { margin-bottom: 44px; }
+    .sub { font-size: 16px; }
+    .cards { grid-template-columns: minmax(0, 1fr); }
+    .stat { padding: 22px 12px; }
+    ol.guide > li { padding: 16px 16px 16px 58px; }
+    ol.guide > li::before { left: 14px; top: 15px; width: 30px; height: 30px; }
+    details summary { padding: 16px 48px 16px 18px; }
+    details summary::after { right: 18px; }
+    .news { padding: 22px 18px; }
+    .news-tag { font-size: 24px; }
+    details p { margin: 0 18px 14px; }
+    .cta { padding: 56px 20px; border-radius: 22px; }
+    .cta .btn { width: 100%; justify-content: center; }
+    .cta-sec { padding-bottom: 80px; }
   }
 </style>
 </head>
 <body>
-<nav>
-  <div class="wrap">
-    <a class="brand" href="./"><img src="images/logo.png" alt="" width="28" height="28">Akati OS</a>
-    <div class="links">
-      <a class="hide-s" href="#features"><span data-l="en">Features</span><span data-l="th">ฟีเจอร์</span><span data-l="vi">Tính năng</span><span data-l="id">Fitur</span></a>
-      <a class="hide-s" href="#install"><span data-l="en">Install</span><span data-l="th">วิธีติดตั้ง</span><span data-l="vi">Cài đặt</span><span data-l="id">Instal</span></a>
-      <a class="hide-s" href="#compare"><span data-l="en">Compare</span><span data-l="th">เปรียบเทียบ</span><span data-l="vi">So sánh</span><span data-l="id">Perbandingan</span></a>
-      <a class="hide-s" href="#faq">FAQ</a>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-dl" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M3 5h6a3 3 0 0 1 3 3v12a2.5 2.5 0 0 0-2.5-2.5H3zM21 5h-6a3 3 0 0 0-3 3v12a2.5 2.5 0 0 1 2.5-2.5H21z"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h4"/></symbol>
+  <symbol id="i-pad" viewBox="0 0 24 24"><path d="M7 7h10a5 5 0 0 1 5 5v1.5a3.5 3.5 0 0 1-6.3 2.1L14.5 14h-5l-1.2 1.6A3.5 3.5 0 0 1 2 13.5V12a5 5 0 0 1 5-5zM7.5 9.5v4M5.5 11.5h4M16 10.5h.01M18 12.5h.01"/></symbol>
+  <symbol id="i-gauge" viewBox="0 0 24 24"><path d="M3.5 17a8.5 8.5 0 1 1 17 0M12 17l4.5-6M7 17h.01M17 17h.01"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7.5 3v5.5c0 4.6-3.1 8.3-7.5 9.5-4.4-1.2-7.5-4.9-7.5-9.5V6zM8.8 12l2.2 2.2 4.2-4.4"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9zM18.5 15.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></symbol>
+  <symbol id="i-pulse" viewBox="0 0 24 24"><path d="M3 12h4l2.5-6 5 12 2.5-6h4"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></symbol>
+  <symbol id="i-code" viewBox="0 0 24 24"><path d="M8 8l-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+</svg>
+
+<nav class="top" id="top">
+  <div class="wrap nav-in">
+    <a class="brand" href="./"><img src="images/logo.png" alt="" width="30" height="30">Akati OS</a>
+    <div class="links" id="links">
+      <a href="#features"><span data-l="en">Features</span><span data-l="th">ฟีเจอร์</span><span data-l="vi">Tính năng</span><span data-l="id">Fitur</span></a>
+      <a href="#install"><span data-l="en">Install</span><span data-l="th">วิธีติดตั้ง</span><span data-l="vi">Cài đặt</span><span data-l="id">Instal</span></a>
+      <a href="#compare"><span data-l="en">Compare</span><span data-l="th">เปรียบเทียบ</span><span data-l="vi">So sánh</span><span data-l="id">Perbandingan</span></a>
+      <a href="#faq">FAQ</a>
       <a href="changelog.html"><span data-l="en">Changelog</span><span data-l="th">ประวัติเวอร์ชัน</span><span data-l="vi">Nhật ký thay đổi</span><span data-l="id">Catatan rilis</span></a>
       <a href="https://github.com/x2Swiftyouz/Akati-Os">GitHub</a>
     </div>
-    <div class="lang" role="group" aria-label="Language">
-      <button data-set="en" lang="en">EN</button><button data-set="th" lang="th">ไทย</button><button data-set="vi" lang="vi">VI</button><button data-set="id" lang="id">ID</button>
+    <div class="tools">
+      <div class="lang" role="group" aria-label="Language">
+        <button data-set="en" lang="en">EN</button><button data-set="th" lang="th">ไทย</button><button data-set="vi" lang="vi">VI</button><button data-set="id" lang="id">ID</button>
+      </div>
+      <button class="theme" id="theme" type="button" aria-label="Switch theme" title="Switch theme"><svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg><svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="currentColor"/><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg></button>
+      <a class="btn-nav" href="#download"><span data-l="en">Download</span><span data-l="th">ดาวน์โหลด</span><span data-l="vi">Tải về</span><span data-l="id">Unduh</span></a>
+      <button class="menu" id="menu" type="button" aria-expanded="false" aria-controls="links" aria-label="Menu"><svg class="i" aria-hidden="true"><use href="#i-menu"/></svg></button>
     </div>
-    <button class="theme" id="theme" type="button" aria-label="Switch theme" title="Switch theme"><svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg><svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="currentColor"/><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg></button>
   </div>
 </nav>
 
-<header class="hero">
+<header class="hero" id="download">
   <div class="wrap">
-    <h1><span>Akati OS</span></h1>
-    <p class="lead" data-l="en">A free gaming playbook for AME Wizard. Fewer things running in the background, settings tuned for games, and Akati OS Center: one app for game boost, health checks, gaming apps and the look of Windows.</p>
-    <p class="lead" data-l="th">Playbook สำหรับเล่นเกม ใช้กับ AME Wizard ฟรี ลดสิ่งที่ทำงานเบื้องหลัง ตั้งค่าให้เหมาะกับเกม และมี Akati OS Center แอปเดียวที่รวมบูสต์เกม ตรวจสุขภาพเครื่อง แอปเกม และหน้าตา Windows</p>
-    <p class="lead" data-l="vi">Playbook chơi game miễn phí cho AME Wizard. Ít thứ chạy nền hơn, cài đặt tối ưu cho game, và Akati OS Center: một ứng dụng cho tăng tốc game, kiểm tra sức khỏe máy, ứng dụng chơi game và giao diện Windows.</p>
-    <p class="lead" data-l="id">Playbook gaming gratis untuk AME Wizard. Lebih sedikit proses di latar belakang, pengaturan yang disetel untuk game, dan Akati OS Center: satu aplikasi untuk Game Boost, cek kesehatan PC, aplikasi gaming, dan tampilan Windows.</p>
-    <div class="buttons">
-      <a class="btn primary" id="dl11" href="https://github.com/x2Swiftyouz/Akati-Os/releases/latest">Windows 11<small id="v11">24H2 · 25H2 · 26H2</small></a>
-      <a class="btn" id="dl10" href="https://github.com/x2Swiftyouz/Akati-Os/releases/latest">Windows 10<small id="v10">22H2</small></a>
-      <a class="btn" href="https://github.com/x2Swiftyouz/Akati-Os/releases/latest"><span data-l="en">All files and SHA256</span><span data-l="th">ไฟล์ทั้งหมดและ SHA256</span><span data-l="vi">Tất cả tệp và SHA256</span><span data-l="id">Semua file dan SHA256</span><small>GitHub Releases</small></a>
+    <a class="pill rise" id="pill" href="changelog.html"><span class="pill-tag"><span data-l="en">New</span><span data-l="th">ใหม่</span><span data-l="vi">Mới</span><span data-l="id">Baru</span></span><span class="pill-t" data-l="en">See what’s new in Akati OS</span><span class="pill-t" data-l="th">ดูว่า Akati OS มีอะไรใหม่</span><span class="pill-t" data-l="vi">Xem Akati OS có gì mới</span><span class="pill-t" data-l="id">Lihat yang baru di Akati OS</span><svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+    <h1 class="rise" style="--d:1"><span data-l="en">Windows, <span class="grad">tuned for gaming</span></span><span data-l="th">Windows ที่<span class="grad">ปรับมาเพื่อเล่นเกม</span></span><span data-l="vi">Windows, <span class="grad">tối ưu cho chơi game</span></span><span data-l="id">Windows, <span class="grad">disetel untuk gaming</span></span></h1>
+    <div class="rise" style="--d:2">
+      <p class="lead" data-l="en">Akati OS is a free gaming playbook for AME Wizard. Fewer things running in the background, settings tuned for games, and Akati OS Center: one app for game boost, health checks, gaming apps and the look of Windows.</p>
+      <p class="lead" data-l="th">Akati OS คือ playbook สำหรับเล่นเกม ใช้กับ AME Wizard ฟรี ลดสิ่งที่ทำงานเบื้องหลัง ตั้งค่าให้เหมาะกับเกม และมี Akati OS Center แอปเดียวที่รวมบูสต์เกม ตรวจสุขภาพเครื่อง แอปเกม และหน้าตา Windows</p>
+      <p class="lead" data-l="vi">Akati OS là playbook chơi game miễn phí cho AME Wizard. Ít thứ chạy nền hơn, cài đặt tối ưu cho game, và Akati OS Center: một ứng dụng cho tăng tốc game, kiểm tra sức khỏe máy, ứng dụng chơi game và giao diện Windows.</p>
+      <p class="lead" data-l="id">Akati OS adalah playbook gaming gratis untuk AME Wizard. Lebih sedikit proses di latar belakang, pengaturan yang disetel untuk game, dan Akati OS Center: satu aplikasi untuk Game Boost, cek kesehatan PC, aplikasi gaming, dan tampilan Windows.</p>
     </div>
-    <p class="dlcount" id="dlcount" hidden><span data-l="en"></span><span data-l="th"></span><span data-l="vi"></span><span data-l="id"></span></p>
-    <p class="note" data-l="en">Back up your files first and try it in a virtual machine. A playbook cannot be fully undone. Based on AtlasOS (GPL-3.0), not an official AtlasOS project.</p>
-    <p class="note" data-l="th">สำรองไฟล์ก่อน และลองใน VM ก่อนใช้จริง playbook ย้อนกลับไม่ได้ทั้งหมด ดัดแปลงจาก AtlasOS (GPL-3.0) ไม่ใช่โปรเจกต์ทางการของ AtlasOS</p>
-    <p class="note" data-l="vi">Hãy sao lưu tệp trước và thử trong máy ảo. Không thể hoàn tác hoàn toàn một playbook. Dựa trên AtlasOS (GPL-3.0), không phải dự án chính thức của AtlasOS.</p>
-    <p class="note" data-l="id">Cadangkan file Anda dulu dan coba di mesin virtual. Playbook tidak bisa dibatalkan sepenuhnya. Berbasis AtlasOS (GPL-3.0), bukan proyek resmi AtlasOS.</p>
-    <picture>
-      <source media="(prefers-reduced-motion: reduce)" srcset="images/screenshots/dashboard-en.png">
-      <source type="image/webp" srcset="images/preview.webp">
-      <img class="shot" src="images/screenshots/dashboard-en.png" alt="Akati OS Center dashboard" width="1008" height="700">
-    </picture>
+    <div class="rise" style="--d:3">
+      <div class="buttons">
+        <a class="btn primary" id="dl11" href="https://github.com/x2Swiftyouz/Akati-Os/releases/latest"><svg class="i" aria-hidden="true"><use href="#i-dl"/></svg><span class="rec" hidden><span data-l="en">Recommended for your PC</span><span data-l="th">แนะนำสำหรับเครื่องของคุณ</span><span data-l="vi">Khuyên dùng cho máy của bạn</span><span data-l="id">Disarankan untuk PC Anda</span></span><span class="t"><span><span data-l="en">Download for Windows 11</span><span data-l="th">ดาวน์โหลดสำหรับ Windows 11</span><span data-l="vi">Tải cho Windows 11</span><span data-l="id">Unduh untuk Windows 11</span></span><small id="v11">24H2 · 25H2 · 26H2</small></span></a>
+        <a class="btn" href="#install"><svg class="i" aria-hidden="true"><use href="#i-book"/></svg><span class="t"><span><span data-l="en">Install guide</span><span data-l="th">วิธีติดตั้ง</span><span data-l="vi">Hướng dẫn cài đặt</span><span data-l="id">Panduan instal</span></span><small><span data-l="en">Step by step</span><span data-l="th">ทำตามทีละขั้น</span><span data-l="vi">Từng bước một</span><span data-l="id">Langkah demi langkah</span></small></span></a>
+      </div>
+      <div class="alt">
+        <a class="btn sm" id="dl10" href="https://github.com/x2Swiftyouz/Akati-Os/releases/latest"><svg class="i" aria-hidden="true"><use href="#i-dl"/></svg><span class="rec" hidden><span data-l="en">Recommended for your PC</span><span data-l="th">แนะนำสำหรับเครื่องของคุณ</span><span data-l="vi">Khuyên dùng cho máy của bạn</span><span data-l="id">Disarankan untuk PC Anda</span></span><span class="t"><span><span data-l="en">Download for Windows 10</span><span data-l="th">ดาวน์โหลดสำหรับ Windows 10</span><span data-l="vi">Tải cho Windows 10</span><span data-l="id">Unduh untuk Windows 10</span></span><small id="v10">22H2</small></span></a>
+        <a class="btn sm" href="https://github.com/x2Swiftyouz/Akati-Os/releases/latest"><svg class="i" aria-hidden="true"><use href="#i-file"/></svg><span><span data-l="en">All files and SHA256</span><span data-l="th">ไฟล์ทั้งหมดและ SHA256</span><span data-l="vi">Tất cả tệp và SHA256</span><span data-l="id">Semua file dan SHA256</span></span><small>GitHub Releases</small></a>
+      </div>
+      <p class="note" data-l="en">Back up your files first and try it in a virtual machine. A playbook cannot be fully undone. Based on AtlasOS (GPL-3.0), not an official AtlasOS project.</p>
+      <p class="note" data-l="th">สำรองไฟล์ก่อน และลองใน VM ก่อนใช้จริง playbook ย้อนกลับไม่ได้ทั้งหมด ดัดแปลงจาก AtlasOS (GPL-3.0) ไม่ใช่โปรเจกต์ทางการของ AtlasOS</p>
+      <p class="note" data-l="vi">Hãy sao lưu tệp trước và thử trong máy ảo. Không thể hoàn tác hoàn toàn một playbook. Dựa trên AtlasOS (GPL-3.0), không phải dự án chính thức của AtlasOS.</p>
+      <p class="note" data-l="id">Cadangkan file Anda dulu dan coba di mesin virtual. Playbook tidak bisa dibatalkan sepenuhnya. Berbasis AtlasOS (GPL-3.0), bukan proyek resmi AtlasOS.</p>
+    </div>
+    <div class="showcase rise" style="--d:4">
+      <picture>
+        <source media="(prefers-reduced-motion: reduce)" srcset="images/screenshots/dashboard-en.png">
+        <source type="image/webp" srcset="images/preview.webp">
+        <img src="images/screenshots/dashboard-en.png" alt="Akati OS Center dashboard" width="1008" height="700">
+      </picture>
+    </div>
   </div>
 </header>
 
+<div class="wrap">
+  <div class="stats rv">
+    <div class="stat" id="dlcount">
+      <div class="stat-v grad"><span class="dl-v" data-l="en">Free</span><span class="dl-v" data-l="th">ฟรี</span><span class="dl-v" data-l="vi">Miễn phí</span><span class="dl-v" data-l="id">Gratis</span></div>
+      <div class="stat-l"><span class="dl-l" data-l="en">to download and use</span><span class="dl-l" data-l="th">ดาวน์โหลดและใช้งานได้ฟรี</span><span class="dl-l" data-l="vi">tải về và sử dụng</span><span class="dl-l" data-l="id">untuk diunduh dan dipakai</span></div>
+    </div>
+    <div class="stat">
+      <div class="stat-v grad">4</div>
+      <div class="stat-l"><span data-l="en">languages: English, Thai, Vietnamese, Indonesian</span><span data-l="th">ภาษา: อังกฤษ ไทย เวียดนาม อินโดนีเซีย</span><span data-l="vi">ngôn ngữ: Anh, Thái, Việt, Indonesia</span><span data-l="id">bahasa: Inggris, Thai, Vietnam, Indonesia</span></div>
+    </div>
+    <div class="stat">
+      <div class="stat-v grad">GPL-3.0</div>
+      <div class="stat-l"><span data-l="en">open source, based on AtlasOS</span><span data-l="th">โอเพนซอร์ส ดัดแปลงจาก AtlasOS</span><span data-l="vi">mã nguồn mở, dựa trên AtlasOS</span><span data-l="id">sumber terbuka, berbasis AtlasOS</span></div>
+    </div>
+    <div class="stat">
+      <div class="stat-v grad">10 · 11</div>
+      <div class="stat-l"><span data-l="en">Windows 10 22H2 and Windows 11 24H2 to 26H2</span><span data-l="th">Windows 10 22H2 และ Windows 11 24H2 ถึง 26H2</span><span data-l="vi">Windows 10 22H2 và Windows 11 24H2 đến 26H2</span><span data-l="id">Windows 10 22H2 dan Windows 11 24H2 sampai 26H2</span></div>
+    </div>
+  </div>
+</div>
+
 <section id="features">
   <div class="wrap">
-    <h2 data-l="en">What you get</h2><h2 data-l="th">มีอะไรบ้าง</h2><h2 data-l="vi">Bạn nhận được gì</h2><h2 data-l="id">Apa yang Anda dapatkan</h2>
-    <p class="sub" data-l="en">Everything is in Akati OS Center, in English, Thai, Vietnamese and Indonesian.</p>
-    <p class="sub" data-l="th">ทุกอย่างอยู่ใน Akati OS Center มีภาษาอังกฤษ ไทย เวียดนาม และอินโดนีเซีย</p>
-    <p class="sub" data-l="vi">Mọi thứ đều có trong Akati OS Center, bằng tiếng Anh, tiếng Thái, tiếng Việt và tiếng Indonesia.</p>
-    <p class="sub" data-l="id">Semuanya ada di Akati OS Center, dalam bahasa Inggris, Thai, Vietnam, dan Indonesia.</p>
-    <div class="grid">
-      <div class="card"><div class="ic">⚡</div><h3 data-l="en">Game boost</h3><h3 data-l="th">บูสต์เกม</h3><h3 data-l="vi">Tăng tốc game</h3><h3 data-l="id">Game Boost</h3>
-        <p data-l="en">One click before you play: performance power plan, fewer background apps, no notifications, free standby RAM. Starts by itself when a game opens.</p>
-        <p data-l="th">คลิกเดียวก่อนเล่น: แผนพลังงานแรงสุด ปิดแอปเบื้องหลัง ปิดการแจ้งเตือน คืน RAM และเริ่มเองได้เมื่อเปิดเกม</p>
-        <p data-l="vi">Một cú nhấp trước khi chơi: gói nguồn hiệu năng cao, ít ứng dụng nền hơn, tắt thông báo, giải phóng RAM chờ. Tự bật khi bạn mở game.</p>
-        <p data-l="id">Satu klik sebelum bermain: power plan performa, lebih sedikit aplikasi latar belakang, tanpa notifikasi, RAM standby dibebaskan. Menyala sendiri saat game dibuka.</p></div>
-      <div class="card"><div class="ic">🎮</div><h3 data-l="en">My games</h3><h3 data-l="th">เกมของฉัน</h3><h3 data-l="vi">Game của tôi</h3><h3 data-l="id">Game saya</h3>
-        <p data-l="en">A Play button and a profile for each game: Game boost, keep it off CPU 0, the Memory integrity it needs (Valorant on, FiveM off). Play time counted.</p>
-        <p data-l="th">ปุ่มเล่นและโปรไฟล์ของแต่ละเกม: บูสต์เกม ไม่ใช้ CPU 0 และ Memory integrity ที่เกมต้องการ (Valorant เปิด, FiveM ปิด) พร้อมนับเวลาเล่น</p>
-        <p data-l="vi">Nút Chơi và hồ sơ riêng cho từng game: Tăng tốc game, tránh CPU 0, Memory integrity mà game cần (Valorant bật, FiveM tắt). Có đếm thời gian chơi.</p>
-        <p data-l="id">Tombol Main dan profil untuk tiap game: Game Boost, jauhkan dari CPU 0, Memory integrity yang dibutuhkan (Valorant aktif, FiveM mati). Waktu bermain dihitung.</p></div>
-      <div class="card"><div class="ic">📈</div><h3 data-l="en">FPS test</h3><h3 data-l="th">ทดสอบ FPS</h3><h3 data-l="vi">Đo FPS</h3><h3 data-l="id">Tes FPS</h3>
-        <p data-l="en">Average FPS and 1% low of the game that runs, with and without Game boost (PresentMon by Intel).</p>
-        <p data-l="th">วัด FPS เฉลี่ยและ 1% low ของเกมที่เปิดอยู่ เทียบตอนเปิดและปิดบูสต์เกม (ใช้ PresentMon ของ Intel)</p>
-        <p data-l="vi">FPS trung bình và 1% low của game đang chạy, khi bật và tắt Tăng tốc game (dùng PresentMon của Intel).</p>
-        <p data-l="id">FPS rata-rata dan 1% low dari game yang berjalan, dengan dan tanpa Game Boost (PresentMon dari Intel).</p></div>
-      <div class="card"><div class="ic">🩺</div><h3>Akati Doctor &amp; Akati Score</h3>
-        <p data-l="en">Checks your PC and fixes what it finds; a score from 0 to 100 with what would raise it. Crashes, startup time and Windows Update in one page.</p>
-        <p data-l="th">ตรวจเครื่องและแก้ให้ คะแนน 0-100 พร้อมบอกวิธีทำให้ดีขึ้น รวมการแครช เวลาเปิดเครื่อง และ Windows Update ไว้ในหน้าเดียว</p>
-        <p data-l="vi">Kiểm tra máy và sửa những gì tìm thấy; điểm từ 0 đến 100 kèm cách để tăng điểm. Lỗi crash, thời gian khởi động và Windows Update trong một trang.</p>
-        <p data-l="id">Memeriksa PC dan memperbaiki yang ditemukan; skor 0 sampai 100 beserta cara menaikkannya. Crash, waktu startup, dan Windows Update dalam satu halaman.</p></div>
-      <div class="card"><div class="ic">🕹️</div><h3>FiveM &amp; Valorant</h3>
-        <p data-l="en">Anti-cheat mode for Vanguard and FiveM, FiveM cache cleaner and server connection test.</p>
-        <p data-l="th">โหมดแอนตี้ชีตสำหรับ Vanguard และ FiveM ล้างแคช FiveM และวัดการเชื่อมต่อเซิร์ฟเวอร์</p>
-        <p data-l="vi">Chế độ chống gian lận cho Vanguard và FiveM, dọn bộ nhớ đệm FiveM và kiểm tra kết nối máy chủ.</p>
-        <p data-l="id">Mode anti-cheat untuk Vanguard dan FiveM, pembersih cache FiveM, dan tes koneksi server.</p></div>
-      <div class="card"><div class="ic">📦</div><h3 data-l="en">Gaming apps</h3><h3 data-l="th">แอปเกม</h3><h3 data-l="vi">Ứng dụng chơi game</h3><h3 data-l="id">Aplikasi gaming</h3>
-        <p data-l="en">Steam, Epic, Riot Client, Discord, OBS and more from their official installers (signatures checked), with updates.</p>
-        <p data-l="th">Steam, Epic, Riot Client, Discord, OBS และอื่น ๆ จากตัวติดตั้งทางการ (ตรวจลายเซ็น) พร้อมอัปเดต</p>
-        <p data-l="vi">Steam, Epic, Riot Client, Discord, OBS và nhiều ứng dụng khác từ trình cài đặt chính thức (có kiểm tra chữ ký), kèm cập nhật.</p>
-        <p data-l="id">Steam, Epic, Riot Client, Discord, OBS, dan lainnya dari installer resmi (tanda tangan diperiksa), beserta pembaruannya.</p></div>
-      <div class="card"><div class="ic">🎨</div><h3 data-l="en">Your look</h3><h3 data-l="th">หน้าตาของคุณ</h3><h3 data-l="vi">Giao diện của bạn</h3><h3 data-l="id">Tampilan Anda</h3>
-        <p data-l="en">Style presets, OLED wallpapers, accent from your wallpaper, Akati OS cursors and sounds, light by day and dark at night.</p>
-        <p data-l="th">สไตล์สำเร็จรูป วอลเปเปอร์ OLED สีตามวอลเปเปอร์ เคอร์เซอร์และเสียง Akati OS สว่างกลางวันมืดกลางคืน</p>
-        <p data-l="vi">Bộ phong cách có sẵn, hình nền OLED, màu nhấn theo hình nền, con trỏ và âm thanh Akati OS, sáng ban ngày và tối ban đêm.</p>
-        <p data-l="id">Preset gaya, wallpaper OLED, warna aksen dari wallpaper, kursor dan suara Akati OS, terang di siang hari dan gelap di malam hari.</p></div>
-      <div class="card"><div class="ic">🧹</div><h3 data-l="en">Cleaner &amp; tweaks</h3><h3 data-l="th">ล้างไฟล์ขยะและปรับแต่ง</h3><h3 data-l="vi">Dọn dẹp &amp; tinh chỉnh</h3><h3 data-l="id">Pembersih &amp; tweak</h3>
-        <p data-l="en">Weekly automatic clean, every tweak shows what it changes, change history with Undo, backup and restore.</p>
-        <p data-l="th">ล้างอัตโนมัติทุกสัปดาห์ ทุกสวิตช์บอกว่าเปลี่ยนอะไร มีประวัติพร้อมเลิกทำ และสำรอง/กู้คืนการตั้งค่า</p>
-        <p data-l="vi">Tự dọn dẹp hằng tuần, mỗi tinh chỉnh cho biết nó thay đổi gì, lịch sử thay đổi có Hoàn tác, sao lưu và khôi phục.</p>
-        <p data-l="id">Pembersihan otomatis tiap minggu, setiap tweak menunjukkan apa yang diubah, riwayat perubahan dengan Urungkan, cadangkan dan pulihkan.</p></div>
+    <div class="head rv">
+      <span class="eyebrow">Akati OS Center</span>
+      <h2 data-l="en">One app for your whole gaming PC</h2><h2 data-l="th">แอปเดียว ดูแลเครื่องเล่นเกมได้ครบ</h2><h2 data-l="vi">Một ứng dụng cho cả chiếc PC chơi game</h2><h2 data-l="id">Satu aplikasi untuk seluruh PC gaming Anda</h2>
+      <p class="sub" data-l="en">Everything is in Akati OS Center, in English, Thai, Vietnamese and Indonesian.</p>
+      <p class="sub" data-l="th">ทุกอย่างอยู่ใน Akati OS Center มีภาษาอังกฤษ ไทย เวียดนาม และอินโดนีเซีย</p>
+      <p class="sub" data-l="vi">Mọi thứ đều có trong Akati OS Center, bằng tiếng Anh, tiếng Thái, tiếng Việt và tiếng Indonesia.</p>
+      <p class="sub" data-l="id">Semuanya ada di Akati OS Center, dalam bahasa Inggris, Thai, Vietnam, dan Indonesia.</p>
+    </div>
+
+    <div class="feat">
+      <div class="feat-txt rv">
+        <span class="eyebrow"><span data-l="en">Dashboard</span><span data-l="th">แดชบอร์ด</span><span data-l="vi">Bảng điều khiển</span><span data-l="id">Dasbor</span></span><span class="new"><span data-l="en">New in v1.8.0</span><span data-l="th">ใหม่ใน v1.8.0</span><span data-l="vi">Mới trong v1.8.0</span><span data-l="id">Baru di v1.8.0</span></span>
+        <h3 data-l="en">Your week at a glance</h3><h3 data-l="th">ดูภาพรวมทั้งสัปดาห์ได้ในที่เดียว</h3><h3 data-l="vi">Cả tuần chỉ trong một cái nhìn</h3><h3 data-l="id">Seminggu dalam sekali lihat</h3>
+        <p data-l="en">The “This week” card sums up your PC: what was cleaned, how long Game boost ran and how your Akati Score moved since last week. Next to it: live CPU, RAM and GPU, your drives, network and ping.</p>
+        <p data-l="th">การ์ด “สัปดาห์นี้” สรุปเครื่องของคุณให้ดู ว่าล้างอะไรไปบ้าง บูสต์เกมทำงานไปนานเท่าไร และ Akati Score ขยับไปแค่ไหนจากสัปดาห์ก่อน ข้าง ๆ กันมี CPU, RAM, GPU แบบเรียลไทม์ ไดรฟ์ เน็ต และปิง</p>
+        <p data-l="vi">Thẻ “Tuần này” tóm tắt máy của bạn: đã dọn những gì, Tăng tốc game chạy bao lâu và Akati Score thay đổi ra sao so với tuần trước. Bên cạnh là CPU, RAM, GPU theo thời gian thực, các ổ đĩa, mạng và ping.</p>
+        <p data-l="id">Kartu “Minggu ini” merangkum PC Anda: apa yang dibersihkan, berapa lama Game Boost berjalan, dan bagaimana Akati Score berubah dibanding minggu lalu. Di sebelahnya: CPU, RAM, dan GPU secara langsung, drive, jaringan, dan ping.</p>
+        <ul class="checks" data-l="en"><li>Cleaned by hand and by the weekly clean</li><li>Game boost time and sessions</li><li>Akati Score compared with last week</li><li>Hide or move any card with Customize dashboard</li></ul>
+        <ul class="checks" data-l="th"><li>สิ่งที่ล้างเองและที่ล้างอัตโนมัติประจำสัปดาห์</li><li>เวลาและจำนวนครั้งที่ใช้บูสต์เกม</li><li>Akati Score เทียบกับสัปดาห์ที่แล้ว</li><li>ซ่อนหรือย้ายการ์ดไหนก็ได้ด้วยปุ่มปรับแต่งแดชบอร์ด</li></ul>
+        <ul class="checks" data-l="vi"><li>Đã dọn thủ công và bằng lần dọn hằng tuần</li><li>Thời gian và số phiên Tăng tốc game</li><li>Akati Score so với tuần trước</li><li>Ẩn hoặc di chuyển thẻ bằng Tùy chỉnh bảng điều khiển</li></ul>
+        <ul class="checks" data-l="id"><li>Dibersihkan manual dan oleh pembersihan mingguan</li><li>Waktu dan sesi Game Boost</li><li>Akati Score dibanding minggu lalu</li><li>Sembunyikan atau pindahkan kartu dengan Sesuaikan dasbor</li></ul>
+      </div>
+      <div class="frame rv" style="--d:1"><img src="images/screenshots/dashboard-en.png" data-dark="images/screenshots/dashboard-en.png" data-light="images/screenshots/light-dashboard.png" alt="Akati OS Center: Dashboard" loading="lazy" width="1008" height="700"></div>
+    </div>
+
+    <div class="feat rev">
+      <div class="feat-txt rv">
+        <span class="eyebrow"><span data-l="en">Game boost</span><span data-l="th">บูสต์เกม</span><span data-l="vi">Tăng tốc game</span><span data-l="id">Game Boost</span></span>
+        <h3 data-l="en">One click before you play</h3><h3 data-l="th">คลิกเดียวก่อนเริ่มเล่น</h3><h3 data-l="vi">Một cú nhấp trước khi chơi</h3><h3 data-l="id">Satu klik sebelum bermain</h3>
+        <p data-l="en">Game boost switches to a performance power plan, closes background apps, turns notifications off and frees standby RAM. Stop puts everything back. It can start by itself when a game from My games opens.</p>
+        <p data-l="th">บูสต์เกมจะเปลี่ยนไปใช้แผนพลังงานแรงสุด ปิดแอปเบื้องหลัง ปิดการแจ้งเตือน และคืน RAM ที่ค้างอยู่ กดหยุดเมื่อไรทุกอย่างก็กลับเหมือนเดิม และเริ่มเองได้เมื่อเปิดเกมที่อยู่ใน “เกมของฉัน”</p>
+        <p data-l="vi">Tăng tốc game chuyển sang gói nguồn hiệu năng cao, đóng ứng dụng nền, tắt thông báo và giải phóng RAM chờ. Dừng là mọi thứ trở lại như cũ. Nó có thể tự bật khi một game trong Game của tôi được mở.</p>
+        <p data-l="id">Game Boost beralih ke power plan performa, menutup aplikasi latar belakang, mematikan notifikasi, dan membebaskan RAM standby. Stop mengembalikan semuanya. Bisa menyala sendiri saat game dari Game saya dibuka.</p>
+        <ul class="checks" data-l="en"><li>Pauses search indexing, SysMain, printing and Windows Update downloads until you stop</li><li>Background tasks: turn the updaters of other apps on or off</li><li>FPS test: average FPS and 1% low, with and without Game boost</li><li>Anti-cheat mode: Valorant mode or FiveM mode</li></ul>
+        <ul class="checks" data-l="th"><li>พักการทำดัชนีค้นหา SysMain งานพิมพ์ และการดาวน์โหลด Windows Update ไว้จนกว่าจะกดหยุด</li><li>งานเบื้องหลัง: เปิดหรือปิดตัวอัปเดตของแอปอื่น ๆ ได้</li><li>ทดสอบ FPS: FPS เฉลี่ยและ 1% low เทียบตอนเปิดและปิดบูสต์เกม</li><li>โหมดแอนตี้ชีต: โหมด Valorant หรือโหมด FiveM</li></ul>
+        <ul class="checks" data-l="vi"><li>Tạm dừng lập chỉ mục tìm kiếm, SysMain, in ấn và tải Windows Update cho đến khi bạn dừng</li><li>Tác vụ nền: bật hoặc tắt trình cập nhật của ứng dụng khác</li><li>Đo FPS: FPS trung bình và 1% low, khi bật và tắt Tăng tốc game</li><li>Chế độ chống gian lận: chế độ Valorant hoặc FiveM</li></ul>
+        <ul class="checks" data-l="id"><li>Menjeda pengindeksan pencarian, SysMain, pencetakan, dan unduhan Windows Update sampai Anda berhenti</li><li>Tugas latar belakang: nyalakan atau matikan updater aplikasi lain</li><li>Tes FPS: FPS rata-rata dan 1% low, dengan dan tanpa Game Boost</li><li>Mode anti-cheat: mode Valorant atau mode FiveM</li></ul>
+      </div>
+      <div class="frame rv" style="--d:1"><img src="images/screenshots/boost-en-mid.png" alt="Akati OS Center: Game boost" loading="lazy" width="1008" height="700"></div>
+    </div>
+
+    <div class="feat">
+      <div class="feat-txt rv">
+        <span class="eyebrow"><span data-l="en">Gaming apps</span><span data-l="th">แอปเกม</span><span data-l="vi">Ứng dụng chơi game</span><span data-l="id">Aplikasi gaming</span></span>
+        <h3 data-l="en">Your launchers, one click away</h3><h3 data-l="th">ตัวเปิดเกมทั้งหมด ห่างแค่คลิกเดียว</h3><h3 data-l="vi">Các trình khởi chạy game, chỉ một cú nhấp</h3><h3 data-l="id">Semua launcher, cukup satu klik</h3>
+        <p data-l="en">Steam, Epic Games Launcher, EA app, Ubisoft Connect, Battle.net, Riot Client, GOG GALAXY, Rockstar Games Launcher, Discord, OBS Studio and MSI Afterburner. Nothing is installed during setup: get what you want, when you want it.</p>
+        <p data-l="th">Steam, Epic Games Launcher, EA app, Ubisoft Connect, Battle.net, Riot Client, GOG GALAXY, Rockstar Games Launcher, Discord, OBS Studio และ MSI Afterburner ตอนติดตั้งจะไม่ลงแอปอะไรให้ อยากได้ตัวไหนก็กดลงเองเมื่อพร้อม</p>
+        <p data-l="vi">Steam, Epic Games Launcher, EA app, Ubisoft Connect, Battle.net, Riot Client, GOG GALAXY, Rockstar Games Launcher, Discord, OBS Studio và MSI Afterburner. Không có gì được cài trong lúc thiết lập: cài thứ bạn muốn, khi bạn muốn.</p>
+        <p data-l="id">Steam, Epic Games Launcher, EA app, Ubisoft Connect, Battle.net, Riot Client, GOG GALAXY, Rockstar Games Launcher, Discord, OBS Studio, dan MSI Afterburner. Tidak ada yang dipasang saat instalasi: ambil yang Anda mau, kapan pun Anda mau.</p>
+        <ul class="checks" data-l="en"><li>Official installers, signatures checked</li><li>Get, Open and Update buttons, and Update all</li><li>GPU driver links with the version and age of your driver</li></ul>
+        <ul class="checks" data-l="th"><li>ใช้ตัวติดตั้งทางการ และตรวจลายเซ็นทุกครั้ง</li><li>ปุ่มติดตั้ง เปิด และอัปเดต พร้อมอัปเดตทั้งหมดในคลิกเดียว</li><li>ลิงก์ไดรเวอร์การ์ดจอ พร้อมบอกเวอร์ชันและอายุของไดรเวอร์</li></ul>
+        <ul class="checks" data-l="vi"><li>Trình cài đặt chính thức, có kiểm tra chữ ký</li><li>Nút Tải, Mở, Cập nhật và Cập nhật tất cả</li><li>Liên kết driver GPU kèm phiên bản và tuổi của driver</li></ul>
+        <ul class="checks" data-l="id"><li>Installer resmi, tanda tangan diperiksa</li><li>Tombol Dapatkan, Buka, Perbarui, dan Perbarui semua</li><li>Tautan driver GPU beserta versi dan umur driver Anda</li></ul>
+      </div>
+      <div class="frame rv" style="--d:1"><img src="images/screenshots/gaming-en.png" data-dark="images/screenshots/gaming-en.png" data-light="images/screenshots/light-gaming.png" alt="Akati OS Center: Gaming apps" loading="lazy" width="1008" height="700"></div>
+    </div>
+
+    <div class="feat rev">
+      <div class="feat-txt rv">
+        <span class="eyebrow"><span data-l="en">Health</span><span data-l="th">สุขภาพเครื่อง</span><span data-l="vi">Sức khỏe</span><span data-l="id">Kesehatan</span></span>
+        <h3 data-l="en">Know how your PC is doing</h3><h3 data-l="th">รู้ทันสภาพเครื่องของคุณ</h3><h3 data-l="vi">Biết máy bạn đang thế nào</h3><h3 data-l="id">Tahu kondisi PC Anda</h3>
+        <p data-l="en">Akati Score rates your PC from 0 to 100 and tells you what would raise it. Akati Doctor checks the PC and fixes what it finds, with a button for each problem.</p>
+        <p data-l="th">Akati Score ให้คะแนนเครื่องตั้งแต่ 0 ถึง 100 และบอกว่าทำอะไรแล้วคะแนนจะดีขึ้น ส่วน Akati Doctor ตรวจเครื่องและแก้สิ่งที่เจอ แต่ละปัญหามีปุ่มให้กดแก้</p>
+        <p data-l="vi">Akati Score chấm máy bạn từ 0 đến 100 và cho biết cách để tăng điểm. Akati Doctor kiểm tra máy và sửa những gì tìm thấy, mỗi vấn đề có một nút riêng.</p>
+        <p data-l="id">Akati Score menilai PC Anda dari 0 sampai 100 dan memberi tahu cara menaikkannya. Akati Doctor memeriksa PC dan memperbaiki yang ditemukan, dengan tombol untuk tiap masalah.</p>
+        <ul class="checks" data-l="en"><li>Your Akati Score of the last 30 days as a chart <span class="new">New in v1.8.0</span></li><li>Screen refresh rate, RAM speed (XMP or EXPO), Memory integrity and devices</li><li>Crashes of the last 30 days, startup time and Windows Update</li><li>Repair Windows files (DISM and SFC)</li></ul>
+        <ul class="checks" data-l="th"><li>กราฟ Akati Score ย้อนหลัง 30 วัน <span class="new">ใหม่ใน v1.8.0</span></li><li>ตรวจรีเฟรชเรตจอ ความเร็ว RAM (XMP หรือ EXPO) Memory integrity และอุปกรณ์</li><li>การแครชใน 30 วันล่าสุด เวลาเปิดเครื่อง และ Windows Update</li><li>ซ่อมไฟล์ Windows (DISM และ SFC)</li></ul>
+        <ul class="checks" data-l="vi"><li>Biểu đồ Akati Score trong 30 ngày qua <span class="new">Mới trong v1.8.0</span></li><li>Tần số quét màn hình, tốc độ RAM (XMP hoặc EXPO), Memory integrity và thiết bị</li><li>Lỗi crash trong 30 ngày qua, thời gian khởi động và Windows Update</li><li>Sửa tệp Windows (DISM và SFC)</li></ul>
+        <ul class="checks" data-l="id"><li>Grafik Akati Score 30 hari terakhir <span class="new">Baru di v1.8.0</span></li><li>Refresh rate layar, kecepatan RAM (XMP atau EXPO), Memory integrity, dan perangkat</li><li>Crash 30 hari terakhir, waktu startup, dan Windows Update</li><li>Perbaiki file Windows (DISM dan SFC)</li></ul>
+      </div>
+      <div class="frame rv" style="--d:1"><img src="images/screenshots/health-en.png" alt="Akati OS Center: Health with Akati Score and Akati Doctor" loading="lazy" width="1008" height="700"></div>
+    </div>
+
+    <div class="feat">
+      <div class="feat-txt rv">
+        <span class="eyebrow"><span data-l="en">Appearance</span><span data-l="th">หน้าตา</span><span data-l="vi">Giao diện</span><span data-l="id">Tampilan</span></span>
+        <h3 data-l="en">Make it look like yours</h3><h3 data-l="th">แต่งให้เป็นสไตล์ของคุณ</h3><h3 data-l="vi">Mang phong cách của riêng bạn</h3><h3 data-l="id">Buat tampilannya jadi milik Anda</h3>
+        <p data-l="en">Style presets set the wallpaper, accent color, app look, cursor and sounds in one click: Neon, Ocean, Ember, Sakura or Stealth for OLED screens.</p>
+        <p data-l="th">สไตล์สำเร็จรูปเปลี่ยนวอลเปเปอร์ สีหลัก หน้าตาแอป เคอร์เซอร์ และเสียงได้ในคลิกเดียว มีให้เลือก Neon, Ocean, Ember, Sakura และ Stealth สำหรับจอ OLED</p>
+        <p data-l="vi">Bộ phong cách có sẵn đổi hình nền, màu nhấn, giao diện ứng dụng, con trỏ và âm thanh chỉ với một cú nhấp: Neon, Ocean, Ember, Sakura hoặc Stealth cho màn hình OLED.</p>
+        <p data-l="id">Preset gaya mengatur wallpaper, warna aksen, tampilan aplikasi, kursor, dan suara dalam satu klik: Neon, Ocean, Ember, Sakura, atau Stealth untuk layar OLED.</p>
+        <ul class="checks" data-l="en"><li>Akati OS Dark, Light and Slideshow themes</li><li>7 accent colors, or one taken from your wallpaper</li><li>Text size from 90 % to 125 % (Ctrl + / Ctrl -) <span class="new">New in v1.8.0</span></li><li>Akati OS cursors and sounds, light by day and dark at night</li></ul>
+        <ul class="checks" data-l="th"><li>ธีม Akati OS Dark, Light และ Slideshow</li><li>สีหลัก 7 สี หรือดึงสีจากวอลเปเปอร์ของคุณ</li><li>ขนาดตัวอักษร 90 % ถึง 125 % (Ctrl + / Ctrl -) <span class="new">ใหม่ใน v1.8.0</span></li><li>เคอร์เซอร์และเสียง Akati OS สว่างกลางวัน มืดกลางคืน</li></ul>
+        <ul class="checks" data-l="vi"><li>Giao diện Akati OS Dark, Light và Slideshow</li><li>7 màu nhấn, hoặc lấy màu từ hình nền</li><li>Cỡ chữ từ 90 % đến 125 % (Ctrl + / Ctrl -) <span class="new">Mới trong v1.8.0</span></li><li>Con trỏ và âm thanh Akati OS, sáng ban ngày và tối ban đêm</li></ul>
+        <ul class="checks" data-l="id"><li>Tema Akati OS Dark, Light, dan Slideshow</li><li>7 warna aksen, atau diambil dari wallpaper Anda</li><li>Ukuran teks 90 % sampai 125 % (Ctrl + / Ctrl -) <span class="new">Baru di v1.8.0</span></li><li>Kursor dan suara Akati OS, terang di siang hari dan gelap di malam hari</li></ul>
+      </div>
+      <div class="frame rv" style="--d:1"><img src="images/screenshots/appearance-en.png" alt="Akati OS Center: Appearance with style presets" loading="lazy" width="1008" height="700"></div>
+    </div>
+
+    <div class="feat rev">
+      <div class="feat-txt rv">
+        <span class="eyebrow"><span data-l="en">Tweaks</span><span data-l="th">ปรับแต่ง</span><span data-l="vi">Tinh chỉnh</span><span data-l="id">Tweak</span></span>
+        <h3 data-l="en">Every setting, explained</h3><h3 data-l="th">ทุกการตั้งค่า มีคำอธิบายชัดเจน</h3><h3 data-l="vi">Mọi cài đặt đều có giải thích</h3><h3 data-l="id">Setiap pengaturan, dengan penjelasan</h3>
+        <p data-l="en">Gaming switches on top, then every AtlasOS setting in one place. Each switch shows what it changes, so you always know what you turn on.</p>
+        <p data-l="th">สวิตช์สำหรับเกมอยู่ด้านบน ตามด้วยการตั้งค่าทั้งหมดของ AtlasOS ในที่เดียว ทุกสวิตช์บอกว่าเปลี่ยนอะไร จะเปิดอะไรก็รู้ชัดเสมอ</p>
+        <p data-l="vi">Các công tắc cho game ở trên cùng, sau đó là mọi cài đặt của AtlasOS ở cùng một nơi. Mỗi công tắc cho biết nó thay đổi gì, nên bạn luôn biết mình đang bật cái gì.</p>
+        <p data-l="id">Sakelar gaming di atas, lalu semua pengaturan AtlasOS di satu tempat. Setiap sakelar menunjukkan apa yang diubah, jadi Anda selalu tahu apa yang Anda nyalakan.</p>
+        <ul class="checks" data-l="en"><li>Change history: the last 30 switches, each with Undo</li><li>Back up and restore your settings with a .json file</li><li>Search everything with Ctrl+K</li><li>Reset to Windows defaults</li></ul>
+        <ul class="checks" data-l="th"><li>ประวัติการเปลี่ยนแปลง: 30 สวิตช์ล่าสุด กดเลิกทำได้ทุกอัน</li><li>สำรองและกู้คืนการตั้งค่าด้วยไฟล์ .json</li><li>ค้นหาทุกอย่างด้วย Ctrl+K</li><li>คืนค่าเริ่มต้นของ Windows ได้</li></ul>
+        <ul class="checks" data-l="vi"><li>Lịch sử thay đổi: 30 công tắc gần nhất, mỗi cái có Hoàn tác</li><li>Sao lưu và khôi phục cài đặt bằng tệp .json</li><li>Tìm mọi thứ bằng Ctrl+K</li><li>Đặt lại về mặc định của Windows</li></ul>
+        <ul class="checks" data-l="id"><li>Riwayat perubahan: 30 sakelar terakhir, masing-masing dengan Urungkan</li><li>Cadangkan dan pulihkan pengaturan dengan file .json</li><li>Cari apa saja dengan Ctrl+K</li><li>Kembalikan ke bawaan Windows</li></ul>
+      </div>
+      <div class="frame rv" style="--d:1"><img src="images/screenshots/tweaks-en.png" data-dark="images/screenshots/tweaks-en.png" data-light="images/screenshots/light-tweaks.png" alt="Akati OS Center: Tweaks" loading="lazy" width="1008" height="700"></div>
+    </div>
+
+    <div class="more">
+      <h3 class="more-h rv"><span data-l="en">And there is more</span><span data-l="th">และยังมีอีกเพียบ</span><span data-l="vi">Và còn nhiều hơn nữa</span><span data-l="id">Dan masih banyak lagi</span></h3>
+      <div class="cards">
+        <div class="card rv"><div class="ic"><svg class="i" aria-hidden="true"><use href="#i-pad"/></svg></div><h4 data-l="en">My games</h4><h4 data-l="th">เกมของฉัน</h4><h4 data-l="vi">Game của tôi</h4><h4 data-l="id">Game saya</h4>
+          <p data-l="en">A Play button and a profile for each game: Game boost, keep it off CPU 0, the Memory integrity it needs (Valorant on, FiveM off). Play time counted.</p>
+          <p data-l="th">ปุ่มเล่นและโปรไฟล์ของแต่ละเกม: บูสต์เกม ไม่ใช้ CPU 0 และ Memory integrity ที่เกมต้องการ (Valorant เปิด, FiveM ปิด) พร้อมนับเวลาเล่น</p>
+          <p data-l="vi">Nút Chơi và hồ sơ riêng cho từng game: Tăng tốc game, tránh CPU 0, Memory integrity mà game cần (Valorant bật, FiveM tắt). Có đếm thời gian chơi.</p>
+          <p data-l="id">Tombol Main dan profil untuk tiap game: Game Boost, jauhkan dari CPU 0, Memory integrity yang dibutuhkan (Valorant aktif, FiveM mati). Waktu bermain dihitung.</p></div>
+        <div class="card rv" style="--d:1"><div class="ic"><svg class="i" aria-hidden="true"><use href="#i-gauge"/></svg></div><h4 data-l="en">FPS test</h4><h4 data-l="th">ทดสอบ FPS</h4><h4 data-l="vi">Đo FPS</h4><h4 data-l="id">Tes FPS</h4>
+          <p data-l="en">Average FPS and 1% low of the game that runs, with and without Game boost (PresentMon by Intel).</p>
+          <p data-l="th">วัด FPS เฉลี่ยและ 1% low ของเกมที่เปิดอยู่ เทียบตอนเปิดและปิดบูสต์เกม (ใช้ PresentMon ของ Intel)</p>
+          <p data-l="vi">FPS trung bình và 1% low của game đang chạy, khi bật và tắt Tăng tốc game (dùng PresentMon của Intel).</p>
+          <p data-l="id">FPS rata-rata dan 1% low dari game yang berjalan, dengan dan tanpa Game Boost (PresentMon dari Intel).</p></div>
+        <div class="card rv" style="--d:2"><div class="ic"><svg class="i" aria-hidden="true"><use href="#i-shield"/></svg></div><h4>FiveM &amp; Valorant</h4>
+          <p data-l="en">Anti-cheat mode for Vanguard and FiveM, FiveM cache cleaner and server connection test.</p>
+          <p data-l="th">โหมดแอนตี้ชีตสำหรับ Vanguard และ FiveM ล้างแคช FiveM และวัดการเชื่อมต่อเซิร์ฟเวอร์</p>
+          <p data-l="vi">Chế độ chống gian lận cho Vanguard và FiveM, dọn bộ nhớ đệm FiveM và kiểm tra kết nối máy chủ.</p>
+          <p data-l="id">Mode anti-cheat untuk Vanguard dan FiveM, pembersih cache FiveM, dan tes koneksi server.</p></div>
+        <div class="card rv" style="--d:3"><div class="ic"><svg class="i" aria-hidden="true"><use href="#i-spark"/></svg></div><h4 data-l="en">Cleaner</h4><h4 data-l="th">ล้างไฟล์ขยะ</h4><h4 data-l="vi">Dọn dẹp</h4><h4 data-l="id">Pembersih</h4>
+          <p data-l="en">Windows Update downloads, error reports, the thumbnail cache and the web caches of Discord, Steam and Epic. Weekly automatic clean. No cookies, passwords or settings.</p>
+          <p data-l="th">ล้างไฟล์ดาวน์โหลดของ Windows Update รายงานข้อผิดพลาด แคชภาพย่อ และแคชเว็บของ Discord, Steam และ Epic ตั้งให้ล้างอัตโนมัติทุกสัปดาห์ได้ ไม่แตะคุกกี้ รหัสผ่าน หรือการตั้งค่า</p>
+          <p data-l="vi">Tệp tải của Windows Update, báo cáo lỗi, bộ nhớ đệm hình thu nhỏ và bộ nhớ đệm web của Discord, Steam và Epic. Tự dọn hằng tuần. Không đụng đến cookie, mật khẩu hay cài đặt.</p>
+          <p data-l="id">Unduhan Windows Update, laporan error, cache thumbnail, dan cache web Discord, Steam, dan Epic. Pembersihan otomatis tiap minggu. Tanpa menyentuh cookie, kata sandi, atau pengaturan.</p></div>
+        <div class="card rv"><div class="ic"><svg class="i" aria-hidden="true"><use href="#i-pulse"/></svg></div><h4 data-l="en">Performance widget</h4><h4 data-l="th">วิดเจ็ตประสิทธิภาพ</h4><h4 data-l="vi">Tiện ích hiệu năng</h4><h4 data-l="id">Widget performa</h4>
+          <p data-l="en">A small bar on top of other windows and borderless games with CPU, RAM, GPU, GPU temperature (NVIDIA) and ping.</p>
+          <p data-l="th">แถบเล็ก ๆ ที่ลอยอยู่บนหน้าต่างอื่นและเกมแบบ borderless แสดง CPU, RAM, GPU อุณหภูมิ GPU (NVIDIA) และปิง</p>
+          <p data-l="vi">Một thanh nhỏ nằm trên các cửa sổ khác và game chế độ borderless, hiển thị CPU, RAM, GPU, nhiệt độ GPU (NVIDIA) và ping.</p>
+          <p data-l="id">Bilah kecil di atas jendela lain dan game borderless dengan CPU, RAM, GPU, suhu GPU (NVIDIA), dan ping.</p></div>
+        <div class="card rv" style="--d:1"><div class="ic"><svg class="i" aria-hidden="true"><use href="#i-clock"/></svg></div><h4 data-l="en">Icon next to the clock</h4><h4 data-l="th">ไอคอนข้างนาฬิกา</h4><h4 data-l="vi">Biểu tượng cạnh đồng hồ</h4><h4 data-l="id">Ikon di samping jam</h4>
+          <p data-l="en">Free up RAM, your apps and Game boost from the taskbar. Ctrl+Alt+B starts or stops Game boost, also in games.</p>
+          <p data-l="th">คืน RAM เปิดแอป และสั่งบูสต์เกมได้จากทาสก์บาร์ กด Ctrl+Alt+B เพื่อเริ่มหรือหยุดบูสต์เกมได้แม้อยู่ในเกม</p>
+          <p data-l="vi">Giải phóng RAM, mở ứng dụng và Tăng tốc game từ thanh tác vụ. Ctrl+Alt+B bật hoặc tắt Tăng tốc game, cả khi đang trong game.</p>
+          <p data-l="id">Bebaskan RAM, buka aplikasi, dan Game Boost dari taskbar. Ctrl+Alt+B menyalakan atau mematikan Game Boost, juga di dalam game.</p></div>
+        <div class="card rv" style="--d:2"><div class="ic"><svg class="i" aria-hidden="true"><use href="#i-globe"/></svg></div><h4 data-l="en">Four languages</h4><h4 data-l="th">4 ภาษา</h4><h4 data-l="vi">Bốn ngôn ngữ</h4><h4 data-l="id">Empat bahasa</h4>
+          <p data-l="en">Akati OS Center, the icon next to the clock and this site in English, Thai, Vietnamese and Indonesian.</p>
+          <p data-l="th">Akati OS Center ไอคอนข้างนาฬิกา และเว็บนี้ มีภาษาอังกฤษ ไทย เวียดนาม และอินโดนีเซีย</p>
+          <p data-l="vi">Akati OS Center, biểu tượng cạnh đồng hồ và trang web này bằng tiếng Anh, Thái, Việt và Indonesia.</p>
+          <p data-l="id">Akati OS Center, ikon di samping jam, dan situs ini dalam bahasa Inggris, Thai, Vietnam, dan Indonesia.</p></div>
+        <div class="card rv" style="--d:3"><div class="ic"><svg class="i" aria-hidden="true"><use href="#i-code"/></svg></div><h4 data-l="en">Open and readable</h4><h4 data-l="th">เปิดอ่านได้ทุกบรรทัด</h4><h4 data-l="vi">Mở và đọc được</h4><h4 data-l="id">Terbuka dan bisa dibaca</h4>
+          <p data-l="en">GPL-3.0. The .apbx is a 7z archive of the source, and Akati OS Center is PowerShell and WPF: no .exe, so every script can be read.</p>
+          <p data-l="th">GPL-3.0 ไฟล์ .apbx คือไฟล์ 7z ของซอร์สโค้ด และ Akati OS Center เขียนด้วย PowerShell กับ WPF ไม่มีไฟล์ .exe จึงเปิดอ่านได้ทุกสคริปต์</p>
+          <p data-l="vi">GPL-3.0. Tệp .apbx là tệp nén 7z của mã nguồn, và Akati OS Center viết bằng PowerShell và WPF: không có .exe, nên đọc được mọi script.</p>
+          <p data-l="id">GPL-3.0. File .apbx adalah arsip 7z dari kode sumber, dan Akati OS Center ditulis dengan PowerShell dan WPF: tanpa .exe, jadi setiap skrip bisa dibaca.</p></div>
+      </div>
     </div>
   </div>
 </section>
 
-<section id="screens">
+<section id="whatsnew" class="alt-bg" hidden>
   <div class="wrap">
-    <h2 data-l="en">Screenshots</h2><h2 data-l="th">ภาพหน้าจอ</h2><h2 data-l="vi">Ảnh chụp màn hình</h2><h2 data-l="id">Tangkapan layar</h2>
-    <div class="gallery">
-      <figure><img src="images/screenshots/health-en.png" alt="" loading="lazy" width="1008" height="700"><figcaption><span data-l="en">Health: Akati Score and Akati Doctor</span><span data-l="th">สุขภาพเครื่อง: Akati Score และ Akati Doctor</span><span data-l="vi">Sức khỏe: Akati Score và Akati Doctor</span><span data-l="id">Kesehatan: Akati Score dan Akati Doctor</span></figcaption></figure>
-      <figure><img src="images/screenshots/boost-en-mid.png" alt="" loading="lazy" width="1008" height="700"><figcaption><span data-l="en">Game boost: My games, anti-cheat mode, FPS test</span><span data-l="th">บูสต์เกม: เกมของฉัน โหมดแอนตี้ชีต ทดสอบ FPS</span><span data-l="vi">Tăng tốc game: Game của tôi, chế độ chống gian lận, đo FPS</span><span data-l="id">Game Boost: Game saya, mode anti-cheat, tes FPS</span></figcaption></figure>
-      <figure><img src="images/screenshots/gaming-en.png" alt="" loading="lazy" width="1008" height="700"><figcaption><span data-l="en">Gaming apps</span><span data-l="th">แอปเกม</span><span data-l="vi">Ứng dụng chơi game</span><span data-l="id">Aplikasi gaming</span></figcaption></figure>
-      <figure><img src="images/screenshots/appearance-en.png" alt="" loading="lazy" width="1008" height="700"><figcaption><span data-l="en">Appearance: style presets</span><span data-l="th">หน้าตา: สไตล์สำเร็จรูป</span><span data-l="vi">Giao diện: bộ phong cách có sẵn</span><span data-l="id">Tampilan: preset gaya</span></figcaption></figure>
+    <div class="head rv">
+      <span class="eyebrow"><span data-l="en">What’s new</span><span data-l="th">มีอะไรใหม่</span><span data-l="vi">Có gì mới</span><span data-l="id">Yang baru</span></span>
+      <h2 data-l="en">Latest release</h2><h2 data-l="th">เวอร์ชันล่าสุด</h2><h2 data-l="vi">Phiên bản mới nhất</h2><h2 data-l="id">Rilis terbaru</h2>
     </div>
+    <article class="news rv">
+      <div class="news-head"><span class="news-tag" id="news-tag"></span><span class="news-badge"><span data-l="en">Latest</span><span data-l="th">ล่าสุด</span><span data-l="vi">Mới nhất</span><span data-l="id">Terbaru</span></span><span class="news-date" id="news-date"></span></div>
+      <div class="news-body" id="news-body"></div>
+      <div class="news-foot">
+        <span><span data-l="en">The release notes are written in English.</span><span data-l="th">บันทึกการเปลี่ยนแปลงเขียนเป็นภาษาอังกฤษ</span><span data-l="vi">Ghi chú phát hành được viết bằng tiếng Anh.</span><span data-l="id">Catatan rilis ditulis dalam bahasa Inggris.</span></span>
+        <a href="changelog.html"><span data-l="en">All changes</span><span data-l="th">ดูการเปลี่ยนแปลงทั้งหมด</span><span data-l="vi">Tất cả thay đổi</span><span data-l="id">Semua perubahan</span><svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+      </div>
+    </article>
   </div>
 </section>
 
 <section id="install">
   <div class="wrap">
-    <h2 data-l="en">Install, step by step</h2><h2 data-l="th">วิธีติดตั้งทีละขั้น</h2><h2 data-l="vi">Cài đặt từng bước</h2><h2 data-l="id">Instal langkah demi langkah</h2>
-    <p class="sub" data-l="en">From the download to Akati OS Center. Read it once before you start.</p>
-    <p class="sub" data-l="th">ตั้งแต่ดาวน์โหลดจนเปิด Akati OS Center ได้ อ่านให้จบหนึ่งรอบก่อนเริ่ม</p>
-    <p class="sub" data-l="vi">Từ lúc tải về đến khi mở Akati OS Center. Hãy đọc hết một lượt trước khi bắt đầu.</p>
-    <p class="sub" data-l="id">Dari unduhan sampai Akati OS Center. Baca sekali sampai habis sebelum mulai.</p>
-    <div class="req">
-      <h3 data-l="en">Before you start</h3><h3 data-l="th">ก่อนเริ่ม</h3><h3 data-l="vi">Trước khi bắt đầu</h3><h3 data-l="id">Sebelum mulai</h3>
-      <ul data-l="en">
-        <li>Windows 11 24H2, 25H2 or 26H2, or Windows 10 22H2. To check, press Win+R and type <code>winver</code>.</li>
-        <li>A genuine Windows licence. Akati OS does not activate Windows.</li>
-        <li>An internet connection during setup, and a laptop plugged in.</li>
-        <li>Your files backed up. A fresh Windows install is recommended (required for Windows 10). Try it in a virtual machine first.</li>
-      </ul>
-      <ul data-l="th">
-        <li>Windows 11 24H2, 25H2 หรือ 26H2 หรือ Windows 10 22H2 เช็กได้โดยกด Win+R แล้วพิมพ์ <code>winver</code></li>
-        <li>Windows ที่มีไลเซนส์ถูกต้อง Akati OS ไม่ได้ Activate Windows ให้</li>
-        <li>ต่ออินเทอร์เน็ตไว้ระหว่างติดตั้ง ถ้าเป็นโน้ตบุ๊กให้เสียบสายชาร์จไว้ด้วย</li>
-        <li>สำรองไฟล์เรียบร้อยแล้ว แนะนำให้ลง Windows ใหม่ก่อน (Windows 10 ต้องลงใหม่) และลองใน VM ก่อนใช้กับเครื่องจริง</li>
-      </ul>
-      <ul data-l="vi">
-        <li>Windows 11 24H2, 25H2 hoặc 26H2, hoặc Windows 10 22H2. Để kiểm tra, nhấn Win+R rồi gõ <code>winver</code>.</li>
-        <li>Giấy phép Windows chính hãng. Akati OS không kích hoạt Windows.</li>
-        <li>Có kết nối Internet trong khi cài, và cắm sạc nếu dùng laptop.</li>
-        <li>Đã sao lưu tệp. Nên cài Windows mới (bắt buộc với Windows 10). Hãy thử trong máy ảo trước.</li>
-      </ul>
-      <ul data-l="id">
-        <li>Windows 11 24H2, 25H2, atau 26H2, atau Windows 10 22H2. Untuk mengecek, tekan Win+R lalu ketik <code>winver</code>.</li>
-        <li>Lisensi Windows yang asli. Akati OS tidak mengaktivasi Windows.</li>
-        <li>Koneksi internet selama instalasi, dan laptop tersambung ke listrik.</li>
-        <li>File Anda sudah dicadangkan. Disarankan instalasi Windows yang baru (wajib untuk Windows 10). Coba dulu di mesin virtual.</li>
-      </ul>
+    <div class="head rv">
+      <span class="eyebrow"><span data-l="en">Install</span><span data-l="th">ติดตั้ง</span><span data-l="vi">Cài đặt</span><span data-l="id">Instal</span></span>
+      <h2 data-l="en">Install, step by step</h2><h2 data-l="th">วิธีติดตั้งทีละขั้น</h2><h2 data-l="vi">Cài đặt từng bước</h2><h2 data-l="id">Instal langkah demi langkah</h2>
+      <p class="sub" data-l="en">From the download to Akati OS Center. Read it once before you start.</p>
+      <p class="sub" data-l="th">ตั้งแต่ดาวน์โหลดจนเปิด Akati OS Center ได้ อ่านให้จบหนึ่งรอบก่อนเริ่ม</p>
+      <p class="sub" data-l="vi">Từ lúc tải về đến khi mở Akati OS Center. Hãy đọc hết một lượt trước khi bắt đầu.</p>
+      <p class="sub" data-l="id">Dari unduhan sampai Akati OS Center. Baca sekali sampai habis sebelum mulai.</p>
     </div>
-    <div class="tablewrap"><table>
-      <tr><th></th><th>Windows 11</th><th>Windows 10</th></tr>
-      <tr><td data-l="en">File</td><td data-l="th">ไฟล์</td><td data-l="vi">Tệp</td><td data-l="id">File</td><td><code>AkatiOS-Win11_v…apbx</code></td><td><code>AkatiOS-Win10_v…apbx</code></td></tr>
-      <tr><td data-l="en">Windows version</td><td data-l="th">เวอร์ชัน Windows</td><td data-l="vi">Phiên bản Windows</td><td data-l="id">Versi Windows</td><td>24H2 (26100), 25H2 (26200), 26H2 (26300)</td><td>22H2 (build 19045)</td></tr>
-      <tr><td data-l="en">Fresh Windows install</td><td data-l="th">ลง Windows ใหม่ก่อน</td><td data-l="vi">Cài Windows mới</td><td data-l="id">Instalasi Windows baru</td>
-        <td><span data-l="en">Recommended</span><span data-l="th">แนะนำ</span><span data-l="vi">Nên làm</span><span data-l="id">Disarankan</span></td>
-        <td><span data-l="en">Required</span><span data-l="th">จำเป็น</span><span data-l="vi">Bắt buộc</span><span data-l="id">Wajib</span></td></tr>
-    </table></div>
-    <ol class="guide">
-      <li><h3 data-l="en">Update Windows and back up</h3><h3 data-l="th">อัปเดต Windows และสำรองไฟล์</h3><h3 data-l="vi">Cập nhật Windows và sao lưu</h3><h3 data-l="id">Perbarui Windows dan cadangkan file</h3>
-        <p data-l="en">Install all Windows updates and restart: AME Wizard checks that no updates are waiting. Copy your files to another drive or to the cloud.</p>
-        <p data-l="th">ติดตั้งอัปเดต Windows ให้ครบแล้วรีสตาร์ท เพราะ AME Wizard จะตรวจว่าไม่มีอัปเดตค้างอยู่ จากนั้นก๊อปไฟล์สำคัญไปเก็บไว้ในไดรฟ์อื่นหรือบนคลาวด์</p>
-        <p data-l="vi">Cài hết các bản cập nhật Windows rồi khởi động lại: AME Wizard sẽ kiểm tra để chắc chắn không còn bản cập nhật nào đang chờ. Chép tệp của bạn sang ổ khác hoặc lên đám mây.</p>
-        <p data-l="id">Instal semua pembaruan Windows lalu restart: AME Wizard memeriksa bahwa tidak ada pembaruan yang menunggu. Salin file Anda ke drive lain atau ke cloud.</p></li>
-      <li><h3 data-l="en">Download the playbook</h3><h3 data-l="th">ดาวน์โหลด playbook</h3><h3 data-l="vi">Tải playbook</h3><h3 data-l="id">Unduh playbook</h3>
-        <p data-l="en">From <a href="https://github.com/x2Swiftyouz/Akati-Os/releases/latest">GitHub Releases</a> (or the buttons at the top), download <code>AkatiOS-Win11_v…apbx</code> for Windows 11 or <code>AkatiOS-Win10_v…apbx</code> for Windows 10 22H2, and <code>SHA256SUMS.txt</code>.</p>
-        <p data-l="th">ที่ <a href="https://github.com/x2Swiftyouz/Akati-Os/releases/latest">GitHub Releases</a> (หรือปุ่มด้านบนสุด) โหลด <code>AkatiOS-Win11_v…apbx</code> สำหรับ Windows 11 หรือ <code>AkatiOS-Win10_v…apbx</code> สำหรับ Windows 10 22H2 พร้อมไฟล์ <code>SHA256SUMS.txt</code></p>
-        <p data-l="vi">Từ <a href="https://github.com/x2Swiftyouz/Akati-Os/releases/latest">GitHub Releases</a> (hoặc các nút ở đầu trang), tải <code>AkatiOS-Win11_v…apbx</code> cho Windows 11 hoặc <code>AkatiOS-Win10_v…apbx</code> cho Windows 10 22H2, cùng với <code>SHA256SUMS.txt</code>.</p>
-        <p data-l="id">Dari <a href="https://github.com/x2Swiftyouz/Akati-Os/releases/latest">GitHub Releases</a> (atau tombol di bagian atas), unduh <code>AkatiOS-Win11_v…apbx</code> untuk Windows 11 atau <code>AkatiOS-Win10_v…apbx</code> untuk Windows 10 22H2, serta <code>SHA256SUMS.txt</code>.</p></li>
-      <li><h3 data-l="en">Check the SHA256</h3><h3 data-l="th">ตรวจ SHA256</h3><h3 data-l="vi">Kiểm tra SHA256</h3><h3 data-l="id">Cek SHA256</h3>
-        <p data-l="en">Open PowerShell in the download folder and run this, with the name of your file:</p>
-        <p data-l="th">เปิด PowerShell ในโฟลเดอร์ที่โหลดไฟล์ไว้ แล้วรันคำสั่งนี้ (เปลี่ยนเป็นชื่อไฟล์ของคุณ)</p>
-        <p data-l="vi">Mở PowerShell trong thư mục chứa tệp đã tải và chạy lệnh sau, thay bằng tên tệp của bạn:</p>
-        <p data-l="id">Buka PowerShell di folder unduhan lalu jalankan ini, dengan nama file Anda:</p>
-        <pre class="cmd"><code>(Get-FileHash .\AkatiOS-Win11_v1.8.0.apbx -Algorithm SHA256).Hash.ToLower()
+    <div class="install">
+      <div class="install-side rv">
+        <div class="box">
+          <h3 data-l="en">Before you start</h3><h3 data-l="th">ก่อนเริ่ม</h3><h3 data-l="vi">Trước khi bắt đầu</h3><h3 data-l="id">Sebelum mulai</h3>
+          <ul data-l="en">
+            <li>Windows 11 24H2, 25H2 or 26H2, or Windows 10 22H2. To check, press Win+R and type <code>winver</code>.</li>
+            <li>A genuine Windows licence. Akati OS does not activate Windows.</li>
+            <li>An internet connection during setup, and a laptop plugged in.</li>
+            <li>Your files backed up. A fresh Windows install is recommended (required for Windows 10). Try it in a virtual machine first.</li>
+          </ul>
+          <ul data-l="th">
+            <li>Windows 11 24H2, 25H2 หรือ 26H2 หรือ Windows 10 22H2 เช็กได้โดยกด Win+R แล้วพิมพ์ <code>winver</code></li>
+            <li>Windows ที่มีไลเซนส์ถูกต้อง Akati OS ไม่ได้ Activate Windows ให้</li>
+            <li>ต่ออินเทอร์เน็ตไว้ระหว่างติดตั้ง ถ้าเป็นโน้ตบุ๊กให้เสียบสายชาร์จไว้ด้วย</li>
+            <li>สำรองไฟล์เรียบร้อยแล้ว แนะนำให้ลง Windows ใหม่ก่อน (Windows 10 ต้องลงใหม่) และลองใน VM ก่อนใช้กับเครื่องจริง</li>
+          </ul>
+          <ul data-l="vi">
+            <li>Windows 11 24H2, 25H2 hoặc 26H2, hoặc Windows 10 22H2. Để kiểm tra, nhấn Win+R rồi gõ <code>winver</code>.</li>
+            <li>Giấy phép Windows chính hãng. Akati OS không kích hoạt Windows.</li>
+            <li>Có kết nối Internet trong khi cài, và cắm sạc nếu dùng laptop.</li>
+            <li>Đã sao lưu tệp. Nên cài Windows mới (bắt buộc với Windows 10). Hãy thử trong máy ảo trước.</li>
+          </ul>
+          <ul data-l="id">
+            <li>Windows 11 24H2, 25H2, atau 26H2, atau Windows 10 22H2. Untuk mengecek, tekan Win+R lalu ketik <code>winver</code>.</li>
+            <li>Lisensi Windows yang asli. Akati OS tidak mengaktivasi Windows.</li>
+            <li>Koneksi internet selama instalasi, dan laptop tersambung ke listrik.</li>
+            <li>File Anda sudah dicadangkan. Disarankan instalasi Windows yang baru (wajib untuk Windows 10). Coba dulu di mesin virtual.</li>
+          </ul>
+        </div>
+        <div class="tablewrap"><table class="files">
+          <tr><th></th><th>Windows 11</th><th>Windows 10</th></tr>
+          <tr><td data-l="en">File</td><td data-l="th">ไฟล์</td><td data-l="vi">Tệp</td><td data-l="id">File</td><td><code>AkatiOS-Win11_v…apbx</code></td><td><code>AkatiOS-Win10_v…apbx</code></td></tr>
+          <tr><td data-l="en">Windows version</td><td data-l="th">เวอร์ชัน Windows</td><td data-l="vi">Phiên bản Windows</td><td data-l="id">Versi Windows</td><td>24H2 (26100), 25H2 (26200), 26H2 (26300)</td><td>22H2 (build 19045)</td></tr>
+          <tr><td data-l="en">Fresh Windows install</td><td data-l="th">ลง Windows ใหม่ก่อน</td><td data-l="vi">Cài Windows mới</td><td data-l="id">Instalasi Windows baru</td>
+            <td><span data-l="en">Recommended</span><span data-l="th">แนะนำ</span><span data-l="vi">Nên làm</span><span data-l="id">Disarankan</span></td>
+            <td><span data-l="en">Required</span><span data-l="th">จำเป็น</span><span data-l="vi">Bắt buộc</span><span data-l="id">Wajib</span></td></tr>
+        </table></div>
+      </div>
+      <ol class="guide rv" style="--d:1">
+        <li><h3 data-l="en">Update Windows and back up</h3><h3 data-l="th">อัปเดต Windows และสำรองไฟล์</h3><h3 data-l="vi">Cập nhật Windows và sao lưu</h3><h3 data-l="id">Perbarui Windows dan cadangkan file</h3>
+          <p data-l="en">Install all Windows updates and restart: AME Wizard checks that no updates are waiting. Copy your files to another drive or to the cloud.</p>
+          <p data-l="th">ติดตั้งอัปเดต Windows ให้ครบแล้วรีสตาร์ท เพราะ AME Wizard จะตรวจว่าไม่มีอัปเดตค้างอยู่ จากนั้นก๊อปไฟล์สำคัญไปเก็บไว้ในไดรฟ์อื่นหรือบนคลาวด์</p>
+          <p data-l="vi">Cài hết các bản cập nhật Windows rồi khởi động lại: AME Wizard sẽ kiểm tra để chắc chắn không còn bản cập nhật nào đang chờ. Chép tệp của bạn sang ổ khác hoặc lên đám mây.</p>
+          <p data-l="id">Instal semua pembaruan Windows lalu restart: AME Wizard memeriksa bahwa tidak ada pembaruan yang menunggu. Salin file Anda ke drive lain atau ke cloud.</p></li>
+        <li><h3 data-l="en">Download the playbook</h3><h3 data-l="th">ดาวน์โหลด playbook</h3><h3 data-l="vi">Tải playbook</h3><h3 data-l="id">Unduh playbook</h3>
+          <p data-l="en">From <a href="https://github.com/x2Swiftyouz/Akati-Os/releases/latest">GitHub Releases</a> (or the buttons at the top), download <code>AkatiOS-Win11_v…apbx</code> for Windows 11 or <code>AkatiOS-Win10_v…apbx</code> for Windows 10 22H2, and <code>SHA256SUMS.txt</code>.</p>
+          <p data-l="th">ที่ <a href="https://github.com/x2Swiftyouz/Akati-Os/releases/latest">GitHub Releases</a> (หรือปุ่มด้านบนสุด) โหลด <code>AkatiOS-Win11_v…apbx</code> สำหรับ Windows 11 หรือ <code>AkatiOS-Win10_v…apbx</code> สำหรับ Windows 10 22H2 พร้อมไฟล์ <code>SHA256SUMS.txt</code></p>
+          <p data-l="vi">Từ <a href="https://github.com/x2Swiftyouz/Akati-Os/releases/latest">GitHub Releases</a> (hoặc các nút ở đầu trang), tải <code>AkatiOS-Win11_v…apbx</code> cho Windows 11 hoặc <code>AkatiOS-Win10_v…apbx</code> cho Windows 10 22H2, cùng với <code>SHA256SUMS.txt</code>.</p>
+          <p data-l="id">Dari <a href="https://github.com/x2Swiftyouz/Akati-Os/releases/latest">GitHub Releases</a> (atau tombol di bagian atas), unduh <code>AkatiOS-Win11_v…apbx</code> untuk Windows 11 atau <code>AkatiOS-Win10_v…apbx</code> untuk Windows 10 22H2, serta <code>SHA256SUMS.txt</code>.</p></li>
+        <li><h3 data-l="en">Check the SHA256</h3><h3 data-l="th">ตรวจ SHA256</h3><h3 data-l="vi">Kiểm tra SHA256</h3><h3 data-l="id">Cek SHA256</h3>
+          <p data-l="en">Open PowerShell in the download folder and run this, with the name of your file:</p>
+          <p data-l="th">เปิด PowerShell ในโฟลเดอร์ที่โหลดไฟล์ไว้ แล้วรันคำสั่งนี้ (เปลี่ยนเป็นชื่อไฟล์ของคุณ)</p>
+          <p data-l="vi">Mở PowerShell trong thư mục chứa tệp đã tải và chạy lệnh sau, thay bằng tên tệp của bạn:</p>
+          <p data-l="id">Buka PowerShell di folder unduhan lalu jalankan ini, dengan nama file Anda:</p>
+          <pre class="cmd"><code>(Get-FileHash .\AkatiOS-Win11_v1.9.0.apbx -Algorithm SHA256).Hash.ToLower()
 Get-Content .\SHA256SUMS.txt</code></pre>
-        <p data-l="en">The two values must match. Do not use a file that does not match.</p>
-        <p data-l="th">ค่าทั้งสองต้องตรงกัน ถ้าไม่ตรงอย่าใช้ไฟล์นั้น</p>
-        <p data-l="vi">Hai giá trị phải trùng khớp. Đừng dùng tệp không khớp.</p>
-        <p data-l="id">Kedua nilai harus sama. Jangan pakai file yang tidak cocok.</p></li>
-      <li><h3 data-l="en">Get AME Wizard</h3><h3 data-l="th">โหลด AME Wizard</h3><h3 data-l="vi">Tải AME Wizard</h3><h3 data-l="id">Unduh AME Wizard</h3>
-        <p data-l="en">Download AME Wizard (Beta) only from the official site <a href="https://ameliorated.io">ameliorated.io</a>, then open it.</p>
-        <p data-l="th">โหลด AME Wizard (Beta) จากเว็บทางการ <a href="https://ameliorated.io">ameliorated.io</a> เท่านั้น แล้วเปิดโปรแกรมขึ้นมา</p>
-        <p data-l="vi">Chỉ tải AME Wizard (Beta) từ trang chính thức <a href="https://ameliorated.io">ameliorated.io</a>, rồi mở nó.</p>
-        <p data-l="id">Unduh AME Wizard (Beta) hanya dari situs resmi <a href="https://ameliorated.io">ameliorated.io</a>, lalu buka.</p></li>
-      <li><h3 data-l="en">Drag the .apbx into AME Wizard</h3><h3 data-l="th">ลากไฟล์ .apbx เข้า AME Wizard</h3><h3 data-l="vi">Kéo tệp .apbx vào AME Wizard</h3><h3 data-l="id">Seret .apbx ke AME Wizard</h3>
-        <p data-l="en">"Unverified" is normal (see the <a href="#faq">FAQ</a>). With the wrong file it says "This Windows build is not supported by this Playbook": nothing is changed, use the other file.</p>
-        <p data-l="th">ถ้าขึ้นว่า "Unverified" ถือว่าปกติ (ดู<a href="#faq">คำถามที่พบบ่อย</a>) ถ้าใช้ผิดไฟล์จะขึ้นว่า "This Windows build is not supported by this Playbook" ไม่มีอะไรถูกเปลี่ยน ให้ใช้อีกไฟล์แทน</p>
-        <p data-l="vi">"Unverified" là bình thường (xem <a href="#faq">FAQ</a>). Nếu dùng sai tệp, nó báo "This Windows build is not supported by this Playbook": không có gì bị thay đổi, hãy dùng tệp còn lại.</p>
-        <p data-l="id">"Unverified" itu normal (lihat <a href="#faq">FAQ</a>). Jika filenya salah, muncul "This Windows build is not supported by this Playbook": tidak ada yang diubah, pakai file yang satunya.</p></li>
-      <li><h3 data-l="en">Do what AME Wizard asks</h3><h3 data-l="th">ทำตามที่ AME Wizard บอก</h3><h3 data-l="vi">Làm theo yêu cầu của AME Wizard</h3><h3 data-l="id">Ikuti permintaan AME Wizard</h3>
-        <p data-l="en">Before it starts, AME Wizard lists what it needs, for example Defender turned off, internet and power plugged in. Follow what it shows.</p>
-        <p data-l="th">ก่อนเริ่ม AME Wizard จะบอกสิ่งที่ต้องทำ เช่น ปิด Defender ต่ออินเทอร์เน็ต และเสียบสายชาร์จ ทำตามที่ขึ้นบนหน้าจอได้เลย</p>
-        <p data-l="vi">Trước khi bắt đầu, AME Wizard liệt kê những gì cần có, ví dụ tắt Defender, có Internet và cắm sạc. Hãy làm theo những gì nó hiển thị.</p>
-        <p data-l="id">Sebelum mulai, AME Wizard menampilkan apa yang dibutuhkan, misalnya Defender dimatikan, internet, dan listrik tersambung. Ikuti yang ditampilkan.</p></li>
-      <li><h3 data-l="en">Pick your options</h3><h3 data-l="th">เลือกตัวเลือก</h3><h3 data-l="vi">Chọn các tùy chọn</h3><h3 data-l="id">Pilih opsi</h3>
-        <p data-l="en">The recommended defaults are a good start. If you play anti-cheat games (Valorant, FACEIT), keep Defender enabled and leave "Disable Core Isolation" unticked. "Learn more" opens the <a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/OPTIONS.md">options guide</a>; most options can be changed later in Akati OS Center &gt; Tweaks.</p>
-        <p data-l="th">ใช้ค่าแนะนำก็เริ่มต้นได้ดีแล้ว ถ้าเล่นเกมที่มีแอนตี้ชีต (Valorant, FACEIT) ให้เปิด Defender ไว้และไม่ต้องติ๊ก "Disable Core Isolation" ปุ่ม "Learn more" จะเปิด<a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/OPTIONS.md">คู่มือตัวเลือก</a> ตัวเลือกส่วนใหญ่เปลี่ยนทีหลังได้ใน Akati OS Center &gt; ปรับแต่ง</p>
-        <p data-l="vi">Các giá trị mặc định được đề xuất là khởi đầu tốt. Nếu bạn chơi game có chống gian lận (Valorant, FACEIT), hãy giữ Defender bật và đừng tích "Disable Core Isolation". "Learn more" mở <a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/OPTIONS.md">hướng dẫn tùy chọn</a>; hầu hết tùy chọn có thể đổi sau trong Akati OS Center &gt; Tinh chỉnh.</p>
-        <p data-l="id">Pengaturan bawaan yang disarankan sudah jadi awal yang baik. Jika Anda main game dengan anti-cheat (Valorant, FACEIT), biarkan Defender aktif dan jangan centang "Disable Core Isolation". "Learn more" membuka <a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/OPTIONS.md">panduan opsi</a>; sebagian besar opsi bisa diubah nanti di Akati OS Center &gt; Tweak.</p></li>
-      <li><h3 data-l="en">Wait, then restart</h3><h3 data-l="th">รอจนเสร็จแล้วรีสตาร์ท</h3><h3 data-l="vi">Chờ rồi khởi động lại</h3><h3 data-l="id">Tunggu, lalu restart</h3>
-        <p data-l="en">Do not turn off the PC while it works. AME Wizard estimates about 15 minutes. The PC restarts when it is done.</p>
-        <p data-l="th">ห้ามปิดเครื่องระหว่างติดตั้ง AME Wizard ประมาณเวลาไว้ราว 15 นาที เสร็จแล้วเครื่องจะรีสตาร์ทเอง</p>
-        <p data-l="vi">Đừng tắt máy khi đang cài. AME Wizard ước tính khoảng 15 phút. Máy sẽ khởi động lại khi xong.</p>
-        <p data-l="id">Jangan matikan PC selama proses berjalan. AME Wizard memperkirakan sekitar 15 menit. PC akan restart setelah selesai.</p></li>
-      <li><h3 data-l="en">Open Akati OS Center</h3><h3 data-l="th">เปิด Akati OS Center</h3><h3 data-l="vi">Mở Akati OS Center</h3><h3 data-l="id">Buka Akati OS Center</h3>
-        <p data-l="en">After the restart, open Akati OS Center from the desktop or the Start menu. The first time, a welcome screen asks for your language, gaming apps and theme.</p>
-        <p data-l="th">หลังรีสตาร์ท เปิด Akati OS Center จากเดสก์ท็อปหรือ Start menu ครั้งแรกจะมีหน้าต้อนรับให้เลือกภาษา แอปเกม และธีม</p>
-        <p data-l="vi">Sau khi khởi động lại, mở Akati OS Center từ màn hình nền hoặc menu Start. Lần đầu tiên, màn hình chào mừng sẽ hỏi ngôn ngữ, ứng dụng chơi game và giao diện.</p>
-        <p data-l="id">Setelah restart, buka Akati OS Center dari desktop atau menu Start. Pertama kali dibuka, layar sambutan menanyakan bahasa, aplikasi gaming, dan tema Anda.</p></li>
-    </ol>
+          <p data-l="en">The two values must match. Do not use a file that does not match.</p>
+          <p data-l="th">ค่าทั้งสองต้องตรงกัน ถ้าไม่ตรงอย่าใช้ไฟล์นั้น</p>
+          <p data-l="vi">Hai giá trị phải trùng khớp. Đừng dùng tệp không khớp.</p>
+          <p data-l="id">Kedua nilai harus sama. Jangan pakai file yang tidak cocok.</p></li>
+        <li><h3 data-l="en">Get AME Wizard</h3><h3 data-l="th">โหลด AME Wizard</h3><h3 data-l="vi">Tải AME Wizard</h3><h3 data-l="id">Unduh AME Wizard</h3>
+          <p data-l="en">Download AME Wizard (Beta) only from the official site <a href="https://ameliorated.io">ameliorated.io</a>, then open it.</p>
+          <p data-l="th">โหลด AME Wizard (Beta) จากเว็บทางการ <a href="https://ameliorated.io">ameliorated.io</a> เท่านั้น แล้วเปิดโปรแกรมขึ้นมา</p>
+          <p data-l="vi">Chỉ tải AME Wizard (Beta) từ trang chính thức <a href="https://ameliorated.io">ameliorated.io</a>, rồi mở nó.</p>
+          <p data-l="id">Unduh AME Wizard (Beta) hanya dari situs resmi <a href="https://ameliorated.io">ameliorated.io</a>, lalu buka.</p></li>
+        <li><h3 data-l="en">Drag the .apbx into AME Wizard</h3><h3 data-l="th">ลากไฟล์ .apbx เข้า AME Wizard</h3><h3 data-l="vi">Kéo tệp .apbx vào AME Wizard</h3><h3 data-l="id">Seret .apbx ke AME Wizard</h3>
+          <p data-l="en">"Unverified" is normal (see the <a href="#faq">FAQ</a>). With the wrong file it says "This Windows build is not supported by this Playbook": nothing is changed, use the other file.</p>
+          <p data-l="th">ถ้าขึ้นว่า "Unverified" ถือว่าปกติ (ดู<a href="#faq">คำถามที่พบบ่อย</a>) ถ้าใช้ผิดไฟล์จะขึ้นว่า "This Windows build is not supported by this Playbook" ไม่มีอะไรถูกเปลี่ยน ให้ใช้อีกไฟล์แทน</p>
+          <p data-l="vi">"Unverified" là bình thường (xem <a href="#faq">FAQ</a>). Nếu dùng sai tệp, nó báo "This Windows build is not supported by this Playbook": không có gì bị thay đổi, hãy dùng tệp còn lại.</p>
+          <p data-l="id">"Unverified" itu normal (lihat <a href="#faq">FAQ</a>). Jika filenya salah, muncul "This Windows build is not supported by this Playbook": tidak ada yang diubah, pakai file yang satunya.</p></li>
+        <li><h3 data-l="en">Do what AME Wizard asks</h3><h3 data-l="th">ทำตามที่ AME Wizard บอก</h3><h3 data-l="vi">Làm theo yêu cầu của AME Wizard</h3><h3 data-l="id">Ikuti permintaan AME Wizard</h3>
+          <p data-l="en">Before it starts, AME Wizard lists what it needs, for example Defender turned off, internet and power plugged in. Follow what it shows.</p>
+          <p data-l="th">ก่อนเริ่ม AME Wizard จะบอกสิ่งที่ต้องทำ เช่น ปิด Defender ต่ออินเทอร์เน็ต และเสียบสายชาร์จ ทำตามที่ขึ้นบนหน้าจอได้เลย</p>
+          <p data-l="vi">Trước khi bắt đầu, AME Wizard liệt kê những gì cần có, ví dụ tắt Defender, có Internet và cắm sạc. Hãy làm theo những gì nó hiển thị.</p>
+          <p data-l="id">Sebelum mulai, AME Wizard menampilkan apa yang dibutuhkan, misalnya Defender dimatikan, internet, dan listrik tersambung. Ikuti yang ditampilkan.</p></li>
+        <li><h3 data-l="en">Pick your options</h3><h3 data-l="th">เลือกตัวเลือก</h3><h3 data-l="vi">Chọn các tùy chọn</h3><h3 data-l="id">Pilih opsi</h3>
+          <p data-l="en">The recommended defaults are a good start. If you play anti-cheat games (Valorant, FACEIT), keep Defender enabled and leave "Disable Core Isolation" unticked. "Learn more" opens the <a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/OPTIONS.md">options guide</a>; most options can be changed later in Akati OS Center &gt; Tweaks.</p>
+          <p data-l="th">ใช้ค่าแนะนำก็เริ่มต้นได้ดีแล้ว ถ้าเล่นเกมที่มีแอนตี้ชีต (Valorant, FACEIT) ให้เปิด Defender ไว้และไม่ต้องติ๊ก "Disable Core Isolation" ปุ่ม "Learn more" จะเปิด<a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/OPTIONS.md">คู่มือตัวเลือก</a> ตัวเลือกส่วนใหญ่เปลี่ยนทีหลังได้ใน Akati OS Center &gt; ปรับแต่ง</p>
+          <p data-l="vi">Các giá trị mặc định được đề xuất là khởi đầu tốt. Nếu bạn chơi game có chống gian lận (Valorant, FACEIT), hãy giữ Defender bật và đừng tích "Disable Core Isolation". "Learn more" mở <a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/OPTIONS.md">hướng dẫn tùy chọn</a>; hầu hết tùy chọn có thể đổi sau trong Akati OS Center &gt; Tinh chỉnh.</p>
+          <p data-l="id">Pengaturan bawaan yang disarankan sudah jadi awal yang baik. Jika Anda main game dengan anti-cheat (Valorant, FACEIT), biarkan Defender aktif dan jangan centang "Disable Core Isolation". "Learn more" membuka <a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/OPTIONS.md">panduan opsi</a>; sebagian besar opsi bisa diubah nanti di Akati OS Center &gt; Tweak.</p></li>
+        <li><h3 data-l="en">Wait, then restart</h3><h3 data-l="th">รอจนเสร็จแล้วรีสตาร์ท</h3><h3 data-l="vi">Chờ rồi khởi động lại</h3><h3 data-l="id">Tunggu, lalu restart</h3>
+          <p data-l="en">Do not turn off the PC while it works. AME Wizard estimates about 15 minutes. The PC restarts when it is done.</p>
+          <p data-l="th">ห้ามปิดเครื่องระหว่างติดตั้ง AME Wizard ประมาณเวลาไว้ราว 15 นาที เสร็จแล้วเครื่องจะรีสตาร์ทเอง</p>
+          <p data-l="vi">Đừng tắt máy khi đang cài. AME Wizard ước tính khoảng 15 phút. Máy sẽ khởi động lại khi xong.</p>
+          <p data-l="id">Jangan matikan PC selama proses berjalan. AME Wizard memperkirakan sekitar 15 menit. PC akan restart setelah selesai.</p></li>
+        <li><h3 data-l="en">Open Akati OS Center</h3><h3 data-l="th">เปิด Akati OS Center</h3><h3 data-l="vi">Mở Akati OS Center</h3><h3 data-l="id">Buka Akati OS Center</h3>
+          <p data-l="en">After the restart, open Akati OS Center from the desktop or the Start menu. The first time, a welcome screen asks for your language, gaming apps and theme.</p>
+          <p data-l="th">หลังรีสตาร์ท เปิด Akati OS Center จากเดสก์ท็อปหรือ Start menu ครั้งแรกจะมีหน้าต้อนรับให้เลือกภาษา แอปเกม และธีม</p>
+          <p data-l="vi">Sau khi khởi động lại, mở Akati OS Center từ màn hình nền hoặc menu Start. Lần đầu tiên, màn hình chào mừng sẽ hỏi ngôn ngữ, ứng dụng chơi game và giao diện.</p>
+          <p data-l="id">Setelah restart, buka Akati OS Center dari desktop atau menu Start. Pertama kali dibuka, layar sambutan menanyakan bahasa, aplikasi gaming, dan tema Anda.</p></li>
+      </ol>
+    </div>
   </div>
 </section>
 
 <section id="compare">
   <div class="wrap">
-    <h2 data-l="en">Windows, AtlasOS and Akati OS</h2><h2 data-l="th">เทียบ Windows, AtlasOS และ Akati OS</h2><h2 data-l="vi">So sánh Windows, AtlasOS và Akati OS</h2><h2 data-l="id">Windows, AtlasOS, dan Akati OS</h2>
-    <p class="sub" data-l="en">Features only, no speed claims. Akati OS is built on AtlasOS: its tweaks are the work of the AtlasOS team.</p>
-    <p class="sub" data-l="th">เทียบเฉพาะฟีเจอร์ ไม่ได้อ้างเรื่องความเร็ว Akati OS สร้างต่อจาก AtlasOS การปรับแต่งหลักเป็นผลงานของทีม AtlasOS</p>
-    <p class="sub" data-l="vi">Chỉ so sánh tính năng, không khẳng định về tốc độ. Akati OS được xây dựng trên AtlasOS: các tinh chỉnh là công sức của nhóm AtlasOS.</p>
-    <p class="sub" data-l="id">Hanya fitur, tanpa klaim kecepatan. Akati OS dibangun di atas AtlasOS: tweak-nya adalah karya tim AtlasOS.</p>
+    <div class="head rv">
+      <span class="eyebrow"><span data-l="en">Compare</span><span data-l="th">เปรียบเทียบ</span><span data-l="vi">So sánh</span><span data-l="id">Perbandingan</span></span>
+      <h2 data-l="en">Windows, AtlasOS and Akati OS</h2><h2 data-l="th">เทียบ Windows, AtlasOS และ Akati OS</h2><h2 data-l="vi">So sánh Windows, AtlasOS và Akati OS</h2><h2 data-l="id">Windows, AtlasOS, dan Akati OS</h2>
+      <p class="sub" data-l="en">Features only, no speed claims. Akati OS is built on AtlasOS: its tweaks are the work of the AtlasOS team.</p>
+      <p class="sub" data-l="th">เทียบเฉพาะฟีเจอร์ ไม่ได้อ้างเรื่องความเร็ว Akati OS สร้างต่อจาก AtlasOS การปรับแต่งหลักเป็นผลงานของทีม AtlasOS</p>
+      <p class="sub" data-l="vi">Chỉ so sánh tính năng, không khẳng định về tốc độ. Akati OS được xây dựng trên AtlasOS: các tinh chỉnh là công sức của nhóm AtlasOS.</p>
+      <p class="sub" data-l="id">Hanya fitur, tanpa klaim kecepatan. Akati OS dibangun di atas AtlasOS: tweak-nya adalah karya tim AtlasOS.</p>
+    </div>
+    <div class="rv">
     <div class="tablewrap"><table class="compare">
       <thead><tr><th></th><th><span data-l="en">Windows (stock)</span><span data-l="th">Windows (ปกติ)</span><span data-l="vi">Windows (gốc)</span><span data-l="id">Windows (bawaan)</span></th><th>AtlasOS</th><th class="me">Akati OS</th></tr></thead>
       <tbody>
@@ -365,12 +703,17 @@ Get-Content .\SHA256SUMS.txt</code></pre>
     <p class="note" data-l="th">✓ มี — ไม่มี คอลัมน์ AtlasOS หมายถึง playbook ของ AtlasOS ที่ Akati OS ใช้เป็นฐาน (v0.5.0 สำหรับ Windows 11, v0.4.1 สำหรับ Windows 10) ไม่รวม AtlasOS เวอร์ชันหลังจากนั้นหรือแอป Atlas Toolbox ที่เป็นตัวเลือกเสริม ทุกจุดที่ต่างกันอยู่ใน <a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/CHANGES-FROM-ATLAS.md">Changes from AtlasOS</a></p>
     <p class="note" data-l="vi">✓ có, — không có. Cột AtlasOS là playbook AtlasOS mà Akati OS dựa trên (v0.5.0 cho Windows 11, v0.4.1 cho Windows 10), không phải các phiên bản AtlasOS sau này hay ứng dụng tùy chọn Atlas Toolbox. Mọi khác biệt đều có trong <a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/CHANGES-FROM-ATLAS.md">Changes from AtlasOS</a>.</p>
     <p class="note" data-l="id">✓ ada, — tidak ada. Kolom AtlasOS adalah playbook AtlasOS yang menjadi dasar Akati OS (v0.5.0 untuk Windows 11, v0.4.1 untuk Windows 10), bukan versi AtlasOS yang lebih baru atau aplikasi opsional Atlas Toolbox. Setiap perbedaan tercantum di <a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/CHANGES-FROM-ATLAS.md">Changes from AtlasOS</a>.</p>
+    </div>
   </div>
 </section>
 
-<section id="faq">
+<section id="faq" class="alt-bg">
   <div class="wrap">
-    <h2 data-l="en">Questions</h2><h2 data-l="th">คำถามที่พบบ่อย</h2><h2 data-l="vi">Câu hỏi thường gặp</h2><h2 data-l="id">Pertanyaan umum</h2>
+    <div class="head rv">
+      <span class="eyebrow">FAQ</span>
+      <h2 data-l="en">Questions</h2><h2 data-l="th">คำถามที่พบบ่อย</h2><h2 data-l="vi">Câu hỏi thường gặp</h2><h2 data-l="id">Pertanyaan umum</h2>
+    </div>
+    <div class="faq rv">
     <details><summary><span data-l="en">Is Akati OS safe? Where does it come from?</span><span data-l="th">Akati OS ปลอดภัยไหม มาจากไหน</span><span data-l="vi">Akati OS có an toàn không? Nó đến từ đâu?</span><span data-l="id">Apakah Akati OS aman? Dari mana asalnya?</span></summary>
       <p data-l="en">Akati OS is built on AtlasOS (v0.5.0 for Windows 11, v0.4.1 for Windows 10) and is open source under GPL-3.0. The full source is on <a href="https://github.com/x2Swiftyouz/Akati-Os">GitHub</a> and every change from AtlasOS is listed in <a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/CHANGES-FROM-ATLAS.md">Changes from AtlasOS</a>. The <code>.apbx</code> is a 7z archive of the source folder (password <code>malte</code>, the AME Wizard default), so you can open it and read every script. Nothing is sent anywhere. It is not an official AtlasOS project.</p>
       <p data-l="th">Akati OS สร้างต่อจาก AtlasOS (v0.5.0 สำหรับ Windows 11 และ v0.4.1 สำหรับ Windows 10) เป็นโอเพนซอร์สภายใต้ GPL-3.0 ซอร์สโค้ดทั้งหมดอยู่บน <a href="https://github.com/x2Swiftyouz/Akati-Os">GitHub</a> และทุกจุดที่เปลี่ยนจาก AtlasOS มีรายการอยู่ใน <a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/CHANGES-FROM-ATLAS.md">Changes from AtlasOS</a> ไฟล์ <code>.apbx</code> คือไฟล์ 7z ของโฟลเดอร์ซอร์ส (รหัสผ่าน <code>malte</code> ซึ่งเป็นค่าเริ่มต้นของ AME Wizard) แตกไฟล์ออกมาอ่านได้ทุกสคริปต์ ไม่มีการส่งข้อมูลไปไหน และไม่ใช่โปรเจกต์ทางการของ AtlasOS</p>
@@ -406,24 +749,84 @@ Get-Content .\SHA256SUMS.txt</code></pre>
       <p data-l="vi">Không thể hoàn tác hoàn toàn một playbook: muốn quay lại Windows bình thường, hãy cài lại Windows. Vì vậy hãy sao lưu trước và thử trong máy ảo. Từng thay đổi riêng lẻ có thể đặt lại trong Akati OS Center: mỗi tinh chỉnh cho biết nó thay đổi gì, và lịch sử thay đổi có Hoàn tác.</p>
       <p data-l="id">Playbook tidak bisa dibatalkan sepenuhnya: untuk kembali ke Windows biasa, instal ulang Windows. Karena itu cadangkan file dulu dan coba di mesin virtual. Perubahan satu per satu bisa dikembalikan di Akati OS Center: setiap tweak menunjukkan apa yang diubah, dan riwayat perubahan punya Urungkan.</p></details>
     <details><summary><span data-l="en">How is it different from AtlasOS?</span><span data-l="th">ต่างจาก AtlasOS อย่างไร</span><span data-l="vi">Khác gì so với AtlasOS?</span><span data-l="id">Apa bedanya dengan AtlasOS?</span></summary>
-      <p data-l="en">Akati OS keeps all AtlasOS performance, privacy and debloat tweaks, and adds Akati OS Center (Game boost, My games, FPS test, Akati Doctor, gaming apps and every AtlasOS setting in one app, in four languages), more setup options (remove the Microsoft Store, turn off unused services, notifications and Xbox Game Bar, 0.5 ms timer resolution) and its own themes, wallpapers, cursors and sounds instead of the Atlas branding. It also accepts Windows 11 26H2, and the optional Atlas Toolbox is not offered. The full list is in <a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/CHANGES-FROM-ATLAS.md">Changes from AtlasOS</a>. The base is the work of the AtlasOS team.</p>
-      <p data-l="th">Akati OS เก็บการปรับแต่งด้านประสิทธิภาพ ความเป็นส่วนตัว และการลบแอปของ AtlasOS ไว้ทั้งหมด แล้วเพิ่ม Akati OS Center (บูสต์เกม เกมของฉัน ทดสอบ FPS Akati Doctor แอปเกม และการตั้งค่าทั้งหมดของ AtlasOS ในแอปเดียว มี 4 ภาษา) ตัวเลือกตอนติดตั้งเพิ่มเติม (ลบ Microsoft Store ปิดเซอร์วิสที่ไม่ใช้ ปิดการแจ้งเตือนและ Xbox Game Bar ตั้ง timer resolution 0.5 ms) และธีม วอลเปเปอร์ เคอร์เซอร์ เสียงของตัวเองแทนแบรนด์ Atlas นอกจากนี้ยังรองรับ Windows 11 26H2 และไม่มีตัวเลือกติดตั้ง Atlas Toolbox ดูรายการทั้งหมดได้ใน <a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/CHANGES-FROM-ATLAS.md">Changes from AtlasOS</a> ส่วนฐานทั้งหมดเป็นผลงานของทีม AtlasOS</p>
-      <p data-l="vi">Akati OS giữ toàn bộ tinh chỉnh hiệu năng, quyền riêng tư và gỡ bloatware của AtlasOS, và thêm Akati OS Center (Tăng tốc game, Game của tôi, đo FPS, Akati Doctor, ứng dụng chơi game và mọi cài đặt của AtlasOS trong một ứng dụng, bằng bốn ngôn ngữ), thêm tùy chọn khi cài (gỡ Microsoft Store, tắt dịch vụ không dùng, thông báo và Xbox Game Bar, timer resolution 0.5 ms) cùng giao diện, hình nền, con trỏ và âm thanh riêng thay cho thương hiệu Atlas. Nó cũng chấp nhận Windows 11 26H2, và không cung cấp Atlas Toolbox tùy chọn. Danh sách đầy đủ có trong <a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/CHANGES-FROM-ATLAS.md">Changes from AtlasOS</a>. Phần nền tảng là công sức của nhóm AtlasOS.</p>
-      <p data-l="id">Akati OS mempertahankan semua tweak performa, privasi, dan debloat AtlasOS, lalu menambahkan Akati OS Center (Game Boost, Game saya, tes FPS, Akati Doctor, aplikasi gaming, dan semua pengaturan AtlasOS dalam satu aplikasi, dalam empat bahasa), opsi instalasi tambahan (hapus Microsoft Store, matikan layanan yang tidak dipakai, notifikasi dan Xbox Game Bar, timer resolution 0,5 ms), serta tema, wallpaper, kursor, dan suara sendiri sebagai pengganti merek Atlas. Akati OS juga menerima Windows 11 26H2, dan Atlas Toolbox opsional tidak ditawarkan. Daftar lengkapnya ada di <a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/CHANGES-FROM-ATLAS.md">Changes from AtlasOS</a>. Dasarnya adalah karya tim AtlasOS.</p></details>
+      <p data-l="en">Akati OS keeps all AtlasOS performance, privacy and debloat tweaks, and adds Akati OS Center (Game boost, My games, FPS test, Akati Doctor, gaming apps and every AtlasOS setting in one app, in four languages), more setup options (remove the Microsoft Store, turn off unused services, notifications and Xbox Game Bar, 0.5 ms timer resolution) and its own themes, wallpapers, cursors and sounds instead of the Atlas branding. It also accepts Windows 11 26H2, and the optional Atlas Toolbox is not offered. The full list is in <a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/CHANGES-FROM-ATLAS.md">Changes from AtlasOS</a>. The base is the work of the AtlasOS team. Akati OS is based on AtlasOS (GPL-3.0) and is not an official AtlasOS project.</p>
+      <p data-l="th">Akati OS เก็บการปรับแต่งด้านประสิทธิภาพ ความเป็นส่วนตัว และการลบแอปของ AtlasOS ไว้ทั้งหมด แล้วเพิ่ม Akati OS Center (บูสต์เกม เกมของฉัน ทดสอบ FPS Akati Doctor แอปเกม และการตั้งค่าทั้งหมดของ AtlasOS ในแอปเดียว มี 4 ภาษา) ตัวเลือกตอนติดตั้งเพิ่มเติม (ลบ Microsoft Store ปิดเซอร์วิสที่ไม่ใช้ ปิดการแจ้งเตือนและ Xbox Game Bar ตั้ง timer resolution 0.5 ms) และธีม วอลเปเปอร์ เคอร์เซอร์ เสียงของตัวเองแทนแบรนด์ Atlas นอกจากนี้ยังรองรับ Windows 11 26H2 และไม่มีตัวเลือกติดตั้ง Atlas Toolbox ดูรายการทั้งหมดได้ใน <a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/CHANGES-FROM-ATLAS.md">Changes from AtlasOS</a> ส่วนฐานทั้งหมดเป็นผลงานของทีม AtlasOS Akati OS ดัดแปลงจาก AtlasOS (GPL-3.0) และไม่ใช่โปรเจกต์ทางการของ AtlasOS</p>
+      <p data-l="vi">Akati OS giữ toàn bộ tinh chỉnh hiệu năng, quyền riêng tư và gỡ bloatware của AtlasOS, và thêm Akati OS Center (Tăng tốc game, Game của tôi, đo FPS, Akati Doctor, ứng dụng chơi game và mọi cài đặt của AtlasOS trong một ứng dụng, bằng bốn ngôn ngữ), thêm tùy chọn khi cài (gỡ Microsoft Store, tắt dịch vụ không dùng, thông báo và Xbox Game Bar, timer resolution 0.5 ms) cùng giao diện, hình nền, con trỏ và âm thanh riêng thay cho thương hiệu Atlas. Nó cũng chấp nhận Windows 11 26H2, và không cung cấp Atlas Toolbox tùy chọn. Danh sách đầy đủ có trong <a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/CHANGES-FROM-ATLAS.md">Changes from AtlasOS</a>. Phần nền tảng là công sức của nhóm AtlasOS. Akati OS dựa trên AtlasOS (GPL-3.0) và không phải dự án chính thức của AtlasOS.</p>
+      <p data-l="id">Akati OS mempertahankan semua tweak performa, privasi, dan debloat AtlasOS, lalu menambahkan Akati OS Center (Game Boost, Game saya, tes FPS, Akati Doctor, aplikasi gaming, dan semua pengaturan AtlasOS dalam satu aplikasi, dalam empat bahasa), opsi instalasi tambahan (hapus Microsoft Store, matikan layanan yang tidak dipakai, notifikasi dan Xbox Game Bar, timer resolution 0,5 ms), serta tema, wallpaper, kursor, dan suara sendiri sebagai pengganti merek Atlas. Akati OS juga menerima Windows 11 26H2, dan Atlas Toolbox opsional tidak ditawarkan. Daftar lengkapnya ada di <a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/CHANGES-FROM-ATLAS.md">Changes from AtlasOS</a>. Dasarnya adalah karya tim AtlasOS. Akati OS berbasis AtlasOS (GPL-3.0) dan bukan proyek resmi AtlasOS.</p></details>
     <details><summary><span data-l="en">Found a problem?</span><span data-l="th">เจอปัญหา?</span><span data-l="vi">Gặp sự cố?</span><span data-l="id">Menemukan masalah?</span></summary>
-      <p data-l="en">Akati OS Center > About > Create problem report, then open an <a href="https://github.com/x2Swiftyouz/Akati-Os/issues/new/choose">issue on GitHub</a> and attach the .zip.</p>
-      <p data-l="th">Akati OS Center > เกี่ยวกับ > สร้างรายงานปัญหา แล้วเปิด <a href="https://github.com/x2Swiftyouz/Akati-Os/issues/new/choose">issue บน GitHub</a> แนบไฟล์ .zip</p>
-      <p data-l="vi">Akati OS Center > Giới thiệu > Tạo báo cáo sự cố, sau đó mở một <a href="https://github.com/x2Swiftyouz/Akati-Os/issues/new/choose">issue trên GitHub</a> và đính kèm tệp .zip.</p>
-      <p data-l="id">Akati OS Center > Tentang > Buat laporan masalah, lalu buka <a href="https://github.com/x2Swiftyouz/Akati-Os/issues/new/choose">issue di GitHub</a> dan lampirkan file .zip.</p></details>
+      <p data-l="en">Akati OS Center &gt; About &gt; Create problem report, then open an <a href="https://github.com/x2Swiftyouz/Akati-Os/issues/new/choose">issue on GitHub</a> and attach the .zip.</p>
+      <p data-l="th">Akati OS Center &gt; เกี่ยวกับ &gt; สร้างรายงานปัญหา แล้วเปิด <a href="https://github.com/x2Swiftyouz/Akati-Os/issues/new/choose">issue บน GitHub</a> แนบไฟล์ .zip</p>
+      <p data-l="vi">Akati OS Center &gt; Giới thiệu &gt; Tạo báo cáo sự cố, sau đó mở một <a href="https://github.com/x2Swiftyouz/Akati-Os/issues/new/choose">issue trên GitHub</a> và đính kèm tệp .zip.</p>
+      <p data-l="id">Akati OS Center &gt; Tentang &gt; Buat laporan masalah, lalu buka <a href="https://github.com/x2Swiftyouz/Akati-Os/issues/new/choose">issue di GitHub</a> dan lampirkan file .zip.</p></details>
+    </div>
+  </div>
+</section>
+
+<section class="cta-sec">
+  <div class="wrap">
+    <div class="cta rv">
+      <h2 data-l="en">Ready to play?</h2><h2 data-l="th">พร้อมลุยเกมหรือยัง?</h2><h2 data-l="vi">Sẵn sàng chơi chưa?</h2><h2 data-l="id">Siap bermain?</h2>
+      <p data-l="en">Back up your files, try it in a virtual machine first, and follow the guide step by step.</p>
+      <p data-l="th">สำรองไฟล์ ลองใน VM ก่อน แล้วทำตามคู่มือทีละขั้น</p>
+      <p data-l="vi">Sao lưu tệp, thử trong máy ảo trước, rồi làm theo hướng dẫn từng bước.</p>
+      <p data-l="id">Cadangkan file, coba dulu di mesin virtual, lalu ikuti panduan langkah demi langkah.</p>
+      <div class="buttons">
+        <a class="btn white" data-dl="11" href="https://github.com/x2Swiftyouz/Akati-Os/releases/latest"><svg class="i" aria-hidden="true"><use href="#i-dl"/></svg><span class="t"><span><span data-l="en">Download for Windows 11</span><span data-l="th">ดาวน์โหลดสำหรับ Windows 11</span><span data-l="vi">Tải cho Windows 11</span><span data-l="id">Unduh untuk Windows 11</span></span><small>24H2 · 25H2 · 26H2</small></span></a>
+        <a class="btn" data-dl="10" href="https://github.com/x2Swiftyouz/Akati-Os/releases/latest"><svg class="i" aria-hidden="true"><use href="#i-dl"/></svg><span class="t"><span><span data-l="en">Download for Windows 10</span><span data-l="th">ดาวน์โหลดสำหรับ Windows 10</span><span data-l="vi">Tải cho Windows 10</span><span data-l="id">Unduh untuk Windows 10</span></span><small>22H2</small></span></a>
+      </div>
+    </div>
   </div>
 </section>
 
 <footer>
   <div class="wrap">
-    Akati OS · GPL-3.0 · <a href="https://github.com/x2Swiftyouz/Akati-Os">Source</a> ·
-    <a href="changelog.html">Changelog</a> ·
-    <a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/CHANGES-FROM-ATLAS.md">Changes from AtlasOS</a> ·
-    Based on <a href="https://github.com/Atlas-OS/Atlas">AtlasOS</a>, not an official AtlasOS project. AME Wizard by Ameliorated.
+    <div class="fgrid">
+      <div class="fbrand">
+        <a class="brand" href="./"><img src="images/logo.png" alt="" width="30" height="30" loading="lazy">Akati OS</a>
+        <p data-l="en">A free gaming playbook for AME Wizard.</p>
+        <p data-l="th">Playbook สำหรับเล่นเกม ใช้กับ AME Wizard ได้ฟรี</p>
+        <p data-l="vi">Playbook chơi game miễn phí cho AME Wizard.</p>
+        <p data-l="id">Playbook gaming gratis untuk AME Wizard.</p>
+        <p class="credit" data-l="en">Based on <a href="https://github.com/Atlas-OS/Atlas">AtlasOS</a> (GPL-3.0), not an official AtlasOS project. The base tweaks are the work of the AtlasOS team.</p>
+        <p class="credit" data-l="th">ดัดแปลงจาก <a href="https://github.com/Atlas-OS/Atlas">AtlasOS</a> (GPL-3.0) ไม่ใช่โปรเจกต์ทางการของ AtlasOS การปรับแต่งพื้นฐานเป็นผลงานของทีม AtlasOS</p>
+        <p class="credit" data-l="vi">Dựa trên <a href="https://github.com/Atlas-OS/Atlas">AtlasOS</a> (GPL-3.0), không phải dự án chính thức của AtlasOS. Các tinh chỉnh nền tảng là công sức của nhóm AtlasOS.</p>
+        <p class="credit" data-l="id">Berbasis <a href="https://github.com/Atlas-OS/Atlas">AtlasOS</a> (GPL-3.0), bukan proyek resmi AtlasOS. Tweak dasarnya adalah karya tim AtlasOS.</p>
+      </div>
+      <div>
+        <h4>Akati OS</h4>
+        <ul>
+          <li><a href="#features"><span data-l="en">Features</span><span data-l="th">ฟีเจอร์</span><span data-l="vi">Tính năng</span><span data-l="id">Fitur</span></a></li>
+          <li><a href="#install"><span data-l="en">Install</span><span data-l="th">วิธีติดตั้ง</span><span data-l="vi">Cài đặt</span><span data-l="id">Instal</span></a></li>
+          <li><a href="#compare"><span data-l="en">Compare</span><span data-l="th">เปรียบเทียบ</span><span data-l="vi">So sánh</span><span data-l="id">Perbandingan</span></a></li>
+          <li><a href="#faq">FAQ</a></li>
+          <li><a href="changelog.html"><span data-l="en">Changelog</span><span data-l="th">ประวัติเวอร์ชัน</span><span data-l="vi">Nhật ký thay đổi</span><span data-l="id">Catatan rilis</span></a></li>
+        </ul>
+      </div>
+      <div>
+        <h4><span data-l="en">Project</span><span data-l="th">โปรเจกต์</span><span data-l="vi">Dự án</span><span data-l="id">Proyek</span></h4>
+        <ul>
+          <li><a href="https://github.com/x2Swiftyouz/Akati-Os"><span data-l="en">Source code</span><span data-l="th">ซอร์สโค้ด</span><span data-l="vi">Mã nguồn</span><span data-l="id">Kode sumber</span></a></li>
+          <li><a href="https://github.com/x2Swiftyouz/Akati-Os/releases">GitHub Releases</a></li>
+          <li><a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/OPTIONS.md"><span data-l="en">Options guide</span><span data-l="th">คู่มือตัวเลือก</span><span data-l="vi">Hướng dẫn tùy chọn</span><span data-l="id">Panduan opsi</span></a></li>
+          <li><a href="https://github.com/x2Swiftyouz/Akati-Os/issues/new/choose"><span data-l="en">Report a problem</span><span data-l="th">แจ้งปัญหา</span><span data-l="vi">Báo lỗi</span><span data-l="id">Laporkan masalah</span></a></li>
+        </ul>
+      </div>
+      <div>
+        <h4><span data-l="en">Credits</span><span data-l="th">เครดิต</span><span data-l="vi">Ghi công</span><span data-l="id">Kredit</span></h4>
+        <ul>
+          <li><a href="https://github.com/Atlas-OS/Atlas">AtlasOS</a></li>
+          <li><a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/CHANGES-FROM-ATLAS.md">Changes from AtlasOS</a></li>
+          <li><a href="https://ameliorated.io"><span data-l="en">AME Wizard by Ameliorated</span><span data-l="th">AME Wizard โดย Ameliorated</span><span data-l="vi">AME Wizard của Ameliorated</span><span data-l="id">AME Wizard oleh Ameliorated</span></a></li>
+          <li><a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/LICENSE"><span data-l="en">License: GPL-3.0</span><span data-l="th">สัญญาอนุญาต: GPL-3.0</span><span data-l="vi">Giấy phép: GPL-3.0</span><span data-l="id">Lisensi: GPL-3.0</span></a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="fbottom">
+      <span data-l="en">Akati OS · GPL-3.0 · Based on AtlasOS, not an official AtlasOS project. AME Wizard by Ameliorated.</span>
+      <span data-l="th">Akati OS · GPL-3.0 · ดัดแปลงจาก AtlasOS ไม่ใช่โปรเจกต์ทางการของ AtlasOS · AME Wizard โดย Ameliorated</span>
+      <span data-l="vi">Akati OS · GPL-3.0 · Dựa trên AtlasOS, không phải dự án chính thức của AtlasOS. AME Wizard của Ameliorated.</span>
+      <span data-l="id">Akati OS · GPL-3.0 · Berbasis AtlasOS, bukan proyek resmi AtlasOS. AME Wizard oleh Ameliorated.</span>
+    </div>
   </div>
 </footer>
 
@@ -450,6 +853,7 @@ Get-Content .\SHA256SUMS.txt</code></pre>
       vi: { light: 'Chuyển sang giao diện sáng', dark: 'Chuyển sang giao diện tối' },
       id: { light: 'Ganti ke tema terang', dark: 'Ganti ke tema gelap' }
     };
+    var MENU_LABEL = { en: 'Menu', th: 'เมนู', vi: 'Menu', id: 'Menu' };
     var root = document.documentElement;
     var lightQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: light)') : null;
     function chosenTheme() { var t = root.getAttribute('data-theme'); return (t === 'light' || t === 'dark') ? t : null; }
@@ -462,6 +866,12 @@ Get-Content .\SHA256SUMS.txt</code></pre>
         b.setAttribute('aria-label', THEME_LABEL[lang][next]);
         b.title = THEME_LABEL[lang][next];
       }
+      // Screenshots with a light version follow the theme of the page
+      var light = currentTheme() === 'light';
+      document.querySelectorAll('img[data-light]').forEach(function (img) {
+        var want = img.getAttribute(light ? 'data-light' : 'data-dark');
+        if (want && img.getAttribute('src') !== want) img.setAttribute('src', want);
+      });
       var chosen = chosenTheme();
       document.querySelectorAll('meta[name="theme-color"]').forEach(function (m) {
         if (!m.getAttribute('data-c')) m.setAttribute('data-c', m.content);
@@ -479,17 +889,122 @@ Get-Content .\SHA256SUMS.txt</code></pre>
       else if (lightQuery.addListener) lightQuery.addListener(paintTheme);
     }
 
+    // Navbar: menu button on small screens, a line under the bar once the page scrolls
+    var nav = document.getElementById('top');
+    var menu = document.getElementById('menu');
+    function closeMenu() { nav.classList.remove('open'); menu.setAttribute('aria-expanded', 'false'); }
+    menu.addEventListener('click', function () {
+      var open = nav.classList.toggle('open');
+      menu.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    document.querySelectorAll('#links a').forEach(function (a) { a.addEventListener('click', closeMenu); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeMenu(); });
+    function onScroll() { nav.classList.toggle('scrolled', window.scrollY > 8); }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
     function set(l) {
       lang = l;
       document.documentElement.lang = l;
       document.querySelectorAll('[data-l]').forEach(function (el) { el.classList.toggle('show', el.getAttribute('data-l') === l); });
       document.querySelectorAll('[data-set]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-set') === l); b.setAttribute('aria-pressed', b.getAttribute('data-set') === l ? 'true' : 'false'); });
+      menu.setAttribute('aria-label', MENU_LABEL[l]);
       paintTheme();
     }
     document.querySelectorAll('[data-set]').forEach(function (b) {
       b.addEventListener('click', function () { set(b.getAttribute('data-set')); try { localStorage.setItem('akati-lang', lang); } catch (e) {} });
     });
     set(lang);
+
+    // Fade in sections while scrolling (not when the system asks for less motion)
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if ('IntersectionObserver' in window && !reduce) {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+      }, { rootMargin: '0px 0px -8% 0px', threshold: 0 });
+      document.querySelectorAll('.rv').forEach(function (el) {
+        var r = el.getBoundingClientRect();
+        if (r.top < window.innerHeight && r.bottom > 0) el.classList.add('in'); else io.observe(el);
+      });
+      root.classList.add('anim');
+    }
+
+    // Recommended download: Windows 11 unless the browser reports Windows 10 (platformVersion 1-12; 13 and up is Windows 11)
+    function recommend(v) {
+      try {
+        var mine = document.getElementById(v === '10' ? 'dl10' : 'dl11');
+        var other = document.getElementById(v === '10' ? 'dl11' : 'dl10');
+        var main = document.querySelector('.hero .buttons'), alt = document.querySelector('.hero .alt');
+        mine.className = 'btn primary'; other.className = 'btn sm';
+        main.insertBefore(mine, main.firstChild); alt.insertBefore(other, alt.firstChild);
+        mine.querySelector('.rec').hidden = false; other.querySelector('.rec').hidden = true;
+        var cta = document.querySelector('.cta .buttons');
+        cta.querySelectorAll('[data-dl]').forEach(function (a) { a.classList.toggle('white', a.getAttribute('data-dl') === v); });
+        var first = cta.querySelector('[data-dl="' + v + '"]');
+        if (first) cta.insertBefore(first, cta.firstChild);
+      } catch (e) {}
+    }
+    try {
+      var uad = navigator.userAgentData;
+      if (uad && uad.getHighEntropyValues) {
+        uad.getHighEntropyValues(['platform', 'platformVersion']).then(function (h) {
+          if (!h || h.platform !== 'Windows') return;
+          var major = parseInt(String(h.platformVersion || '').split('.')[0], 10);
+          if (major >= 13) recommend('11'); else if (major >= 1) recommend('10');
+        }).catch(function () {});
+      }
+    } catch (e) {}
+
+    // What's new: headings and bullets of the latest release notes, built as text (never as HTML)
+    var SECTION = {
+      added: { en: 'Added', th: 'เพิ่มใหม่', vi: 'Thêm mới', id: 'Ditambahkan' },
+      changed: { en: 'Changed', th: 'เปลี่ยนแปลง', vi: 'Thay đổi', id: 'Diubah' },
+      fixed: { en: 'Fixed', th: 'แก้ไข', vi: 'Đã sửa', id: 'Diperbaiki' }
+    };
+    function inlineText(parent, text) {
+      // `code` becomes <code>; **bold** markers and [text](url) links become plain text
+      text = text.replace(/\*\*(.+?)\*\*/g, '$1').replace(/\[([^\]]+)\]\([^)]*\)/g, '$1');
+      text.split(/(`[^`]+`)/).forEach(function (part, i) {
+        if (!part) return;
+        if (i % 2) { var c = document.createElement('code'); c.textContent = part.slice(1, -1); parent.appendChild(c); }
+        else parent.appendChild(document.createTextNode(part));
+      });
+    }
+    function langSpans(parent, texts) {
+      LANGS.forEach(function (l) { var s = document.createElement('span'); s.setAttribute('data-l', l); s.textContent = texts[l]; parent.appendChild(s); });
+    }
+    function showNews(rel) {
+      var body = String(rel.body || '').split(/^##\s*Download/m)[0].replace(/\r\n?/g, '\n');
+      var box = document.getElementById('news-body');
+      var group = null, list = null, li = null, count = 0;
+      body.split('\n').forEach(function (line) {
+        var m;
+        if ((m = /^#{2,6}\s+(.*?)\s*#*\s*$/.exec(line))) {
+          group = document.createElement('div'); box.appendChild(group);
+          var h = document.createElement('h3'), key = m[1].toLowerCase();
+          if (SECTION[key]) langSpans(h, SECTION[key]); else inlineText(h, m[1]);
+          group.appendChild(h); list = null; li = null;
+          return;
+        }
+        if ((m = /^\s*[-*+]\s+(.*)$/.exec(line))) {
+          if (!group) { group = document.createElement('div'); box.appendChild(group); }
+          if (!list) { list = document.createElement('ul'); group.appendChild(list); }
+          li = document.createElement('li'); inlineText(li, m[1]); list.appendChild(li); count++;
+          return;
+        }
+        if (li && /^\s+\S/.test(line)) { inlineText(li, ' ' + line.trim()); return; }
+        if (!line.trim()) li = null;
+      });
+      if (!count) { box.textContent = ''; return; }
+      document.getElementById('news-tag').textContent = rel.tag_name;
+      var d = new Date(rel.published_at), dates = {};
+      LANGS.forEach(function (l) {
+        try { dates[l] = isNaN(d) ? '' : d.toLocaleDateString(l, { year: 'numeric', month: 'long', day: 'numeric' }); } catch (e) { dates[l] = String(rel.published_at || '').slice(0, 10); }
+      });
+      langSpans(document.getElementById('news-date'), dates);
+      document.getElementById('whatsnew').hidden = false;
+      set(lang);
+    }
 
     // Releases from GitHub (cached for 10 minutes in this tab; the page works without them)
     var API = 'https://api.github.com/repos/x2Swiftyouz/Akati-Os/releases?per_page=100';
@@ -517,35 +1032,43 @@ Get-Content .\SHA256SUMS.txt</code></pre>
       // Direct download links of the latest release (the buttons go to the release page when this fails)
       var rel = list.filter(function (r) { return !r.prerelease; })[0];
       if (rel) {
+        var urls = {};
         rel.assets.forEach(function (a) {
-          if (/^AkatiOS-Win11_.*\.apbx$/.test(a.name)) { document.getElementById('dl11').href = a.browser_download_url; }
-          if (/^AkatiOS-Win10_.*\.apbx$/.test(a.name)) { document.getElementById('dl10').href = a.browser_download_url; }
+          if (/^AkatiOS-Win11_.*\.apbx$/.test(a.name)) { urls['11'] = a.browser_download_url; document.getElementById('dl11').href = a.browser_download_url; }
+          if (/^AkatiOS-Win10_.*\.apbx$/.test(a.name)) { urls['10'] = a.browser_download_url; document.getElementById('dl10').href = a.browser_download_url; }
         });
+        document.querySelectorAll('[data-dl]').forEach(function (a) { var u = urls[a.getAttribute('data-dl')]; if (u) a.href = u; });
         document.getElementById('v11').textContent = rel.tag_name + ' · 24H2 · 25H2 · 26H2';
         document.getElementById('v10').textContent = rel.tag_name + ' · 22H2';
+        // "vX is out" in the pill above the title
+        var PILL = {
+          en: function (v) { return v + ' is out: see what’s new'; },
+          th: function (v) { return v + ' มาแล้ว ดูว่ามีอะไรใหม่'; },
+          vi: function (v) { return 'Đã có ' + v + ': xem có gì mới'; },
+          id: function (v) { return v + ' sudah rilis: lihat yang baru'; }
+        };
+        var pill = document.getElementById('pill');
+        pill.href = 'changelog.html#' + encodeURIComponent(rel.tag_name);
+        pill.querySelectorAll('.pill-t').forEach(function (el) { el.textContent = PILL[el.getAttribute('data-l')](rel.tag_name); });
+        try { showNews(rel); } catch (e) { document.getElementById('whatsnew').hidden = true; }
       }
       // Total downloads of all playbook files
       var total = 0;
       list.forEach(function (r) { r.assets.forEach(function (a) { if (/\.apbx$/i.test(a.name)) total += a.download_count; }); });
       if (total > 0) {
-        var text = {
-          en: function (n) { return n + (total === 1 ? ' download' : ' downloads'); },
-          th: function (n) { return 'ดาวน์โหลดแล้ว ' + n + ' ครั้ง'; },
-          vi: function (n) { return n + ' lượt tải'; },
-          id: function (n) { return n + ' unduhan'; }
+        var label = {
+          en: total === 1 ? 'playbook download' : 'playbook downloads',
+          th: 'ยอดดาวน์โหลด playbook',
+          vi: 'lượt tải playbook',
+          id: 'unduhan playbook'
         };
         var box = document.getElementById('dlcount');
-        box.querySelectorAll('[data-l]').forEach(function (el) {
+        box.querySelectorAll('.dl-v').forEach(function (el) {
           var l = el.getAttribute('data-l'), n;
           try { n = total.toLocaleString(l); } catch (e) { n = String(total); }
-          el.textContent = '';
-          el.appendChild(document.createTextNode('⬇ '));
-          var parts = text[l](n).split(n);
-          el.appendChild(document.createTextNode(parts[0]));
-          var b = document.createElement('b'); b.textContent = n; el.appendChild(b);
-          el.appendChild(document.createTextNode(parts.slice(1).join(n)));
+          el.textContent = n;
         });
-        box.hidden = false;
+        box.querySelectorAll('.dl-l').forEach(function (el) { el.textContent = label[el.getAttribute('data-l')]; });
       }
     }).catch(function () {});
   })();

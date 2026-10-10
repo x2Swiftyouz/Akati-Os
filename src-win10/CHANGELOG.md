@@ -1,5 +1,18 @@
 # Changelog: Akati OS for Windows 10
 
+## v1.9.0
+
+### Added
+- Game boost > My games: "Find my games" looks for games installed with Steam, Epic Games, Riot (VALORANT, League of Legends) and Battle.net; tick them and add them in one click
+- Game boost: "Choose apps" sets which apps Game boost closes (the usual ones and any app running now)
+- My games: "Network priority" for a game marks its traffic as high priority (QoS, DSCP 46); only routers that read DSCP use it
+- Akati Doctor: on a laptop, says when it runs on battery (Windows then holds the CPU and GPU back); Game boost says so too
+- Tweaks > Services: turn off printing on PCs without a printer, and the Bluetooth services on PCs without Bluetooth
+- Health: "Share score" saves a picture of the Akati Score and the PC (no PC or user name) to Pictures\Akati OS and copies it, ready to paste in a chat
+- Numbers on the sidebar: app updates on Gaming apps, Akati Doctor findings on Health
+- Keyboard shortcuts: press ? (or Ctrl+K > Keyboard shortcuts) for the list
+- Quick actions on the Dashboard grow a little under the mouse
+
 ## v1.8.0
 
 ### Added

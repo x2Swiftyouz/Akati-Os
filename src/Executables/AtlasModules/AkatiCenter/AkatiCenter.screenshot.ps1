@@ -146,6 +146,12 @@ if ($Screenshot) {
     $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 140)); $sv.UpdateLayout(); Save-Shot 'boost-en-scan.png'
     $sv.ScrollToVerticalOffset(0); $ui.BoostAppsPanel.Visibility = 'Collapsed'; $ui.GameScanPanel.Visibility = 'Collapsed'
     Show-Keys; Save-Shot 'keys-en.png'; $ui.Keys.Visibility = 'Collapsed'
+    # CPU balance and process rules with sample settings
+    Save-Setting ProcessRules ([string[]]@('chrome|BelowNormal|', 'obs64||12'))
+    Save-Setting BalanceLog ([string[]]@("$((Get-Date).AddMinutes(-5).ToString('s'))|chrome|41", "$((Get-Date).AddMinutes(-42).ToString('s'))|OneDrive|33"))
+    $ui.BalanceOn.IsChecked = $true; Show-Rules; Show-BalLog
+    $top = $ui.BalanceOn.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
+    $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 40)); $sv.UpdateLayout(); Save-Shot 'boost-en-balance.png'; $sv.ScrollToVerticalOffset(0)
     try { [void](Save-ScoreCard (Join-Path $Screenshot 'share-card.png')) } catch { Write-Host "Share picture failed: $($_.Exception.Message)" }
     $script:navBadges['Gaming'] = 0; $script:navBadges['Health'] = 0; Update-NavBadges
     # Tweaks > Interrupts: the devices of the CI runner and a sample benchmark

@@ -69,7 +69,7 @@ namespace AkatiOS {
 function Get-W32Value { $v = Get-RegValue $w32Key 'Win32PrioritySeparation'; if ($null -eq $v) { 2 } else { [int]$v } }
 function Get-W32Text([int]$v) {
     $p = Get-PrioritySeparation $v
-    $parts = @(T "w32.q.$($p.Quantum)"), (T $(if ($p.Fixed) { 'w32.fixed' } else { 'w32.variable' }))
+    $parts = @((T "w32.q.$($p.Quantum)"), (T $(if ($p.Fixed) { 'w32.fixed' } else { 'w32.variable' })))
     if (!$p.Fixed) { $parts += (T 'w32.turns') -f ($p.Boost + 1) }
     if ($p.Boost) { $parts += (T 'w32.boost') -f $p.Boost }
     '0x{0:X2}  ·  {1}' -f $v, ($parts -join '  ·  ')

@@ -306,6 +306,75 @@ function Update-ScheduledTheme {
     $r = [IntPtr]::Zero
     [void][AkatiOS.TrayNative]::SendMessageTimeout([IntPtr]0xffff, 0x1A, [IntPtr]::Zero, 'ImmersiveColorSet', 2, 3000, [ref]$r)
 }
+# Process rules and CPU balance (set in Akati OS Center > Game boost). This icon runs as the signed-in user, so it
+# only changes the apps of that user: never Windows services or apps that run as administrator.
+#   ProcessRules: "name|priority|affinity mask" for each app, applied once to each new process of it
+#   Balance: an app in the background that uses more than BalanceLimit % of the whole CPU for two checks in a row gets
+#   Below normal priority until it is calm again or comes to the front; its own priority is put back then
+Add-Type -Namespace AkatiOS -Name TrayFg -MemberDefinition '[DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow(); [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint pid);'
+$script:ruleDone = @{}; $script:cpuLast = @{}; $script:hot = @{}; $script:restrained = @{}
+$balanceNever = 'explorer', 'dwm', 'csrss', 'winlogon', 'audiodg', 'System', 'Idle', 'ctfmon', 'sihost', 'svchost', 'powershell', 'pwsh', 'conhost',
+                'fontdrvhost', 'ShellExperienceHost', 'StartMenuExperienceHost', 'SearchHost', 'TextInputHost', 'RuntimeBroker', 'obs64', 'Discord', 'Taskmgr'
+function Invoke-ProcessRules {
+    foreach ($line in @(Get-Setting 'ProcessRules')) {
+        if (!$line) { continue }
+        $name, $prio, $mask = ([string]$line).Split('|')
+        foreach ($p in @(Get-Process -Name $name -ErrorAction SilentlyContinue)) {
+            $sig = "$($p.Id)|$line"
+            if ($script:ruleDone.ContainsKey($sig)) { continue }
+            $script:ruleDone[$sig] = $true
+            try { if ($prio) { $p.PriorityClass = $prio } } catch { }
+            try { if ($mask -and [long]$mask -gt 0) { $p.ProcessorAffinity = [IntPtr][long]$mask } } catch { }
+        }
+    }
+    if ($script:ruleDone.Count -gt 2000) { $script:ruleDone = @{} }
+}
+function Restore-Balanced([int]$id) {
+    $r = $script:restrained[$id]; $script:restrained.Remove($id)
+    if ($r) { try { (Get-Process -Id $id -ErrorAction Stop).PriorityClass = $r.Old } catch { } }
+}
+function Invoke-Balance {
+    if ((Get-Setting 'Balance') -ne 1) {
+        foreach ($id in @($script:restrained.Keys)) { Restore-Balanced $id }
+        $script:cpuLast = @{}; return
+    }
+    $limit = [int](Get-Setting 'BalanceLimit'); if ($limit -le 0) { $limit = 30 }
+    $cpus = [Environment]::ProcessorCount
+    [uint32]$fg = 0; [void][AkatiOS.TrayFg]::GetWindowThreadProcessId([AkatiOS.TrayFg]::GetForegroundWindow(), [ref]$fg)
+    # Games and apps with a rule of their own are left alone
+    $own = @(if (Test-Path "$userKey\Games") { (Get-Item "$userKey\Games").Property | ForEach-Object { [IO.Path]::GetFileNameWithoutExtension($_) } }) +
+           @(Get-Setting 'ProcessRules' | Where-Object { $_ } | ForEach-Object { ([string]$_).Split('|')[0] })
+    $now = Get-Date; $seen = @{}
+    foreach ($p in @(Get-Process)) {
+        $t = 0.0
+        try { $t = $p.TotalProcessorTime.TotalMilliseconds } catch { continue }
+        $seen[$p.Id] = $true
+        $last = $script:cpuLast[$p.Id]
+        $script:cpuLast[$p.Id] = @{ T = $t; At = $now }
+        if (!$last) { continue }
+        $ms = ($now - $last.At).TotalMilliseconds
+        if ($ms -le 0) { continue }
+        $pct = 100 * ($t - $last.T) / ($ms * $cpus)
+        if ($script:restrained.ContainsKey($p.Id)) {
+            if ($p.Id -eq $fg -or $pct -lt $limit / 2) { Restore-Balanced $p.Id }
+            continue
+        }
+        if ($p.Id -eq $fg -or $p.Id -eq $PID -or $p.SessionId -eq 0 -or $p.Name -in $balanceNever -or $p.Name -in $own -or $pct -lt $limit) { $script:hot.Remove($p.Id); continue }
+        $script:hot[$p.Id] = [int]$script:hot[$p.Id] + 1
+        if ($script:hot[$p.Id] -lt 2) { continue }
+        $script:hot.Remove($p.Id)
+        try {
+            $old = [string]$p.PriorityClass
+            if ($old -in 'Normal', 'AboveNormal', 'High') {
+                $p.PriorityClass = 'BelowNormal'
+                $script:restrained[$p.Id] = @{ Old = $old; Name = $p.Name }
+                $log = @("$($now.ToString('s'))|$($p.Name)|$([int]$pct)") + @(Get-Setting 'BalanceLog' | Where-Object { $_ }) | Select-Object -First 20
+                Set-ItemProperty -Path $userKey -Name BalanceLog -Value ([string[]]$log) -Type MultiString -Force
+            }
+        } catch { }
+    }
+    foreach ($id in @($script:cpuLast.Keys)) { if (!$seen.ContainsKey($id)) { $script:cpuLast.Remove($id); $script:hot.Remove($id); $script:restrained.Remove($id) } }
+}
 $timer = New-Object System.Windows.Forms.Timer
 $timer.Interval = 3000
 $timer.Add_Tick({
@@ -334,6 +403,8 @@ $timer.Add_Tick({
             }
         }
     } catch { }
+    try { Invoke-ProcessRules } catch { }
+    try { Invoke-Balance } catch { }
     try {
         $script:ticks++
         $gamePaths = @(if (Test-Path "$userKey\Games") { (Get-Item "$userKey\Games").Property })
@@ -405,6 +476,7 @@ $updateShow.Start()
 
 [System.Windows.Forms.Application]::Run()
 $timer.Stop()
+foreach ($id in @($script:restrained.Keys)) { Restore-Balanced $id }
 Save-PlayTime
 if ($hotkeys) { $hotkeys.Dispose() }
 $notify.Dispose()

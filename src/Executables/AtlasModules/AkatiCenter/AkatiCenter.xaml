@@ -1067,6 +1067,71 @@
                                     <TextBlock x:Name="GamesEmpty" Tag="t:games.empty" Text="No games added yet." Style="{StaticResource Muted}" Margin="14,8"/>
                                 </StackPanel>
                             </Border>
+                            <!-- CPU balance and process rules: done by the icon next to the clock (AkatiTray.ps1), set here (AkatiCenter.rules.ps1) -->
+                            <Border Style="{StaticResource Card}" Padding="8" Margin="0,0,0,16">
+                                <StackPanel Margin="14,8,14,8">
+                                    <DockPanel>
+                                        <CheckBox x:Name="BalanceOn" DockPanel.Dock="Right" Style="{StaticResource Switch}" VerticalAlignment="Top"/>
+                                        <StackPanel Margin="0,0,12,0">
+                                            <TextBlock Tag="t:bal.title" Text="CPU balance" Style="{StaticResource CardTitle}"/>
+                                            <TextBlock Tag="t:bal.sub" Text="When an app in the background takes too much CPU, it gets a lower priority until it calms down, so the game and the window in front stay smooth. Its own priority comes back by itself." Style="{StaticResource Muted}" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </DockPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                        <TextBlock Tag="t:bal.limit" Text="Step in above" Style="{StaticResource Muted}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                        <Border Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="7" Padding="2">
+                                            <StackPanel Orientation="Horizontal">
+                                                <RadioButton x:Name="BalLimit20" Style="{StaticResource Segment}" GroupName="BalLimit" Content="20%"/>
+                                                <RadioButton x:Name="BalLimit30" Style="{StaticResource Segment}" GroupName="BalLimit" Content="30%" IsChecked="True"/>
+                                                <RadioButton x:Name="BalLimit50" Style="{StaticResource Segment}" GroupName="BalLimit" Content="50%"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <TextBlock Tag="t:bal.limit2" Text="of the whole CPU" Style="{StaticResource Muted}" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                                    </StackPanel>
+                                    <TextBlock x:Name="BalTray" Tag="t:bal.notray" Text="The icon next to the clock does this: turn it on in Tweaks > System." Foreground="#FF9F0A" TextWrapping="Wrap" Margin="0,8,0,0" Visibility="Collapsed"/>
+                                    <TextBlock x:Name="BalLogHead" Tag="t:bal.log" Text="RECENTLY" Style="{StaticResource Label}" Margin="0,12,0,4" Visibility="Collapsed"/>
+                                    <StackPanel x:Name="BalLog"/>
+                                    <Border Height="1" Background="{DynamicResource Line}" Margin="0,14,0,12"/>
+                                    <DockPanel>
+                                        <Button x:Name="RuleAdd" DockPanel.Dock="Right" Style="{StaticResource PillAccent}" VerticalAlignment="Top">
+                                            <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE710;" FontSize="12" Margin="0,0,8,0"/><TextBlock Tag="t:rules.add" Text="Add rule"/></StackPanel>
+                                        </Button>
+                                        <StackPanel Margin="0,0,12,0">
+                                            <TextBlock Tag="t:rules.title" Text="Process rules" Style="{StaticResource CardTitle}"/>
+                                            <TextBlock Tag="t:rules.sub" Text="A priority and the processors an app may use, set every time it starts. For apps of this user; apps that run as administrator are left as they are." Style="{StaticResource Muted}" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </DockPanel>
+                                    <Border x:Name="RulePanel" Background="{DynamicResource Field}" CornerRadius="8" Padding="12,10" Margin="0,10,0,4" Visibility="Collapsed">
+                                        <StackPanel>
+                                            <TextBlock Tag="t:rules.pick" Text="Pick a running app, or type the name of its .exe" FontWeight="SemiBold"/>
+                                            <WrapPanel x:Name="RuleApps" Margin="0,8,0,4"/>
+                                            <Grid Margin="0,0,0,10">
+                                                <TextBox x:Name="RuleName" Background="{DynamicResource CardBg}" Foreground="{DynamicResource Text2}" CaretBrush="{DynamicResource Text2}" BorderBrush="{DynamicResource Line}" Padding="8,6" VerticalContentAlignment="Center"/>
+                                                <TextBlock x:Name="RuleNameHint" Tag="t:rules.name" Text="App name, for example chrome" Foreground="{DynamicResource MutedBrush}" Margin="10,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                                            </Grid>
+                                            <TextBlock Tag="t:rules.prio" Text="PRIORITY" Style="{StaticResource Label}" Margin="0,0,0,4"/>
+                                            <Border Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="7" Padding="2" HorizontalAlignment="Left">
+                                                <WrapPanel>
+                                                    <RadioButton x:Name="RulePrioKeep" Style="{StaticResource Segment}" GroupName="RulePrio" Tag="t:rules.prio.keep" Content="Keep" IsChecked="True"/>
+                                                    <RadioButton x:Name="RulePrioIdle" Style="{StaticResource Segment}" GroupName="RulePrio" Tag="t:rules.prio.Idle" Content="Low"/>
+                                                    <RadioButton x:Name="RulePrioBelowNormal" Style="{StaticResource Segment}" GroupName="RulePrio" Tag="t:rules.prio.BelowNormal" Content="Below normal"/>
+                                                    <RadioButton x:Name="RulePrioNormal" Style="{StaticResource Segment}" GroupName="RulePrio" Tag="t:rules.prio.Normal" Content="Normal"/>
+                                                    <RadioButton x:Name="RulePrioAboveNormal" Style="{StaticResource Segment}" GroupName="RulePrio" Tag="t:rules.prio.AboveNormal" Content="Above normal"/>
+                                                    <RadioButton x:Name="RulePrioHigh" Style="{StaticResource Segment}" GroupName="RulePrio" Tag="t:rules.prio.High" Content="High"/>
+                                                </WrapPanel>
+                                            </Border>
+                                            <TextBlock Tag="t:rules.cpus" Text="PROCESSORS (NONE TICKED: ALL)" Style="{StaticResource Label}" Margin="0,10,0,4"/>
+                                            <WrapPanel x:Name="RuleCpus"/>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,6,0,0">
+                                                <Button x:Name="RuleCancel" Style="{StaticResource Pill}" Margin="0,0,8,0"><TextBlock Tag="t:cancel" Text="Cancel"/></Button>
+                                                <Button x:Name="RuleSave" Style="{StaticResource PillAccent}"><TextBlock Tag="t:rules.save" Text="Save rule"/></Button>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+                                    <StackPanel x:Name="RuleList" Margin="0,8,0,0"/>
+                                    <TextBlock x:Name="RuleEmpty" Tag="t:rules.empty" Text="No rules yet." Style="{StaticResource Muted}" Margin="0,8,0,0"/>
+                                </StackPanel>
+                            </Border>
                             <!-- Anti-cheat mode: Memory integrity (HVCI) on for Valorant, off for FiveM -->
                             <Border Style="{StaticResource Card}" Margin="0,0,0,16">
                                 <StackPanel>

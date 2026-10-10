@@ -309,6 +309,7 @@ if ($null -ne $script:exitNow) { exit $script:exitNow }
 . (Join-Path $appDir 'AkatiCenter.irq.ps1')
 . (Join-Path $appDir 'AkatiCenter.priority.ps1')
 . (Join-Path $appDir 'AkatiCenter.games.ps1')
+. (Join-Path $appDir 'AkatiCenter.rules.ps1')
 . (Join-Path $appDir 'AkatiCenter.cleaner.ps1')
 . (Join-Path $appDir 'AkatiCenter.uninstall.ps1')
 . (Join-Path $appDir 'AkatiCenter.appearance.ps1')
@@ -353,7 +354,8 @@ function Show-Page([string]$name) {
     if ($name -eq 'gaming') { Initialize-Apps }
     if ($name -eq 'appearance') { Initialize-Appearance }
     if ($name -eq 'uninstall' -and !$script:uninstLoaded) { $script:uninstLoaded = $true; Start-UninstLoad }
-    if ($name -eq 'boost' -and !$script:startupShown) { $script:startupShown = $true; Show-StartupItems; Start-BgTasks }
+    if ($name -eq 'boost' -and !$script:startupShown) { $script:startupShown = $true; Show-StartupItems; Start-BgTasks; Test-BalTray }
+    if ($name -eq 'boost') { Show-BalLog }
     foreach ($p in $pages) {
         $el = $ui["Page$(Get-PageId $p)"]
         if ($p -ne $name) { $el.Visibility = 'Collapsed'; continue }

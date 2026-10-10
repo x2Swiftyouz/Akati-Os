@@ -1,6 +1,6 @@
 # Changelog: Akati OS for Windows 10
 
-## Unreleased
+## v1.9.0
 
 ### Added
 - Game boost > My games: "Find my games" looks for games installed with Steam, Epic Games, Riot (VALORANT, League of Legends) and Battle.net; tick them and add them in one click

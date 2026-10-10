@@ -103,3 +103,12 @@ function Get-PrioritySeparation([int]$value) {
     $q = ($value -shr 4) -band 3; $k = ($value -shr 2) -band 3
     @{ Quantum = $(if ($q -eq 1) { 'long' } else { 'short' }); Fixed = $k -eq 2; Boost = [Math]::Min(2, $value -band 3) }
 }
+
+# Uninstaller: the name a program uses for its folders and registry keys, without the version, the edition in
+# brackets and the bitness ("7-Zip 21.07 (x64 edition)" -> "7-Zip")
+function Get-ProgramBaseName([string]$name) {
+    $n = $name -replace '\s*\([^)]*\)', ''
+    $n = $n -replace '\s+-?\s*v?\d+(\.\d+)+.*$', ''
+    $n = $n -replace '\s+(x64|x86|64-bit|32-bit)$', ''
+    $n.Trim().Trim('-').Trim()
+}

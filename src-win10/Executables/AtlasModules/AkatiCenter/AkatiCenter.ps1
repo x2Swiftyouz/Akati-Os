@@ -310,6 +310,7 @@ if ($null -ne $script:exitNow) { exit $script:exitNow }
 . (Join-Path $appDir 'AkatiCenter.priority.ps1')
 . (Join-Path $appDir 'AkatiCenter.games.ps1')
 . (Join-Path $appDir 'AkatiCenter.cleaner.ps1')
+. (Join-Path $appDir 'AkatiCenter.uninstall.ps1')
 . (Join-Path $appDir 'AkatiCenter.appearance.ps1')
 . (Join-Path $appDir 'AkatiCenter.system.ps1')
 . (Join-Path $appDir 'AkatiCenter.health.ps1')
@@ -318,7 +319,7 @@ if ($null -ne $script:exitNow) { exit $script:exitNow }
 # Navigation, title bar, language
 # ---------------------------------------------------------------------------------------------
 Add-Mark 'Navigation, title bar, language'
-$pages = 'dashboard', 'gaming', 'boost', 'tweaks', 'health', 'cleaner', 'appearance', 'about'
+$pages = 'dashboard', 'gaming', 'boost', 'tweaks', 'health', 'cleaner', 'uninstall', 'appearance', 'about'
 $script:page = 'dashboard'
 function Get-PageId([string]$p) { [Globalization.CultureInfo]::InvariantCulture.TextInfo.ToTitleCase($p) }
 # Numbers count up from 0 when a page opens (Akati Score, usage): ease-out over about 0.7 s.
@@ -351,6 +352,7 @@ function Show-Page([string]$name) {
     if ($name -eq 'tweaks') { Initialize-Tweaks }
     if ($name -eq 'gaming') { Initialize-Apps }
     if ($name -eq 'appearance') { Initialize-Appearance }
+    if ($name -eq 'uninstall' -and !$script:uninstLoaded) { $script:uninstLoaded = $true; Start-UninstLoad }
     if ($name -eq 'boost' -and !$script:startupShown) { $script:startupShown = $true; Show-StartupItems; Start-BgTasks }
     foreach ($p in $pages) {
         $el = $ui["Page$(Get-PageId $p)"]
@@ -644,7 +646,7 @@ function Set-AppLanguage([string]$l) {
     Update-Language
 }
 # Narrow sidebar: icons only, the page names show as tooltips
-$navButtons = @($ui.NavDashboard, $ui.NavGaming, $ui.NavBoost, $ui.NavTweaks, $ui.NavHealth, $ui.NavCleaner, $ui.NavAppearance, $ui.NavAbout)
+$navButtons = @($ui.NavDashboard, $ui.NavGaming, $ui.NavBoost, $ui.NavTweaks, $ui.NavHealth, $ui.NavCleaner, $ui.NavUninstall, $ui.NavAppearance, $ui.NavAbout)
 $script:compact = $false
 function Set-Compact([bool]$on) {
     $script:compact = $on
@@ -726,7 +728,7 @@ $ui.WelcomeDone.Add_Click({
 
 # Keyboard shortcuts (the ? key, or Ctrl+K > Keyboard shortcuts)
 $keyList = @(
-    @('Ctrl + K', 'keys.search'), @('Ctrl + 1 ... 8', 'keys.pages'), @('Ctrl + Tab', 'keys.next'), @('Ctrl + F', 'keys.find'),
+    @('Ctrl + K', 'keys.search'), @('Ctrl + 1 ... 9', 'keys.pages'), @('Ctrl + Tab', 'keys.next'), @('Ctrl + F', 'keys.find'),
     @('Ctrl +  /  Ctrl -  /  Ctrl 0', 'keys.zoom'), @('F1', 'keys.tour'), @('Esc', 'keys.esc'), @('?', 'keys.keys'),
     @('Ctrl + Alt + B', 'keys.boost'), @('Ctrl + Alt + R', 'keys.ram')
 )
@@ -772,7 +774,7 @@ if (!$Screenshot) {
     elseif ((Get-RegValue $settingsKey 'LastVersion') -ne $version) { Show-WhatsNew }
 }
 
-# Keyboard: Ctrl+1 to Ctrl+8 switch pages, Ctrl+Tab the next page, F1 the tour, Ctrl+F searches the AtlasOS settings in Tweaks, Esc closes the welcome or clears the search
+# Keyboard: Ctrl+1 to Ctrl+9 switch pages, Ctrl+Tab the next page, F1 the tour, Ctrl+F searches the AtlasOS settings in Tweaks, Esc closes the welcome or clears the search
 $window.Add_PreviewKeyDown({
     param($sender, $e)
     $ctrl = ([System.Windows.Input.Keyboard]::Modifiers -band [System.Windows.Input.ModifierKeys]::Control) -ne 0
@@ -810,7 +812,7 @@ $window.Add_PreviewKeyDown({
         $ui.NavTweaks.IsChecked = $true
         [void]$ui.SystemSearch.Focus(); $ui.SystemSearch.SelectAll()
         $e.Handled = $true
-    } elseif ($key -match '^(D|NumPad)([1-8])$') {
+    } elseif ($key -match '^(D|NumPad)([1-9])$') {
         $ui["Nav$(Get-PageId $pages[[int]$Matches[2] - 1])"].IsChecked = $true
         $e.Handled = $true
     }

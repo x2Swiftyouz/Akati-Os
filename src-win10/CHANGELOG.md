@@ -7,6 +7,9 @@
   - A core benchmark runs a small piece of work on each logical processor (in a new random order each round) and suggests the processors with the fewest interruptions; CPU 0 is never suggested, and with Hyper-Threading two devices never share a core
   - Suggested fills in MSI on, the best core for the graphics card (and high priority), the next for the network adapter and the third for USB; nothing is written until Apply
   - Only the values that changed are written. Each device is backed up before its first change; Undo and Undo all put it back exactly, also from Safe Mode. Storage controllers ask before their MSI setting changes
+- Tweaks > Interrupts: the benchmark now runs at time critical priority and measures the time interrupts and DPCs take away on each logical processor (the interrupt load); bridges and chipset parts are in a closed "Other PCI devices" group
+- Tweaks: CPU time for the window in front (Win32PrioritySeparation). Every common value with what it means, set at once without a restart; Measure shows what the value now does, Compare tries several values in a random order each round with a busy background program on the same processor and puts your value back afterwards
+- Uninstaller (new page, Ctrl+9): every program and Store app with search, filter and sort; the own uninstaller of the program (quiet when possible), several one after another, a warning for shared runtimes and drivers; afterwards the folders, shortcuts and registry keys it left behind, removed only when you press Remove (files to the Recycle Bin, registry keys saved as .reg files first)
 
 ## v1.9.0
 

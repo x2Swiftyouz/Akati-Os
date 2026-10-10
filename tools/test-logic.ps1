@@ -78,5 +78,11 @@ Check 'w32 0x18' ('{0} {1} {2}' -f $ps.Quantum, $ps.Fixed, $ps.Boost) 'long True
 $ps = Get-PrioritySeparation 2
 Check 'w32 default bits' ('{0} {1} {2}' -f $ps.Quantum, $ps.Fixed, $ps.Boost) 'short False 2'
 
+# Uninstaller names
+Check 'base 7zip' (Get-ProgramBaseName '7-Zip 21.07 (x64 edition)') '7-Zip'
+Check 'base plain' (Get-ProgramBaseName 'Brave') 'Brave'
+Check 'base version dash' (Get-ProgramBaseName 'Microsoft Visual C++ 2010  x64 Redistributable - 10.0.40219') 'Microsoft Visual C++ 2010  x64 Redistributable'
+Check 'base bitness' (Get-ProgramBaseName 'Notepad++ (64-bit x64)') 'Notepad++'
+
 Write-Host "$script:count checks, $script:failed failed"
 if ($script:failed) { exit 1 }

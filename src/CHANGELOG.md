@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.10.1
+
+### Changed
+- Setup installs 7-Zip (the newest version from 7-zip.org) instead of NanaZip, and no longer asks whether to replace 7-Zip with NanaZip
+
 ## v1.10.0
 
 ### Added

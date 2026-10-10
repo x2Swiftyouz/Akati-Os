@@ -127,63 +127,23 @@ foreach ($a in $vcredists.GetEnumerator()) {
 	}
 }
 
-# NanaZip
+# 7-Zip (Akati OS uses 7-Zip instead of NanaZip, the AtlasOS default): the newest version from 7-zip.org,
+# installed silently, unless 7-Zip is already installed
 function Install7Zip {
 	$website = 'https://7-zip.org/'
 	$7zipArch = ('x64', 'arm64')[$arm]
-	$download = $website + ((Invoke-WebRequest $website -UseBasicParsing).Links.href | Where-Object { $_ -like "a/7z*-$7zipArch.exe" })
+	$link = (Invoke-WebRequest $website -UseBasicParsing).Links.href | Where-Object { $_ -like "a/7z*-$7zipArch.exe" } | Select-Object -First 1
+	if (!$link) { Write-Error "Can't find the 7-Zip download on 7-zip.org, not installing 7-Zip."; return }
 	Write-Output "Downloading 7-Zip..."
-	& curl.exe -LSs $download -o "$tempDir\7zip.exe" $timeouts
+	& curl.exe -LSs ($website + $link) -o "$tempDir\7zip.exe" $timeouts
 	Write-Output "Installing 7-Zip..."
 	Start-Process -FilePath "$tempDir\7zip.exe" -WindowStyle Hidden -ArgumentList '/S' -Wait
 }
 
-$githubApi = Invoke-RestMethod "https://api.github.com/repos/M2Team/NanaZip/releases/latest" -EA 0
-$assets = $githubApi.Assets.browser_download_url | Select-String ".xml", ".msixbundle" | Select-Object -Unique -First 2
-function InstallNanaZip {
-	Write-Output "Downloading NanaZip..."	
-	$path = New-Item "$tempDir\nanazip" -ItemType Directory
-	$assets | ForEach-Object {
-		$filename = $_ -split '/' | Select-Object -Last 1
-		Write-Output "Downloading '$filename'..."
-		& curl.exe -LSs $_ -o "$path\$filename" $timeouts
-	}
-
-	Write-Output "Installing NanaZip..."	
-	try {
-		$appxArgs = @{
-			"PackagePath" = (Get-ChildItem $path -Filter "*.msixbundle" | Select-Object -First 1).FullName
-			"LicensePath" = (Get-ChildItem $path -Filter "*.xml" | Select-Object -First 1).FullName
-		}
-		Add-AppxProvisionedPackage -Online @appxArgs | Out-Null
-		
-		Write-Output "Installed NanaZip!"
-	} catch {
-		Write-Error "Failed to install NanaZip! Getting 7-Zip instead. $_"
-		Install7Zip
-	}
+if (Test-Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\7-Zip") {
+	Write-Output "7-Zip is already installed, skipping installation."
 }
-
-if ($assets.Count -eq 2) {
-	$7zipRegistry = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\7-Zip"
-	if (Test-Path $7zipRegistry) {
-		$Message = @'
-Would you like to uninstall 7-Zip and replace it with NanaZip?
-
-NanaZip is a fork of 7-Zip with an updated user interface and extra features.
-'@
-
-		if ((Read-MessageBox -Title 'Installing NanaZip - Akati OS' -Body $Message -Icon Question) -eq 'Yes') {
-			$7zipUninstall = (Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\7-Zip" -Name "QuietUninstallString" -EA 0).QuietUninstallString
-			Write-Output "Uninstalling 7-Zip..."
-			Start-Process -FilePath "cmd" -WindowStyle Hidden -ArgumentList "/c $7zipUninstall" -Wait
-			InstallNanaZip
-		}
-	} else {
-		InstallNanaZip
-	}
-} else {
-	Write-Error "Can't access GitHub API, downloading 7-Zip instead of NanaZip."
+else {
 	Install7Zip
 }
 

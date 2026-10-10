@@ -41,6 +41,7 @@ W11 = Windows 11 playbook, W10 = Windows 10 playbook.
 | `Executables/AtlasModules/Scripts/newUsers.ps1` | W11 | Default theme for new users is `akatios-dark.theme` |
 | `Executables/AtlasModules/Scripts/Modules/Themes/Themes.psm1` | W11, W10 | Akati OS themes in `Set-ThemeMRU` (AtlasOS themes removed), default lock screen image |
 | `Executables/AtlasModules/Scripts/Modules/Qol/Qol.psm1` | W11 | `Set-AtlasTheme` uses `akatios-dark.theme` |
+| `Executables/SOFTWARE.ps1` | W11, W10 | 7-Zip instead of NanaZip: the newest 7-Zip from 7-zip.org is installed silently (skipped when 7-Zip is already installed); NanaZip is not downloaded and there is no question about replacing 7-Zip |
 | `Executables/SHORTCUTS.ps1` | W11, W10 | No Atlas folder shortcut on the desktop or in the Start menu (the settings are in Akati OS Center > Tweaks). The folder `C:\Windows\AtlasDesktop` itself stays, AtlasOS scripts use it |
 | `Configuration/tweaks/performance/disable-fth.yml` | W11, W10 | `rundll32 fthsvc.dll,FthSysprepSpecialize` only runs when `fthsvc.dll` exists (trimmed Windows builds such as imOS 10 removed it, and rundll32 showed an error). The registry value that turns FTH off is unchanged |
 
@@ -48,7 +49,7 @@ W11 = Windows 11 playbook, W10 = Windows 10 playbook.
 
 The AtlasOS wallpapers and themes are removed, so the Atlas logo is not used: `Executables/AtlasModules/Wallpapers/atlas-*.png`, `lockscreen*.png`, `Executables/Themes/atlas-*.theme` and the folder icon `Executables/AtlasModules/Other/atlas-folder.ico`.
 
-W11: the Atlas Toolbox is not offered: the setup page "Install Atlas Toolbox" (`install-toolbox`), its install step and `AtlasDesktop\Install AtlasOS Toolbox.cmd` with `AtlasModules\Scripts\installToolbox.ps1` are removed. `SOFTWARE.ps1` is unchanged.
+W11: the Atlas Toolbox is not offered: the setup page "Install Atlas Toolbox" (`install-toolbox`), its install step and `AtlasDesktop\Install AtlasOS Toolbox.cmd` with `AtlasModules\Scripts\installToolbox.ps1` are removed. `SOFTWARE.ps1` installs 7-Zip instead of NanaZip (see above).
 
 ## Akati OS names instead of AtlasOS names
 
@@ -56,7 +57,7 @@ What the user sees says Akati OS, not AtlasOS. The credit to AtlasOS (GPL-3.0) s
 
 - Removed: the links to the AtlasOS website, Discord, GitHub, discussions and documentation in `AtlasDesktop` (`Atlas *.url` and every `*Documentation*.url`, `Must Read First*.url`, `Reset this PC (read first).url`, `Apple devices.url`, `Bluetooth.url`, all to `atlasos.net`). New: `AtlasDesktop\Akati OS GitHub.url`
 - Renamed: `Reset Network to Atlas Default.cmd`, `Atlas Visual Effects (default).cmd` and `Atlas Open-Shell Preset.xml` are now `... Akati OS ...` (`atlas-network-settings.yml` and `newUsers.ps1` use the new names)
-- Texts: the power plan is called "Akati OS Power Scheme" (`DisablePowerSaving.ps1`), and the messages of the scripts in `AtlasDesktop`, `packageInstall.ps1`, `serviceWarning.cmd`, `TelemetryComponents.ps1`, `newUsers.ps1`, the NanaZip question in `SOFTWARE.ps1` and the status text of `atlas/default.yml` say Akati OS (or point to Akati OS Center) instead of Atlas
+- Texts: the power plan is called "Akati OS Power Scheme" (`DisablePowerSaving.ps1`), and the messages of the scripts in `AtlasDesktop`, `packageInstall.ps1`, `serviceWarning.cmd`, `TelemetryComponents.ps1`, `newUsers.ps1` and the status text of `atlas/default.yml` say Akati OS (or point to Akati OS Center) instead of Atlas
 
 ## New files
 
@@ -143,4 +144,4 @@ It runs only when the user opens it and asks for administrator rights. Everythin
 - Windows 11: Mica backdrop with `DwmSetWindowAttribute` (on its own window only)
 - Reads usage with CIM (`Win32_PerfFormattedData_*`); nothing is sent anywhere
 
-No other downloads were added. All other downloads (7-Zip, Visual C++, DirectX, browsers) come from the unchanged AtlasOS `SOFTWARE.ps1`.
+No other downloads were added. All other downloads (7-Zip, Visual C++, DirectX, browsers) come from the AtlasOS `SOFTWARE.ps1`, which installs 7-Zip instead of NanaZip.

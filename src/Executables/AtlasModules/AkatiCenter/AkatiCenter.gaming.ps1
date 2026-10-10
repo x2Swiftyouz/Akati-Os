@@ -522,16 +522,24 @@ function Start-AppUpdateCheck([bool]$quiet = $false) {
 $ui.CheckUpdatesButton.Add_Click({ Start-AppUpdateCheck })
 
 # GPU drivers: highlight the vendor of the graphics card in this PC
-$gpus = @(try { Get-CimInstance Win32_VideoController | Where-Object { $_.Name -notmatch 'Basic Display|Remote|Virtual|VMware|Hyper-V|Parsec' } } catch { })
-$gpuNames = @($gpus | ForEach-Object { $_.Name })
+# The graphics cards are read in the background (WMI takes a moment); until then the card shows no text
+$gpuQuery = { @(try { Get-CimInstance Win32_VideoController | Where-Object { $_.Name -notmatch 'Basic Display|Remote|Virtual|VMware|Hyper-V|Parsec' } } catch { }) }
+$gpus = @(); $gpuNames = @(); $script:gpusLoaded = $false
 $gpuVendors = @{ GpuNvidia = 'NVIDIA|GeForce|Quadro|RTX|GTX'; GpuAmd = 'AMD|Radeon|ATI '; GpuIntel = 'Intel|Arc ' }
 $script:gpuFound = @()
-foreach ($k in $gpuVendors.Keys) {
-    if (@($gpuNames | Where-Object { $_ -match $gpuVendors[$k] }).Count) {
-        $ui[$k].Style = $window.FindResource('PillAccent'); $script:gpuFound += $k
+function Set-Gpus($list) {
+    $script:gpus = @($list | Where-Object { $_ })
+    $script:gpuNames = @($script:gpus | ForEach-Object { $_.Name })
+    $script:gpusLoaded = $true
+    foreach ($k in $gpuVendors.Keys) {
+        if (@($script:gpuNames | Where-Object { $_ -match $gpuVendors[$k] }).Count) {
+            $ui[$k].Style = $window.FindResource('PillAccent'); $script:gpuFound += $k
+        }
     }
+    Update-GpuText
 }
 function Update-GpuText {
+    if (!$script:gpusLoaded) { $ui.GpuDetected.Text = ''; $ui.GpuDriver.Visibility = 'Collapsed'; return }
     $ui.GpuDetected.Text = if ($gpuNames.Count) { (T 'gpu.detected') -f ($gpuNames -join ', ') } else { T 'gpu.none' }
     # Installed driver version and date; older than about 6 months: a hint to look for a newer one
     $culture = (Get-LangCulture)
@@ -546,7 +554,7 @@ function Update-GpuText {
     $ui.GpuDriver.Visibility = if ($lines.Count) { 'Visible' } else { 'Collapsed' }
     if ($old) { $ui.GpuDriver.Foreground = '#FF9F0A' } else { $ui.GpuDriver.Foreground = $window.FindResource('MutedBrush') }
 }
-Update-GpuText
+if ($Screenshot) { Set-Gpus (& $gpuQuery) } else { Update-GpuText; Start-Work $gpuQuery @() { param($r) Set-Gpus @($r) } $null }
 $ui.GpuNvidia.Add_Click({ Start-Process 'https://www.nvidia.com/en-us/drivers/' })
 $ui.GpuAmd.Add_Click({ Start-Process 'https://www.amd.com/en/support/download/drivers.html' })
 $ui.GpuIntel.Add_Click({ Start-Process 'https://www.intel.com/content/www/us/en/download-center/home.html' })

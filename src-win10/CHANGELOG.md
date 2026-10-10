@@ -1,5 +1,10 @@
 # Changelog: Akati OS for Windows 10
 
+## v1.7.5
+
+### Changed
+- Akati OS Center opens faster again: the graphics cards (Gaming apps > GPU drivers) and the weekly automatic clean switch (Cleaner) are read in the background
+
 ## v1.7.4
 
 ### Changed

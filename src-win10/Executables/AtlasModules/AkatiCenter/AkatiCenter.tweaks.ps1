@@ -23,6 +23,8 @@ $hvciKey = "$deviceGuardKey\Scenarios\HypervisorEnforcedCodeIntegrity"
 $accessKeys = 'HKCU:\Control Panel\Accessibility\StickyKeys', 'HKCU:\Control Panel\Accessibility\Keyboard Response', 'HKCU:\Control Panel\Accessibility\ToggleKeys'
 # Registry keys of the MSI setting of each real graphics card (PCI)
 function Get-GpuMsiKeys {
+    # The Gaming apps page reads the graphics cards in the background; read them here when that is not done yet
+    if (!$script:gpusLoaded) { Set-Gpus (& $gpuQuery) }
     @($gpus | Where-Object { $_.PNPDeviceID -like 'PCI\*' } | ForEach-Object {
         "HKLM:\SYSTEM\CurrentControlSet\Enum\$($_.PNPDeviceID)\Device Parameters\Interrupt Management\MessageSignaledInterruptProperties" })
 }

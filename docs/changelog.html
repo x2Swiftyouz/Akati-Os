@@ -28,139 +28,227 @@
 </script>
 <style>
   :root {
-    --bg: #0f0d14; --bg2: #17141e; --card: #1d1a26; --line: #2c2838; --text: #f4f2f8; --muted: #a6a1b3;
-    --accent: #a35cf0; --accent2: #e559a9; --good: #5fd38d; --link: #b98af5; --on: #8346d6; --shadow: rgba(0,0,0,.35);
+    --bg: #0f0d14; --bg2: #16131d; --card: #1a1723; --line: #2a2636; --line2: #3a3449; --text: #f4f2f8; --muted: #a6a1b3;
+    --accent: #a35cf0; --accent2: #e559a9; --good: #5fd38d; --link: #b98af5; --pink: #f08cc4; --on: #8346d6;
+    --shadow: rgba(0,0,0,.55); --glow: .5; --grid: rgba(255,255,255,.04); --nav: rgba(15,13,20,.72);
     color-scheme: dark;
   }
   @media (prefers-color-scheme: light) {
-    :root:not([data-theme="dark"]) { --bg: #f6f4fa; --bg2: #ffffff; --card: #ffffff; --line: #e3dfeb; --text: #1d1a24; --muted: #625d70; --good: #1b7a43; --link: #7a3fc8; --shadow: rgba(40,20,70,.14); color-scheme: light; }
+    :root:not([data-theme="dark"]) { --bg: #f6f4fa; --bg2: #efebf6; --card: #ffffff; --line: #e3dfeb; --line2: #d5cfe1; --text: #1d1a24; --muted: #5f5a6d; --good: #1b7a43; --link: #7a3fc8; --pink: #b42a78; --shadow: rgba(50,25,90,.2); --glow: .28; --grid: rgba(70,35,130,.06); --nav: rgba(246,244,250,.78); color-scheme: light; }
   }
-  :root[data-theme="light"] { --bg: #f6f4fa; --bg2: #ffffff; --card: #ffffff; --line: #e3dfeb; --text: #1d1a24; --muted: #625d70; --good: #1b7a43; --link: #7a3fc8; --shadow: rgba(40,20,70,.14); color-scheme: light; }
+  :root[data-theme="light"] { --bg: #f6f4fa; --bg2: #efebf6; --card: #ffffff; --line: #e3dfeb; --line2: #d5cfe1; --text: #1d1a24; --muted: #5f5a6d; --good: #1b7a43; --link: #7a3fc8; --pink: #b42a78; --shadow: rgba(50,25,90,.2); --glow: .28; --grid: rgba(70,35,130,.06); --nav: rgba(246,244,250,.78); color-scheme: light; }
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
-  html { scroll-behavior: smooth; }
-  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 "Segoe UI Variable Text", "Segoe UI", "Leelawadee UI", system-ui, sans-serif; overflow-wrap: break-word; }
+  html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 "Segoe UI Variable Text", "Segoe UI", "Leelawadee UI", system-ui, sans-serif; overflow-wrap: break-word; -webkit-font-smoothing: antialiased; }
+  h1, h2, h3 { font-family: "Segoe UI Variable Display", "Segoe UI", "Leelawadee UI", system-ui, sans-serif; }
   a { color: var(--link); }
-  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
-  nav { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--bg) 85%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
-  nav .wrap { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; min-height: 56px; }
-  nav .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; text-decoration: none; color: var(--text); }
-  nav .brand img { width: 28px; height: 28px; }
-  nav .links { margin-left: auto; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
-  nav .links a { color: var(--muted); text-decoration: none; font-size: 14px; }
-  nav .links a:hover, nav .links a[aria-current] { color: var(--text); }
-  .lang { display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; flex-shrink: 0; }
-  .lang button { background: none; border: 0; color: var(--muted); padding: 4px 10px; cursor: pointer; font: inherit; font-size: 13px; }
+  img { max-width: 100%; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+  button:focus-visible, a:focus-visible, summary:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
+  [data-l]:not(.show) { display: none; }
+  .i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+  /* Navbar */
+  nav.top { position: sticky; top: 0; z-index: 50; background: var(--nav); -webkit-backdrop-filter: saturate(160%) blur(16px); backdrop-filter: saturate(160%) blur(16px); border-bottom: 1px solid transparent; transition: border-color .3s; }
+  nav.top.scrolled, nav.top.open { border-bottom-color: var(--line); }
+  .nav-in { display: flex; align-items: center; gap: 20px; height: 64px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 17px; text-decoration: none; color: var(--text); flex: none; }
+  .brand img { width: 30px; height: 30px; }
+  .links { display: flex; align-items: center; gap: 2px; margin: 0 auto; }
+  .links a { padding: 7px 12px; border-radius: 10px; color: var(--muted); text-decoration: none; font-size: 14.5px; font-weight: 500; white-space: nowrap; }
+  .links a:hover, .links a[aria-current] { color: var(--text); background: color-mix(in srgb, var(--text) 7%, transparent); }
+  .tools { display: flex; align-items: center; gap: 10px; flex: none; }
+  .lang { display: flex; border: 1px solid var(--line2); border-radius: 10px; overflow: hidden; flex-shrink: 0; }
+  .lang button { background: none; border: 0; color: var(--muted); padding: 5px 10px; cursor: pointer; font: inherit; font-size: 13px; }
+  .lang button:hover { color: var(--text); }
   .lang button.on { background: var(--on); color: #fff; }
-  .theme { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 30px; flex-shrink: 0; padding: 0; border: 1px solid var(--line); border-radius: 8px; background: none; color: var(--muted); cursor: pointer; }
-  .theme:hover { color: var(--text); }
+  .theme, .menu { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; flex-shrink: 0; padding: 0; border: 1px solid var(--line2); border-radius: 10px; background: none; color: var(--muted); cursor: pointer; }
+  .theme:hover, .menu:hover { color: var(--text); }
   .theme svg { width: 16px; height: 16px; }
   .theme .sun { display: none; }
   .theme.to-light .sun { display: block; }
   .theme.to-light .moon { display: none; }
-  button:focus-visible, a:focus-visible, summary:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
-  header.hero { padding: 72px 0 48px; background: radial-gradient(60% 80% at 80% 0%, color-mix(in srgb, var(--accent) 30%, transparent), transparent), radial-gradient(50% 70% at 0% 100%, color-mix(in srgb, var(--accent2) 22%, transparent), transparent); }
-  .hero h1 { font-size: clamp(36px, 7vw, 64px); line-height: 1.05; margin: 0 0 16px; letter-spacing: -1px; }
-  .hero h1 span { background: linear-gradient(90deg, var(--accent), var(--accent2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .hero p.lead { font-size: 19px; color: var(--muted); max-width: 640px; margin: 0 0 28px; }
-  .buttons { display: flex; gap: 12px; flex-wrap: wrap; }
-  .btn { display: inline-flex; flex-direction: column; padding: 12px 20px; border-radius: 12px; text-decoration: none; font-weight: 600; border: 1px solid var(--line); color: var(--text); background: var(--card); }
-  .btn small { font-weight: 400; color: var(--muted); font-size: 12px; }
-  .btn.primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; border: 0; }
-  .btn.primary small { color: #f3e8ff; }
-  .dlcount { margin: 14px 0 0; font-size: 14px; color: var(--muted); }
-  .dlcount b { color: var(--text); }
-  .note { font-size: 13px; color: var(--muted); margin-top: 14px; }
-  .shot { margin-top: 40px; border-radius: 16px; border: 1px solid var(--line); width: 100%; height: auto; box-shadow: 0 30px 80px var(--shadow); }
-  section { padding: 56px 0; }
-  section h2 { font-size: 30px; margin: 0 0 8px; }
-  section p.sub { color: var(--muted); margin: 0 0 28px; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
-  .card h3 { margin: 0 0 6px; font-size: 16px; }
-  .card p { margin: 0; color: var(--muted); font-size: 14px; }
-  .card .ic { font-size: 22px; margin-bottom: 8px; }
-  .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr)); gap: 14px; }
-  .gallery figure { margin: 0; }
-  .gallery img { width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--line); }
-  .gallery figcaption { color: var(--muted); font-size: 13px; margin-top: 6px; }
-  ol.steps { padding-left: 20px; }
-  ol.steps li { margin-bottom: 10px; }
-  table { border-collapse: collapse; width: 100%; font-size: 14px; }
-  td, th { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
-  th { background: var(--bg2); }
-  .tablewrap { overflow-x: auto; }
-  details { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; margin-bottom: 10px; }
-  details summary { cursor: pointer; font-weight: 600; }
-  details p { color: var(--muted); margin: 10px 0 0; }
-  code { background: var(--bg2); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; font-size: 13px; }
-  footer { border-top: 1px solid var(--line); padding: 28px 0 40px; color: var(--muted); font-size: 13px; }
-  [data-l]:not(.show) { display: none; }
-  @media (max-width: 640px) {
-    nav .wrap { gap: 4px 12px; padding-top: 8px; padding-bottom: 8px; }
-    nav .lang { order: 2; margin-left: auto; }
-    nav .theme { order: 2; }
-    nav .links { order: 3; width: 100%; margin-left: 0; gap: 4px 16px; }
-    nav .links a.hide-s { display: none; }
-    .lang button { padding: 4px 9px; font-size: 12px; }
-    header.hero { padding-top: 44px; }
-  }
-  header.hero.small { padding: 56px 0 24px; }
-  section.releases { padding: 8px 0 56px; }
-  .rel { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px 22px; margin-bottom: 16px; }
+  .menu { display: none; }
+  .btn-nav { padding: 7px 16px; border-radius: 10px; font-size: 14px; font-weight: 600; color: #fff; text-decoration: none; background: linear-gradient(135deg, var(--accent), var(--accent2)); white-space: nowrap; }
+  .btn-nav:hover { filter: brightness(1.08); }
+
+  /* Buttons */
+  .btn { display: inline-flex; align-items: center; gap: 12px; padding: 14px 22px; border-radius: 14px; text-decoration: none; font-weight: 600; line-height: 1.25; text-align: left; border: 1px solid var(--line2); color: var(--text); background: var(--card); transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+  .btn:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--accent) 50%, var(--line2)); }
+  .btn .t { display: flex; flex-direction: column; }
+  .btn small { font-weight: 400; font-size: 12px; color: var(--muted); }
+  .btn.primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; border: 0; box-shadow: 0 14px 34px -12px color-mix(in srgb, var(--accent) 80%, transparent); }
+  .btn.primary small { color: rgba(255,255,255,.86); }
+  .btn.primary:hover { box-shadow: 0 18px 40px -12px color-mix(in srgb, var(--accent2) 80%, transparent); }
+  .btn.sm { padding: 8px 14px; border-radius: 11px; font-size: 14px; gap: 8px; background: transparent; }
+  .btn.sm .i { width: 16px; height: 16px; }
+  .buttons { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+  .btn { position: relative; }
+  .btn.sm .t { flex-direction: row; align-items: baseline; gap: 8px; }
+  .rec { position: absolute; top: -11px; right: 12px; padding: 1px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; line-height: 1.6; white-space: nowrap; color: #2a1450; background: #fff; box-shadow: 0 4px 14px -4px rgba(40,10,80,.5); }
+  .btn.sm .rec { display: none; }
+
+  /* Hero */
+  .hero { position: relative; isolation: isolate; overflow: hidden; padding: 84px 0 0; text-align: center; }
+  .hero::before { content: ""; position: absolute; inset: 0; z-index: -2; pointer-events: none; background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px); background-size: 56px 56px; -webkit-mask-image: radial-gradient(70% 55% at 50% 0%, #000 25%, transparent 80%); mask-image: radial-gradient(70% 55% at 50% 0%, #000 25%, transparent 80%); }
+  .hero::after { content: ""; position: absolute; z-index: -2; pointer-events: none; left: 50%; top: -320px; width: 1200px; height: 760px; transform: translateX(-50%); opacity: var(--glow); background: radial-gradient(closest-side at 38% 50%, var(--accent), transparent), radial-gradient(closest-side at 66% 55%, var(--accent2), transparent); filter: blur(40px); }
+  .pill { display: inline-flex; align-items: center; gap: 10px; max-width: 100%; padding: 5px 14px 5px 5px; border-radius: 999px; border: 1px solid var(--line2); background: color-mix(in srgb, var(--card) 70%, transparent); color: var(--text); text-decoration: none; font-size: 14px; transition: border-color .2s; }
+  .pill:hover { border-color: color-mix(in srgb, var(--accent) 60%, var(--line2)); }
+  .pill-tag { padding: 2px 10px; border-radius: 999px; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; font-weight: 600; font-size: 12px; flex: none; }
+  .pill .i { width: 15px; height: 15px; color: var(--muted); }
+  .hero h1 { font-size: clamp(42px, 7.6vw, 92px); line-height: 1.02; letter-spacing: -.035em; font-weight: 800; margin: 26px auto 22px; max-width: 980px; }
+  .grad { background: linear-gradient(100deg, var(--accent) 10%, var(--accent2) 90%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero p.lead { font-size: clamp(17px, 1.9vw, 20px); color: var(--muted); max-width: 700px; margin: 0 auto 34px; }
+  .alt { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; align-items: center; margin-top: 16px; }
+  .alt .btn.sm { flex-direction: row; }
+  .note { font-size: 13px; color: var(--muted); margin: 20px auto 0; max-width: 680px; }
+  .showcase { position: relative; max-width: 1060px; margin: 64px auto 0; padding-bottom: 88px; }
+  .showcase::before { content: ""; position: absolute; z-index: -1; inset: 8% 6% 22%; border-radius: 50%; background: linear-gradient(120deg, var(--accent), var(--accent2)); filter: blur(90px); opacity: var(--glow); }
+  .showcase img { display: block; width: 100%; height: auto; border-radius: 14px; border: 1px solid var(--line2); box-shadow: 0 50px 110px -30px var(--shadow); }
+  @keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+  .rise { animation: rise .8s cubic-bezier(.2,.7,.2,1) both; animation-delay: calc(var(--d, 0) * 90ms); }
+
+  /* Sections */
+  section { padding: 112px 0; }
+  .head { text-align: center; max-width: 780px; margin: 0 auto 64px; }
+  .eyebrow { display: inline-block; font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--link); margin-bottom: 12px; }
+  h2 { font-size: clamp(30px, 4.4vw, 52px); line-height: 1.08; letter-spacing: -.03em; font-weight: 800; margin: 0 0 16px; }
+  .sub { color: var(--muted); font-size: 18px; margin: 0; }
+  html[lang="th"] h1, html[lang="th"] h2, html[lang="th"] h3 { letter-spacing: 0; line-height: 1.3; }
+  html[lang="th"] .eyebrow { letter-spacing: .02em; }
+
+  /* Footer */
+  footer { border-top: 1px solid var(--line); padding: 64px 0 36px; color: var(--muted); font-size: 14px; }
+  .fgrid { display: grid; grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr)); gap: 40px; }
+  .fgrid h4 { color: var(--text); font-size: 14px; margin: 4px 0 14px; }
+  .fgrid ul { list-style: none; padding: 0; margin: 0; }
+  .fgrid li { margin-bottom: 10px; }
+  .fgrid a { color: var(--muted); text-decoration: none; }
+  .fgrid a:hover { color: var(--text); }
+  .fgrid a.brand { color: var(--text); }
+  .fbrand p { margin: 14px 0 0; max-width: 340px; }
+  .fbrand .credit { font-size: 13px; }
+  .fbrand .credit a { color: var(--link); text-decoration: underline; }
+  .fbottom { margin-top: 48px; padding-top: 22px; border-top: 1px solid var(--line); font-size: 13px; }
+
+  .hero.small { padding: 72px 0 56px; }
+  .hero.small h1 { margin: 0 auto 16px; font-size: clamp(40px, 6.4vw, 76px); }
+  .hero.small p.lead { margin-bottom: 30px; }
+  section.releases { padding: 0 0 112px; }
+  .rels { max-width: 900px; margin: 0 auto; }
+  .rel { background: var(--card); border: 1px solid var(--line); border-radius: 22px; padding: 26px 30px; margin-bottom: 18px; }
+  .rel.latest { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); box-shadow: 0 30px 80px -40px color-mix(in srgb, var(--accent) 70%, transparent); }
   .rel-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; margin-bottom: 4px; }
-  .rel-head h2 { font-size: 24px; margin: 0; }
+  .rel-head h2 { font-size: 28px; margin: 0; letter-spacing: -.02em; }
   .rel-head h2 a { color: var(--text); text-decoration: none; }
-  .rel-head h2 a:hover { color: var(--accent); }
+  .rel-head h2 a:hover { color: var(--link); }
   .rel-date { color: var(--muted); font-size: 14px; }
-  .badge { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; }
+  .badge { font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; }
   .badge.pre { background: var(--bg2); color: var(--muted); border: 1px solid var(--line); }
-  .rel-body h3 { font-size: 16px; margin: 18px 0 6px; }
+  .rel-body h3 { font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--link); margin: 20px 0 8px; }
   .rel-body h4 { font-size: 15px; margin: 14px 0 4px; }
   .rel-body p { margin: 8px 0; color: var(--muted); }
-  .rel-body ul { margin: 6px 0; padding-left: 22px; }
+  .rel-body ul { margin: 6px 0; padding-left: 22px; color: var(--muted); font-size: 15px; }
   .rel-body li { margin-bottom: 6px; }
+  .rel-body li::marker { color: var(--accent); }
+  .rel-body strong { color: var(--text); }
   .rel-body pre { background: var(--bg2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; overflow-x: auto; font-size: 13px; }
   .rel-body pre code { background: none; border: 0; padding: 0; }
-  .rel-body code { overflow-wrap: anywhere; }
-  .rel-link { margin: 12px 0 0; font-size: 14px; }
-  .status { color: var(--muted); }
+  code { background: var(--bg2); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; font-size: 13px; overflow-wrap: anywhere; }
+  .rel-link { margin: 16px 0 0; padding-top: 14px; border-top: 1px solid var(--line); font-size: 14px; }
+  .status { color: var(--muted); text-align: center; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .rise { animation: none; }
+    .btn { transition: none; }
+    .btn:hover { transform: none; }
+  }
+  @media (max-width: 1100px) {
+    .menu { display: inline-flex; }
+    .tools { margin-left: auto; }
+    .links { display: none; position: absolute; top: 64px; left: 0; right: 0; margin: 0; flex-direction: column; align-items: stretch; gap: 2px; padding: 8px 16px 16px; background: var(--bg); border-bottom: 1px solid var(--line); box-shadow: 0 24px 40px -20px var(--shadow); }
+    nav.top.open .links { display: flex; }
+    .links a { padding: 11px 12px; font-size: 16px; }
+  }
+  @media (max-width: 900px) {
+    .fgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .fbrand { grid-column: 1 / -1; }
+  }
+  @media (max-width: 640px) {
+    .wrap { padding: 0 16px; }
+    .nav-in { gap: 8px; height: 60px; }
+    .links { top: 60px; }
+    .brand { font-size: 16px; gap: 8px; }
+    .brand img { width: 28px; height: 28px; }
+    .tools { gap: 6px; }
+    .btn-nav { display: none; }
+    .lang button { padding: 5px 7px; font-size: 12px; }
+    .theme, .menu { width: 32px; height: 32px; }
+    .hero.small { padding: 44px 0 40px; }
+    .rel { padding: 20px 18px; border-radius: 18px; }
+    .rel-head h2 { font-size: 24px; }
+    section.releases { padding-bottom: 80px; }
+  }
 </style>
 </head>
 <body>
-<nav>
-  <div class="wrap">
-    <a class="brand" href="./"><img src="images/logo.png" alt="" width="28" height="28">Akati OS</a>
-    <div class="links">
-      <a class="hide-s" href="./#features"><span data-l="en">Features</span><span data-l="th">ฟีเจอร์</span><span data-l="vi">Tính năng</span><span data-l="id">Fitur</span></a>
-      <a class="hide-s" href="./#install"><span data-l="en">Install</span><span data-l="th">วิธีติดตั้ง</span><span data-l="vi">Cài đặt</span><span data-l="id">Instal</span></a>
-      <a class="hide-s" href="./#compare"><span data-l="en">Compare</span><span data-l="th">เปรียบเทียบ</span><span data-l="vi">So sánh</span><span data-l="id">Perbandingan</span></a>
-      <a class="hide-s" href="./#faq">FAQ</a>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-dl" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M3 5h6a3 3 0 0 1 3 3v12a2.5 2.5 0 0 0-2.5-2.5H3zM21 5h-6a3 3 0 0 0-3 3v12a2.5 2.5 0 0 1 2.5-2.5H21z"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h4"/></symbol>
+  <symbol id="i-pad" viewBox="0 0 24 24"><path d="M7 7h10a5 5 0 0 1 5 5v1.5a3.5 3.5 0 0 1-6.3 2.1L14.5 14h-5l-1.2 1.6A3.5 3.5 0 0 1 2 13.5V12a5 5 0 0 1 5-5zM7.5 9.5v4M5.5 11.5h4M16 10.5h.01M18 12.5h.01"/></symbol>
+  <symbol id="i-gauge" viewBox="0 0 24 24"><path d="M3.5 17a8.5 8.5 0 1 1 17 0M12 17l4.5-6M7 17h.01M17 17h.01"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7.5 3v5.5c0 4.6-3.1 8.3-7.5 9.5-4.4-1.2-7.5-4.9-7.5-9.5V6zM8.8 12l2.2 2.2 4.2-4.4"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9zM18.5 15.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></symbol>
+  <symbol id="i-pulse" viewBox="0 0 24 24"><path d="M3 12h4l2.5-6 5 12 2.5-6h4"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></symbol>
+  <symbol id="i-code" viewBox="0 0 24 24"><path d="M8 8l-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+</svg>
+
+<nav class="top" id="top">
+  <div class="wrap nav-in">
+    <a class="brand" href="./"><img src="images/logo.png" alt="" width="30" height="30">Akati OS</a>
+    <div class="links" id="links">
+      <a href="./#features"><span data-l="en">Features</span><span data-l="th">ฟีเจอร์</span><span data-l="vi">Tính năng</span><span data-l="id">Fitur</span></a>
+      <a href="./#install"><span data-l="en">Install</span><span data-l="th">วิธีติดตั้ง</span><span data-l="vi">Cài đặt</span><span data-l="id">Instal</span></a>
+      <a href="./#compare"><span data-l="en">Compare</span><span data-l="th">เปรียบเทียบ</span><span data-l="vi">So sánh</span><span data-l="id">Perbandingan</span></a>
+      <a href="./#faq">FAQ</a>
       <a href="changelog.html" aria-current="page"><span data-l="en">Changelog</span><span data-l="th">ประวัติเวอร์ชัน</span><span data-l="vi">Nhật ký thay đổi</span><span data-l="id">Catatan rilis</span></a>
       <a href="https://github.com/x2Swiftyouz/Akati-Os">GitHub</a>
     </div>
-    <div class="lang" role="group" aria-label="Language">
-      <button data-set="en" lang="en">EN</button><button data-set="th" lang="th">ไทย</button><button data-set="vi" lang="vi">VI</button><button data-set="id" lang="id">ID</button>
+    <div class="tools">
+      <div class="lang" role="group" aria-label="Language">
+        <button data-set="en" lang="en">EN</button><button data-set="th" lang="th">ไทย</button><button data-set="vi" lang="vi">VI</button><button data-set="id" lang="id">ID</button>
+      </div>
+      <button class="theme" id="theme" type="button" aria-label="Switch theme" title="Switch theme"><svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg><svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="currentColor"/><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg></button>
+      <a class="btn-nav" href="./#download"><span data-l="en">Download</span><span data-l="th">ดาวน์โหลด</span><span data-l="vi">Tải về</span><span data-l="id">Unduh</span></a>
+      <button class="menu" id="menu" type="button" aria-expanded="false" aria-controls="links" aria-label="Menu"><svg class="i" aria-hidden="true"><use href="#i-menu"/></svg></button>
     </div>
-    <button class="theme" id="theme" type="button" aria-label="Switch theme" title="Switch theme"><svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg><svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="currentColor"/><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg></button>
   </div>
 </nav>
 
 <header class="hero small">
   <div class="wrap">
-    <h1><span data-l="en">Changelog</span><span data-l="th">ประวัติเวอร์ชัน</span><span data-l="vi">Nhật ký thay đổi</span><span data-l="id">Catatan rilis</span></h1>
-    <p class="lead" data-l="en">What changed in each Akati OS release. The release notes are written in English.</p>
-    <p class="lead" data-l="th">สิ่งที่เปลี่ยนในแต่ละเวอร์ชันของ Akati OS บันทึกการเปลี่ยนแปลงเขียนเป็นภาษาอังกฤษ</p>
-    <p class="lead" data-l="vi">Những thay đổi trong từng phiên bản Akati OS. Ghi chú phát hành được viết bằng tiếng Anh.</p>
-    <p class="lead" data-l="id">Apa yang berubah di setiap rilis Akati OS. Catatan rilis ditulis dalam bahasa Inggris.</p>
-    <div class="buttons">
-      <a class="btn primary" href="./"><span data-l="en">Download Akati OS</span><span data-l="th">ดาวน์โหลด Akati OS</span><span data-l="vi">Tải Akati OS</span><span data-l="id">Unduh Akati OS</span><small>Windows 11 · Windows 10</small></a>
+    <h1 class="rise"><span data-l="en">Change<span class="grad">log</span></span><span data-l="th"><span class="grad">ประวัติเวอร์ชัน</span></span><span data-l="vi">Nhật ký <span class="grad">thay đổi</span></span><span data-l="id">Catatan <span class="grad">rilis</span></span></h1>
+    <div class="rise" style="--d:1">
+      <p class="lead" data-l="en">What changed in each Akati OS release. The release notes are written in English.</p>
+      <p class="lead" data-l="th">สิ่งที่เปลี่ยนในแต่ละเวอร์ชันของ Akati OS บันทึกการเปลี่ยนแปลงเขียนเป็นภาษาอังกฤษ</p>
+      <p class="lead" data-l="vi">Những thay đổi trong từng phiên bản Akati OS. Ghi chú phát hành được viết bằng tiếng Anh.</p>
+      <p class="lead" data-l="id">Apa yang berubah di setiap rilis Akati OS. Catatan rilis ditulis dalam bahasa Inggris.</p>
+    </div>
+    <div class="buttons rise" style="--d:2">
+      <a class="btn primary" href="./#download"><svg class="i" aria-hidden="true"><use href="#i-dl"/></svg><span class="t"><span><span data-l="en">Download Akati OS</span><span data-l="th">ดาวน์โหลด Akati OS</span><span data-l="vi">Tải Akati OS</span><span data-l="id">Unduh Akati OS</span></span><small>Windows 11 · Windows 10</small></span></a>
+      <a class="btn" href="https://github.com/x2Swiftyouz/Akati-Os/releases"><svg class="i" aria-hidden="true"><use href="#i-file"/></svg><span class="t"><span>GitHub Releases</span><small><span data-l="en">All files and SHA256</span><span data-l="th">ไฟล์ทั้งหมดและ SHA256</span><span data-l="vi">Tất cả tệp và SHA256</span><span data-l="id">Semua file dan SHA256</span></small></span></a>
     </div>
   </div>
 </header>
 
 <section class="releases">
-  <div class="wrap">
+  <div class="wrap rels">
     <div id="status">
       <p class="status" id="loading"><span data-l="en">Loading releases…</span><span data-l="th">กำลังโหลด…</span><span data-l="vi">Đang tải…</span><span data-l="id">Memuat…</span></p>
       <p class="status" id="failed" hidden>
@@ -177,10 +265,53 @@
 
 <footer>
   <div class="wrap">
-    Akati OS · GPL-3.0 · <a href="https://github.com/x2Swiftyouz/Akati-Os">Source</a> ·
-    <a href="https://github.com/x2Swiftyouz/Akati-Os/releases">GitHub Releases</a> ·
-    <a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/CHANGES-FROM-ATLAS.md">Changes from AtlasOS</a> ·
-    Based on <a href="https://github.com/Atlas-OS/Atlas">AtlasOS</a>, not an official AtlasOS project. AME Wizard by Ameliorated.
+    <div class="fgrid">
+      <div class="fbrand">
+        <a class="brand" href="./"><img src="images/logo.png" alt="" width="30" height="30" loading="lazy">Akati OS</a>
+        <p data-l="en">A free gaming playbook for AME Wizard.</p>
+        <p data-l="th">Playbook สำหรับเล่นเกม ใช้กับ AME Wizard ได้ฟรี</p>
+        <p data-l="vi">Playbook chơi game miễn phí cho AME Wizard.</p>
+        <p data-l="id">Playbook gaming gratis untuk AME Wizard.</p>
+        <p class="credit" data-l="en">Based on <a href="https://github.com/Atlas-OS/Atlas">AtlasOS</a> (GPL-3.0), not an official AtlasOS project. The base tweaks are the work of the AtlasOS team.</p>
+        <p class="credit" data-l="th">ดัดแปลงจาก <a href="https://github.com/Atlas-OS/Atlas">AtlasOS</a> (GPL-3.0) ไม่ใช่โปรเจกต์ทางการของ AtlasOS การปรับแต่งพื้นฐานเป็นผลงานของทีม AtlasOS</p>
+        <p class="credit" data-l="vi">Dựa trên <a href="https://github.com/Atlas-OS/Atlas">AtlasOS</a> (GPL-3.0), không phải dự án chính thức của AtlasOS. Các tinh chỉnh nền tảng là công sức của nhóm AtlasOS.</p>
+        <p class="credit" data-l="id">Berbasis <a href="https://github.com/Atlas-OS/Atlas">AtlasOS</a> (GPL-3.0), bukan proyek resmi AtlasOS. Tweak dasarnya adalah karya tim AtlasOS.</p>
+      </div>
+      <div>
+        <h4>Akati OS</h4>
+        <ul>
+          <li><a href="./#features"><span data-l="en">Features</span><span data-l="th">ฟีเจอร์</span><span data-l="vi">Tính năng</span><span data-l="id">Fitur</span></a></li>
+          <li><a href="./#install"><span data-l="en">Install</span><span data-l="th">วิธีติดตั้ง</span><span data-l="vi">Cài đặt</span><span data-l="id">Instal</span></a></li>
+          <li><a href="./#compare"><span data-l="en">Compare</span><span data-l="th">เปรียบเทียบ</span><span data-l="vi">So sánh</span><span data-l="id">Perbandingan</span></a></li>
+          <li><a href="./#faq">FAQ</a></li>
+          <li><a href="changelog.html"><span data-l="en">Changelog</span><span data-l="th">ประวัติเวอร์ชัน</span><span data-l="vi">Nhật ký thay đổi</span><span data-l="id">Catatan rilis</span></a></li>
+        </ul>
+      </div>
+      <div>
+        <h4><span data-l="en">Project</span><span data-l="th">โปรเจกต์</span><span data-l="vi">Dự án</span><span data-l="id">Proyek</span></h4>
+        <ul>
+          <li><a href="https://github.com/x2Swiftyouz/Akati-Os"><span data-l="en">Source code</span><span data-l="th">ซอร์สโค้ด</span><span data-l="vi">Mã nguồn</span><span data-l="id">Kode sumber</span></a></li>
+          <li><a href="https://github.com/x2Swiftyouz/Akati-Os/releases">GitHub Releases</a></li>
+          <li><a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/OPTIONS.md"><span data-l="en">Options guide</span><span data-l="th">คู่มือตัวเลือก</span><span data-l="vi">Hướng dẫn tùy chọn</span><span data-l="id">Panduan opsi</span></a></li>
+          <li><a href="https://github.com/x2Swiftyouz/Akati-Os/issues/new/choose"><span data-l="en">Report a problem</span><span data-l="th">แจ้งปัญหา</span><span data-l="vi">Báo lỗi</span><span data-l="id">Laporkan masalah</span></a></li>
+        </ul>
+      </div>
+      <div>
+        <h4><span data-l="en">Credits</span><span data-l="th">เครดิต</span><span data-l="vi">Ghi công</span><span data-l="id">Kredit</span></h4>
+        <ul>
+          <li><a href="https://github.com/Atlas-OS/Atlas">AtlasOS</a></li>
+          <li><a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/CHANGES-FROM-ATLAS.md">Changes from AtlasOS</a></li>
+          <li><a href="https://ameliorated.io"><span data-l="en">AME Wizard by Ameliorated</span><span data-l="th">AME Wizard โดย Ameliorated</span><span data-l="vi">AME Wizard của Ameliorated</span><span data-l="id">AME Wizard oleh Ameliorated</span></a></li>
+          <li><a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/LICENSE"><span data-l="en">License: GPL-3.0</span><span data-l="th">สัญญาอนุญาต: GPL-3.0</span><span data-l="vi">Giấy phép: GPL-3.0</span><span data-l="id">Lisensi: GPL-3.0</span></a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="fbottom">
+      <span data-l="en">Akati OS · GPL-3.0 · Based on AtlasOS, not an official AtlasOS project. AME Wizard by Ameliorated.</span>
+      <span data-l="th">Akati OS · GPL-3.0 · ดัดแปลงจาก AtlasOS ไม่ใช่โปรเจกต์ทางการของ AtlasOS · AME Wizard โดย Ameliorated</span>
+      <span data-l="vi">Akati OS · GPL-3.0 · Dựa trên AtlasOS, không phải dự án chính thức của AtlasOS. AME Wizard của Ameliorated.</span>
+      <span data-l="id">Akati OS · GPL-3.0 · Berbasis AtlasOS, bukan proyek resmi AtlasOS. AME Wizard oleh Ameliorated.</span>
+    </div>
   </div>
 </footer>
 
@@ -236,11 +367,27 @@
       else if (lightQuery.addListener) lightQuery.addListener(paintTheme);
     }
 
+    // Navbar: menu button on small screens, a line under the bar once the page scrolls
+    var MENU_LABEL = { en: 'Menu', th: 'เมนู', vi: 'Menu', id: 'Menu' };
+    var nav = document.getElementById('top');
+    var menu = document.getElementById('menu');
+    function closeMenu() { nav.classList.remove('open'); menu.setAttribute('aria-expanded', 'false'); }
+    menu.addEventListener('click', function () {
+      var open = nav.classList.toggle('open');
+      menu.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    document.querySelectorAll('#links a').forEach(function (a) { a.addEventListener('click', closeMenu); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeMenu(); });
+    function onScroll() { nav.classList.toggle('scrolled', window.scrollY > 8); }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
     function set(l) {
       lang = l;
       document.documentElement.lang = l;
       document.querySelectorAll('[data-l]').forEach(function (el) { el.classList.toggle('show', el.getAttribute('data-l') === l); });
       document.querySelectorAll('[data-set]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-set') === l); b.setAttribute('aria-pressed', b.getAttribute('data-set') === l ? 'true' : 'false'); });
+      menu.setAttribute('aria-label', MENU_LABEL[l]);
       paintTheme();
     }
     document.querySelectorAll('[data-set]').forEach(function (b) {
@@ -343,7 +490,7 @@
       var html = list.map(function (r) {
         var body = String(r.body || '').split(/^##\s*Download/m)[0].trim();
         var url = safeUrl(r.html_url);
-        return '<article class="rel" id="' + esc(r.tag_name) + '">' +
+        return '<article class="rel' + (r === latest ? ' latest' : '') + '" id="' + esc(r.tag_name) + '">' +
           '<div class="rel-head"><h2><a href="' + esc(url) + '">' + esc(r.tag_name) + '</a></h2>' +
           (r === latest ? '<span class="badge">' + words('latest') + '</span>' : '') +
           (r.prerelease ? '<span class="badge pre">' + words('pre') + '</span>' : '') +

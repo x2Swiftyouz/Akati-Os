@@ -56,7 +56,9 @@ function Start-Clean {
         Start-Scan {
             $after = 0
             foreach ($ci in $cleanItems) { if ($ci.Check.IsChecked) { $after += $ci.Bytes } }
-            Set-Status ((T 'status.cleaned') -f (Format-Size ([Math]::Max(0, $script:cleanBefore - $after))))
+            $freed = [Math]::Max(0, $script:cleanBefore - $after)
+            Set-Status ((T 'status.cleaned') -f (Format-Size $freed))
+            Add-WeekStat 'WeekCleanBytes' $freed; Update-Week
         }
     }
 }

@@ -211,10 +211,10 @@ function Set-Status([string]$text, [bool]$busy = $false) {
 $looks = @{
     dark  = @{ Text = '#F5F5F7'; Text2 = '#EBEBF0'; Text3 = '#D1D1D6'; RootBg = '#1C1C1E'; SidebarBg = '#232325'; CardBg = '#2A2A2C'; CardBorder = '#38383A'
                Line = '#38383A'; Fill = '#3A3A3C'; FillHover = '#48484A'; Field = '#2E2E30'; Popup = '#2C2C2E'; Handle = '#5A5A5E'; SegmentOn = '#4A4A4D'
-               MutedBrush = '#98989D'; Good = '#5FD38D'; MicaRoot = '#D01C1C1E'; MicaSidebar = '#90232325' }
+               MutedBrush = '#98989D'; Good = '#5FD38D'; CardBorderHover = '#4C4C50'; MicaRoot = '#D01C1C1E'; MicaSidebar = '#90232325' }
     light = @{ Text = '#1D1D1F'; Text2 = '#1D1D1F'; Text3 = '#3C3C43'; RootBg = '#F5F5F7'; SidebarBg = '#E9E9EE'; CardBg = '#FFFFFF'; CardBorder = '#DEDEE3'
                Line = '#E1E1E6'; Fill = '#EDEDF1'; FillHover = '#E0E0E5'; Field = '#E2E2E7'; Popup = '#FFFFFF'; Handle = '#B8B8BE'; SegmentOn = '#FFFFFF'
-               MutedBrush = '#6E6E73'; Good = '#1F9D57'; MicaRoot = '#D0F5F5F7'; MicaSidebar = '#90E9E9EE' }
+               MutedBrush = '#6E6E73'; Good = '#1F9D57'; CardBorderHover = '#C8C8CF'; MicaRoot = '#D0F5F5F7'; MicaSidebar = '#90E9E9EE' }
 }
 function Set-ThemeBrush([string]$key, [string]$hex) {
     $color = [System.Windows.Media.ColorConverter]::ConvertFromString($hex)
@@ -326,6 +326,9 @@ $numberText = { param($v) [string][int][Math]::Round($v) }
 function Show-Page([string]$name) {
     $script:page = $name
     if ($name -eq 'tweaks') { Initialize-Tweaks }
+    if ($name -eq 'gaming') { Initialize-Apps }
+    if ($name -eq 'appearance') { Initialize-Appearance }
+    if ($name -eq 'boost' -and !$script:startupShown) { $script:startupShown = $true; Show-StartupItems; Start-BgTasks }
     foreach ($p in $pages) {
         $el = $ui["Page$(Get-PageId $p)"]
         if ($p -ne $name) { $el.Visibility = 'Collapsed'; continue }
@@ -350,6 +353,7 @@ function Show-Page([string]$name) {
     if ($name -eq 'cleaner' -and $ui.CleanTotal.Text -eq '-') { Start-Scan }
     if ($name -eq 'boost') { Update-BoostCard }
     if ($name -eq 'dashboard') {
+        Update-Week
         Start-CountUp $ui.CpuValue $stats.Cpu $percentText; Start-CountUp $ui.RamValue $stats.Ram $percentText
         if ($stats.Gpu -ge 0) { Start-CountUp $ui.GpuValue $stats.Gpu $percentText }
     }
@@ -455,7 +459,7 @@ function Show-Element([string]$page, $element) {
     }, 'Background')
 }
 function Get-SpotlightItems {
-    Initialize-Tweaks
+    Initialize-Tweaks; Initialize-Apps
     $items = New-Object System.Collections.ArrayList
     # Name: the title and other names of the item (both languages, keywords); Desc: its description
     $add = { param($text, $search, $sub, $glyph, $action, $data, $desc)
@@ -650,6 +654,7 @@ function Update-Language {
     # The history needs the switches, which are made when first needed: only for the Health page on screen
     if ($script:page -eq 'health') { Show-History }
     Update-WuState; Update-TempText; Update-Fivem
+    Update-Week; Show-ScoreChart
     Set-Compact $script:compact
     if ($stats.Top) { Show-TopApps }
     foreach ($a in $apps) { if ($a.State -ne 'install') { Update-AppRow $a } }
@@ -729,6 +734,13 @@ $window.Add_PreviewKeyDown({
     }
     if (!$ctrl -or $ui.Welcome.Visibility -eq 'Visible') { return }
     if ($key -eq 'K') { Open-Spotlight; $e.Handled = $true; return }
+    # Ctrl + / Ctrl - / Ctrl 0: text size
+    if ($key -in 'OemPlus', 'Add', 'OemMinus', 'Subtract', 'D0', 'NumPad0') {
+        $i = [array]::IndexOf($zoomSteps, $script:zoom)
+        $z = if ($key -in 'D0', 'NumPad0') { 100 } elseif ($key -in 'OemPlus', 'Add') { $zoomSteps[[Math]::Min($i + 1, $zoomSteps.Count - 1)] } else { $zoomSteps[[Math]::Max($i - 1, 0)] }
+        $ui["Zoom$z"].IsChecked = $true
+        $e.Handled = $true; return
+    }
     # Ctrl+Tab / Ctrl+Shift+Tab: next or previous page
     if ($key -eq 'Tab') {
         $shift = ([System.Windows.Input.Keyboard]::Modifiers -band [System.Windows.Input.ModifierKeys]::Shift) -ne 0
@@ -776,6 +788,8 @@ Set-Language
 Show-Disks
 Update-Clock
 Update-Chips
+Update-Week
+Show-ScoreChart
 Set-Status (T 'ready')
 # Started from the desktop menu: open that page (and start the ping test)
 # The saved position when it is still on a screen (screens can change)

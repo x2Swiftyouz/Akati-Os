@@ -10,6 +10,7 @@
         <SolidColorBrush x:Key="Accent2" Color="#B07CF0"/>
         <SolidColorBrush x:Key="CardBg" Color="#2A2A2C"/>
         <SolidColorBrush x:Key="CardBorder" Color="#38383A"/>
+        <SolidColorBrush x:Key="CardBorderHover" Color="#4C4C50"/>
         <SolidColorBrush x:Key="MutedBrush" Color="#98989D"/>
         <SolidColorBrush x:Key="Good" Color="#5FD38D"/>
         <!-- Theme colors (dark). AkatiCenter.ps1 changes them for the light look -->
@@ -60,6 +61,12 @@
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="10"/>
             <Setter Property="Padding" Value="16"/>
+            <!-- The border lights up a little under the mouse -->
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="BorderBrush" Value="{DynamicResource CardBorderHover}"/>
+                </Trigger>
+            </Style.Triggers>
         </Style>
 
         <Style x:Key="Glyph" TargetType="TextBlock">
@@ -850,6 +857,33 @@
                             </Border>
                             </StackPanel>
 
+                            <!-- This week: what Akati OS did since Monday -->
+                            <Border x:Name="DashWeek" Style="{StaticResource Card}" Margin="0,0,0,16">
+                                <StackPanel>
+                                    <DockPanel Margin="0,0,0,12">
+                                        <TextBlock x:Name="WeekRange" DockPanel.Dock="Right" Style="{StaticResource Muted}" FontSize="12" VerticalAlignment="Center"/>
+                                        <TextBlock Tag="t:week.title" Text="This week" Style="{StaticResource CardTitle}"/>
+                                    </DockPanel>
+                                    <UniformGrid Columns="3">
+                                        <StackPanel>
+                                            <TextBlock Tag="t:week.clean" Text="CLEANED" Style="{StaticResource Label}"/>
+                                            <TextBlock x:Name="WeekClean" Text="-" FontSize="22" FontWeight="Bold" Margin="0,4,0,0"/>
+                                            <TextBlock x:Name="WeekCleanSub" Style="{StaticResource Muted}" FontSize="11" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                        <StackPanel>
+                                            <TextBlock Tag="t:week.boost" Text="GAME BOOST" Style="{StaticResource Label}"/>
+                                            <TextBlock x:Name="WeekBoost" Text="-" FontSize="22" FontWeight="Bold" Margin="0,4,0,0"/>
+                                            <TextBlock x:Name="WeekBoostSub" Style="{StaticResource Muted}" FontSize="11" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                        <StackPanel>
+                                            <TextBlock Tag="t:week.score" Text="AKATI SCORE" Style="{StaticResource Label}"/>
+                                            <TextBlock x:Name="WeekScore" Text="-" FontSize="22" FontWeight="Bold" Margin="0,4,0,0"/>
+                                            <TextBlock x:Name="WeekScoreSub" Style="{StaticResource Muted}" FontSize="11" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </UniformGrid>
+                                </StackPanel>
+                            </Border>
+
                             <Border x:Name="DashQuick" Style="{StaticResource Card}" Margin="0,0,0,16">
                                 <StackPanel>
                                     <TextBlock Tag="t:quick" Text="Quick actions" Style="{StaticResource CardTitle}" Margin="0,0,0,14"/>
@@ -964,6 +998,7 @@
                                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                             <TextBlock Tag="t:boost.mode" Text="Game Mode" FontSize="17" FontWeight="SemiBold"/>
                                             <TextBlock x:Name="BoostState" Text="Off" Style="{StaticResource Muted}" Margin="0,2,0,0"/>
+                                            <TextBlock x:Name="BoostLast" Style="{StaticResource Muted}" FontSize="12" Margin="0,2,0,0" TextWrapping="Wrap" Visibility="Collapsed"/>
                                         </StackPanel>
                                         <Button x:Name="BoostButton" Grid.Column="2" Style="{StaticResource Primary}" MinWidth="150" VerticalAlignment="Center" Content="Start"/>
                                     </Grid>
@@ -1065,6 +1100,16 @@
                                     <TextBlock x:Name="StartupEmpty" Tag="t:startup.empty" Text="No startup apps." Style="{StaticResource Muted}" Margin="14,8" Visibility="Collapsed"/>
                                 </StackPanel>
                             </Border>
+                            <Border Style="{StaticResource Card}" Padding="8" Margin="0,0,0,16">
+                                <StackPanel>
+                                    <StackPanel Margin="14,8,14,6">
+                                        <TextBlock Tag="t:bgtasks.title" Text="Background tasks" Style="{StaticResource CardTitle}"/>
+                                        <TextBlock Tag="t:bgtasks.sub" Text="Tasks that other apps run on a schedule, mostly their updaters. Turning one off only stops that task; you can turn it on again here." Style="{StaticResource Muted}" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                    <StackPanel x:Name="BgTaskList"/>
+                                    <TextBlock x:Name="BgTaskEmpty" Tag="t:bgtasks.loading" Text="Reading the tasks..." Style="{StaticResource Muted}" Margin="14,8"/>
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
                     </ScrollViewer>
 
@@ -1126,6 +1171,17 @@
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock x:Name="ScoreTitle" Text="" FontWeight="SemiBold" FontSize="15" TextWrapping="Wrap"/>
                                         <StackPanel x:Name="ScoreTips" Margin="0,6,0,0"/>
+                                        <!-- The score of each day (the last one of the day), up to 30 days -->
+                                        <StackPanel x:Name="ScoreChartBox" Margin="0,12,0,0" Visibility="Collapsed">
+                                            <DockPanel>
+                                                <TextBlock x:Name="ScoreChartRange" DockPanel.Dock="Right" Style="{StaticResource Label}"/>
+                                                <TextBlock Tag="t:score.history" Text="SCORE, LAST 30 DAYS" Style="{StaticResource Label}"/>
+                                            </DockPanel>
+                                            <Canvas x:Name="ScoreChart" Height="44" Margin="0,6,0,0" ClipToBounds="True">
+                                                <Polygon x:Name="ScoreFill" Fill="{DynamicResource Accent2}" Opacity="0.14"/>
+                                                <Polyline x:Name="ScoreLine" Stroke="{DynamicResource Accent2}" StrokeThickness="1.6" StrokeLineJoin="Round"/>
+                                            </Canvas>
+                                        </StackPanel>
                                     </StackPanel>
                                 </Grid>
                             </Border>
@@ -1260,6 +1316,23 @@
                                     <StackPanel Margin="0,0,12,0">
                                         <TextBlock Tag="t:look.title" Text="Akati OS Center look" Style="{StaticResource CardTitle}"/>
                                         <TextBlock Tag="t:look.sub" Text="Auto follows the Windows app mode." Style="{StaticResource Muted}" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </DockPanel>
+                            </Border>
+                            <!-- Size of everything in the window (Ctrl + and Ctrl - too) -->
+                            <Border Style="{StaticResource Card}" Margin="0,0,0,16">
+                                <DockPanel>
+                                    <Border DockPanel.Dock="Right" Background="{DynamicResource Field}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="7" Padding="2" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal">
+                                            <RadioButton x:Name="Zoom90" Style="{StaticResource Segment}" GroupName="CenterZoom" Content="90%"/>
+                                            <RadioButton x:Name="Zoom100" Style="{StaticResource Segment}" GroupName="CenterZoom" Content="100%"/>
+                                            <RadioButton x:Name="Zoom110" Style="{StaticResource Segment}" GroupName="CenterZoom" Content="110%"/>
+                                            <RadioButton x:Name="Zoom125" Style="{StaticResource Segment}" GroupName="CenterZoom" Content="125%"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <StackPanel Margin="0,0,12,0">
+                                        <TextBlock Tag="t:zoom.title" Text="Text size" Style="{StaticResource CardTitle}"/>
+                                        <TextBlock Tag="t:zoom.sub" Text="Makes everything in Akati OS Center bigger or smaller. Ctrl + and Ctrl - work too." Style="{StaticResource Muted}" Margin="0,4,0,0" TextWrapping="Wrap"/>
                                     </StackPanel>
                                 </DockPanel>
                             </Border>

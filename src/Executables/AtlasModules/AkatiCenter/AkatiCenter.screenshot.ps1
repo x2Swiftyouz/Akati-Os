@@ -11,6 +11,11 @@ if ($Screenshot) {
     Add-Mark 'Ready (before screenshots)'
     Write-Host 'Startup timing:'; $script:marks | ForEach-Object { Write-Host "  $_" }
     New-Item -ItemType Directory -Path $Screenshot -Force | Out-Null
+    # Sample week and score history (the CI runner has none)
+    Save-Setting WeekStart (Get-WeekStart (Get-Date)); Save-Setting WeekCleanBytes '1932735283'; Save-Setting WeekBoostMinutes '415'; Save-Setting WeekBoosts '6'
+    Save-Setting ScoreHistory ([string[]]@(0..13 | ForEach-Object { '{0}={1}' -f (Get-Date).Date.AddDays($_ - 13).ToString('yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture), (72 + [int](12 * $_ / 13) + @(0, 2, -1, 1)[$_ % 4]) }))
+    Save-Setting LastBoost ('{0}|83|2|4' -f (Get-Date).AddHours(-2).ToString('s', [Globalization.CultureInfo]::InvariantCulture))
+    Update-BoostCard
     $stats.Run = $false
     # A minute of sample usage for the lines in the CPU and RAM cards (CI takes one sample only)
     $size = New-Object System.Windows.Size $window.Width, $window.Height
@@ -70,7 +75,7 @@ if ($Screenshot) {
                     $mf = [IO.File]::Create((Join-Path $Screenshot "menu-$l.png")); $me.Save($mf); $mf.Close()
                 } catch { Write-Host "Menu screenshot failed: $($_.Exception.Message)" }
             }
-            if ($p -eq 'appearance' -or $p -eq 'tweaks' -or $p -eq 'boost' -or $p -eq 'gaming' -or $p -eq 'health') {
+            if ($p -eq 'appearance' -or $p -eq 'tweaks' -or $p -eq 'boost' -or $p -eq 'gaming' -or $p -eq 'health' -or $p -eq 'dashboard') {
                 # The lower part of long pages
                 $sv = $ui["Page$(Get-PageId $p)"]
                 if ($p -eq 'tweaks') {
@@ -81,6 +86,12 @@ if ($Screenshot) {
                     $top = $tweakLists['services'].TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
                     $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 60)); $sv.UpdateLayout()
                     Save-Shot "$p-$l-services.png"
+                }
+                if ($p -eq 'appearance') {
+                    # The look and text size cards
+                    $top = $ui.Zoom100.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
+                    $sv.UpdateLayout(); $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 260)); $sv.UpdateLayout()
+                    Save-Shot "$p-$l-mid.png"
                 }
                 if ($p -eq 'boost') {
                     # My games with one game (CI runner: Notepad) and the FiveM card

@@ -14,6 +14,7 @@ $themes = @(
 )
 
 function Update-ThemeCards {
+    if (!$script:appearanceBuilt) { return }
     $current = [string](Get-RegValue 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes' 'CurrentTheme')
     foreach ($th in $themes) {
         $active = $current -like "*$($th.File)"
@@ -22,36 +23,40 @@ function Update-ThemeCards {
     }
 }
 
-foreach ($th in $themes) {
-    $card = New-Object System.Windows.Controls.Border
-    $card.Style = $window.FindResource('Card'); $card.Margin = '8,0'; $card.Padding = '12'; $card.BorderThickness = 2
-    $stack = New-Object System.Windows.Controls.StackPanel
-    $preview = New-Object System.Windows.Controls.Border
-    $preview.CornerRadius = 8; $preview.Height = 130; $preview.ClipToBounds = $true; $preview.SetResourceReference([System.Windows.Controls.Border]::BackgroundProperty, 'Fill')
-    $img = New-Object System.Windows.Controls.Image
-    $img.Stretch = 'UniformToFill'; $img.Source = Get-Image (Join-Path $wallpapers $th.Image) 480
-    $preview.Child = $img
-    $name = New-Text (T "theme.$($th.Key)") 14 'SemiBold' "t:theme.$($th.Key)"; $name.Margin = '2,12,0,0'
-    $desc = New-Text '' 12; $desc.Foreground = $window.FindResource('MutedBrush'); $desc.Margin = '2,2,0,10'
-    if ($th.Key -eq 'slideshow') { $desc.Tag = 't:theme.slideshow.d'; $desc.Text = T 'theme.slideshow.d' } else { $desc.Text = ' ' }
-    $btn = New-Object System.Windows.Controls.Button
-    $btn.Style = $window.FindResource('Secondary'); $btn.Tag = $th
-    $btn.Add_Click({
-        $t = $this.Tag
-        $path = Join-Path $themesDir $t.File
-        if (Test-Path -LiteralPath $path) { Start-Process -FilePath $path }
-        Set-Status ((T 'status.theme') -f (T "theme.$($t.Key)"))
-        $timer2 = New-Object System.Windows.Threading.DispatcherTimer
-        $timer2.Interval = [TimeSpan]::FromSeconds(3)
-        $timer2.Add_Tick({ $this.Stop(); Update-ThemeCards })
-        $timer2.Start()
-    })
-    [void]$stack.Children.Add($preview); [void]$stack.Children.Add($name); [void]$stack.Children.Add($desc); [void]$stack.Children.Add($btn)
-    $card.Child = $stack
-    $th.Card = $card; $th.Button = $btn
-    [void]$ui.ThemesGrid.Children.Add($card)
+# The theme cards, wallpapers and style presets are made when the page first opens (Initialize-Appearance):
+# decoding their pictures made the app start about half a second slower.
+function Add-ThemeCards {
+    foreach ($th in $themes) {
+        $card = New-Object System.Windows.Controls.Border
+        $card.Style = $window.FindResource('Card'); $card.Margin = '8,0'; $card.Padding = '12'; $card.BorderThickness = 2
+        $stack = New-Object System.Windows.Controls.StackPanel
+        $preview = New-Object System.Windows.Controls.Border
+        $preview.CornerRadius = 8; $preview.Height = 130; $preview.ClipToBounds = $true; $preview.SetResourceReference([System.Windows.Controls.Border]::BackgroundProperty, 'Fill')
+        $img = New-Object System.Windows.Controls.Image
+        $img.Stretch = 'UniformToFill'; $img.Source = Get-Image (Join-Path $wallpapers $th.Image) 480
+        $preview.Child = $img
+        $name = New-Text (T "theme.$($th.Key)") 14 'SemiBold' "t:theme.$($th.Key)"; $name.Margin = '2,12,0,0'
+        $desc = New-Text '' 12; $desc.Foreground = $window.FindResource('MutedBrush'); $desc.Margin = '2,2,0,10'
+        if ($th.Key -eq 'slideshow') { $desc.Tag = 't:theme.slideshow.d'; $desc.Text = T 'theme.slideshow.d' } else { $desc.Text = ' ' }
+        $btn = New-Object System.Windows.Controls.Button
+        $btn.Style = $window.FindResource('Secondary'); $btn.Tag = $th
+        $btn.Add_Click({
+            $t = $this.Tag
+            $path = Join-Path $themesDir $t.File
+            if (Test-Path -LiteralPath $path) { Start-Process -FilePath $path }
+            Set-Status ((T 'status.theme') -f (T "theme.$($t.Key)"))
+            $timer2 = New-Object System.Windows.Threading.DispatcherTimer
+            $timer2.Interval = [TimeSpan]::FromSeconds(3)
+            $timer2.Add_Tick({ $this.Stop(); Update-ThemeCards })
+            $timer2.Start()
+        })
+        [void]$stack.Children.Add($preview); [void]$stack.Children.Add($name); [void]$stack.Children.Add($desc); [void]$stack.Children.Add($btn)
+        $card.Child = $stack
+        $th.Card = $card; $th.Button = $btn
+        [void]$ui.ThemesGrid.Children.Add($card)
+    }
+    Update-ThemeCards
 }
-Update-ThemeCards
 
 # Windows API: wallpaper, cursors and the "colors changed" message
 Import-Code 'Native' @'
@@ -91,6 +96,24 @@ if ($lookChoice -notin 'dark', 'light', 'time') { $lookChoice = 'auto' }
 $ui["Look$([Globalization.CultureInfo]::InvariantCulture.TextInfo.ToTitleCase($lookChoice))"].IsChecked = $true
 foreach ($n in 'Auto', 'Dark', 'Light', 'Time') {
     $ui["Look$n"].Add_Checked({ Save-Setting CenterLook $this.Name.Substring(4).ToLowerInvariant(); Set-CenterLook (Get-LookName) })
+}
+
+# Text size: the whole window is scaled (LayoutTransform, so the layout fits the window at every size)
+$zoomSteps = 90, 100, 110, 125
+$script:zoom = 100
+function Set-Zoom([int]$percent) {
+    if ($percent -notin $zoomSteps) { $percent = 100 }
+    $script:zoom = $percent
+    $root = $ui.RootBorder.Child
+    $root.LayoutTransform = if ($percent -eq 100) { [System.Windows.Media.Transform]::Identity } else { New-Object System.Windows.Media.ScaleTransform ($percent / 100), ($percent / 100) }
+}
+# The saved size first, then the clicks (Save-Setting is defined later in AkatiCenter.ps1)
+$savedZoom = if ($Screenshot) { 100 } else { [int](Get-RegValue $settingsKey 'Zoom') }
+if ($savedZoom -notin $zoomSteps) { $savedZoom = 100 }
+$ui["Zoom$savedZoom"].IsChecked = $true
+Set-Zoom $savedZoom
+foreach ($z in $zoomSteps) {
+    $ui["Zoom$z"].Add_Checked({ $p = [int]$this.Name.Substring(4); Set-Zoom $p; Save-Setting Zoom $p; Set-Status ((T 'status.zoom') -f $p) })
 }
 
 function Set-CenterAccent($a) {
@@ -202,7 +225,6 @@ function Update-WallSwatch {
     $file = Get-WallpaperFile
     $wallSwatch.Background = if ($file) { $b = New-Object System.Windows.Media.ImageBrush (Get-Image $file 80); $b.Stretch = 'UniformToFill'; $b } else { $window.FindResource('Fill') }
 }
-Update-WallSwatch
 $wallSwatch.Add_Click({
     $hue = try { Get-WallpaperHue } catch { $null }
     if ($null -eq $hue) { Set-Status (T 'accent.nowallcolor'); $this.IsChecked = $false; return }
@@ -224,10 +246,9 @@ function Set-Wallpaper([string]$path) {
     Update-WallSwatch
     Set-Status ((T 'status.wallpaper') -f [IO.Path]::GetFileNameWithoutExtension($path))
 }
-foreach ($file in @(Get-ChildItem -Path (Join-Path $wallpapers '*') -Include *.png, *.jpg -File -ErrorAction SilentlyContinue | Sort-Object Name)) {
-    $btn = New-Object System.Windows.Controls.Button
-    $btn.Cursor = 'Hand'; $btn.Margin = '0,0,12,12'; $btn.Tag = $file.FullName; $btn.ToolTip = $file.BaseName
-    $btn.Template = [Windows.Markup.XamlReader]::Parse(@'
+function Add-WallpaperButtons {
+    # One template for all the pictures
+    $template = [Windows.Markup.XamlReader]::Parse(@'
 <ControlTemplate xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" TargetType="Button">
     <Border x:Name="Bd" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" CornerRadius="10" BorderThickness="2" BorderBrush="Transparent" Padding="2">
         <ContentPresenter/>
@@ -237,14 +258,19 @@ foreach ($file in @(Get-ChildItem -Path (Join-Path $wallpapers '*') -Include *.p
     </ControlTemplate.Triggers>
 </ControlTemplate>
 '@)
-    $frame = New-Object System.Windows.Controls.Border
-    $frame.Width = 168; $frame.Height = 95; $frame.CornerRadius = 8; $frame.SetResourceReference([System.Windows.Controls.Border]::BackgroundProperty, 'Fill')
-    $brush = New-Object System.Windows.Media.ImageBrush (Get-Image $file.FullName 340)
-    $brush.Stretch = 'UniformToFill'
-    $frame.Background = $brush
-    $btn.Content = $frame
-    $btn.Add_Click({ Set-Wallpaper $this.Tag })
-    [void]$ui.WallPanel.Children.Add($btn)
+    foreach ($file in @(Get-ChildItem -Path (Join-Path $wallpapers '*') -Include *.png, *.jpg -File -ErrorAction SilentlyContinue | Sort-Object Name)) {
+        $btn = New-Object System.Windows.Controls.Button
+        $btn.Cursor = 'Hand'; $btn.Margin = '0,0,12,12'; $btn.Tag = $file.FullName; $btn.ToolTip = $file.BaseName
+        $btn.Template = $template
+        $frame = New-Object System.Windows.Controls.Border
+        $frame.Width = 168; $frame.Height = 95; $frame.CornerRadius = 8; $frame.SetResourceReference([System.Windows.Controls.Border]::BackgroundProperty, 'Fill')
+        $brush = New-Object System.Windows.Media.ImageBrush (Get-Image $file.FullName 340)
+        $brush.Stretch = 'UniformToFill'
+        $frame.Background = $brush
+        $btn.Content = $frame
+        $btn.Add_Click({ Set-Wallpaper $this.Tag })
+        [void]$ui.WallPanel.Children.Add($btn)
+    }
 }
 
 # Cursors: Akati OS arrow and busy cursors; the other pointers stay the Windows ones
@@ -320,32 +346,41 @@ $presets = @(
     @{ Key = 'sakura';  Wall = 'akatios-mist.png';  Accent = 'pink';   Look = 'Light'; Cursor = $true;  Sound = 'akati' }
     @{ Key = 'stealth'; Wall = 'akatios-oled.png';  Accent = 'red';    Look = 'Dark';  Cursor = $false; Sound = 'none' }
 )
-foreach ($p in $presets) {
-    $file = Join-Path $wallpapers $p.Wall
-    if (!(Test-Path -LiteralPath $file)) { continue }
-    $acc = $accents | Where-Object { $_.Key -eq $p.Accent } | Select-Object -First 1
-    $btn = New-Object System.Windows.Controls.Button
-    $btn.Style = $window.FindResource('Bare'); $btn.Margin = '0,0,12,12'; $btn.Padding = '0'; $btn.Tag = $p
-    $stack = New-Object System.Windows.Controls.StackPanel
-    $frame = New-Object System.Windows.Controls.Border
-    $frame.Width = 150; $frame.Height = 84; $frame.CornerRadius = 8; $frame.BorderThickness = '0,0,0,4'
-    $frame.BorderBrush = New-Object System.Windows.Media.LinearGradientBrush (ConvertTo-Color $acc.G1), (ConvertTo-Color $acc.G2), 0
-    $brush = New-Object System.Windows.Media.ImageBrush (Get-Image $file 300); $brush.Stretch = 'UniformToFill'
-    $frame.Background = $brush
-    $name = New-Text (T "preset.$($p.Key)") 13 'SemiBold' "t:preset.$($p.Key)"; $name.Margin = '2,6,0,0'
-    [void]$stack.Children.Add($frame); [void]$stack.Children.Add($name)
-    $btn.Content = $stack
-    $btn.Add_Click({
-        $p = $this.Tag
-        try {
-            Set-Wallpaper (Join-Path $wallpapers $p.Wall)
-            Use-Accent ($accents | Where-Object { $_.Key -eq $p.Accent } | Select-Object -First 1)
-            $ui["Look$($p.Look)"].IsChecked = $true
-            Set-Cursors $p.Cursor
-            Set-Sounds $p.Sound
-            Set-Status ((T 'status.preset') -f (T "preset.$($p.Key)"))
-        } catch { Set-Status $_.Exception.Message }
-    })
-    [void]$ui.PresetPanel.Children.Add($btn)
+function Add-PresetButtons {
+    foreach ($p in $presets) {
+        $file = Join-Path $wallpapers $p.Wall
+        if (!(Test-Path -LiteralPath $file)) { continue }
+        $acc = $accents | Where-Object { $_.Key -eq $p.Accent } | Select-Object -First 1
+        $btn = New-Object System.Windows.Controls.Button
+        $btn.Style = $window.FindResource('Bare'); $btn.Margin = '0,0,12,12'; $btn.Padding = '0'; $btn.Tag = $p
+        $stack = New-Object System.Windows.Controls.StackPanel
+        $frame = New-Object System.Windows.Controls.Border
+        $frame.Width = 150; $frame.Height = 84; $frame.CornerRadius = 8; $frame.BorderThickness = '0,0,0,4'
+        $frame.BorderBrush = New-Object System.Windows.Media.LinearGradientBrush (ConvertTo-Color $acc.G1), (ConvertTo-Color $acc.G2), 0
+        $brush = New-Object System.Windows.Media.ImageBrush (Get-Image $file 300); $brush.Stretch = 'UniformToFill'
+        $frame.Background = $brush
+        $name = New-Text (T "preset.$($p.Key)") 13 'SemiBold' "t:preset.$($p.Key)"; $name.Margin = '2,6,0,0'
+        [void]$stack.Children.Add($frame); [void]$stack.Children.Add($name)
+        $btn.Content = $stack
+        $btn.Add_Click({
+            $p = $this.Tag
+            try {
+                Set-Wallpaper (Join-Path $wallpapers $p.Wall)
+                Use-Accent ($accents | Where-Object { $_.Key -eq $p.Accent } | Select-Object -First 1)
+                $ui["Look$($p.Look)"].IsChecked = $true
+                Set-Cursors $p.Cursor
+                Set-Sounds $p.Sound
+                Set-Status ((T 'status.preset') -f (T "preset.$($p.Key)"))
+            } catch { Set-Status $_.Exception.Message }
+        })
+        [void]$ui.PresetPanel.Children.Add($btn)
+    }
 }
+
+function Initialize-Appearance {
+    if ($script:appearanceBuilt) { return }
+    $script:appearanceBuilt = $true
+    Add-ThemeCards; Update-WallSwatch; Add-WallpaperButtons; Add-PresetButtons
+}
+if ($Screenshot) { Initialize-Appearance }
 

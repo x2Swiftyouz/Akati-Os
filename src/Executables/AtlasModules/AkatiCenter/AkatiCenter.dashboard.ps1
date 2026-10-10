@@ -364,8 +364,8 @@ function Update-DesktopMenu {
 # Customize dashboard: each card can be hidden and moved. Saved as DashLayout, for example
 # "usage,hero,-chips,..." (a "-" in front = hidden); cards missing from it (new ones) go last.
 # ---------------------------------------------------------------------------------------------
-$dashCards = [ordered]@{ hero = 'DashHero'; chips = 'StatusChips'; specs = 'DashSpecs'; usage = 'UsageGrid'; storage = 'DashStorage'; top = 'DashTop'; quick = 'DashQuick' }
-$dashGlyphs = @{ hero = [char]0xE80F; chips = [char]0xE8FD; specs = [char]0xE950; usage = [char]0xE9D9; storage = [char]0xEDA2; top = [char]0xE9F5; quick = [char]0xE945 }
+$dashCards = [ordered]@{ hero = 'DashHero'; chips = 'StatusChips'; specs = 'DashSpecs'; usage = 'UsageGrid'; storage = 'DashStorage'; top = 'DashTop'; week = 'DashWeek'; quick = 'DashQuick' }
+$dashGlyphs = @{ hero = [char]0xE80F; chips = [char]0xE8FD; specs = [char]0xE950; usage = [char]0xE9D9; storage = [char]0xEDA2; top = [char]0xE9F5; week = [char]0xE787; quick = [char]0xE945 }
 function Get-DashLayout {
     $list = New-Object System.Collections.ArrayList
     foreach ($part in ([string](Get-RegValue $settingsKey 'DashLayout')).Split(',')) {
@@ -426,3 +426,71 @@ $ui.DashReset.Add_Click({
     Set-DashLayout (Get-DashLayout); Show-DashEditor
 })
 if (!$Screenshot) { Set-DashLayout (Get-DashLayout) }
+
+# ---------------------------------------------------------------------------------------------
+# This week: cleaned (by hand and the weekly clean), Game boost time and the Akati Score since Monday.
+# The totals are kept in WeekStart / WeekCleanBytes / WeekBoostMinutes / WeekBoosts (Add-WeekStat).
+# Akati Score history: ScoreHistory, one "yyyy-MM-dd=score" per day (Update-ScoreHistory in logic.ps1).
+# ---------------------------------------------------------------------------------------------
+function Get-WeekNumber([string]$name) {
+    if ((Get-RegValue $settingsKey 'WeekStart') -ne (Get-WeekStart (Get-Date))) { return 0 }
+    $v = 0.0; [void][double]::TryParse([string](Get-RegValue $settingsKey $name), [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$v)
+    $v
+}
+function Get-ScoreDays {
+    @(foreach ($e in @(Get-RegValue $settingsKey 'ScoreHistory')) {
+        if ([string]$e -match '^(\d{4}-\d{2}-\d{2})=(\d+)$') { @{ Day = $Matches[1]; Score = [int]$Matches[2] } } })
+}
+function Update-Week {
+    $monday = [datetime]::ParseExact((Get-WeekStart (Get-Date)), 'yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture)
+    $c = Get-LangCulture
+    $ui.WeekRange.Text = '{0} - {1}' -f $monday.ToString('d MMM', $c), $monday.AddDays(6).ToString('d MMM', $c)
+    $clean = Get-WeekNumber 'WeekCleanBytes'
+    $ui.WeekClean.Text = if ($clean -gt 0) { Format-Size $clean } else { '0 MB' }
+    $ui.WeekCleanSub.Text = T 'week.clean.d'
+    $ui.WeekBoost.Text = Format-Minutes ([int](Get-WeekNumber 'WeekBoostMinutes'))
+    $ui.WeekBoostSub.Text = (T 'week.boosts') -f [int](Get-WeekNumber 'WeekBoosts')
+    $days = @(Get-ScoreDays)
+    if (!$days.Count) { $ui.WeekScore.Text = '-'; $ui.WeekScoreSub.Text = T 'week.score.none'; return }
+    $now = $days[-1].Score
+    $ui.WeekScore.Text = [string]$now
+    $ui.WeekScore.Foreground = Get-ScoreBrush $now
+    # Compared with the last score before this week, or the first one of this week
+    $weekStart = $monday.ToString('yyyy-MM-dd')
+    $before = @($days | Where-Object { $_.Day -lt $weekStart })
+    $base = if ($before.Count) { $before[-1].Score } else { $days[0].Score }
+    $delta = $now - $base
+    $ui.WeekScoreSub.Text = if ($delta -gt 0) { (T 'week.score.up') -f $delta } elseif ($delta -lt 0) { (T 'week.score.down') -f (-$delta) } else { T 'week.score.same' }
+}
+function Show-ScoreChart {
+    $days = @(Get-ScoreDays)
+    if ($days.Count -lt 2) { $ui.ScoreChartBox.Visibility = 'Collapsed'; return }
+    $ui.ScoreChartBox.Visibility = 'Visible'
+    $c = Get-LangCulture
+    $first = [datetime]::ParseExact($days[0].Day, 'yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture)
+    $last = [datetime]::ParseExact($days[-1].Day, 'yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture)
+    $ui.ScoreChartRange.Text = '{0} - {1}' -f $first.ToString('d MMM', $c), $last.ToString('d MMM', $c)
+    $w = $ui.ScoreChart.ActualWidth; if ($w -le 0) { $w = 300 }
+    $h = 44
+    $low = [Math]::Max(0, (($days | ForEach-Object { $_.Score } | Measure-Object -Minimum).Minimum) - 10)
+    $line = New-Object System.Windows.Media.PointCollection
+    for ($i = 0; $i -lt $days.Count; $i++) {
+        $x = $i * $w / ($days.Count - 1)
+        $y = 2 + ($h - 4) * (1 - ($days[$i].Score - $low) / [Math]::Max(1, 100 - $low))
+        $line.Add((New-Object System.Windows.Point $x, $y))
+    }
+    $fill = New-Object System.Windows.Media.PointCollection
+    foreach ($pt in $line) { $fill.Add($pt) }
+    $fill.Add((New-Object System.Windows.Point $w, $h)); $fill.Add((New-Object System.Windows.Point 0, $h))
+    $ui.ScoreLine.Points = $line; $ui.ScoreFill.Points = $fill
+}
+$ui.ScoreChart.Add_SizeChanged({ Show-ScoreChart })
+# Called with each new score; saved once per change, so the registry is not written every second
+function Save-ScoreDay([int]$score) {
+    if ($Screenshot) { return }
+    $day = (Get-Date).ToString('yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture)
+    if ($script:scoreSaved -eq "$day=$score") { return }
+    $script:scoreSaved = "$day=$score"
+    Save-Setting ScoreHistory (Update-ScoreHistory @(Get-RegValue $settingsKey 'ScoreHistory') $day $score)
+    Show-ScoreChart; Update-Week
+}

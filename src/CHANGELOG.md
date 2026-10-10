@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- Dashboard: a "This week" card with what was cleaned (by hand and by the weekly clean), the Game boost time and sessions, and the Akati Score compared with last week; it can be hidden or moved like the other cards
+- Health: the Akati Score of the last 30 days as a small chart (one score per day)
+- Game boost: the last session (how long, apps closed, services paused) under the Start button
+- Game boost: "Background tasks", the scheduled tasks of other apps (mostly updaters), each with an on/off switch. Tasks of Windows, AtlasOS and Akati OS are not listed
+- Appearance: text size of Akati OS Center (90 %, 100 %, 110 %, 125 %), also with Ctrl + / Ctrl - / Ctrl 0
+- Cards light up their border a little under the mouse
+
+### Changed
+- Akati OS Center opens faster again: the Gaming apps rows, the theme cards, wallpapers and style presets (Appearance) and the startup apps list (Game boost) are made when their page first opens
+
 ## v1.7.5
 
 ### Changed

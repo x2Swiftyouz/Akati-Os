@@ -70,3 +70,27 @@ function Update-ScoreHistory([string[]]$list, [string]$day, [int]$score, [int]$k
     if ($days.Count -gt $keep) { $days = $days[($days.Count - $keep)..($days.Count - 1)] }
     , [string[]]$days
 }
+
+# Interrupts: the modes a PCI device supports (DEVPKEY_PciDevice_InterruptSupport: 1 line-based, 2 MSI, 4 MSI-X)
+function Get-IrqModes([int]$support) {
+    $m = @(); if ($support -band 1) { $m += 'LB' }; if ($support -band 2) { $m += 'MSI' }; if ($support -band 4) { $m += 'MSI-X' }
+    $m -join ', '
+}
+# CPU affinity mask (bit n = logical processor n) from a list of processors, and back
+function ConvertTo-CpuMask([int[]]$cpus) { [uint64]$mask = 0; foreach ($c in $cpus) { if ($c -ge 0 -and $c -lt 64) { $mask = $mask -bor ([uint64]1 -shl $c) } }; $mask }
+function ConvertFrom-CpuMask([uint64]$mask) { @(for ($i = 0; $i -lt 64; $i++) { if ($mask -band ([uint64]1 -shl $i)) { $i } }) }
+# Core benchmark: the logical processors from best to worst score, without CPU 0 (Windows handles most of its own
+# interrupts there). With Hyper-Threading two logical processors share a core (0-1, 2-3...): only the better one of
+# each pair is kept, so two devices never land on the same physical core.
+function Get-BestCores([double[]]$scores, [bool]$ht) {
+    $order = @(0..($scores.Count - 1) | Sort-Object { - $scores[$_] }, { $_ })
+    $used = @{}; $best = @()
+    foreach ($c in $order) {
+        if ($c -eq 0) { continue }
+        $core = if ($ht) { [int][Math]::Floor($c / 2) } else { [int]$c }
+        if ($ht -and $core -eq 0) { continue }
+        if ($used.ContainsKey($core)) { continue }
+        $used[$core] = $true; $best += $c
+    }
+    , [int[]]$best
+}

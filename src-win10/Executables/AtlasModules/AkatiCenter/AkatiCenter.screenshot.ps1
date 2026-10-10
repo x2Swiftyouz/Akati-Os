@@ -148,6 +148,16 @@ if ($Screenshot) {
     Show-Keys; Save-Shot 'keys-en.png'; $ui.Keys.Visibility = 'Collapsed'
     try { [void](Save-ScoreCard (Join-Path $Screenshot 'share-card.png')) } catch { Write-Host "Share picture failed: $($_.Exception.Message)" }
     $script:navBadges['Gaming'] = 0; $script:navBadges['Health'] = 0; Update-NavBadges
+    # Tweaks > Interrupts: the devices of the CI runner and a sample benchmark
+    $ui.NavTweaks.IsChecked = $true
+    $ui.IrqShow.RaiseEvent((New-Object System.Windows.RoutedEventArgs ([System.Windows.Controls.Primitives.ButtonBase]::ClickEvent)))
+    $n = [Math]::Min(8, [Environment]::ProcessorCount)
+    Show-IrqCores ([double[]]@(@(0..($n - 1) | ForEach-Object { 100000 - 900 * (($_ * 5) % 7) - $(if ($_ -eq 0) { 6000 } else { 0 }) }) + @(0..($n - 1) | ForEach-Object { 40 + 10 * ($_ % 3) })))
+    $sv = $ui.PageTweaks; $sv.UpdateLayout()
+    $top = $ui.IrqPanel.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
+    $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 150)); $sv.UpdateLayout(); Save-Shot 'tweaks-en-irq.png'
+    $sv.ScrollToVerticalOffset($top + 260); $sv.UpdateLayout(); Save-Shot 'tweaks-en-irq2.png'
+    $sv.ScrollToVerticalOffset(0)
     # The light look
     Set-CenterLook 'light'
     foreach ($p in 'dashboard', 'gaming', 'tweaks') { $ui["Nav$(Get-PageId $p)"].IsChecked = $true; Save-Shot "light-$p.png" }

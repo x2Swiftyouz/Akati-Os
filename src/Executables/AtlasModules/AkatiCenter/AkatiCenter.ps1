@@ -306,6 +306,7 @@ function Update-NavBadges {
 . (Join-Path $appDir 'AkatiCenter.boost.ps1')
 if ($null -ne $script:exitNow) { exit $script:exitNow }
 . (Join-Path $appDir 'AkatiCenter.tweaks.ps1')
+. (Join-Path $appDir 'AkatiCenter.irq.ps1')
 . (Join-Path $appDir 'AkatiCenter.games.ps1')
 . (Join-Path $appDir 'AkatiCenter.cleaner.ps1')
 . (Join-Path $appDir 'AkatiCenter.appearance.ps1')
@@ -509,6 +510,9 @@ function Get-SpotlightItems {
     & $add (T 'act.lang') (Get-Both 'act.lang') (T 'spot.action') ([char]0xE774) { param($d) $keys = @($languages.Keys); Set-AppLanguage $keys[([array]::IndexOf($keys, $lang) + 1) % $keys.Count] } $null
     & $add (T 'act.report') (Get-Both 'act.report') (T 'spot.action') ([char]0xE7BA) { param($d) $ui.ReportButton.RaiseEvent((New-Object System.Windows.RoutedEventArgs ([System.Windows.Controls.Primitives.ButtonBase]::ClickEvent))) } $null
     & $add (T 'keys.title') ((Get-Both 'keys.title') + ' keyboard hotkeys') (T 'spot.action') ([char]0xE765) { param($d) Show-Keys } $null
+    & $add (T 'irq.title') ((Get-Both 'irq.title') + ' msi affinity interrupt irq') (T 'spot.setting') ([char]0xE964) { param($d)
+        if ($ui.IrqPanel.Visibility -ne 'Visible') { $ui.IrqShow.RaiseEvent((New-Object System.Windows.RoutedEventArgs ([System.Windows.Controls.Primitives.ButtonBase]::ClickEvent))) }
+        Show-Element 'tweaks' $ui.IrqShow.Parent.Parent } $null
     & $add (T 'games.scan') (Get-Both 'games.scan') (T 'spot.action') ([char]0xE721) { param($d) $ui.NavBoost.IsChecked = $true; $ui.GameScanButton.RaiseEvent((New-Object System.Windows.RoutedEventArgs ([System.Windows.Controls.Primitives.ButtonBase]::ClickEvent))) } $null
     return $items
 }

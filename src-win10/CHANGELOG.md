@@ -1,5 +1,13 @@
 # Changelog: Akati OS for Windows 10
 
+## Unreleased
+
+### Added
+- Tweaks > Interrupts (advanced): MSI mode, MSI limit, interrupt priority and CPU affinity of each PCI device (graphics card, network, USB, audio, storage)
+  - A core benchmark runs a small piece of work on each logical processor (in a new random order each round) and suggests the processors with the fewest interruptions; CPU 0 is never suggested, and with Hyper-Threading two devices never share a core
+  - Suggested fills in MSI on, the best core for the graphics card (and high priority), the next for the network adapter and the third for USB; nothing is written until Apply
+  - Only the values that changed are written. Each device is backed up before its first change; Undo and Undo all put it back exactly, also from Safe Mode. Storage controllers ask before their MSI setting changes
+
 ## v1.9.0
 
 ### Added

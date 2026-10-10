@@ -61,5 +61,14 @@ $h = Update-ScoreHistory @('2026-10-01=70', 'bad', '2026-10-02=75') '2026-10-03'
 Check 'score history keep' ($h -join ',') '2026-10-02=75,2026-10-03=90'
 Check 'score history empty' ((Update-ScoreHistory $null '2026-10-03' 88) -join ',') '2026-10-03=88'
 
+# Interrupts
+Check 'irq modes' (Get-IrqModes 7) 'LB, MSI, MSI-X'
+Check 'irq modes lb' (Get-IrqModes 1) 'LB'
+Check 'cpu mask' (ConvertTo-CpuMask @(2, 4)) 20
+Check 'cpu mask high' (ConvertTo-CpuMask @(63)) ([uint64]9223372036854775808)
+Check 'cpu mask back' ((ConvertFrom-CpuMask 20) -join ',') '2,4'
+Check 'best cores' ((Get-BestCores @(9, 5, 8, 7) $false) -join ',') '2,3,1'
+Check 'best cores ht' ((Get-BestCores @(9, 9, 5, 8, 7, 6) $true) -join ',') '3,4'
+
 Write-Host "$script:count checks, $script:failed failed"
 if ($script:failed) { exit 1 }

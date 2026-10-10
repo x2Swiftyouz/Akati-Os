@@ -24,19 +24,25 @@
 <link rel="canonical" href="https://x2swiftyouz.github.io/Akati-Os/">
 <link rel="icon" type="image/png" href="images/logo.png">
 <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+<script>
+  // Theme chosen with the button in the header (otherwise the system setting); set before the page draws
+  try { var akatiTheme = localStorage.getItem('akati-theme'); if (akatiTheme === 'light' || akatiTheme === 'dark') document.documentElement.setAttribute('data-theme', akatiTheme); } catch (e) {}
+</script>
 <style>
   :root {
     --bg: #0f0d14; --bg2: #17141e; --card: #1d1a26; --line: #2c2838; --text: #f4f2f8; --muted: #a6a1b3;
-    --accent: #a35cf0; --accent2: #e559a9; --good: #5fd38d;
+    --accent: #a35cf0; --accent2: #e559a9; --good: #5fd38d; --link: #b98af5; --on: #8346d6; --shadow: rgba(0,0,0,.35);
+    color-scheme: dark;
   }
   @media (prefers-color-scheme: light) {
-    :root:not([data-theme="dark"]) { --bg: #f6f4fa; --bg2: #ffffff; --card: #ffffff; --line: #e3dfeb; --text: #1d1a24; --muted: #625d70; }
+    :root:not([data-theme="dark"]) { --bg: #f6f4fa; --bg2: #ffffff; --card: #ffffff; --line: #e3dfeb; --text: #1d1a24; --muted: #625d70; --good: #1b7a43; --link: #7a3fc8; --shadow: rgba(40,20,70,.14); color-scheme: light; }
   }
+  :root[data-theme="light"] { --bg: #f6f4fa; --bg2: #ffffff; --card: #ffffff; --line: #e3dfeb; --text: #1d1a24; --muted: #625d70; --good: #1b7a43; --link: #7a3fc8; --shadow: rgba(40,20,70,.14); color-scheme: light; }
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
   html { scroll-behavior: smooth; }
   body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 "Segoe UI Variable Text", "Segoe UI", "Leelawadee UI", system-ui, sans-serif; overflow-wrap: break-word; }
-  a { color: var(--accent); }
+  a { color: var(--link); }
   .wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
   nav { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--bg) 85%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
   nav .wrap { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; min-height: 56px; }
@@ -47,7 +53,14 @@
   nav .links a:hover, nav .links a[aria-current] { color: var(--text); }
   .lang { display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; flex-shrink: 0; }
   .lang button { background: none; border: 0; color: var(--muted); padding: 4px 10px; cursor: pointer; font: inherit; font-size: 13px; }
-  .lang button.on { background: var(--accent); color: #fff; }
+  .lang button.on { background: var(--on); color: #fff; }
+  .theme { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 30px; flex-shrink: 0; padding: 0; border: 1px solid var(--line); border-radius: 8px; background: none; color: var(--muted); cursor: pointer; }
+  .theme:hover { color: var(--text); }
+  .theme svg { width: 16px; height: 16px; }
+  .theme .sun { display: none; }
+  .theme.to-light .sun { display: block; }
+  .theme.to-light .moon { display: none; }
+  button:focus-visible, a:focus-visible, summary:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
   header.hero { padding: 72px 0 48px; background: radial-gradient(60% 80% at 80% 0%, color-mix(in srgb, var(--accent) 30%, transparent), transparent), radial-gradient(50% 70% at 0% 100%, color-mix(in srgb, var(--accent2) 22%, transparent), transparent); }
   .hero h1 { font-size: clamp(36px, 7vw, 64px); line-height: 1.05; margin: 0 0 16px; letter-spacing: -1px; }
   .hero h1 span { background: linear-gradient(90deg, var(--accent), var(--accent2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
@@ -60,7 +73,7 @@
   .dlcount { margin: 14px 0 0; font-size: 14px; color: var(--muted); }
   .dlcount b { color: var(--text); }
   .note { font-size: 13px; color: var(--muted); margin-top: 14px; }
-  .shot { margin-top: 40px; border-radius: 16px; border: 1px solid var(--line); width: 100%; height: auto; box-shadow: 0 30px 80px rgba(0,0,0,.35); }
+  .shot { margin-top: 40px; border-radius: 16px; border: 1px solid var(--line); width: 100%; height: auto; box-shadow: 0 30px 80px var(--shadow); }
   section { padding: 56px 0; }
   section h2 { font-size: 30px; margin: 0 0 8px; }
   section p.sub { color: var(--muted); margin: 0 0 28px; }
@@ -79,6 +92,25 @@
   td, th { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
   th { background: var(--bg2); }
   .tablewrap { overflow-x: auto; }
+  .req { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; margin: 0 0 18px; }
+  .req h3 { margin: 0 0 6px; font-size: 16px; }
+  .req ul { margin: 0; padding-left: 20px; color: var(--muted); font-size: 14px; }
+  .req li { margin-bottom: 4px; }
+  ol.guide { list-style: none; counter-reset: step; padding: 0; margin: 18px 0 0; display: grid; gap: 12px; }
+  ol.guide > li { counter-increment: step; position: relative; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px 16px 64px; min-width: 0; }
+  ol.guide > li::before { content: counter(step); position: absolute; left: 18px; top: 15px; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: #fff; background: linear-gradient(135deg, var(--accent), var(--accent2)); }
+  ol.guide h3 { margin: 2px 0 4px; font-size: 16px; }
+  ol.guide p { margin: 0 0 6px; color: var(--muted); font-size: 14px; }
+  ol.guide p:last-child { margin-bottom: 0; }
+  pre.cmd { margin: 8px 0; background: var(--bg2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; overflow-x: auto; font-size: 13px; line-height: 1.5; }
+  pre.cmd code { background: none; border: 0; padding: 0; white-space: pre; }
+  table.compare { min-width: 640px; }
+  table.compare th:not(:first-child), table.compare td:not(:first-child) { width: 22%; }
+  table.compare th.me { background: color-mix(in srgb, var(--accent) 22%, var(--bg2)); }
+  table.compare td.me { background: color-mix(in srgb, var(--accent) 8%, var(--card)); }
+  table.compare .yes { color: var(--good); font-weight: 700; }
+  table.compare .no { color: var(--muted); }
+  #compare .note { margin-top: 12px; }
   details { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; margin-bottom: 10px; }
   details summary { cursor: pointer; font-weight: 600; }
   details p { color: var(--muted); margin: 10px 0 0; }
@@ -88,10 +120,13 @@
   @media (max-width: 640px) {
     nav .wrap { gap: 4px 12px; padding-top: 8px; padding-bottom: 8px; }
     nav .lang { order: 2; margin-left: auto; }
+    nav .theme { order: 2; }
     nav .links { order: 3; width: 100%; margin-left: 0; gap: 4px 16px; }
     nav .links a.hide-s { display: none; }
     .lang button { padding: 4px 9px; font-size: 12px; }
     header.hero { padding-top: 44px; }
+    ol.guide > li { padding: 14px 14px 14px 54px; }
+    ol.guide > li::before { left: 14px; top: 13px; }
   }
 </style>
 </head>
@@ -102,6 +137,7 @@
     <div class="links">
       <a class="hide-s" href="#features"><span data-l="en">Features</span><span data-l="th">ฟีเจอร์</span><span data-l="vi">Tính năng</span><span data-l="id">Fitur</span></a>
       <a class="hide-s" href="#install"><span data-l="en">Install</span><span data-l="th">วิธีติดตั้ง</span><span data-l="vi">Cài đặt</span><span data-l="id">Instal</span></a>
+      <a class="hide-s" href="#compare"><span data-l="en">Compare</span><span data-l="th">เปรียบเทียบ</span><span data-l="vi">So sánh</span><span data-l="id">Perbandingan</span></a>
       <a class="hide-s" href="#faq">FAQ</a>
       <a href="changelog.html"><span data-l="en">Changelog</span><span data-l="th">ประวัติเวอร์ชัน</span><span data-l="vi">Nhật ký thay đổi</span><span data-l="id">Catatan rilis</span></a>
       <a href="https://github.com/x2Swiftyouz/Akati-Os">GitHub</a>
@@ -109,6 +145,7 @@
     <div class="lang" role="group" aria-label="Language">
       <button data-set="en" lang="en">EN</button><button data-set="th" lang="th">ไทย</button><button data-set="vi" lang="vi">VI</button><button data-set="id" lang="id">ID</button>
     </div>
+    <button class="theme" id="theme" type="button" aria-label="Switch theme" title="Switch theme"><svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg><svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="currentColor"/><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg></button>
   </div>
 </nav>
 
@@ -203,62 +240,176 @@
 
 <section id="install">
   <div class="wrap">
-    <h2 data-l="en">Install</h2><h2 data-l="th">วิธีติดตั้ง</h2><h2 data-l="vi">Cài đặt</h2><h2 data-l="id">Instal</h2>
+    <h2 data-l="en">Install, step by step</h2><h2 data-l="th">วิธีติดตั้งทีละขั้น</h2><h2 data-l="vi">Cài đặt từng bước</h2><h2 data-l="id">Instal langkah demi langkah</h2>
+    <p class="sub" data-l="en">From the download to Akati OS Center. Read it once before you start.</p>
+    <p class="sub" data-l="th">ตั้งแต่ดาวน์โหลดจนเปิด Akati OS Center ได้ อ่านให้จบหนึ่งรอบก่อนเริ่ม</p>
+    <p class="sub" data-l="vi">Từ lúc tải về đến khi mở Akati OS Center. Hãy đọc hết một lượt trước khi bắt đầu.</p>
+    <p class="sub" data-l="id">Dari unduhan sampai Akati OS Center. Baca sekali sampai habis sebelum mulai.</p>
+    <div class="req">
+      <h3 data-l="en">Before you start</h3><h3 data-l="th">ก่อนเริ่ม</h3><h3 data-l="vi">Trước khi bắt đầu</h3><h3 data-l="id">Sebelum mulai</h3>
+      <ul data-l="en">
+        <li>Windows 11 24H2, 25H2 or 26H2, or Windows 10 22H2. To check, press Win+R and type <code>winver</code>.</li>
+        <li>A genuine Windows licence. Akati OS does not activate Windows.</li>
+        <li>An internet connection during setup, and a laptop plugged in.</li>
+        <li>Your files backed up. A fresh Windows install is recommended (required for Windows 10). Try it in a virtual machine first.</li>
+      </ul>
+      <ul data-l="th">
+        <li>Windows 11 24H2, 25H2 หรือ 26H2 หรือ Windows 10 22H2 เช็กได้โดยกด Win+R แล้วพิมพ์ <code>winver</code></li>
+        <li>Windows ที่มีไลเซนส์ถูกต้อง Akati OS ไม่ได้ Activate Windows ให้</li>
+        <li>ต่ออินเทอร์เน็ตไว้ระหว่างติดตั้ง ถ้าเป็นโน้ตบุ๊กให้เสียบสายชาร์จไว้ด้วย</li>
+        <li>สำรองไฟล์เรียบร้อยแล้ว แนะนำให้ลง Windows ใหม่ก่อน (Windows 10 ต้องลงใหม่) และลองใน VM ก่อนใช้กับเครื่องจริง</li>
+      </ul>
+      <ul data-l="vi">
+        <li>Windows 11 24H2, 25H2 hoặc 26H2, hoặc Windows 10 22H2. Để kiểm tra, nhấn Win+R rồi gõ <code>winver</code>.</li>
+        <li>Giấy phép Windows chính hãng. Akati OS không kích hoạt Windows.</li>
+        <li>Có kết nối Internet trong khi cài, và cắm sạc nếu dùng laptop.</li>
+        <li>Đã sao lưu tệp. Nên cài Windows mới (bắt buộc với Windows 10). Hãy thử trong máy ảo trước.</li>
+      </ul>
+      <ul data-l="id">
+        <li>Windows 11 24H2, 25H2, atau 26H2, atau Windows 10 22H2. Untuk mengecek, tekan Win+R lalu ketik <code>winver</code>.</li>
+        <li>Lisensi Windows yang asli. Akati OS tidak mengaktivasi Windows.</li>
+        <li>Koneksi internet selama instalasi, dan laptop tersambung ke listrik.</li>
+        <li>File Anda sudah dicadangkan. Disarankan instalasi Windows yang baru (wajib untuk Windows 10). Coba dulu di mesin virtual.</li>
+      </ul>
+    </div>
     <div class="tablewrap"><table>
       <tr><th></th><th>Windows 11</th><th>Windows 10</th></tr>
       <tr><td data-l="en">File</td><td data-l="th">ไฟล์</td><td data-l="vi">Tệp</td><td data-l="id">File</td><td><code>AkatiOS-Win11_v…apbx</code></td><td><code>AkatiOS-Win10_v…apbx</code></td></tr>
-      <tr><td data-l="en">Windows version</td><td data-l="th">เวอร์ชัน Windows</td><td data-l="vi">Phiên bản Windows</td><td data-l="id">Versi Windows</td><td>24H2, 25H2, 26H2</td><td>22H2 (build 19045)</td></tr>
+      <tr><td data-l="en">Windows version</td><td data-l="th">เวอร์ชัน Windows</td><td data-l="vi">Phiên bản Windows</td><td data-l="id">Versi Windows</td><td>24H2 (26100), 25H2 (26200), 26H2 (26300)</td><td>22H2 (build 19045)</td></tr>
+      <tr><td data-l="en">Fresh Windows install</td><td data-l="th">ลง Windows ใหม่ก่อน</td><td data-l="vi">Cài Windows mới</td><td data-l="id">Instalasi Windows baru</td>
+        <td><span data-l="en">Recommended</span><span data-l="th">แนะนำ</span><span data-l="vi">Nên làm</span><span data-l="id">Disarankan</span></td>
+        <td><span data-l="en">Required</span><span data-l="th">จำเป็น</span><span data-l="vi">Bắt buộc</span><span data-l="id">Wajib</span></td></tr>
     </table></div>
-    <ol class="steps" data-l="en">
-      <li>Back up your files. A fresh Windows install is recommended.</li>
-      <li>Download the <code>.apbx</code> for your Windows and check its SHA256 against <code>SHA256SUMS.txt</code>.</li>
-      <li>Download <a href="https://ameliorated.io">AME Wizard</a>, open it and drag the <code>.apbx</code> into it.</li>
-      <li>Pick your options, let it finish and restart. Akati OS Center is on the desktop.</li>
+    <ol class="guide">
+      <li><h3 data-l="en">Update Windows and back up</h3><h3 data-l="th">อัปเดต Windows และสำรองไฟล์</h3><h3 data-l="vi">Cập nhật Windows và sao lưu</h3><h3 data-l="id">Perbarui Windows dan cadangkan file</h3>
+        <p data-l="en">Install all Windows updates and restart: AME Wizard checks that no updates are waiting. Copy your files to another drive or to the cloud.</p>
+        <p data-l="th">ติดตั้งอัปเดต Windows ให้ครบแล้วรีสตาร์ท เพราะ AME Wizard จะตรวจว่าไม่มีอัปเดตค้างอยู่ จากนั้นก๊อปไฟล์สำคัญไปเก็บไว้ในไดรฟ์อื่นหรือบนคลาวด์</p>
+        <p data-l="vi">Cài hết các bản cập nhật Windows rồi khởi động lại: AME Wizard sẽ kiểm tra để chắc chắn không còn bản cập nhật nào đang chờ. Chép tệp của bạn sang ổ khác hoặc lên đám mây.</p>
+        <p data-l="id">Instal semua pembaruan Windows lalu restart: AME Wizard memeriksa bahwa tidak ada pembaruan yang menunggu. Salin file Anda ke drive lain atau ke cloud.</p></li>
+      <li><h3 data-l="en">Download the playbook</h3><h3 data-l="th">ดาวน์โหลด playbook</h3><h3 data-l="vi">Tải playbook</h3><h3 data-l="id">Unduh playbook</h3>
+        <p data-l="en">From <a href="https://github.com/x2Swiftyouz/Akati-Os/releases/latest">GitHub Releases</a> (or the buttons at the top), download <code>AkatiOS-Win11_v…apbx</code> for Windows 11 or <code>AkatiOS-Win10_v…apbx</code> for Windows 10 22H2, and <code>SHA256SUMS.txt</code>.</p>
+        <p data-l="th">ที่ <a href="https://github.com/x2Swiftyouz/Akati-Os/releases/latest">GitHub Releases</a> (หรือปุ่มด้านบนสุด) โหลด <code>AkatiOS-Win11_v…apbx</code> สำหรับ Windows 11 หรือ <code>AkatiOS-Win10_v…apbx</code> สำหรับ Windows 10 22H2 พร้อมไฟล์ <code>SHA256SUMS.txt</code></p>
+        <p data-l="vi">Từ <a href="https://github.com/x2Swiftyouz/Akati-Os/releases/latest">GitHub Releases</a> (hoặc các nút ở đầu trang), tải <code>AkatiOS-Win11_v…apbx</code> cho Windows 11 hoặc <code>AkatiOS-Win10_v…apbx</code> cho Windows 10 22H2, cùng với <code>SHA256SUMS.txt</code>.</p>
+        <p data-l="id">Dari <a href="https://github.com/x2Swiftyouz/Akati-Os/releases/latest">GitHub Releases</a> (atau tombol di bagian atas), unduh <code>AkatiOS-Win11_v…apbx</code> untuk Windows 11 atau <code>AkatiOS-Win10_v…apbx</code> untuk Windows 10 22H2, serta <code>SHA256SUMS.txt</code>.</p></li>
+      <li><h3 data-l="en">Check the SHA256</h3><h3 data-l="th">ตรวจ SHA256</h3><h3 data-l="vi">Kiểm tra SHA256</h3><h3 data-l="id">Cek SHA256</h3>
+        <p data-l="en">Open PowerShell in the download folder and run this, with the name of your file:</p>
+        <p data-l="th">เปิด PowerShell ในโฟลเดอร์ที่โหลดไฟล์ไว้ แล้วรันคำสั่งนี้ (เปลี่ยนเป็นชื่อไฟล์ของคุณ)</p>
+        <p data-l="vi">Mở PowerShell trong thư mục chứa tệp đã tải và chạy lệnh sau, thay bằng tên tệp của bạn:</p>
+        <p data-l="id">Buka PowerShell di folder unduhan lalu jalankan ini, dengan nama file Anda:</p>
+        <pre class="cmd"><code>(Get-FileHash .\AkatiOS-Win11_v1.7.5.apbx -Algorithm SHA256).Hash.ToLower()
+Get-Content .\SHA256SUMS.txt</code></pre>
+        <p data-l="en">The two values must match. Do not use a file that does not match.</p>
+        <p data-l="th">ค่าทั้งสองต้องตรงกัน ถ้าไม่ตรงอย่าใช้ไฟล์นั้น</p>
+        <p data-l="vi">Hai giá trị phải trùng khớp. Đừng dùng tệp không khớp.</p>
+        <p data-l="id">Kedua nilai harus sama. Jangan pakai file yang tidak cocok.</p></li>
+      <li><h3 data-l="en">Get AME Wizard</h3><h3 data-l="th">โหลด AME Wizard</h3><h3 data-l="vi">Tải AME Wizard</h3><h3 data-l="id">Unduh AME Wizard</h3>
+        <p data-l="en">Download AME Wizard (Beta) only from the official site <a href="https://ameliorated.io">ameliorated.io</a>, then open it.</p>
+        <p data-l="th">โหลด AME Wizard (Beta) จากเว็บทางการ <a href="https://ameliorated.io">ameliorated.io</a> เท่านั้น แล้วเปิดโปรแกรมขึ้นมา</p>
+        <p data-l="vi">Chỉ tải AME Wizard (Beta) từ trang chính thức <a href="https://ameliorated.io">ameliorated.io</a>, rồi mở nó.</p>
+        <p data-l="id">Unduh AME Wizard (Beta) hanya dari situs resmi <a href="https://ameliorated.io">ameliorated.io</a>, lalu buka.</p></li>
+      <li><h3 data-l="en">Drag the .apbx into AME Wizard</h3><h3 data-l="th">ลากไฟล์ .apbx เข้า AME Wizard</h3><h3 data-l="vi">Kéo tệp .apbx vào AME Wizard</h3><h3 data-l="id">Seret .apbx ke AME Wizard</h3>
+        <p data-l="en">"Unverified" is normal (see the <a href="#faq">FAQ</a>). With the wrong file it says "This Windows build is not supported by this Playbook": nothing is changed, use the other file.</p>
+        <p data-l="th">ถ้าขึ้นว่า "Unverified" ถือว่าปกติ (ดู<a href="#faq">คำถามที่พบบ่อย</a>) ถ้าใช้ผิดไฟล์จะขึ้นว่า "This Windows build is not supported by this Playbook" ไม่มีอะไรถูกเปลี่ยน ให้ใช้อีกไฟล์แทน</p>
+        <p data-l="vi">"Unverified" là bình thường (xem <a href="#faq">FAQ</a>). Nếu dùng sai tệp, nó báo "This Windows build is not supported by this Playbook": không có gì bị thay đổi, hãy dùng tệp còn lại.</p>
+        <p data-l="id">"Unverified" itu normal (lihat <a href="#faq">FAQ</a>). Jika filenya salah, muncul "This Windows build is not supported by this Playbook": tidak ada yang diubah, pakai file yang satunya.</p></li>
+      <li><h3 data-l="en">Do what AME Wizard asks</h3><h3 data-l="th">ทำตามที่ AME Wizard บอก</h3><h3 data-l="vi">Làm theo yêu cầu của AME Wizard</h3><h3 data-l="id">Ikuti permintaan AME Wizard</h3>
+        <p data-l="en">Before it starts, AME Wizard lists what it needs, for example Defender turned off, internet and power plugged in. Follow what it shows.</p>
+        <p data-l="th">ก่อนเริ่ม AME Wizard จะบอกสิ่งที่ต้องทำ เช่น ปิด Defender ต่ออินเทอร์เน็ต และเสียบสายชาร์จ ทำตามที่ขึ้นบนหน้าจอได้เลย</p>
+        <p data-l="vi">Trước khi bắt đầu, AME Wizard liệt kê những gì cần có, ví dụ tắt Defender, có Internet và cắm sạc. Hãy làm theo những gì nó hiển thị.</p>
+        <p data-l="id">Sebelum mulai, AME Wizard menampilkan apa yang dibutuhkan, misalnya Defender dimatikan, internet, dan listrik tersambung. Ikuti yang ditampilkan.</p></li>
+      <li><h3 data-l="en">Pick your options</h3><h3 data-l="th">เลือกตัวเลือก</h3><h3 data-l="vi">Chọn các tùy chọn</h3><h3 data-l="id">Pilih opsi</h3>
+        <p data-l="en">The recommended defaults are a good start. If you play anti-cheat games (Valorant, FACEIT), keep Defender enabled and leave "Disable Core Isolation" unticked. "Learn more" opens the <a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/OPTIONS.md">options guide</a>; most options can be changed later in Akati OS Center &gt; Tweaks.</p>
+        <p data-l="th">ใช้ค่าแนะนำก็เริ่มต้นได้ดีแล้ว ถ้าเล่นเกมที่มีแอนตี้ชีต (Valorant, FACEIT) ให้เปิด Defender ไว้และไม่ต้องติ๊ก "Disable Core Isolation" ปุ่ม "Learn more" จะเปิด<a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/OPTIONS.md">คู่มือตัวเลือก</a> ตัวเลือกส่วนใหญ่เปลี่ยนทีหลังได้ใน Akati OS Center &gt; ปรับแต่ง</p>
+        <p data-l="vi">Các giá trị mặc định được đề xuất là khởi đầu tốt. Nếu bạn chơi game có chống gian lận (Valorant, FACEIT), hãy giữ Defender bật và đừng tích "Disable Core Isolation". "Learn more" mở <a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/OPTIONS.md">hướng dẫn tùy chọn</a>; hầu hết tùy chọn có thể đổi sau trong Akati OS Center &gt; Tinh chỉnh.</p>
+        <p data-l="id">Pengaturan bawaan yang disarankan sudah jadi awal yang baik. Jika Anda main game dengan anti-cheat (Valorant, FACEIT), biarkan Defender aktif dan jangan centang "Disable Core Isolation". "Learn more" membuka <a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/OPTIONS.md">panduan opsi</a>; sebagian besar opsi bisa diubah nanti di Akati OS Center &gt; Tweak.</p></li>
+      <li><h3 data-l="en">Wait, then restart</h3><h3 data-l="th">รอจนเสร็จแล้วรีสตาร์ท</h3><h3 data-l="vi">Chờ rồi khởi động lại</h3><h3 data-l="id">Tunggu, lalu restart</h3>
+        <p data-l="en">Do not turn off the PC while it works. AME Wizard estimates about 15 minutes. The PC restarts when it is done.</p>
+        <p data-l="th">ห้ามปิดเครื่องระหว่างติดตั้ง AME Wizard ประมาณเวลาไว้ราว 15 นาที เสร็จแล้วเครื่องจะรีสตาร์ทเอง</p>
+        <p data-l="vi">Đừng tắt máy khi đang cài. AME Wizard ước tính khoảng 15 phút. Máy sẽ khởi động lại khi xong.</p>
+        <p data-l="id">Jangan matikan PC selama proses berjalan. AME Wizard memperkirakan sekitar 15 menit. PC akan restart setelah selesai.</p></li>
+      <li><h3 data-l="en">Open Akati OS Center</h3><h3 data-l="th">เปิด Akati OS Center</h3><h3 data-l="vi">Mở Akati OS Center</h3><h3 data-l="id">Buka Akati OS Center</h3>
+        <p data-l="en">After the restart, open Akati OS Center from the desktop or the Start menu. The first time, a welcome screen asks for your language, gaming apps and theme.</p>
+        <p data-l="th">หลังรีสตาร์ท เปิด Akati OS Center จากเดสก์ท็อปหรือ Start menu ครั้งแรกจะมีหน้าต้อนรับให้เลือกภาษา แอปเกม และธีม</p>
+        <p data-l="vi">Sau khi khởi động lại, mở Akati OS Center từ màn hình nền hoặc menu Start. Lần đầu tiên, màn hình chào mừng sẽ hỏi ngôn ngữ, ứng dụng chơi game và giao diện.</p>
+        <p data-l="id">Setelah restart, buka Akati OS Center dari desktop atau menu Start. Pertama kali dibuka, layar sambutan menanyakan bahasa, aplikasi gaming, dan tema Anda.</p></li>
     </ol>
-    <ol class="steps" data-l="th">
-      <li>สำรองไฟล์ก่อน แนะนำให้ลง Windows ใหม่</li>
-      <li>โหลดไฟล์ <code>.apbx</code> ที่ตรงกับ Windows ของคุณ แล้วตรวจ SHA256 กับ <code>SHA256SUMS.txt</code></li>
-      <li>โหลด <a href="https://ameliorated.io">AME Wizard</a> เปิดแล้วลากไฟล์ <code>.apbx</code> เข้าไป</li>
-      <li>เลือกตัวเลือก รอจนเสร็จแล้วรีสตาร์ท Akati OS Center จะอยู่บนเดสก์ท็อป</li>
-    </ol>
-    <ol class="steps" data-l="vi">
-      <li>Sao lưu tệp của bạn. Nên cài Windows mới.</li>
-      <li>Tải tệp <code>.apbx</code> cho Windows của bạn và kiểm tra SHA256 với <code>SHA256SUMS.txt</code>.</li>
-      <li>Tải <a href="https://ameliorated.io">AME Wizard</a>, mở nó và kéo tệp <code>.apbx</code> vào.</li>
-      <li>Chọn các tùy chọn, chờ hoàn tất rồi khởi động lại. Akati OS Center sẽ có trên màn hình nền.</li>
-    </ol>
-    <ol class="steps" data-l="id">
-      <li>Cadangkan file Anda. Disarankan memakai instalasi Windows yang baru.</li>
-      <li>Unduh <code>.apbx</code> untuk Windows Anda dan cocokkan SHA256-nya dengan <code>SHA256SUMS.txt</code>.</li>
-      <li>Unduh <a href="https://ameliorated.io">AME Wizard</a>, buka, lalu seret <code>.apbx</code> ke dalamnya.</li>
-      <li>Pilih opsi Anda, tunggu sampai selesai, lalu restart. Akati OS Center ada di desktop.</li>
-    </ol>
+  </div>
+</section>
+
+<section id="compare">
+  <div class="wrap">
+    <h2 data-l="en">Windows, AtlasOS and Akati OS</h2><h2 data-l="th">เทียบ Windows, AtlasOS และ Akati OS</h2><h2 data-l="vi">So sánh Windows, AtlasOS và Akati OS</h2><h2 data-l="id">Windows, AtlasOS, dan Akati OS</h2>
+    <p class="sub" data-l="en">Features only, no speed claims. Akati OS is built on AtlasOS: its tweaks are the work of the AtlasOS team.</p>
+    <p class="sub" data-l="th">เทียบเฉพาะฟีเจอร์ ไม่ได้อ้างเรื่องความเร็ว Akati OS สร้างต่อจาก AtlasOS การปรับแต่งหลักเป็นผลงานของทีม AtlasOS</p>
+    <p class="sub" data-l="vi">Chỉ so sánh tính năng, không khẳng định về tốc độ. Akati OS được xây dựng trên AtlasOS: các tinh chỉnh là công sức của nhóm AtlasOS.</p>
+    <p class="sub" data-l="id">Hanya fitur, tanpa klaim kecepatan. Akati OS dibangun di atas AtlasOS: tweak-nya adalah karya tim AtlasOS.</p>
+    <div class="tablewrap"><table class="compare">
+      <thead><tr><th></th><th><span data-l="en">Windows (stock)</span><span data-l="th">Windows (ปกติ)</span><span data-l="vi">Windows (gốc)</span><span data-l="id">Windows (bawaan)</span></th><th>AtlasOS</th><th class="me">Akati OS</th></tr></thead>
+      <tbody>
+      <tr><td><span data-l="en">Made by</span><span data-l="th">ผู้สร้าง</span><span data-l="vi">Phát triển bởi</span><span data-l="id">Dibuat oleh</span></td><td>Microsoft</td><td><span data-l="en">AtlasOS team</span><span data-l="th">ทีม AtlasOS</span><span data-l="vi">Nhóm AtlasOS</span><span data-l="id">Tim AtlasOS</span></td><td class="me"><span data-l="en">Based on AtlasOS</span><span data-l="th">ดัดแปลงจาก AtlasOS</span><span data-l="vi">Dựa trên AtlasOS</span><span data-l="id">Berbasis AtlasOS</span></td></tr>
+      <tr><td><span data-l="en">Open source (GPL-3.0)</span><span data-l="th">โอเพนซอร์ส (GPL-3.0)</span><span data-l="vi">Mã nguồn mở (GPL-3.0)</span><span data-l="id">Sumber terbuka (GPL-3.0)</span></td><td class="no">—</td><td class="yes">✓</td><td class="me yes">✓</td></tr>
+      <tr><td><span data-l="en">Applied with AME Wizard</span><span data-l="th">ติดตั้งผ่าน AME Wizard</span><span data-l="vi">Áp dụng bằng AME Wizard</span><span data-l="id">Dipasang dengan AME Wizard</span></td><td class="no">—</td><td class="yes">✓</td><td class="me yes">✓</td></tr>
+      <tr><td><span data-l="en">AtlasOS performance, privacy and debloat tweaks</span><span data-l="th">การปรับแต่งด้านประสิทธิภาพ ความเป็นส่วนตัว และลบแอปของ AtlasOS</span><span data-l="vi">Tinh chỉnh hiệu năng, quyền riêng tư và gỡ bloatware của AtlasOS</span><span data-l="id">Tweak performa, privasi, dan debloat AtlasOS</span></td><td class="no">—</td><td class="yes">✓</td><td class="me yes">✓</td></tr>
+      <tr><td><span data-l="en">Where you change settings</span><span data-l="th">ที่ปรับการตั้งค่า</span><span data-l="vi">Nơi thay đổi cài đặt</span><span data-l="id">Tempat mengubah pengaturan</span></td><td><span data-l="en">Windows Settings</span><span data-l="th">Windows Settings</span><span data-l="vi">Cài đặt Windows</span><span data-l="id">Pengaturan Windows</span></td><td><span data-l="en">Atlas folder (scripts)</span><span data-l="th">โฟลเดอร์ Atlas (สคริปต์)</span><span data-l="vi">Thư mục Atlas (script)</span><span data-l="id">Folder Atlas (skrip)</span></td><td class="me"><span data-l="en">Akati OS Center (includes every AtlasOS setting)</span><span data-l="th">Akati OS Center (รวมการตั้งค่าทั้งหมดของ AtlasOS)</span><span data-l="vi">Akati OS Center (gồm mọi cài đặt của AtlasOS)</span><span data-l="id">Akati OS Center (berisi semua pengaturan AtlasOS)</span></td></tr>
+      <tr><td><span data-l="en">One-click Game boost</span><span data-l="th">บูสต์เกมคลิกเดียว</span><span data-l="vi">Tăng tốc game một cú nhấp</span><span data-l="id">Game Boost sekali klik</span></td><td class="no">—</td><td class="no">—</td><td class="me yes">✓</td></tr>
+      <tr><td><span data-l="en">My games: Play button and profile per game</span><span data-l="th">เกมของฉัน: ปุ่มเล่นและโปรไฟล์แต่ละเกม</span><span data-l="vi">Game của tôi: nút Chơi và hồ sơ cho từng game</span><span data-l="id">Game saya: tombol Main dan profil per game</span></td><td class="no">—</td><td class="no">—</td><td class="me yes">✓</td></tr>
+      <tr><td><span data-l="en">Memory integrity for anti-cheat games</span><span data-l="th">Memory integrity สำหรับเกมที่มีแอนตี้ชีต</span><span data-l="vi">Memory integrity cho game có chống gian lận</span><span data-l="id">Memory integrity untuk game dengan anti-cheat</span></td><td><span data-l="en">Windows Security switch</span><span data-l="th">สวิตช์ใน Windows Security</span><span data-l="vi">Công tắc trong Windows Security</span><span data-l="id">Sakelar di Windows Security</span></td><td><span data-l="en">Enable / Disable VBS scripts</span><span data-l="th">สคริปต์ Enable / Disable VBS</span><span data-l="vi">Script Enable / Disable VBS</span><span data-l="id">Skrip Enable / Disable VBS</span></td><td class="me"><span data-l="en">Valorant mode / FiveM mode</span><span data-l="th">โหมด Valorant / โหมด FiveM</span><span data-l="vi">Chế độ Valorant / FiveM</span><span data-l="id">Mode Valorant / Mode FiveM</span></td></tr>
+      <tr><td><span data-l="en">Gaming apps installer (Steam, Epic, Riot Client, Discord…)</span><span data-l="th">ติดตั้งแอปเกม (Steam, Epic, Riot Client, Discord…)</span><span data-l="vi">Cài ứng dụng chơi game (Steam, Epic, Riot Client, Discord…)</span><span data-l="id">Instalasi aplikasi gaming (Steam, Epic, Riot Client, Discord…)</span></td><td class="no">—</td><td class="no">—</td><td class="me yes">✓</td></tr>
+      <tr><td><span data-l="en">FPS test, Akati Doctor and Akati Score</span><span data-l="th">ทดสอบ FPS, Akati Doctor และ Akati Score</span><span data-l="vi">Đo FPS, Akati Doctor và Akati Score</span><span data-l="id">Tes FPS, Akati Doctor, dan Akati Score</span></td><td class="no">—</td><td class="no">—</td><td class="me yes">✓</td></tr>
+      <tr><td><span data-l="en">Tweak app in Thai, Vietnamese and Indonesian</span><span data-l="th">แอปปรับแต่งภาษาไทย เวียดนาม และอินโดนีเซีย</span><span data-l="vi">Ứng dụng tinh chỉnh bằng tiếng Thái, Việt và Indonesia</span><span data-l="id">Aplikasi tweak dalam bahasa Thai, Vietnam, dan Indonesia</span></td><td class="no">—</td><td class="no">—</td><td class="me yes">✓</td></tr>
+      <tr><td><span data-l="en">Themes</span><span data-l="th">ธีม</span><span data-l="vi">Giao diện</span><span data-l="id">Tema</span></td><td><span data-l="en">Windows themes</span><span data-l="th">ธีมของ Windows</span><span data-l="vi">Giao diện Windows</span><span data-l="id">Tema Windows</span></td><td><span data-l="en">AtlasOS themes and wallpapers</span><span data-l="th">ธีมและวอลเปเปอร์ AtlasOS</span><span data-l="vi">Giao diện và hình nền AtlasOS</span><span data-l="id">Tema dan wallpaper AtlasOS</span></td><td class="me"><span data-l="en">Akati OS themes, wallpapers, cursors and sounds</span><span data-l="th">ธีม วอลเปเปอร์ เคอร์เซอร์ และเสียงของ Akati OS</span><span data-l="vi">Giao diện, hình nền, con trỏ và âm thanh Akati OS</span><span data-l="id">Tema, wallpaper, kursor, dan suara Akati OS</span></td></tr>
+      <tr><td><span data-l="en">Activation tools</span><span data-l="th">เครื่องมือ Activate</span><span data-l="vi">Công cụ kích hoạt</span><span data-l="id">Alat aktivasi</span></td><td class="no">—</td><td class="no">—</td><td class="me no">—</td></tr>
+      </tbody>
+    </table></div>
+    <p class="note" data-l="en">✓ included, — not included. The AtlasOS column is the AtlasOS playbook that Akati OS is based on (v0.5.0 for Windows 11, v0.4.1 for Windows 10), not later AtlasOS versions or the optional Atlas Toolbox app. Every difference is listed in <a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/CHANGES-FROM-ATLAS.md">Changes from AtlasOS</a>.</p>
+    <p class="note" data-l="th">✓ มี — ไม่มี คอลัมน์ AtlasOS หมายถึง playbook ของ AtlasOS ที่ Akati OS ใช้เป็นฐาน (v0.5.0 สำหรับ Windows 11, v0.4.1 สำหรับ Windows 10) ไม่รวม AtlasOS เวอร์ชันหลังจากนั้นหรือแอป Atlas Toolbox ที่เป็นตัวเลือกเสริม ทุกจุดที่ต่างกันอยู่ใน <a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/CHANGES-FROM-ATLAS.md">Changes from AtlasOS</a></p>
+    <p class="note" data-l="vi">✓ có, — không có. Cột AtlasOS là playbook AtlasOS mà Akati OS dựa trên (v0.5.0 cho Windows 11, v0.4.1 cho Windows 10), không phải các phiên bản AtlasOS sau này hay ứng dụng tùy chọn Atlas Toolbox. Mọi khác biệt đều có trong <a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/CHANGES-FROM-ATLAS.md">Changes from AtlasOS</a>.</p>
+    <p class="note" data-l="id">✓ ada, — tidak ada. Kolom AtlasOS adalah playbook AtlasOS yang menjadi dasar Akati OS (v0.5.0 untuk Windows 11, v0.4.1 untuk Windows 10), bukan versi AtlasOS yang lebih baru atau aplikasi opsional Atlas Toolbox. Setiap perbedaan tercantum di <a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/CHANGES-FROM-ATLAS.md">Changes from AtlasOS</a>.</p>
   </div>
 </section>
 
 <section id="faq">
   <div class="wrap">
-    <h2>FAQ</h2>
+    <h2 data-l="en">Questions</h2><h2 data-l="th">คำถามที่พบบ่อย</h2><h2 data-l="vi">Câu hỏi thường gặp</h2><h2 data-l="id">Pertanyaan umum</h2>
+    <details><summary><span data-l="en">Is Akati OS safe? Where does it come from?</span><span data-l="th">Akati OS ปลอดภัยไหม มาจากไหน</span><span data-l="vi">Akati OS có an toàn không? Nó đến từ đâu?</span><span data-l="id">Apakah Akati OS aman? Dari mana asalnya?</span></summary>
+      <p data-l="en">Akati OS is built on AtlasOS (v0.5.0 for Windows 11, v0.4.1 for Windows 10) and is open source under GPL-3.0. The full source is on <a href="https://github.com/x2Swiftyouz/Akati-Os">GitHub</a> and every change from AtlasOS is listed in <a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/CHANGES-FROM-ATLAS.md">Changes from AtlasOS</a>. The <code>.apbx</code> is a 7z archive of the source folder (password <code>malte</code>, the AME Wizard default), so you can open it and read every script. Nothing is sent anywhere. It is not an official AtlasOS project.</p>
+      <p data-l="th">Akati OS สร้างต่อจาก AtlasOS (v0.5.0 สำหรับ Windows 11 และ v0.4.1 สำหรับ Windows 10) เป็นโอเพนซอร์สภายใต้ GPL-3.0 ซอร์สโค้ดทั้งหมดอยู่บน <a href="https://github.com/x2Swiftyouz/Akati-Os">GitHub</a> และทุกจุดที่เปลี่ยนจาก AtlasOS มีรายการอยู่ใน <a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/CHANGES-FROM-ATLAS.md">Changes from AtlasOS</a> ไฟล์ <code>.apbx</code> คือไฟล์ 7z ของโฟลเดอร์ซอร์ส (รหัสผ่าน <code>malte</code> ซึ่งเป็นค่าเริ่มต้นของ AME Wizard) แตกไฟล์ออกมาอ่านได้ทุกสคริปต์ ไม่มีการส่งข้อมูลไปไหน และไม่ใช่โปรเจกต์ทางการของ AtlasOS</p>
+      <p data-l="vi">Akati OS được xây dựng trên AtlasOS (v0.5.0 cho Windows 11, v0.4.1 cho Windows 10) và là mã nguồn mở theo GPL-3.0. Toàn bộ mã nguồn có trên <a href="https://github.com/x2Swiftyouz/Akati-Os">GitHub</a> và mọi thay đổi so với AtlasOS đều được liệt kê trong <a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/CHANGES-FROM-ATLAS.md">Changes from AtlasOS</a>. Tệp <code>.apbx</code> là một tệp nén 7z của thư mục mã nguồn (mật khẩu <code>malte</code>, mặc định của AME Wizard), nên bạn có thể mở ra và đọc mọi script. Không có gì được gửi đi đâu. Đây không phải dự án chính thức của AtlasOS.</p>
+      <p data-l="id">Akati OS dibangun di atas AtlasOS (v0.5.0 untuk Windows 11, v0.4.1 untuk Windows 10) dan bersifat sumber terbuka di bawah GPL-3.0. Seluruh kode sumber ada di <a href="https://github.com/x2Swiftyouz/Akati-Os">GitHub</a> dan setiap perubahan dari AtlasOS tercantum di <a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/CHANGES-FROM-ATLAS.md">Changes from AtlasOS</a>. File <code>.apbx</code> adalah arsip 7z dari folder sumber (kata sandi <code>malte</code>, bawaan AME Wizard), jadi Anda bisa membukanya dan membaca setiap skrip. Tidak ada yang dikirim ke mana pun. Ini bukan proyek resmi AtlasOS.</p></details>
     <details><summary><span data-l="en">AME Wizard shows "Unverified". Is that a problem?</span><span data-l="th">AME Wizard ขึ้นว่า "Unverified" มีปัญหาไหม</span><span data-l="vi">AME Wizard hiện "Unverified". Có sao không?</span><span data-l="id">AME Wizard menampilkan "Unverified". Apakah itu masalah?</span></summary>
       <p data-l="en">No. Ameliorated only verifies playbooks of creators with a large userbase. An unverified playbook works exactly the same; Ameliorated confirmed there is no functional difference.</p>
       <p data-l="th">ไม่มีปัญหา Ameliorated รับรองเฉพาะ playbook ของผู้สร้างที่มีผู้ใช้จำนวนมาก playbook ที่ยังไม่ได้รับรองทำงานเหมือนกันทุกอย่าง ทีม Ameliorated ยืนยันว่าไม่มีความต่างด้านการใช้งาน</p>
       <p data-l="vi">Không. Ameliorated chỉ xác minh playbook của những người tạo có nhiều người dùng. Playbook chưa xác minh hoạt động y hệt; Ameliorated đã xác nhận không có khác biệt nào về chức năng.</p>
       <p data-l="id">Tidak. Ameliorated hanya memverifikasi playbook dari kreator dengan banyak pengguna. Playbook yang belum diverifikasi bekerja sama persis; Ameliorated sudah memastikan tidak ada perbedaan fungsi.</p></details>
-    <details><summary><span data-l="en">Can I play Valorant and FiveM?</span><span data-l="th">เล่น Valorant กับ FiveM ได้ไหม</span><span data-l="vi">Có chơi được Valorant và FiveM không?</span><span data-l="id">Bisakah saya main Valorant dan FiveM?</span></summary>
-      <p data-l="en">Yes. Valorant (Vanguard) may ask for Memory integrity on and FiveM needs it off: switch with Game boost > Anti-cheat mode and restart. Akati OS installs no drivers that anti-cheats block.</p>
-      <p data-l="th">ได้ Valorant (Vanguard) อาจต้องเปิด Memory integrity ส่วน FiveM ต้องปิด สลับได้ที่ บูสต์เกม > โหมดแอนตี้ชีต แล้วรีสตาร์ท Akati OS ไม่ลงไดรเวอร์ที่แอนตี้ชีตบล็อก</p>
-      <p data-l="vi">Được. Valorant (Vanguard) có thể yêu cầu bật Memory integrity, còn FiveM cần tắt: chuyển ở Tăng tốc game > Chế độ chống gian lận rồi khởi động lại. Akati OS không cài driver nào bị phần mềm chống gian lận chặn.</p>
-      <p data-l="id">Bisa. Valorant (Vanguard) bisa meminta Memory integrity aktif, sedangkan FiveM perlu dimatikan: ganti di Game Boost > Mode anti-cheat lalu restart. Akati OS tidak memasang driver yang diblokir anti-cheat.</p></details>
-    <details><summary><span data-l="en">Can I undo it?</span><span data-l="th">ย้อนกลับได้ไหม</span><span data-l="vi">Có hoàn tác được không?</span><span data-l="id">Bisakah dibatalkan?</span></summary>
-      <p data-l="en">Each tweak in Akati OS Center can be turned back, but the playbook as a whole cannot be fully undone. To go back completely, reinstall Windows.</p>
-      <p data-l="th">แต่ละสวิตช์ใน Akati OS Center ปรับกลับได้ แต่ทั้ง playbook ย้อนกลับไม่ได้ทั้งหมด ถ้าจะกลับเหมือนเดิมต้องลง Windows ใหม่</p>
-      <p data-l="vi">Mỗi tinh chỉnh trong Akati OS Center đều có thể đặt lại, nhưng toàn bộ playbook thì không thể hoàn tác hoàn toàn. Muốn quay lại hẳn như cũ, hãy cài lại Windows.</p>
-      <p data-l="id">Setiap tweak di Akati OS Center bisa dikembalikan, tetapi playbook secara keseluruhan tidak bisa dibatalkan sepenuhnya. Untuk kembali sepenuhnya, instal ulang Windows.</p></details>
-    <details><summary><span data-l="en">Does Akati OS collect data or activate Windows?</span><span data-l="th">Akati OS เก็บข้อมูลหรือ Activate Windows ไหม</span><span data-l="vi">Akati OS có thu thập dữ liệu hay kích hoạt Windows không?</span><span data-l="id">Apakah Akati OS mengumpulkan data atau mengaktivasi Windows?</span></summary>
-      <p data-l="en">No to both. Nothing is sent anywhere, and the Windows activation is not changed. Akati Doctor only tells you whether Windows is activated.</p>
-      <p data-l="th">ไม่ทั้งสองอย่าง ไม่มีการส่งข้อมูลไปไหน และไม่เปลี่ยนสถานะ Activation ของ Windows Akati Doctor แค่บอกว่า Windows Activate แล้วหรือยัง</p>
-      <p data-l="vi">Không cả hai. Không có gì được gửi đi đâu, và trạng thái kích hoạt Windows không bị thay đổi. Akati Doctor chỉ cho bạn biết Windows đã được kích hoạt hay chưa.</p>
-      <p data-l="id">Tidak keduanya. Tidak ada yang dikirim ke mana pun, dan aktivasi Windows tidak diubah. Akati Doctor hanya memberi tahu apakah Windows sudah teraktivasi.</p></details>
+    <details><summary><span data-l="en">Can I play games with anti-cheat (Valorant/Vanguard, FiveM)?</span><span data-l="th">เล่นเกมที่มีแอนตี้ชีต (Valorant/Vanguard, FiveM) ได้ไหม</span><span data-l="vi">Có chơi được game có chống gian lận (Valorant/Vanguard, FiveM) không?</span><span data-l="id">Bisakah saya main game dengan anti-cheat (Valorant/Vanguard, FiveM)?</span></summary>
+      <p data-l="en">Some anti-cheat systems (for example Valorant Vanguard and FACEIT) need Defender, Core Isolation (VBS), TPM 2.0 or Secure Boot, so keep the recommended defaults at setup.</p>
+      <p data-l="th">แอนตี้ชีตบางตัว (เช่น Vanguard ของ Valorant และ FACEIT) ต้องใช้ Defender, Core Isolation (VBS), TPM 2.0 หรือ Secure Boot ตอนติดตั้งจึงควรใช้ค่าแนะนำ</p>
+      <p data-l="vi">Một số hệ thống chống gian lận (ví dụ Vanguard của Valorant và FACEIT) cần Defender, Core Isolation (VBS), TPM 2.0 hoặc Secure Boot, vì vậy hãy giữ các giá trị mặc định được đề xuất khi cài.</p>
+      <p data-l="id">Beberapa sistem anti-cheat (misalnya Vanguard dari Valorant dan FACEIT) membutuhkan Defender, Core Isolation (VBS), TPM 2.0, atau Secure Boot, jadi gunakan pengaturan bawaan yang disarankan saat instalasi.</p>
+      <p data-l="en">Valorant (Vanguard) can ask for Memory integrity (HVCI) on, and FiveM needs it off. Akati OS Center &gt; Game boost &gt; Anti-cheat mode switches it: Valorant mode turns it on, FiveM mode turns it off. Windows applies it after a restart, and the app offers to restart. A game in My games can remember the setting it needs, and Play offers to switch. Akati OS installs no sensor driver.</p>
+      <p data-l="th">Valorant (Vanguard) อาจต้องเปิด Memory integrity (HVCI) ส่วน FiveM ต้องปิด สลับได้ที่ Akati OS Center &gt; บูสต์เกม &gt; โหมดแอนตี้ชีต โหมด Valorant จะเปิด โหมด FiveM จะปิด Windows จะเปลี่ยนให้หลังรีสตาร์ท และแอปจะถามว่าจะรีสตาร์ทเลยไหม เกมใน "เกมของฉัน" จำได้ว่าต้องใช้ค่าไหน และปุ่มเล่นจะถามให้สลับให้ Akati OS ไม่ได้ลงไดรเวอร์เซ็นเซอร์ใด ๆ</p>
+      <p data-l="vi">Valorant (Vanguard) có thể yêu cầu bật Memory integrity (HVCI), còn FiveM cần tắt. Akati OS Center &gt; Tăng tốc game &gt; Chế độ chống gian lận sẽ chuyển nó: chế độ Valorant bật, chế độ FiveM tắt. Windows áp dụng sau khi khởi động lại, và ứng dụng sẽ đề nghị khởi động lại. Game trong Game của tôi có thể nhớ cài đặt nó cần, và nút Chơi sẽ đề nghị chuyển. Akati OS không cài driver cảm biến nào.</p>
+      <p data-l="id">Valorant (Vanguard) bisa meminta Memory integrity (HVCI) aktif, sedangkan FiveM perlu dimatikan. Akati OS Center &gt; Game Boost &gt; Mode anti-cheat mengubahnya: mode Valorant menyalakan, mode FiveM mematikan. Windows menerapkannya setelah restart, dan aplikasi menawarkan restart. Game di Game saya bisa mengingat pengaturan yang dibutuhkan, dan tombol Main menawarkan untuk menggantinya. Akati OS tidak memasang driver sensor.</p></details>
+    <details><summary><span data-l="en">Windows 10 or Windows 11?</span><span data-l="th">ใช้ Windows 10 หรือ Windows 11 ดี</span><span data-l="vi">Windows 10 hay Windows 11?</span><span data-l="id">Windows 10 atau Windows 11?</span></summary>
+      <p data-l="en">Windows 11, if your PC can run it. The Windows 11 file supports 24H2, 25H2 and 26H2. The Windows 10 file needs a fresh install of Windows 10 22H2 (build 19045) and is based on AtlasOS v0.4.1, which no longer gets fixes from the Atlas team. Microsoft ended Windows 10 support on October 14, 2025, and Extended Security Updates for home users end on October 13, 2026. Other builds, such as Windows 10 21H2, Windows 11 23H2 or 26H1, are not supported.</p>
+      <p data-l="th">ถ้าเครื่องลง Windows 11 ได้ ให้ใช้ Windows 11 ไฟล์ Windows 11 รองรับ 24H2, 25H2 และ 26H2 ส่วนไฟล์ Windows 10 ต้องใช้กับ Windows 10 22H2 (build 19045) ที่ลงใหม่เท่านั้น และใช้ฐาน AtlasOS v0.4.1 ซึ่งทีม Atlas ไม่ได้แก้บั๊กให้แล้ว Microsoft หยุดซัพพอร์ต Windows 10 ตั้งแต่ 14 ตุลาคม 2025 และ Extended Security Updates สำหรับผู้ใช้ทั่วไปจะหมดวันที่ 13 ตุลาคม 2026 build อื่น เช่น Windows 10 21H2, Windows 11 23H2 หรือ 26H1 ใช้ไม่ได้</p>
+      <p data-l="vi">Windows 11, nếu máy bạn chạy được. Tệp Windows 11 hỗ trợ 24H2, 25H2 và 26H2. Tệp Windows 10 cần bản cài mới của Windows 10 22H2 (build 19045) và dựa trên AtlasOS v0.4.1, phiên bản không còn được nhóm Atlas sửa lỗi. Microsoft đã ngừng hỗ trợ Windows 10 từ ngày 14 tháng 10 năm 2025, và Extended Security Updates cho người dùng gia đình kết thúc vào ngày 13 tháng 10 năm 2026. Các build khác, như Windows 10 21H2, Windows 11 23H2 hoặc 26H1, không được hỗ trợ.</p>
+      <p data-l="id">Windows 11, jika PC Anda bisa menjalankannya. File Windows 11 mendukung 24H2, 25H2, dan 26H2. File Windows 10 membutuhkan instalasi baru Windows 10 22H2 (build 19045) dan berbasis AtlasOS v0.4.1, yang tidak lagi mendapat perbaikan dari tim Atlas. Microsoft mengakhiri dukungan Windows 10 pada 14 Oktober 2025, dan Extended Security Updates untuk pengguna rumahan berakhir pada 13 Oktober 2026. Build lain, seperti Windows 10 21H2, Windows 11 23H2, atau 26H1, tidak didukung.</p></details>
+    <details><summary><span data-l="en">Does Akati OS activate Windows?</span><span data-l="th">Akati OS Activate Windows ให้ไหม</span><span data-l="vi">Akati OS có kích hoạt Windows không?</span><span data-l="id">Apakah Akati OS mengaktivasi Windows?</span></summary>
+      <p data-l="en">No. Akati OS does not include any activation tools and does not change the activation of Windows. You need a genuine Windows licence. Akati Doctor only tells you whether Windows is activated.</p>
+      <p data-l="th">ไม่ Akati OS ไม่มีเครื่องมือ Activate ใด ๆ และไม่เปลี่ยนสถานะ Activation ของ Windows คุณต้องมีไลเซนส์ Windows ที่ถูกต้อง Akati Doctor แค่บอกว่า Windows Activate แล้วหรือยัง</p>
+      <p data-l="vi">Không. Akati OS không có bất kỳ công cụ kích hoạt nào và không thay đổi trạng thái kích hoạt của Windows. Bạn cần giấy phép Windows chính hãng. Akati Doctor chỉ cho bạn biết Windows đã được kích hoạt hay chưa.</p>
+      <p data-l="id">Tidak. Akati OS tidak menyertakan alat aktivasi apa pun dan tidak mengubah aktivasi Windows. Anda membutuhkan lisensi Windows yang asli. Akati Doctor hanya memberi tahu apakah Windows sudah teraktivasi.</p></details>
+    <details><summary><span data-l="en">How do I go back to normal Windows?</span><span data-l="th">จะกลับไปใช้ Windows ปกติได้อย่างไร</span><span data-l="vi">Làm sao để quay lại Windows bình thường?</span><span data-l="id">Bagaimana cara kembali ke Windows biasa?</span></summary>
+      <p data-l="en">A playbook cannot be fully undone: to go back to normal Windows, reinstall Windows. That is why you should back up first and try it in a virtual machine. Single changes can be turned back in Akati OS Center: every tweak shows what it changes, and the change history has Undo.</p>
+      <p data-l="th">playbook ย้อนกลับไม่ได้ทั้งหมด ถ้าจะกลับไปเป็น Windows ปกติต้องลง Windows ใหม่ จึงควรสำรองไฟล์และลองใน VM ก่อน ส่วนการปรับแต่งทีละอย่างปรับกลับได้ใน Akati OS Center ทุกสวิตช์บอกว่าเปลี่ยนอะไร และมีประวัติการเปลี่ยนแปลงพร้อมปุ่มเลิกทำ</p>
+      <p data-l="vi">Không thể hoàn tác hoàn toàn một playbook: muốn quay lại Windows bình thường, hãy cài lại Windows. Vì vậy hãy sao lưu trước và thử trong máy ảo. Từng thay đổi riêng lẻ có thể đặt lại trong Akati OS Center: mỗi tinh chỉnh cho biết nó thay đổi gì, và lịch sử thay đổi có Hoàn tác.</p>
+      <p data-l="id">Playbook tidak bisa dibatalkan sepenuhnya: untuk kembali ke Windows biasa, instal ulang Windows. Karena itu cadangkan file dulu dan coba di mesin virtual. Perubahan satu per satu bisa dikembalikan di Akati OS Center: setiap tweak menunjukkan apa yang diubah, dan riwayat perubahan punya Urungkan.</p></details>
+    <details><summary><span data-l="en">How is it different from AtlasOS?</span><span data-l="th">ต่างจาก AtlasOS อย่างไร</span><span data-l="vi">Khác gì so với AtlasOS?</span><span data-l="id">Apa bedanya dengan AtlasOS?</span></summary>
+      <p data-l="en">Akati OS keeps all AtlasOS performance, privacy and debloat tweaks, and adds Akati OS Center (Game boost, My games, FPS test, Akati Doctor, gaming apps and every AtlasOS setting in one app, in four languages), more setup options (remove the Microsoft Store, turn off unused services, notifications and Xbox Game Bar, 0.5 ms timer resolution) and its own themes, wallpapers, cursors and sounds instead of the Atlas branding. It also accepts Windows 11 26H2, and the optional Atlas Toolbox is not offered. The full list is in <a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/CHANGES-FROM-ATLAS.md">Changes from AtlasOS</a>. The base is the work of the AtlasOS team.</p>
+      <p data-l="th">Akati OS เก็บการปรับแต่งด้านประสิทธิภาพ ความเป็นส่วนตัว และการลบแอปของ AtlasOS ไว้ทั้งหมด แล้วเพิ่ม Akati OS Center (บูสต์เกม เกมของฉัน ทดสอบ FPS Akati Doctor แอปเกม และการตั้งค่าทั้งหมดของ AtlasOS ในแอปเดียว มี 4 ภาษา) ตัวเลือกตอนติดตั้งเพิ่มเติม (ลบ Microsoft Store ปิดเซอร์วิสที่ไม่ใช้ ปิดการแจ้งเตือนและ Xbox Game Bar ตั้ง timer resolution 0.5 ms) และธีม วอลเปเปอร์ เคอร์เซอร์ เสียงของตัวเองแทนแบรนด์ Atlas นอกจากนี้ยังรองรับ Windows 11 26H2 และไม่มีตัวเลือกติดตั้ง Atlas Toolbox ดูรายการทั้งหมดได้ใน <a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/CHANGES-FROM-ATLAS.md">Changes from AtlasOS</a> ส่วนฐานทั้งหมดเป็นผลงานของทีม AtlasOS</p>
+      <p data-l="vi">Akati OS giữ toàn bộ tinh chỉnh hiệu năng, quyền riêng tư và gỡ bloatware của AtlasOS, và thêm Akati OS Center (Tăng tốc game, Game của tôi, đo FPS, Akati Doctor, ứng dụng chơi game và mọi cài đặt của AtlasOS trong một ứng dụng, bằng bốn ngôn ngữ), thêm tùy chọn khi cài (gỡ Microsoft Store, tắt dịch vụ không dùng, thông báo và Xbox Game Bar, timer resolution 0.5 ms) cùng giao diện, hình nền, con trỏ và âm thanh riêng thay cho thương hiệu Atlas. Nó cũng chấp nhận Windows 11 26H2, và không cung cấp Atlas Toolbox tùy chọn. Danh sách đầy đủ có trong <a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/CHANGES-FROM-ATLAS.md">Changes from AtlasOS</a>. Phần nền tảng là công sức của nhóm AtlasOS.</p>
+      <p data-l="id">Akati OS mempertahankan semua tweak performa, privasi, dan debloat AtlasOS, lalu menambahkan Akati OS Center (Game Boost, Game saya, tes FPS, Akati Doctor, aplikasi gaming, dan semua pengaturan AtlasOS dalam satu aplikasi, dalam empat bahasa), opsi instalasi tambahan (hapus Microsoft Store, matikan layanan yang tidak dipakai, notifikasi dan Xbox Game Bar, timer resolution 0,5 ms), serta tema, wallpaper, kursor, dan suara sendiri sebagai pengganti merek Atlas. Akati OS juga menerima Windows 11 26H2, dan Atlas Toolbox opsional tidak ditawarkan. Daftar lengkapnya ada di <a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/CHANGES-FROM-ATLAS.md">Changes from AtlasOS</a>. Dasarnya adalah karya tim AtlasOS.</p></details>
     <details><summary><span data-l="en">Found a problem?</span><span data-l="th">เจอปัญหา?</span><span data-l="vi">Gặp sự cố?</span><span data-l="id">Menemukan masalah?</span></summary>
       <p data-l="en">Akati OS Center > About > Create problem report, then open an <a href="https://github.com/x2Swiftyouz/Akati-Os/issues/new/choose">issue on GitHub</a> and attach the .zip.</p>
       <p data-l="th">Akati OS Center > เกี่ยวกับ > สร้างรายงานปัญหา แล้วเปิด <a href="https://github.com/x2Swiftyouz/Akati-Os/issues/new/choose">issue บน GitHub</a> แนบไฟล์ .zip</p>
@@ -291,11 +442,49 @@
       return 'en';
     }
     var lang = LANGS.indexOf(saved) >= 0 ? saved : browserLang();
+
+    // Theme: follows the system until the button is used, then the choice is remembered
+    var THEME_LABEL = {
+      en: { light: 'Switch to light theme', dark: 'Switch to dark theme' },
+      th: { light: 'เปลี่ยนเป็นธีมสว่าง', dark: 'เปลี่ยนเป็นธีมมืด' },
+      vi: { light: 'Chuyển sang giao diện sáng', dark: 'Chuyển sang giao diện tối' },
+      id: { light: 'Ganti ke tema terang', dark: 'Ganti ke tema gelap' }
+    };
+    var root = document.documentElement;
+    var lightQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: light)') : null;
+    function chosenTheme() { var t = root.getAttribute('data-theme'); return (t === 'light' || t === 'dark') ? t : null; }
+    function currentTheme() { return chosenTheme() || (lightQuery && lightQuery.matches ? 'light' : 'dark'); }
+    function paintTheme() {
+      var next = currentTheme() === 'dark' ? 'light' : 'dark';
+      var b = document.getElementById('theme');
+      if (b) {
+        b.classList.toggle('to-light', next === 'light');
+        b.setAttribute('aria-label', THEME_LABEL[lang][next]);
+        b.title = THEME_LABEL[lang][next];
+      }
+      var chosen = chosenTheme();
+      document.querySelectorAll('meta[name="theme-color"]').forEach(function (m) {
+        if (!m.getAttribute('data-c')) m.setAttribute('data-c', m.content);
+        m.content = chosen ? (chosen === 'light' ? '#f6f4fa' : '#0f0d14') : m.getAttribute('data-c');
+      });
+    }
+    document.getElementById('theme').addEventListener('click', function () {
+      var t = currentTheme() === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', t);
+      try { localStorage.setItem('akati-theme', t); } catch (e) {}
+      paintTheme();
+    });
+    if (lightQuery) {
+      if (lightQuery.addEventListener) lightQuery.addEventListener('change', paintTheme);
+      else if (lightQuery.addListener) lightQuery.addListener(paintTheme);
+    }
+
     function set(l) {
       lang = l;
       document.documentElement.lang = l;
       document.querySelectorAll('[data-l]').forEach(function (el) { el.classList.toggle('show', el.getAttribute('data-l') === l); });
       document.querySelectorAll('[data-set]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-set') === l); b.setAttribute('aria-pressed', b.getAttribute('data-set') === l ? 'true' : 'false'); });
+      paintTheme();
     }
     document.querySelectorAll('[data-set]').forEach(function (b) {
       b.addEventListener('click', function () { set(b.getAttribute('data-set')); try { localStorage.setItem('akati-lang', lang); } catch (e) {} });

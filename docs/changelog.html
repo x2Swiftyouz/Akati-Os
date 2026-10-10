@@ -22,19 +22,25 @@
 <link rel="canonical" href="https://x2swiftyouz.github.io/Akati-Os/changelog.html">
 <link rel="icon" type="image/png" href="images/logo.png">
 <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+<script>
+  // Theme chosen with the button in the header (otherwise the system setting); set before the page draws
+  try { var akatiTheme = localStorage.getItem('akati-theme'); if (akatiTheme === 'light' || akatiTheme === 'dark') document.documentElement.setAttribute('data-theme', akatiTheme); } catch (e) {}
+</script>
 <style>
   :root {
     --bg: #0f0d14; --bg2: #17141e; --card: #1d1a26; --line: #2c2838; --text: #f4f2f8; --muted: #a6a1b3;
-    --accent: #a35cf0; --accent2: #e559a9; --good: #5fd38d;
+    --accent: #a35cf0; --accent2: #e559a9; --good: #5fd38d; --link: #b98af5; --on: #8346d6; --shadow: rgba(0,0,0,.35);
+    color-scheme: dark;
   }
   @media (prefers-color-scheme: light) {
-    :root:not([data-theme="dark"]) { --bg: #f6f4fa; --bg2: #ffffff; --card: #ffffff; --line: #e3dfeb; --text: #1d1a24; --muted: #625d70; }
+    :root:not([data-theme="dark"]) { --bg: #f6f4fa; --bg2: #ffffff; --card: #ffffff; --line: #e3dfeb; --text: #1d1a24; --muted: #625d70; --good: #1b7a43; --link: #7a3fc8; --shadow: rgba(40,20,70,.14); color-scheme: light; }
   }
+  :root[data-theme="light"] { --bg: #f6f4fa; --bg2: #ffffff; --card: #ffffff; --line: #e3dfeb; --text: #1d1a24; --muted: #625d70; --good: #1b7a43; --link: #7a3fc8; --shadow: rgba(40,20,70,.14); color-scheme: light; }
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
   html { scroll-behavior: smooth; }
   body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 "Segoe UI Variable Text", "Segoe UI", "Leelawadee UI", system-ui, sans-serif; overflow-wrap: break-word; }
-  a { color: var(--accent); }
+  a { color: var(--link); }
   .wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
   nav { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--bg) 85%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
   nav .wrap { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; min-height: 56px; }
@@ -45,7 +51,14 @@
   nav .links a:hover, nav .links a[aria-current] { color: var(--text); }
   .lang { display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; flex-shrink: 0; }
   .lang button { background: none; border: 0; color: var(--muted); padding: 4px 10px; cursor: pointer; font: inherit; font-size: 13px; }
-  .lang button.on { background: var(--accent); color: #fff; }
+  .lang button.on { background: var(--on); color: #fff; }
+  .theme { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 30px; flex-shrink: 0; padding: 0; border: 1px solid var(--line); border-radius: 8px; background: none; color: var(--muted); cursor: pointer; }
+  .theme:hover { color: var(--text); }
+  .theme svg { width: 16px; height: 16px; }
+  .theme .sun { display: none; }
+  .theme.to-light .sun { display: block; }
+  .theme.to-light .moon { display: none; }
+  button:focus-visible, a:focus-visible, summary:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
   header.hero { padding: 72px 0 48px; background: radial-gradient(60% 80% at 80% 0%, color-mix(in srgb, var(--accent) 30%, transparent), transparent), radial-gradient(50% 70% at 0% 100%, color-mix(in srgb, var(--accent2) 22%, transparent), transparent); }
   .hero h1 { font-size: clamp(36px, 7vw, 64px); line-height: 1.05; margin: 0 0 16px; letter-spacing: -1px; }
   .hero h1 span { background: linear-gradient(90deg, var(--accent), var(--accent2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
@@ -58,7 +71,7 @@
   .dlcount { margin: 14px 0 0; font-size: 14px; color: var(--muted); }
   .dlcount b { color: var(--text); }
   .note { font-size: 13px; color: var(--muted); margin-top: 14px; }
-  .shot { margin-top: 40px; border-radius: 16px; border: 1px solid var(--line); width: 100%; height: auto; box-shadow: 0 30px 80px rgba(0,0,0,.35); }
+  .shot { margin-top: 40px; border-radius: 16px; border: 1px solid var(--line); width: 100%; height: auto; box-shadow: 0 30px 80px var(--shadow); }
   section { padding: 56px 0; }
   section h2 { font-size: 30px; margin: 0 0 8px; }
   section p.sub { color: var(--muted); margin: 0 0 28px; }
@@ -86,6 +99,7 @@
   @media (max-width: 640px) {
     nav .wrap { gap: 4px 12px; padding-top: 8px; padding-bottom: 8px; }
     nav .lang { order: 2; margin-left: auto; }
+    nav .theme { order: 2; }
     nav .links { order: 3; width: 100%; margin-left: 0; gap: 4px 16px; }
     nav .links a.hide-s { display: none; }
     .lang button { padding: 4px 9px; font-size: 12px; }
@@ -120,6 +134,7 @@
     <div class="links">
       <a class="hide-s" href="./#features"><span data-l="en">Features</span><span data-l="th">ฟีเจอร์</span><span data-l="vi">Tính năng</span><span data-l="id">Fitur</span></a>
       <a class="hide-s" href="./#install"><span data-l="en">Install</span><span data-l="th">วิธีติดตั้ง</span><span data-l="vi">Cài đặt</span><span data-l="id">Instal</span></a>
+      <a class="hide-s" href="./#compare"><span data-l="en">Compare</span><span data-l="th">เปรียบเทียบ</span><span data-l="vi">So sánh</span><span data-l="id">Perbandingan</span></a>
       <a class="hide-s" href="./#faq">FAQ</a>
       <a href="changelog.html" aria-current="page"><span data-l="en">Changelog</span><span data-l="th">ประวัติเวอร์ชัน</span><span data-l="vi">Nhật ký thay đổi</span><span data-l="id">Catatan rilis</span></a>
       <a href="https://github.com/x2Swiftyouz/Akati-Os">GitHub</a>
@@ -127,6 +142,7 @@
     <div class="lang" role="group" aria-label="Language">
       <button data-set="en" lang="en">EN</button><button data-set="th" lang="th">ไทย</button><button data-set="vi" lang="vi">VI</button><button data-set="id" lang="id">ID</button>
     </div>
+    <button class="theme" id="theme" type="button" aria-label="Switch theme" title="Switch theme"><svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg><svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="currentColor"/><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg></button>
   </div>
 </nav>
 
@@ -183,11 +199,49 @@
       return 'en';
     }
     var lang = LANGS.indexOf(saved) >= 0 ? saved : browserLang();
+
+    // Theme: follows the system until the button is used, then the choice is remembered
+    var THEME_LABEL = {
+      en: { light: 'Switch to light theme', dark: 'Switch to dark theme' },
+      th: { light: 'เปลี่ยนเป็นธีมสว่าง', dark: 'เปลี่ยนเป็นธีมมืด' },
+      vi: { light: 'Chuyển sang giao diện sáng', dark: 'Chuyển sang giao diện tối' },
+      id: { light: 'Ganti ke tema terang', dark: 'Ganti ke tema gelap' }
+    };
+    var root = document.documentElement;
+    var lightQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: light)') : null;
+    function chosenTheme() { var t = root.getAttribute('data-theme'); return (t === 'light' || t === 'dark') ? t : null; }
+    function currentTheme() { return chosenTheme() || (lightQuery && lightQuery.matches ? 'light' : 'dark'); }
+    function paintTheme() {
+      var next = currentTheme() === 'dark' ? 'light' : 'dark';
+      var b = document.getElementById('theme');
+      if (b) {
+        b.classList.toggle('to-light', next === 'light');
+        b.setAttribute('aria-label', THEME_LABEL[lang][next]);
+        b.title = THEME_LABEL[lang][next];
+      }
+      var chosen = chosenTheme();
+      document.querySelectorAll('meta[name="theme-color"]').forEach(function (m) {
+        if (!m.getAttribute('data-c')) m.setAttribute('data-c', m.content);
+        m.content = chosen ? (chosen === 'light' ? '#f6f4fa' : '#0f0d14') : m.getAttribute('data-c');
+      });
+    }
+    document.getElementById('theme').addEventListener('click', function () {
+      var t = currentTheme() === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', t);
+      try { localStorage.setItem('akati-theme', t); } catch (e) {}
+      paintTheme();
+    });
+    if (lightQuery) {
+      if (lightQuery.addEventListener) lightQuery.addEventListener('change', paintTheme);
+      else if (lightQuery.addListener) lightQuery.addListener(paintTheme);
+    }
+
     function set(l) {
       lang = l;
       document.documentElement.lang = l;
       document.querySelectorAll('[data-l]').forEach(function (el) { el.classList.toggle('show', el.getAttribute('data-l') === l); });
       document.querySelectorAll('[data-set]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-set') === l); b.setAttribute('aria-pressed', b.getAttribute('data-set') === l ? 'true' : 'false'); });
+      paintTheme();
     }
     document.querySelectorAll('[data-set]').forEach(function (b) {
       b.addEventListener('click', function () { set(b.getAttribute('data-set')); try { localStorage.setItem('akati-lang', lang); } catch (e) {} });

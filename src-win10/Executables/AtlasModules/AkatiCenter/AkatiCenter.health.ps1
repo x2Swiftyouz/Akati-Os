@@ -361,7 +361,9 @@ $ui.BackupLoad.Add_Click({
 function New-ScoreCard {
     $brush = { param($hex) [System.Windows.Media.SolidColorBrush]::new([System.Windows.Media.ColorConverter]::ConvertFromString($hex)) }
     $card = New-Object System.Windows.Controls.Border
-    $card.Width = 1200; $card.Height = 630; $card.FontFamily = $window.FontFamily
+    $card.Width = 1200; $card.Height = 630
+    # A Border has no font of its own: the texts inside take the font of the window through TextElement
+    [System.Windows.Documents.TextElement]::SetFontFamily($card, $window.FontFamily)
     $card.Background = [System.Windows.Media.LinearGradientBrush]::new([System.Windows.Media.ColorConverter]::ConvertFromString('#1E1230'), [System.Windows.Media.ColorConverter]::ConvertFromString('#0E0E12'), 45)
     $grid = New-Object System.Windows.Controls.Grid
     # Soft glow in the accent color behind the score

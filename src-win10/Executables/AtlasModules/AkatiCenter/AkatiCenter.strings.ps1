@@ -415,6 +415,10 @@ $strings = @{
         'irq.failed' = 'Could not read the devices'
         'irq.none' = 'No PCI devices found.'
         'irq.core.tip' = 'CPU {0}: {1}% of the fastest, longest pause {2} µs'
+        'irq.class.display' = 'Graphics'
+        'irq.class.net' = 'Network'
+        'irq.class.audio' = 'Audio'
+        'irq.class.storage' = 'Storage'
     }
     th = @{
         'update.download' = 'ดาวน์โหลดอัปเดต'
@@ -830,6 +834,10 @@ $strings = @{
         'irq.failed' = 'อ่านอุปกรณ์ไม่ได้'
         'irq.none' = 'ไม่พบอุปกรณ์ PCI'
         'irq.core.tip' = 'CPU {0}: {1}% ของคอร์ที่เร็วที่สุด หยุดชะงักนานสุด {2} µs'
+        'irq.class.display' = 'การ์ดจอ'
+        'irq.class.net' = 'เครือข่าย'
+        'irq.class.audio' = 'เสียง'
+        'irq.class.storage' = 'ไดรฟ์'
     }
     # Vietnamese (translated from English; corrections welcome in a GitHub issue)
     vi = @{
@@ -1569,6 +1577,10 @@ $strings = @{
         'irq.failed' = 'Không đọc được thiết bị'
         'irq.none' = 'Không tìm thấy thiết bị PCI.'
         'irq.core.tip' = 'CPU {0}: {1}% so với nhanh nhất, gián đoạn dài nhất {2} µs'
+        'irq.class.display' = 'Đồ họa'
+        'irq.class.net' = 'Mạng'
+        'irq.class.audio' = 'Âm thanh'
+        'irq.class.storage' = 'Lưu trữ'
     }
     # Indonesian (translated from English; corrections welcome in a GitHub issue)
     id = @{
@@ -2308,5 +2320,9 @@ $strings = @{
         'irq.failed' = 'Tidak bisa membaca perangkat'
         'irq.none' = 'Tidak ada perangkat PCI.'
         'irq.core.tip' = 'CPU {0}: {1}% dari yang tercepat, jeda terlama {2} µs'
+        'irq.class.display' = 'Grafis'
+        'irq.class.net' = 'Jaringan'
+        'irq.class.audio' = 'Audio'
+        'irq.class.storage' = 'Penyimpanan'
     }
 }

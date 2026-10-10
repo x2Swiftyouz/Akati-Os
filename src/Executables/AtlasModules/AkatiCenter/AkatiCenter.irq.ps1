@@ -181,7 +181,10 @@ function Get-IrqAffText($w) {
 }
 function Get-IrqSub($d) {
     $msi = switch ($d.Msi) { 1 { T 'irq.msi.on' } 0 { T 'irq.msi.off' } default { T 'irq.msi.default' } }
-    $parts = @($d.Class, $msi)
+    # Friendly names for the common device classes; others as Windows names them
+    $class = switch ($d.Class) { 'Display' { T 'irq.class.display' } 'Net' { T 'irq.class.net' } 'USB' { 'USB' } 'MEDIA' { T 'irq.class.audio' }
+                                 { $_ -in 'SCSIAdapter', 'HDC' } { T 'irq.class.storage' } default { $d.Class } }
+    $parts = @($class, $msi)
     $modes = Get-IrqModes $d.Support
     if ($modes) { $parts += $modes }
     $parts += Get-IrqAffText @{ Policy = $d.Policy; Mask = $d.Mask }

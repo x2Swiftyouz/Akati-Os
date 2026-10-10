@@ -75,7 +75,7 @@ if ($Screenshot) {
                     $mf = [IO.File]::Create((Join-Path $Screenshot "menu-$l.png")); $me.Save($mf); $mf.Close()
                 } catch { Write-Host "Menu screenshot failed: $($_.Exception.Message)" }
             }
-            if ($p -eq 'appearance' -or $p -eq 'tweaks' -or $p -eq 'boost' -or $p -eq 'gaming' -or $p -eq 'health') {
+            if ($p -eq 'appearance' -or $p -eq 'tweaks' -or $p -eq 'boost' -or $p -eq 'gaming' -or $p -eq 'health' -or $p -eq 'dashboard') {
                 # The lower part of long pages
                 $sv = $ui["Page$(Get-PageId $p)"]
                 if ($p -eq 'tweaks') {
@@ -86,6 +86,12 @@ if ($Screenshot) {
                     $top = $tweakLists['services'].TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
                     $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 60)); $sv.UpdateLayout()
                     Save-Shot "$p-$l-services.png"
+                }
+                if ($p -eq 'appearance') {
+                    # The look and text size cards
+                    $top = $ui.Zoom100.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
+                    $sv.UpdateLayout(); $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 260)); $sv.UpdateLayout()
+                    Save-Shot "$p-$l-mid.png"
                 }
                 if ($p -eq 'boost') {
                     # My games with one game (CI runner: Notepad) and the FiveM card

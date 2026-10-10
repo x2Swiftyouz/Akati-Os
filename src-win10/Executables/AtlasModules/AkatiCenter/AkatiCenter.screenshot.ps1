@@ -152,7 +152,8 @@ if ($Screenshot) {
     $ui.NavTweaks.IsChecked = $true
     $ui.IrqShow.RaiseEvent((New-Object System.Windows.RoutedEventArgs ([System.Windows.Controls.Primitives.ButtonBase]::ClickEvent)))
     $n = [Math]::Min(8, [Environment]::ProcessorCount)
-    Show-IrqCores ([double[]]@(@(0..($n - 1) | ForEach-Object { 100000 - 900 * (($_ * 5) % 7) - $(if ($_ -eq 0) { 6000 } else { 0 }) }) + @(0..($n - 1) | ForEach-Object { 40 + 10 * ($_ % 3) })))
+    Show-IrqCores ([double[]]@(@(0..($n - 1) | ForEach-Object { 100000 - 900 * (($_ * 5) % 7) }) + @(0..($n - 1) | ForEach-Object { 40 + 10 * ($_ % 3) }) +
+                               @(0..($n - 1) | ForEach-Object { if ($_ -eq 0) { 2.4 } else { 0.2 + 0.15 * (($_ * 5) % 7) } })))
     $sv = $ui.PageTweaks; $sv.UpdateLayout()
     $top = $ui.IrqPanel.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
     $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 150)); $sv.UpdateLayout(); Save-Shot 'tweaks-en-irq.png'

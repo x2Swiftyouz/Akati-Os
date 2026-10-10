@@ -70,5 +70,13 @@ Check 'cpu mask back' ((ConvertFrom-CpuMask 20) -join ',') '2,4'
 Check 'best cores' ((Get-BestCores @(9, 5, 8, 7) $false) -join ',') '2,3,1'
 Check 'best cores ht' ((Get-BestCores @(9, 9, 5, 8, 7, 6) $true) -join ',') '3,4'
 
+# Win32PrioritySeparation
+$ps = Get-PrioritySeparation 0x26
+Check 'w32 0x26' ('{0} {1} {2}' -f $ps.Quantum, $ps.Fixed, $ps.Boost) 'short False 2'
+$ps = Get-PrioritySeparation 0x18
+Check 'w32 0x18' ('{0} {1} {2}' -f $ps.Quantum, $ps.Fixed, $ps.Boost) 'long True 0'
+$ps = Get-PrioritySeparation 2
+Check 'w32 default bits' ('{0} {1} {2}' -f $ps.Quantum, $ps.Fixed, $ps.Boost) 'short False 2'
+
 Write-Host "$script:count checks, $script:failed failed"
 if ($script:failed) { exit 1 }

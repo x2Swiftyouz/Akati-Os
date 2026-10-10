@@ -27,7 +27,7 @@ $irqWork = {
         $out.Cores = [int]($cpu | Measure-Object NumberOfCores -Sum).Sum
         $out.Logical = [int]($cpu | Measure-Object NumberOfLogicalProcessors -Sum).Sum
     } catch { }
-    $devices = @(Get-CimInstance Win32_PnPEntity -ErrorAction SilentlyContinue | Where-Object { $_.PNPDeviceID -like 'PCI\*' -and $_.PNPClass -and $_.PNPClass -notin 'System', 'SoftwareDevice', 'Processor' })
+    $devices = @(Get-CimInstance Win32_PnPEntity -ErrorAction SilentlyContinue | Where-Object { $_.PNPDeviceID -like 'PCI\*' -and $_.PNPClass -and $_.PNPClass -notin 'SoftwareDevice', 'Processor' })
     $ids = [string[]]@($devices | ForEach-Object { $_.PNPDeviceID })
     $props = @{}
     if ($ids.Count) {
@@ -45,7 +45,8 @@ $irqWork = {
             $buf = New-Object byte[] 8; $b = [byte[]]$aff.AssignmentSetOverride
             [Array]::Copy($b, $buf, [Math]::Min(8, $b.Length)); $mask = [BitConverter]::ToUInt64($buf, 0)
         }
-        @{ Id = $id; Name = [string]$d.Name; Class = [string]$d.PNPClass
+        # Bridges, chipset and management parts (class System) go to "Other PCI devices"
+        @{ Id = $id; Name = [string]$d.Name; Class = [string]$d.PNPClass; Other = $d.PNPClass -eq 'System'
            Support = [int]$props["$id|DEVPKEY_PciDevice_InterruptSupport"]; Max = [int]$props["$id|DEVPKEY_PciDevice_InterruptMessageMaximum"]
            Msi = $(if ($null -ne $msi.MSISupported) { [int]$msi.MSISupported } else { -1 })
            Limit = [int]$msi.MessageNumberLimit; Policy = [int]$aff.DevicePolicy; Priority = [int]$aff.DevicePriority; Mask = $mask }
@@ -63,15 +64,20 @@ namespace AkatiOS {
     public static class Cores {
         [DllImport("kernel32.dll")] static extern IntPtr GetCurrentThread();
         [DllImport("kernel32.dll")] static extern UIntPtr SetThreadAffinityMask(IntPtr thread, UIntPtr mask);
-        // First half of the result: work units per second on each logical processor. Second half: the longest pause
-        // in microseconds (an interrupt or a deferred call that took the processor away), averaged over the rounds.
+        [DllImport("kernel32.dll")] static extern int GetThreadPriority(IntPtr thread);
+        [DllImport("kernel32.dll")] static extern bool SetThreadPriority(IntPtr thread, int priority);
+        // The thread runs at time critical priority, so only interrupts, deferred calls (DPCs) and real time threads can
+        // take the processor away. Result, three parts of cpus values: work units per second, the longest pause in
+        // microseconds, and the share of the time taken away (interrupt load, %), averaged over the rounds.
         // Each round visits every processor in a new random order, for ms milliseconds each.
         public static double[] Run(int cpus, int rounds, int ms) {
-            double[] result = new double[cpus * 2];
+            double[] result = new double[cpus * 3];
             Random random = new Random();
             IntPtr thread = GetCurrentThread();
             UIntPtr first = UIntPtr.Zero;
+            int oldPriority = GetThreadPriority(thread);
             Thread.BeginThreadAffinity();
+            SetThreadPriority(thread, 15);
             try {
                 for (int r = 0; r < rounds; r++) {
                     int[] order = new int[cpus];
@@ -82,22 +88,31 @@ namespace AkatiOS {
                         if (first == UIntPtr.Zero) first = previous;
                         Thread.Sleep(1);
                         Stopwatch watch = Stopwatch.StartNew();
-                        long end = Stopwatch.Frequency * ms / 1000, units = 0, worst = 0, last = 0;
+                        long end = Stopwatch.Frequency * ms / 1000, units = 0, worst = 0, last = 0, shortest = long.MaxValue;
+                        long[] gaps = new long[200000]; int count = 0;
                         double x = 1.0001;
                         while (true) {
-                            for (int k = 0; k < 2000; k++) { x = x * 1.0000001 + 0.0000001; }
+                            for (int k = 0; k < 200; k++) { x = x * 1.0000001 + 0.0000001; }
                             units++;
                             long now = watch.ElapsedTicks;
-                            if (now - last > worst) worst = now - last;
+                            long gap = now - last;
+                            if (gap > worst) worst = gap;
+                            if (gap > 0 && gap < shortest) shortest = gap;
+                            if (count < gaps.Length) gaps[count++] = gap;
                             last = now;
                             if (now >= end) break;
                         }
                         if (x < 0) units++;
-                        result[cpu] += units * 1000.0 / ms / rounds;
+                        // Time taken away: every step that took much longer than the shortest one
+                        long stolen = 0;
+                        for (int i = 1; i < count; i++) { if (gaps[i] > shortest * 4) stolen += gaps[i] - shortest; }
+                        result[cpu] += units * 1000.0 / ms / rounds / 10;
                         result[cpus + cpu] += worst * 1000000.0 / Stopwatch.Frequency / rounds;
+                        result[2 * cpus + cpu] += 100.0 * stolen / Math.Max(1, last) / rounds;
                     }
                 }
             } finally {
+                SetThreadPriority(thread, oldPriority);
                 if (first != UIntPtr.Zero) SetThreadAffinityMask(thread, first);
                 Thread.EndThreadAffinity();
             }
@@ -241,6 +256,17 @@ function Show-IrqDevices($data) {
     }
     $list = @($data.Devices | Where-Object { $_ -is [hashtable] } | Sort-Object { if ($irqOrder.ContainsKey($_.Class)) { $irqOrder[$_.Class] } else { 9 } }, { $_.Name })
     $script:irqDevices = $list
+    # Other PCI devices: a closed group at the end
+    $otherList = New-Object System.Windows.Controls.StackPanel; $otherList.Visibility = 'Collapsed'
+    $otherHead = New-Object System.Windows.Controls.Button
+    $otherHead.Style = $window.FindResource('Bare'); $otherHead.HorizontalContentAlignment = 'Stretch'; $otherHead.Padding = '14,10'; $otherHead.Tag = $otherList
+    $oh = New-Object System.Windows.Controls.DockPanel
+    $chev = New-Text ([string][char]0xE70D) 12; $chev.Style = $window.FindResource('Glyph'); [System.Windows.Controls.DockPanel]::SetDock($chev, 'Right'); $chev.VerticalAlignment = 'Center'
+    $ohText = New-Object System.Windows.Controls.StackPanel
+    [void]$ohText.Children.Add((New-Text (T 'irq.other') 14 'SemiBold'))
+    $ohSub = New-Text (T 'irq.other.d') 12; $ohSub.Foreground = $window.FindResource('MutedBrush'); [void]$ohText.Children.Add($ohSub)
+    [void]$oh.Children.Add($chev); [void]$oh.Children.Add($ohText); $otherHead.Content = $oh
+    $otherHead.Add_Click({ $this.Tag.Visibility = if ($this.Tag.Visibility -eq 'Visible') { 'Collapsed' } else { 'Visible' } })
     foreach ($d in $list) {
         $d.Want = New-IrqWant $d
         $controls = New-Object System.Windows.Controls.WrapPanel; $controls.Margin = '0,8,0,0'
@@ -286,10 +312,15 @@ function Show-IrqDevices($data) {
         $panel.Children.Insert($panel.Children.IndexOf($row.Sub) + 1, $controls)
         $d.Ctl = @{ Row = $row; Msi = $msi; Limit = $limit; Prio = $prio; Aff = $aff; Suggest = $suggest; Undo = $undo }
         Update-IrqControls $d
-        [void]$ui.IrqList.Children.Add($row.Row)
+        if ($d.Other) { [void]$otherList.Children.Add($row.Row) } else { [void]$ui.IrqList.Children.Add($row.Row) }
     }
     if (!$list.Count) { [void]$ui.IrqList.Children.Add((New-Text (T 'irq.none') 13)) }
     Update-Separators $ui.IrqList
+    if ($otherList.Children.Count) {
+        Update-Separators $otherList
+        $line = New-Object System.Windows.Controls.Border; $line.Height = 1; $line.SetResourceReference([System.Windows.Controls.Border]::BackgroundProperty, 'Line')
+        [void]$ui.IrqList.Children.Add($line); [void]$ui.IrqList.Children.Add($otherHead); [void]$ui.IrqList.Children.Add($otherList)
+    }
     $ui.IrqUndoAll.Visibility = if ((Test-Path $irqBackupKey) -and @((Get-Item $irqBackupKey).Property).Count) { 'Visible' } else { 'Collapsed' }
 }
 # Suggested settings after the benchmark: MSI on where the device supports it; the graphics card on the best core
@@ -339,24 +370,26 @@ $ui.IrqUndoAll.Add_Click({
 # The benchmark: bars per logical processor; the best ones are suggested (never CPU 0)
 function Show-IrqCores([double[]]$res) {
     $ui.IrqCores.Children.Clear()
-    $n = [int]($res.Count / 2)
+    $n = [int]($res.Count / 3)
     if ($n -lt 1) { return }
-    $scores = [double[]]$res[0..($n - 1)]; $pauses = [double[]]$res[$n..(2 * $n - 1)]
-    $script:irqBest = Get-BestCores $scores ([bool]$script:irqHt)
-    $top = ($scores | Measure-Object -Maximum).Maximum
+    $pauses = [double[]]$res[$n..(2 * $n - 1)]; $load = [double[]]$res[(2 * $n)..(3 * $n - 1)]
+    # Ranked by the time interrupts took away (less is better)
+    $free = [double[]]@($load | ForEach-Object { 100 - $_ })
+    $script:irqBest = Get-BestCores $free ([bool]$script:irqHt)
+    $worstLoad = [Math]::Max(1, ($load | Measure-Object -Maximum).Maximum)
     for ($i = 0; $i -lt $n; $i++) {
         $col = New-Object System.Windows.Controls.StackPanel; $col.Width = 52; $col.Margin = '0,0,6,6'
-        $pct = if ($top -gt 0) { 100 * $scores[$i] / $top } else { 0 }
         $track = New-Object System.Windows.Controls.Border; $track.Height = 44; $track.CornerRadius = 4; $track.Width = 26
         $track.SetResourceReference([System.Windows.Controls.Border]::BackgroundProperty, 'Fill')
         $bar = New-Object System.Windows.Controls.Border; $bar.VerticalAlignment = 'Bottom'; $bar.CornerRadius = 4
-        $bar.Height = [Math]::Max(3, 44 * [Math]::Max(0, ($pct - 80)) / 20)
+        # The bar shows the interrupt load: the higher, the busier the processor is with interrupts
+        $bar.Height = [Math]::Max(3, 44 * $load[$i] / $worstLoad)
         $rank = [array]::IndexOf([int[]]$script:irqBest, $i)
         $bar.SetResourceReference([System.Windows.Controls.Border]::BackgroundProperty, $(if ($rank -ge 0 -and $rank -lt 3) { 'Accent2' } else { 'Handle' }))
         $track.Child = $bar
         $name = New-Text "CPU $i" 11 'SemiBold'; $name.HorizontalAlignment = 'Center'; $name.Margin = '0,4,0,0'
-        $val = New-Text ('{0:N0}%' -f $pct) 10; $val.HorizontalAlignment = 'Center'; $val.Foreground = $window.FindResource('MutedBrush')
-        $col.ToolTip = (T 'irq.core.tip') -f $i, ('{0:N1}' -f $pct), ('{0:N0}' -f $pauses[$i])
+        $val = New-Text ('{0:N2}%' -f $load[$i]) 10; $val.HorizontalAlignment = 'Center'; $val.Foreground = $window.FindResource('MutedBrush')
+        $col.ToolTip = (T 'irq.core.tip') -f $i, ('{0:N2}' -f $load[$i]), ('{0:N0}' -f $pauses[$i])
         foreach ($x in $track, $name, $val) { [void]$col.Children.Add($x) }
         [void]$ui.IrqCores.Children.Add($col)
     }

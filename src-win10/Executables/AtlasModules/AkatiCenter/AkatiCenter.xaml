@@ -1209,13 +1209,47 @@
                                                     </StackPanel>
                                                     <TextBlock x:Name="IrqBenchState" Tag="t:irq.bench.ready" Text="Press Benchmark: about half a minute, nothing is changed." VerticalAlignment="Center" TextWrapping="Wrap" FontWeight="SemiBold"/>
                                                 </DockPanel>
-                                                <TextBlock Tag="t:irq.bench.d" Text="A small piece of work runs on one logical processor at a time, in a new random order each round. Processors that finish more work with fewer pauses are handling fewer interrupts. CPU 0 is never suggested: Windows uses it for much of its own work." Style="{StaticResource Muted}" FontSize="12" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                                                <TextBlock Tag="t:irq.bench.d" Text="A small piece of work runs on one logical processor at a time, in a new random order each round. CPU 0 is never suggested: Windows uses it for much of its own work." Style="{StaticResource Muted}" FontSize="12" TextWrapping="Wrap" Margin="0,8,0,0"/>
                                                 <WrapPanel x:Name="IrqCores" Margin="0,8,0,0"/>
                                             </StackPanel>
                                         </Border>
                                         <TextBlock x:Name="IrqHint" Tag="t:irq.hint" Text="After the benchmark, press Suggested on a device to fill in its settings, then Apply." Style="{StaticResource Muted}" FontSize="12" Margin="2,0,0,6" TextWrapping="Wrap"/>
                                         <StackPanel x:Name="IrqList"/>
                                     </StackPanel>
+                                </StackPanel>
+                            </Border>
+                            <!-- Win32PrioritySeparation: how CPU time is shared between the window in front and the rest (AkatiCenter.priority.ps1) -->
+                            <Border Style="{StaticResource Card}" Padding="8" Margin="0,0,0,22">
+                                <StackPanel Margin="14,8,14,8">
+                                    <DockPanel>
+                                        <Button x:Name="W32Measure" DockPanel.Dock="Right" Style="{StaticResource Pill}" VerticalAlignment="Top" Margin="12,0,0,0">
+                                            <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE916;" FontSize="12" Margin="0,0,8,0"/><TextBlock Tag="t:w32.measure" Text="Measure"/></StackPanel>
+                                        </Button>
+                                        <StackPanel>
+                                            <TextBlock Tag="t:w32.title" Text="CPU time for the window in front" Style="{StaticResource CardTitle}"/>
+                                            <TextBlock Tag="t:w32.sub" Text="Win32PrioritySeparation: how Windows shares CPU time between the window in front (your game) and everything else. A new value works at once, no restart." Style="{StaticResource Muted}" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </DockPanel>
+                                    <TextBlock x:Name="W32Now" FontWeight="SemiBold" Margin="0,12,0,0" TextWrapping="Wrap"/>
+                                    <TextBlock x:Name="W32Desc" Style="{StaticResource Muted}" FontSize="12" TextWrapping="Wrap" Margin="0,2,0,10"/>
+                                    <WrapPanel x:Name="W32Values"/>
+                                    <TextBlock x:Name="W32MeasureText" TextWrapping="Wrap" Margin="0,6,0,0" Visibility="Collapsed"/>
+                                    <Border Height="1" Background="{DynamicResource Line}" Margin="0,14,0,12"/>
+                                    <TextBlock Tag="t:w32.compare" Text="Compare values on this PC" FontWeight="SemiBold"/>
+                                    <TextBlock Tag="t:w32.compare.d" Text="A busy program in the background shares one processor with this window. For each value, in a new random order each round, it measures how much of the processor this window gets and how fast its thread wakes up. Your value is put back at the end. Keep this window in front while it runs." Style="{StaticResource Muted}" FontSize="12" TextWrapping="Wrap" Margin="0,2,0,8"/>
+                                    <WrapPanel x:Name="W32Pick"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                        <Border Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="7" Padding="2" VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal">
+                                                <RadioButton x:Name="W32Rounds3" Style="{StaticResource Segment}" GroupName="W32Rounds" Content="3" IsChecked="True"/>
+                                                <RadioButton x:Name="W32Rounds6" Style="{StaticResource Segment}" GroupName="W32Rounds" Content="6"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <TextBlock Tag="t:irq.rounds" Text="rounds" Style="{StaticResource Muted}" VerticalAlignment="Center" Margin="8,0,12,0"/>
+                                        <Button x:Name="W32Run" Style="{StaticResource PillAccent}" VerticalAlignment="Center"><TextBlock Tag="t:w32.run" Text="Run comparison"/></Button>
+                                        <TextBlock x:Name="W32State" Style="{StaticResource Muted}" VerticalAlignment="Center" Margin="12,0,0,0" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                    <StackPanel x:Name="W32Results" Margin="0,10,0,0"/>
                                 </StackPanel>
                             </Border>
                             <TextBlock Tag="t:tweaks.system" Text="System" Style="{StaticResource Section}"/>

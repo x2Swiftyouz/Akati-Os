@@ -94,3 +94,12 @@ function Get-BestCores([double[]]$scores, [bool]$ht) {
     }
     , [int[]]$best
 }
+
+# Win32PrioritySeparation: bits 4-5 the length of a CPU turn (1 long, 2 short, 0 or 3 the Windows default: short on
+# Windows 10 and 11), bits 2-3 variable or fixed turns (1 variable, 2 fixed, 0 or 3 default: variable), bits 0-1 how
+# much the window in front gets (0, 1, 2; 3 counts as 2): with variable turns its turns are 1, 2 or 3 times as long,
+# and its threads get that much more priority when they wake up.
+function Get-PrioritySeparation([int]$value) {
+    $q = ($value -shr 4) -band 3; $k = ($value -shr 2) -band 3
+    @{ Quantum = $(if ($q -eq 1) { 'long' } else { 'short' }); Fixed = $k -eq 2; Boost = [Math]::Min(2, $value -band 3) }
+}

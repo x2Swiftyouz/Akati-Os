@@ -307,6 +307,7 @@ function Update-NavBadges {
 if ($null -ne $script:exitNow) { exit $script:exitNow }
 . (Join-Path $appDir 'AkatiCenter.tweaks.ps1')
 . (Join-Path $appDir 'AkatiCenter.irq.ps1')
+. (Join-Path $appDir 'AkatiCenter.priority.ps1')
 . (Join-Path $appDir 'AkatiCenter.games.ps1')
 . (Join-Path $appDir 'AkatiCenter.cleaner.ps1')
 . (Join-Path $appDir 'AkatiCenter.appearance.ps1')

@@ -165,6 +165,8 @@ function Set-Ring($ring, [int]$percent) {
 # (installers and WinGet do not like to run side by side), the others wait in the queue.
 $progressDir = Join-Path $env:LOCALAPPDATA 'AkatiOS\Logs'
 function Update-AppRow($app) {
+    # The rows are made when the page first opens (Initialize-Apps)
+    if (!$app.Button) { return }
     $installed = Test-App $app
     $btn = $app.Button
     $busy = $app.State -ne 'idle'
@@ -421,62 +423,68 @@ function New-AppMenu($app) {
     return $menu
 }
 
-# One gray heading and one grouped list per category
+# The rows are made the first time something needs them (the Gaming apps page, Ctrl+K), not when the app
+# starts: reading the version and size of each installed app from Apps & features took about half a second.
 $appGroups = @{}
-foreach ($cat in $appCats) {
-    $head = New-Text (T "apps.cat.$cat") 13 'SemiBold' "t:apps.cat.$cat"
-    $head.Style = $window.FindResource('Section')
-    $card = New-Object System.Windows.Controls.Border
-    $card.Style = $window.FindResource('Card'); $card.Padding = '0'; $card.Margin = '0,0,0,20'
-    $list = New-Object System.Windows.Controls.StackPanel
-    $card.Child = $list
-    [void]$ui.AppsGroups.Children.Add($head); [void]$ui.AppsGroups.Children.Add($card)
-    $appGroups[$cat] = @{ Head = $head; Card = $card; List = $list }
+function Initialize-Apps {
+    if ($script:appsReady) { return }
+    # One gray heading and one grouped list per category
+    foreach ($cat in $appCats) {
+        $head = New-Text (T "apps.cat.$cat") 13 'SemiBold' "t:apps.cat.$cat"
+        $head.Style = $window.FindResource('Section')
+        $card = New-Object System.Windows.Controls.Border
+        $card.Style = $window.FindResource('Card'); $card.Padding = '0'; $card.Margin = '0,0,0,20'
+        $list = New-Object System.Windows.Controls.StackPanel
+        $card.Child = $list
+        [void]$ui.AppsGroups.Children.Add($head); [void]$ui.AppsGroups.Children.Add($card)
+        $appGroups[$cat] = @{ Head = $head; Card = $card; List = $list }
+    }
+    foreach ($app in $apps) {
+        $btn = New-Object System.Windows.Controls.Button
+        $btn.Style = $window.FindResource('Pill')
+        $more = New-Object System.Windows.Controls.Button
+        $more.Style = $window.FindResource('Bare'); $more.Padding = '7'; $more.Margin = '0,0,8,0'; $more.ToolTip = T 'more'
+        $dots = New-Text ([string][char]0xE712) 14; $dots.Style = $window.FindResource('Glyph'); $more.Content = $dots
+        $right = New-Object System.Windows.Controls.StackPanel; $right.Orientation = 'Horizontal'
+        [void]$right.Children.Add($more); [void]$right.Children.Add($btn)
+        $row = New-Row ([string][char]0xE7FC) $app.Name $null $right $null
+        # Small badge after the name: where the installer comes from
+        $source = if ($app.Source) { $app.Source } else { 'winget' }
+        $badge = New-Object System.Windows.Controls.Border
+        $badge.CornerRadius = 4; $badge.SetResourceReference([System.Windows.Controls.Border]::BackgroundProperty, 'Fill'); $badge.Padding = '5,1'; $badge.Margin = '8,0,0,0'; $badge.VerticalAlignment = 'Center'
+        $badgeText = New-Text (T "src.$source") 10 'SemiBold' "t:src.$source"; $badgeText.Foreground = $window.FindResource('MutedBrush')
+        $badge.Child = $badgeText
+        $titleLine = New-Object System.Windows.Controls.StackPanel; $titleLine.Orientation = 'Horizontal'
+        $textPanel = $row.Title.Parent
+        $textPanel.Children.Remove($row.Title)
+        [void]$titleLine.Children.Add($row.Title); [void]$titleLine.Children.Add($badge)
+        $textPanel.Children.Insert(0, $titleLine)
+        # Letter tile until the app is installed (no logos)
+        $tile = New-Text $app.Mono $(if ($app.Mono.Length -gt 1) { 11 } else { 14 }) 'Bold'
+        $tile.Foreground = 'White'; $tile.HorizontalAlignment = 'Center'; $tile.VerticalAlignment = 'Center'
+        $row.Icon.Background = $app.Color; $row.Icon.Child = $tile
+        $app.Tile = $tile; $app.Ring = New-Ring
+        $app.Sub = $row.Sub; $app.Button = $btn; $app.More = $more; $app.Bar = $row.Bar; $app.RowParts = $row
+        $app.State = 'idle'; $app.HasUpdate = $false; $app.Uninstalling = $false
+        $btn.Tag = $app; $more.Tag = $app
+        $btn.Add_Click({
+            $a = $this.Tag
+            if ($a.State -ne 'idle') { Stop-AppJob $a; return }
+            if (Test-App $a) { if ($a.HasUpdate) { Add-AppToQueue $a 'update' } else { Open-App $a } } else { Add-AppToQueue $a 'install' }
+        })
+        $more.Add_Click({
+            $menu = New-AppMenu $this.Tag
+            $menu.PlacementTarget = $this; $menu.Placement = 'Bottom'; $menu.IsOpen = $true
+        })
+        Update-AppRow $app
+    }
+    $script:appsReady = $true
+    Update-AppGroups
+    Update-AppsToolbar
 }
-foreach ($app in $apps) {
-    $btn = New-Object System.Windows.Controls.Button
-    $btn.Style = $window.FindResource('Pill')
-    $more = New-Object System.Windows.Controls.Button
-    $more.Style = $window.FindResource('Bare'); $more.Padding = '7'; $more.Margin = '0,0,8,0'; $more.ToolTip = T 'more'
-    $dots = New-Text ([string][char]0xE712) 14; $dots.Style = $window.FindResource('Glyph'); $more.Content = $dots
-    $right = New-Object System.Windows.Controls.StackPanel; $right.Orientation = 'Horizontal'
-    [void]$right.Children.Add($more); [void]$right.Children.Add($btn)
-    $row = New-Row ([string][char]0xE7FC) $app.Name $null $right $null
-    # Small badge after the name: where the installer comes from
-    $source = if ($app.Source) { $app.Source } else { 'winget' }
-    $badge = New-Object System.Windows.Controls.Border
-    $badge.CornerRadius = 4; $badge.SetResourceReference([System.Windows.Controls.Border]::BackgroundProperty, 'Fill'); $badge.Padding = '5,1'; $badge.Margin = '8,0,0,0'; $badge.VerticalAlignment = 'Center'
-    $badgeText = New-Text (T "src.$source") 10 'SemiBold' "t:src.$source"; $badgeText.Foreground = $window.FindResource('MutedBrush')
-    $badge.Child = $badgeText
-    $titleLine = New-Object System.Windows.Controls.StackPanel; $titleLine.Orientation = 'Horizontal'
-    $textPanel = $row.Title.Parent
-    $textPanel.Children.Remove($row.Title)
-    [void]$titleLine.Children.Add($row.Title); [void]$titleLine.Children.Add($badge)
-    $textPanel.Children.Insert(0, $titleLine)
-    # Letter tile until the app is installed (no logos)
-    $tile = New-Text $app.Mono $(if ($app.Mono.Length -gt 1) { 11 } else { 14 }) 'Bold'
-    $tile.Foreground = 'White'; $tile.HorizontalAlignment = 'Center'; $tile.VerticalAlignment = 'Center'
-    $row.Icon.Background = $app.Color; $row.Icon.Child = $tile
-    $app.Tile = $tile; $app.Ring = New-Ring
-    $app.Sub = $row.Sub; $app.Button = $btn; $app.More = $more; $app.Bar = $row.Bar; $app.RowParts = $row
-    $app.State = 'idle'; $app.HasUpdate = $false; $app.Uninstalling = $false
-    $btn.Tag = $app; $more.Tag = $app
-    $btn.Add_Click({
-        $a = $this.Tag
-        if ($a.State -ne 'idle') { Stop-AppJob $a; return }
-        if (Test-App $a) { if ($a.HasUpdate) { Add-AppToQueue $a 'update' } else { Open-App $a } } else { Add-AppToQueue $a 'install' }
-    })
-    $more.Add_Click({
-        $menu = New-AppMenu $this.Tag
-        $menu.PlacementTarget = $this; $menu.Placement = 'Bottom'; $menu.IsOpen = $true
-    })
-    Update-AppRow $app
-}
-$script:appsReady = $true
-Update-AppGroups
-Update-AppsToolbar
+if ($Screenshot) { Initialize-Apps } else { Update-AppsToolbar }
 # Installed or uninstalled outside this window: look again when the window comes back to the front
-$window.Add_Activated({ foreach ($a in $apps) { if ($a.State -eq 'idle' -and !$a.Uninstalling) { Update-AppRow $a } }; Update-AppsToolbar })
+$window.Add_Activated({ if ($script:appsReady) { foreach ($a in $apps) { if ($a.State -eq 'idle' -and !$a.Uninstalling) { Update-AppRow $a } }; Update-AppsToolbar } })
 
 $ui.StarterButton.Add_Click({
     foreach ($a in $apps) { if ($a.Key -in 'Steam', 'Discord' -and $a.State -eq 'idle' -and !(Test-App $a)) { Add-AppToQueue $a 'install' } }

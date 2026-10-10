@@ -11,6 +11,11 @@ if ($Screenshot) {
     Add-Mark 'Ready (before screenshots)'
     Write-Host 'Startup timing:'; $script:marks | ForEach-Object { Write-Host "  $_" }
     New-Item -ItemType Directory -Path $Screenshot -Force | Out-Null
+    # Sample week and score history (the CI runner has none)
+    Save-Setting WeekStart (Get-WeekStart (Get-Date)); Save-Setting WeekCleanBytes '1932735283'; Save-Setting WeekBoostMinutes '415'; Save-Setting WeekBoosts '6'
+    Save-Setting ScoreHistory ([string[]]@(0..13 | ForEach-Object { '{0}={1}' -f (Get-Date).Date.AddDays($_ - 13).ToString('yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture), (72 + [int](12 * $_ / 13) + @(0, 2, -1, 1)[$_ % 4]) }))
+    Save-Setting LastBoost ('{0}|83|2|4' -f (Get-Date).AddHours(-2).ToString('s', [Globalization.CultureInfo]::InvariantCulture))
+    Update-BoostCard
     $stats.Run = $false
     # A minute of sample usage for the lines in the CPU and RAM cards (CI takes one sample only)
     $size = New-Object System.Windows.Size $window.Width, $window.Height

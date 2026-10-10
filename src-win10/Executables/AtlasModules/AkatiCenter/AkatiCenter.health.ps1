@@ -142,6 +142,7 @@ function Get-ScoreBrush([int]$s) {
 function Update-Score {
     $s = Get-AkatiScore
     if (!$s) { return }
+    Save-ScoreDay $s.Score
     # The first score counts up; later ones (memory and ping change it) are set at once
     if ($ui.ScoreValue.Text -notmatch '^\d+$') { Start-CountUp $ui.ScoreValue $s.Score $numberText 900 }
     elseif (!(Test-Counting $ui.ScoreValue)) { $ui.ScoreValue.Text = [string]$s.Score }

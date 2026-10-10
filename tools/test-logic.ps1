@@ -51,5 +51,15 @@ Check 'spot word start' (Test-SpotWord 'Free up RAM' 'ram') $true
 Check 'spot inside word' (Test-SpotWord 'Highest frame rate' 'ram') $false
 Check 'spot Thai' (Test-SpotWord 'ล้าง RAM' 'ล้าง') $true
 
+# Weekly report and score history
+Check 'week monday' (Get-WeekStart ([datetime]'2026-10-12')) '2026-10-12'
+Check 'week sunday' (Get-WeekStart ([datetime]'2026-10-11')) '2026-10-05'
+Check 'week friday' (Get-WeekStart ([datetime]'2026-10-09 23:30')) '2026-10-05'
+$h = Update-ScoreHistory @('2026-10-01=70', '2026-10-02=75') '2026-10-02' 80
+Check 'score history same day' ($h -join ',') '2026-10-01=70,2026-10-02=80'
+$h = Update-ScoreHistory @('2026-10-01=70', 'bad', '2026-10-02=75') '2026-10-03' 90 2
+Check 'score history keep' ($h -join ',') '2026-10-02=75,2026-10-03=90'
+Check 'score history empty' ((Update-ScoreHistory $null '2026-10-03' 88) -join ',') '2026-10-03=88'
+
 Write-Host "$script:count checks, $script:failed failed"
 if ($script:failed) { exit 1 }

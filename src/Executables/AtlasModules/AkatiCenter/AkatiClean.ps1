@@ -121,4 +121,12 @@ if ($CleanNow) {
     if (!(Test-Path $key)) { New-Item -Path $key -Force | Out-Null }
     Set-ItemProperty -Path $key -Name AutoCleanLast -Value (Get-Date).ToString('s') -Force
     Set-ItemProperty -Path $key -Name AutoCleanBytes -Value ([string][long]$freed) -Force
+    # Also counted in the weekly report of the Dashboard (the totals start again on Monday)
+    $week = (Get-Date).Date.AddDays(-(([int](Get-Date).DayOfWeek + 6) % 7)).ToString('yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture)
+    if ((Get-ItemProperty -Path $key -Name WeekStart -ErrorAction SilentlyContinue).WeekStart -ne $week) {
+        Set-ItemProperty -Path $key -Name WeekStart -Value $week -Force
+        foreach ($n in 'WeekCleanBytes', 'WeekBoostMinutes', 'WeekBoosts') { Set-ItemProperty -Path $key -Name $n -Value '0' -Force }
+    }
+    $old = 0.0; [void][double]::TryParse([string](Get-ItemProperty -Path $key -Name WeekCleanBytes -ErrorAction SilentlyContinue).WeekCleanBytes, [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$old)
+    Set-ItemProperty -Path $key -Name WeekCleanBytes -Value ([string][long]($old + $freed)) -Force
 }

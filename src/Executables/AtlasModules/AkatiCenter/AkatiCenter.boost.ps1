@@ -25,7 +25,19 @@ $powerSchemes = @(
 function Get-ActiveScheme { if ([string](powercfg /getactivescheme) -match '([0-9a-f]{8}-[0-9a-f-]{27})') { $Matches[1] } }
 function Test-Boost { [bool](Get-RegValue $boostKey 'Active') }
 
+# "Last session: 1 h 05 min · 2 apps closed · 4 services paused"
+function Format-Minutes([int]$m) { if ($m -ge 60) { (T 'time.hm') -f [Math]::Floor($m / 60), ($m % 60) } else { (T 'time.m') -f $m } }
+function Update-BoostLast {
+    $parts = ([string](Get-RegValue $settingsKey 'LastBoost')).Split('|')
+    if ($parts.Count -lt 4 -or (Test-Boost)) { $ui.BoostLast.Visibility = 'Collapsed'; return }
+    $text = (T 'boost.last') -f (Format-Minutes ([int]$parts[1]))
+    if ([int]$parts[2]) { $text += ' · ' + ((T 'boost.last.apps') -f $parts[2]) }
+    if ([int]$parts[3]) { $text += ' · ' + ((T 'boost.last.services') -f $parts[3]) }
+    $ui.BoostLast.Text = $text
+    $ui.BoostLast.Visibility = 'Visible'
+}
 function Update-BoostCard {
+    Update-BoostLast
     $running = @(Get-Process -Name $boostCandidates -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name -Unique)
     $ui.BoostAppsText.Text = if ($running.Count) { (T 'boost.apps') + ' (' + ($running -join ', ') + ')' } else { (T 'boost.apps') + ' (' + (T 'boost.noapps') + ')' }
     if (Test-Boost) {
@@ -52,6 +64,7 @@ function Start-Boost {
     New-Item -Path $boostKey -Force | Out-Null
     # Marked as on first: if a step fails, Stop still undoes the steps that worked
     Set-ItemProperty -Path $boostKey -Name Since -Value (Get-Date -Format 'HH:mm')
+    Set-ItemProperty -Path $boostKey -Name Started -Value (Get-Date).ToString('s', [Globalization.CultureInfo]::InvariantCulture)
     Set-ItemProperty -Path $boostKey -Name Active -Value 1 -Type DWord
     $failed = @()
     if ($ui.BoostPower.IsChecked) {
@@ -104,7 +117,33 @@ function Start-Boost {
     if ($failed.Count) { throw ((T 'status.boostpartial') -f ($failed -join ', ')) }
 }
 
+# The weekly report on the Dashboard: totals of this week (they start again on Monday)
+function Add-WeekStat([string]$name, [double]$value) {
+    $key = 'HKCU:\Software\AkatiOS\Center'
+    if (!(Test-Path $key)) { New-Item -Path $key -Force | Out-Null }
+    $week = Get-WeekStart (Get-Date)
+    if ((Get-RegValue $key 'WeekStart') -ne $week) {
+        Set-ItemProperty -Path $key -Name WeekStart -Value $week
+        foreach ($n in 'WeekCleanBytes', 'WeekBoostMinutes', 'WeekBoosts') { Set-ItemProperty -Path $key -Name $n -Value '0' }
+    }
+    $old = 0.0; [void][double]::TryParse([string](Get-RegValue $key $name), [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$old)
+    Set-ItemProperty -Path $key -Name $name -Value ([string][long]($old + $value))
+}
+# The last session for the Game boost page: "start|minutes|apps closed|services paused"
+function Save-BoostSession {
+    $started = [string](Get-RegValue $boostKey 'Started')
+    $start = [datetime]::MinValue
+    if (![datetime]::TryParseExact($started, 's', [Globalization.CultureInfo]::InvariantCulture, 'None', [ref]$start)) { return }
+    $minutes = [int][Math]::Max(0, ((Get-Date) - $start).TotalMinutes)
+    $apps = @(Get-RegValue $boostKey 'Closed' | Where-Object { $_ }).Count
+    $services = @(Get-RegValue $boostKey 'PausedServices' | Where-Object { $_ }).Count
+    Set-ItemProperty -Path 'HKCU:\Software\AkatiOS\Center' -Name LastBoost -Value ('{0}|{1}|{2}|{3}' -f $started, $minutes, $apps, $services)
+    Add-WeekStat 'WeekBoostMinutes' $minutes
+    Add-WeekStat 'WeekBoosts' 1
+}
+
 function Stop-Boost {
+    try { Save-BoostSession } catch { }
     try {
         $prevScheme = Get-RegValue $boostKey 'PrevScheme'
         if ($prevScheme) { powercfg /setactive $prevScheme | Out-Null }
@@ -310,7 +349,66 @@ function Show-StartupItems {
     }
     Update-Separators $ui.StartupList
 }
-Show-StartupItems
+# Background tasks: scheduled tasks of other apps (not Windows, Akati OS or AtlasOS), mostly updaters that start
+# by themselves. Read in the background when the page first opens (the Task Scheduler module is slow to load).
+$bgTaskWork = {
+    $windows = [Environment]::GetFolderPath('Windows')
+    @(Get-ScheduledTask -ErrorAction SilentlyContinue | Where-Object {
+        $_.TaskPath -notlike '\Microsoft\*' -and $_.TaskPath -notlike '\AkatiOS\*' -and $_.TaskName -notmatch 'Atlas|Akati|Timer Resolution' } | ForEach-Object {
+        $exe = [string]@($_.Actions | Where-Object { $_.Execute } | Select-Object -First 1 -ExpandProperty Execute)
+        $exe = [Environment]::ExpandEnvironmentVariables($exe.Trim('"'))
+        # Programs in the Windows folder belong to Windows
+        if ($exe -and $exe -notlike "$windows\*") {
+            @{ Name = $_.TaskName; Path = $_.TaskPath; Exe = $exe; On = [string]$_.State -ne 'Disabled' }
+        } })
+}
+function Show-BgTasks($list) {
+    $ui.BgTaskList.Children.Clear()
+    $list = @($list | Where-Object { $_ -is [hashtable] } | Sort-Object { $_.Name })
+    $ui.BgTaskEmpty.Tag = 't:bgtasks.empty'; $ui.BgTaskEmpty.Text = T 'bgtasks.empty'
+    $ui.BgTaskEmpty.Visibility = if ($list.Count) { 'Collapsed' } else { 'Visible' }
+    foreach ($item in $list) {
+        $toggle = New-Object System.Windows.Controls.CheckBox
+        $toggle.Style = $window.FindResource('Switch')
+        $toggle.IsChecked = $item.On
+        $toggle.Tag = $item
+        $toggle.Add_Click({
+            $i = $this.Tag; $on = [bool]$this.IsChecked
+            $this.IsEnabled = $false
+            Start-Work { param($path, $name, $on)
+                try {
+                    if ($on) { Enable-ScheduledTask -TaskPath $path -TaskName $name -ErrorAction Stop | Out-Null } else { Disable-ScheduledTask -TaskPath $path -TaskName $name -ErrorAction Stop | Out-Null }
+                    [string](Get-ScheduledTask -TaskPath $path -TaskName $name).State -ne 'Disabled'
+                } catch { $_.Exception.Message } } @($i.Path, $i.Name, $on) {
+                param($r, $ctx)
+                $res = Get-LastOutput $r
+                $ctx.Toggle.IsEnabled = $true
+                if ($res -is [bool]) {
+                    $ctx.Toggle.IsChecked = $res
+                    Set-Status ((T $(if ($res) { 'status.taskon' } else { 'status.taskoff' })) -f $ctx.Item.Name)
+                } else { $ctx.Toggle.IsChecked = !$ctx.On; Set-Status "$($ctx.Item.Name): $res" }
+            } @{ Toggle = $this; Item = $i; On = $on }
+        })
+        $row = New-Row ([string][char]0xE823) $item.Name $null $toggle $null
+        $row.Sub.Text = $item.Exe
+        $row.Sub.TextTrimming = 'CharacterEllipsis'; $row.Sub.TextWrapping = 'NoWrap'
+        Set-RowIcon $row (Get-FileIcon @($item.Exe))
+        [void]$ui.BgTaskList.Children.Add($row.Row)
+    }
+    Update-Separators $ui.BgTaskList
+}
+function Start-BgTasks {
+    if ($Screenshot) {
+        # Sample tasks: the CI runner has its own (Azure) tasks
+        Show-BgTasks @(@{ Name = 'GoogleUpdateTaskMachineCore'; Path = '\'; Exe = "${env:ProgramFiles(x86)}\Google\Update\GoogleUpdate.exe"; On = $true }
+                       @{ Name = 'MicrosoftEdgeUpdateTaskMachineUA'; Path = '\'; Exe = "${env:ProgramFiles(x86)}\Microsoft\EdgeUpdate\MicrosoftEdgeUpdate.exe"; On = $false })
+        return
+    }
+    Start-Work $bgTaskWork @() { param($r) Show-BgTasks @($r) } $null
+}
+
+# The startup apps are read when the page first opens (the shortcuts are slow to read)
+if ($Screenshot) { $script:startupShown = $true; Show-StartupItems; Start-BgTasks }
 Update-BoostCard
 Update-Separators $ui.PingList
 

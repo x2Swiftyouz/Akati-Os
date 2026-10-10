@@ -56,3 +56,17 @@ function Get-FpsStats([double[]]$frameTimes) {
     $p99 = $sorted[[Math]::Min($sorted.Count - 1, [int][Math]::Floor($sorted.Count * 0.99))]
     @{ Avg = [int][Math]::Round(1000 / $avgMs); Low = [int][Math]::Round(1000 / $p99); Frames = $ft.Count }
 }
+
+# Weekly report: the Monday of the week of a date, as yyyy-MM-dd
+function Get-WeekStart([datetime]$date) {
+    $date.Date.AddDays(-(([int]$date.DayOfWeek + 6) % 7)).ToString('yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture)
+}
+
+# Akati Score history: "yyyy-MM-dd=score" per day, the newest last, at most $keep days. A new score on the
+# same day replaces that day's score.
+function Update-ScoreHistory([string[]]$list, [string]$day, [int]$score, [int]$keep = 30) {
+    $days = @($list | Where-Object { $_ -match '^\d{4}-\d{2}-\d{2}=\d+$' -and !$_.StartsWith("$day=") })
+    $days = @($days + "$day=$score" | Sort-Object)
+    if ($days.Count -gt $keep) { $days = $days[($days.Count - $keep)..($days.Count - 1)] }
+    , [string[]]$days
+}

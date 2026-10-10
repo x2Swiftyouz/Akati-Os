@@ -225,7 +225,7 @@ $strings = @{
         'new.title' = "What's new in Akati OS {0}"; 'new.done' = 'Continue'
         'new.1' = 'Find my games: games from Steam, Epic Games, Riot and Battle.net go to My games in one click'
         'new.2' = 'Game boost: choose which apps it closes, and a note when a laptop runs on battery'
-        'new.3' = 'My games: Network priority marks a game's traffic as high priority (routers that read DSCP)'
+        'new.3' = 'My games: Network priority marks the traffic of a game as high priority (routers that read DSCP)'
         'new.4' = 'Share score: a picture of your Akati Score and PC, ready to paste in a chat'
         'new.5' = 'Numbers on the sidebar for app updates and Akati Doctor findings; press ? for the keyboard shortcuts'
         'new.6' = 'Tweaks: turn off printing or Bluetooth services on PCs that do not have them'

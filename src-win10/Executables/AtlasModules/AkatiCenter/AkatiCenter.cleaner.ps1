@@ -35,17 +35,17 @@ foreach ($ci in $cleanItems) {
     $check.Style = $window.FindResource('Tick'); $check.IsChecked = !$ci.Off; $check.VerticalAlignment = 'Top'; $check.Margin = '0,2,12,0'
     $check.Add_Click({ Update-CleanTotal })
     $chip = New-Object System.Windows.Controls.Border
-    $chip.CornerRadius = 5; $chip.Padding = '0,2'; $chip.Width = 40; $chip.Margin = '0,1,12,0'; $chip.VerticalAlignment = 'Top'; $chip.BorderThickness = '1'
+    $chip.CornerRadius = 5; $chip.Padding = '0,2'; $chip.Width = 48; $chip.Margin = '0,1,12,0'; $chip.VerticalAlignment = 'Top'; $chip.BorderThickness = '1'
     $chip.SetResourceReference([System.Windows.Controls.Border]::BackgroundProperty, 'AccentSoft')
     $chip.SetResourceReference([System.Windows.Controls.Border]::BorderBrushProperty, 'AccentLine')
-    $tag = New-Text $cleanTags[$ci.Key] 10 'Bold'; $tag.FontFamily = $window.FindResource('MonoFont'); $tag.HorizontalAlignment = 'Center'
+    $tag = New-Text $cleanTags[$ci.Key] 11.5 'Bold'; $tag.FontFamily = $window.FindResource('MonoFont'); $tag.HorizontalAlignment = 'Center'
     $tag.SetResourceReference([System.Windows.Controls.TextBlock]::ForegroundProperty, 'AccentText')
     $chip.Child = $tag
     [System.Windows.Controls.Grid]::SetColumn($chip, 1)
     $text = New-Object System.Windows.Controls.StackPanel
     $title = New-Text (T "clean.$($ci.Key)") 14 'SemiBold' "t:clean.$($ci.Key)"
     $sub = New-Text (T "clean.$($ci.Key).d") 12 'Normal' "t:clean.$($ci.Key).d"; $sub.Style = $window.FindResource('Muted'); $sub.Margin = '0,2,12,0'
-    $path = New-Text (Get-CleanPath $ci) 10.5; $path.Style = $window.FindResource('MonoText'); $path.Margin = '0,4,12,0'; $path.Opacity = 0.8
+    $path = New-Text (Get-CleanPath $ci) 11; $path.Style = $window.FindResource('MonoText'); $path.Margin = '0,4,12,0'; $path.Opacity = 0.8
     $bar = New-Object System.Windows.Controls.ProgressBar
     $bar.Style = $window.FindResource('Meter'); $bar.Height = 3; $bar.Margin = '0,8,12,0'
     [void]$text.Children.Add($title); [void]$text.Children.Add($sub); [void]$text.Children.Add($path); [void]$text.Children.Add($bar)
@@ -53,7 +53,7 @@ foreach ($ci in $cleanItems) {
     $right = New-Object System.Windows.Controls.StackPanel
     $right.MinWidth = 86
     $size = New-Text '-' 14 'Bold'; $size.FontFamily = $window.FindResource('MonoFont'); $size.TextAlignment = 'Right'; $size.HorizontalAlignment = 'Right'
-    $count = New-Text '' 10.5; $count.Style = $window.FindResource('MonoText'); $count.HorizontalAlignment = 'Right'; $count.Margin = '0,3,0,0'
+    $count = New-Text '' 11; $count.Style = $window.FindResource('MonoText'); $count.HorizontalAlignment = 'Right'; $count.Margin = '0,3,0,0'
     [void]$right.Children.Add($size); [void]$right.Children.Add($count)
     [System.Windows.Controls.Grid]::SetColumn($right, 3)
     [void]$grid.Children.Add($check); [void]$grid.Children.Add($chip); [void]$grid.Children.Add($text); [void]$grid.Children.Add($right)
@@ -94,7 +94,7 @@ function Update-CleanLayout {
     [System.Windows.Controls.Grid]::SetColumn($ui.CleanSide, $(if ($wide) { 1 } else { 0 }))
     [System.Windows.Controls.Grid]::SetRow($ui.CleanSide, $(if ($wide) { 0 } else { 1 }))
     $ui.CleanSide.Margin = if ($wide) { '14,0,0,0' } else { '0,14,0,0' }
-    $ui.CleanGrid.ColumnDefinitions[1].Width = New-Object System.Windows.GridLength ($(if ($wide) { 270 } else { 0 }))
+    $ui.CleanGrid.ColumnDefinitions[1].Width = New-Object System.Windows.GridLength ($(if ($wide) { 330 } else { 0 }))
 }
 $ui.CleanGrid.Add_SizeChanged({ Update-CleanLayout })
 $ui.CleanSelectAll.Add_Click({ foreach ($ci in $cleanItems) { $ci.Check.IsChecked = $true }; Update-CleanTotal })

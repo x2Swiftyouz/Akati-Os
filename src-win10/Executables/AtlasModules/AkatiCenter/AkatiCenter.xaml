@@ -1818,7 +1818,7 @@
                             <Grid x:Name="CleanGrid" Margin="0,0,0,16">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="270"/>
+                                    <ColumnDefinition Width="330"/>
                                 </Grid.ColumnDefinitions>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>

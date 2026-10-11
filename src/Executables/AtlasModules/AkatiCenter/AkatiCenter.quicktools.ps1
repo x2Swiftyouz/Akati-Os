@@ -72,10 +72,10 @@ function Initialize-QuickTools {
         [System.Windows.Controls.DockPanel]::SetDock($box, 'Left')
         $text = New-Object System.Windows.Controls.StackPanel
         $title = New-Text (T "qt.$($qt.Key)") 13 'SemiBold' "t:qt.$($qt.Key)"; $title.TextWrapping = 'NoWrap'; $title.TextTrimming = 'CharacterEllipsis'
-        $sub = New-Text (T "qt.$($qt.Key).d") 11 'Normal' "t:qt.$($qt.Key).d"; $sub.Style = $window.FindResource('Muted'); $sub.Margin = '0,2,0,0'
+        $sub = New-Text (T "qt.$($qt.Key).d") 12 'Normal' "t:qt.$($qt.Key).d"; $sub.Style = $window.FindResource('Muted'); $sub.Margin = '0,2,0,0'
         # What runs, in the small monospace font
         $run = if ($qt.Command) { $qt.Command } elseif ($qt.Arguments) { $qt.Arguments } elseif ($qt.File) { $qt.File } else { 'PurgeStandbyList' }
-        $cmd = New-Text $run 10.5; $cmd.Style = $window.FindResource('MonoText'); $cmd.Margin = '0,5,0,0'; $cmd.Opacity = 0.85
+        $cmd = New-Text $run 11; $cmd.Style = $window.FindResource('MonoText'); $cmd.Margin = '0,5,0,0'; $cmd.Opacity = 0.85
         [void]$text.Children.Add($title); [void]$text.Children.Add($sub); [void]$text.Children.Add($cmd)
         [void]$dock.Children.Add($box); [void]$dock.Children.Add($text)
         $b.Content = $dock

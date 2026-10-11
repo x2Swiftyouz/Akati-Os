@@ -51,7 +51,7 @@
 - [ ] ก๊อป `dist\AkatiOS-Win11_v<version>.apbx` และ `dist\SHA256SUMS.txt` เข้า VM
 - [ ] ตรวจ hash ใน VM:
   ```powershell
-  (Get-FileHash .\AkatiOS-Win11_v1.10.1.apbx -Algorithm SHA256).Hash.ToLower()
+  (Get-FileHash .\AkatiOS-Win11_v1.10.2.apbx -Algorithm SHA256).Hash.ToLower()
   Get-Content .\SHA256SUMS.txt
   ```
   สองค่าต้องตรงกัน
@@ -82,7 +82,7 @@
 - [ ] จดไว้ว่าขึ้นป้าย "Malicious Playbook" หรือไม่ (ใช้ประกอบข้อความถึง Ameliorated)
 
 ### ข้อความในหน้าต่าง ๆ
-- [ ] Title แสดง `Akati OS v1.10.1`
+- [ ] Title แสดง `Akati OS v1.10.2`
 - [ ] Description มีคำเตือนให้สำรองไฟล์และข้อความ "Not an official AtlasOS project"
 - [ ] หน้า Defender มีคำเตือน anti-cheat (Valorant, FACEIT)
 - [ ] ลิงก์ "Install guide" เปิด https://github.com/x2Swiftyouz/Akati-Os#readme
@@ -133,10 +133,10 @@
 bcdedit /enum '{current}' | Select-String description
 Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\OEMInformation'
 ```
-- [ ] บูตเมนูเป็น `Akati OS 11 v1.10.1`
-- [ ] `Model` = `Akati OS v1.10.1`, `Manufacturer` = `Akati OS`
+- [ ] บูตเมนูเป็น `Akati OS 11 v1.10.2`
+- [ ] `Model` = `Akati OS v1.10.2`, `Manufacturer` = `Akati OS`
 - [ ] ไม่มี `SupportURL` และ `SupportPhone`
-- [ ] `winver` และ Settings > System > About แสดง Akati OS v1.10.1
+- [ ] `winver` และ Settings > System > About แสดง Akati OS v1.10.2
 
 ### ธีม
 ```powershell
@@ -236,7 +236,7 @@ Test-Path "$env:windir\System32\d3dx9_43.dll"
 - [ ] เปิดครั้งแรกมีหน้าต้อนรับ 3 ขั้น ปุ่มภาษาเปลี่ยนภาษาได้ กด "เริ่มใช้งาน" แล้วเปิดครั้งต่อไปไม่ขึ้นอีก
 - [ ] Windows 11: พื้นหลังของ Center โปร่งเห็นสีวอลเปเปอร์จาง ๆ (Mica) และมุมหน้าต่างโค้ง ไม่มีขอบดำ
 
-### Akati OS Center v1.10.1
+### Akati OS Center v1.10.2
 - [ ] แอปเกม: แอปที่ติดตั้งแล้วแสดงไอคอนจริง กดติดตั้ง Steam แล้วมีแถบดาวน์โหลดเป็น % กดยกเลิกระหว่างติดตั้งได้ และกลับเป็น "ติดตั้ง"
 - [ ] แอปเกม: ติ๊ก 2 แอป (เช่น OBS กับ Epic) แล้วกด "ติดตั้งที่เลือก" ตัวที่สองขึ้น "รอคิว" แล้วติดตั้งต่อเองหลังตัวแรกเสร็จ
 - [ ] แอปเกม: "ตรวจอัปเดต" ไม่มี error (ขึ้นว่าแอปเป็นเวอร์ชันล่าสุด หรือมีปุ่ม "อัปเดต")

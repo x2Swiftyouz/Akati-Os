@@ -43,6 +43,7 @@ W11 = Windows 11 playbook, W10 = Windows 10 playbook.
 | `Executables/AtlasModules/Scripts/Modules/Qol/Qol.psm1` | W11 | `Set-AtlasTheme` uses `akatios-dark.theme` |
 | `Executables/SOFTWARE.ps1` | W11, W10 | 7-Zip instead of NanaZip: the newest 7-Zip from 7-zip.org is installed silently (skipped when 7-Zip is already installed); NanaZip is not downloaded and there is no question about replacing 7-Zip |
 | `Executables/SHORTCUTS.ps1` | W11, W10 | No Atlas folder shortcut on the desktop or in the Start menu (the settings are in Akati OS Center > Tweaks). The folder `C:\Windows\AtlasDesktop` itself stays, AtlasOS scripts use it |
+| `Configuration/tweaks.yml`, `Executables/AtlasDesktop/4. Interface Tweaks/File Explorer Customization/Folders in This PC/` | W10 | `disable-folders-this-pc.yml` is not run (commented out, like in the AtlasOS Windows 11 playbook), so Desktop, Documents, Downloads, Music, Pictures and Videos stay in This PC and in the File Explorer side bar; the `(default)` mark moved from "Remove all folders in This PC" to "Restore all folders in This PC" |
 | `Configuration/tweaks/performance/disable-fth.yml` | W11, W10 | `rundll32 fthsvc.dll,FthSysprepSpecialize` only runs when `fthsvc.dll` exists (trimmed Windows builds such as imOS 10 removed it, and rundll32 showed an error). The registry value that turns FTH off is unchanged |
 
 ## Removed files

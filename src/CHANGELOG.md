@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.10.2
+
+### Changed
+- Windows 10 playbook only: Desktop, Documents, Downloads, Music, Pictures and Videos stay in This PC and the File Explorer side bar again. Nothing changes in the Windows 11 playbook
+
 ## v1.10.1
 
 ### Changed

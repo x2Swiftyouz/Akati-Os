@@ -288,6 +288,41 @@
             </Setter>
         </Style>
 
+        <!-- Outlined button: the second choice next to an accent button (dialogs) -->
+        <Style x:Key="Outline" TargetType="Button">
+            <Setter Property="Foreground" Value="{DynamicResource Text2}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="14,7"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" RenderTransformOrigin="0.5,0.5" Background="Transparent" BorderBrush="{DynamicResource CardBorderHover}" BorderThickness="1" CornerRadius="6" Padding="{TemplateBinding Padding}"><Border.RenderTransform><ScaleTransform x:Name="Press"/></Border.RenderTransform>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Trigger.EnterActions><BeginStoryboard><Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="Press" Storyboard.TargetProperty="ScaleX" To="0.96" Duration="0:0:0.08"/>
+                                    <DoubleAnimation Storyboard.TargetName="Press" Storyboard.TargetProperty="ScaleY" To="0.96" Duration="0:0:0.08"/>
+                                </Storyboard></BeginStoryboard></Trigger.EnterActions>
+                                <Trigger.ExitActions><BeginStoryboard><Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="Press" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.15"/>
+                                    <DoubleAnimation Storyboard.TargetName="Press" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.15"/>
+                                </Storyboard></BeginStoryboard></Trigger.ExitActions>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource Fill}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.4"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- App Store style buttons: gray capsule (Get, Open), accent capsule (Update) -->
         <Style x:Key="Pill" TargetType="Button">
             <Setter Property="Foreground" Value="{DynamicResource Accent2}"/>
@@ -736,22 +771,31 @@
                         <Button x:Name="MinButton" Style="{StaticResource Light}" Background="#FEBC2E" Content="&#xE921;" ToolTip="Minimize"/>
                         <Button x:Name="MaxButton" Style="{StaticResource Light}" Background="#28C840" Content="&#xE740;" ToolTip="Full screen"/>
                     </StackPanel>
+                    <!-- The background follows the accent color (Update-BrandBanner); the picture is a gray texture on it -->
                     <Border DockPanel.Dock="Top" x:Name="Brand" CornerRadius="12" Height="92" ClipToBounds="True" Margin="0,0,0,14" TextElement.Foreground="White">
                         <Border.Background>
                             <LinearGradientBrush StartPoint="0,1" EndPoint="1,0">
-                                <GradientStop Color="#173A72" Offset="0"/>
-                                <GradientStop Color="#1A1030" Offset="0.5"/>
-                                <GradientStop Color="#4A1C7A" Offset="1"/>
+                                <GradientStop Color="#3E1C60" Offset="0"/>
+                                <GradientStop Color="#8A3FD6" Offset="1"/>
                             </LinearGradientBrush>
                         </Border.Background>
                         <Grid>
-                            <Image x:Name="BrandImage" Stretch="UniformToFill" Opacity="0.9"/>
+                            <Image x:Name="BrandImage" Stretch="UniformToFill" Opacity="0.3"/>
+                            <!-- A darker shade under the logo, so it stays readable on every accent -->
+                            <Border IsHitTestVisible="False">
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0,1" EndPoint="0.6,0">
+                                        <GradientStop Color="#66000000" Offset="0"/>
+                                        <GradientStop Color="#00000000" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Border.Background>
+                            </Border>
                             <StackPanel VerticalAlignment="Bottom" Margin="16,0,16,14">
                                 <StackPanel Orientation="Horizontal">
                                     <Image x:Name="LogoImage" Width="30" Height="30" Margin="0,0,10,0"/>
                                     <TextBlock Text="AKATI OS" FontSize="20" FontWeight="Bold" VerticalAlignment="Center"/>
                                 </StackPanel>
-                                <TextBlock Text="CENTER" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Accent2}" Margin="40,0,0,0"/>
+                                <TextBlock Text="CENTER" FontSize="11" FontWeight="SemiBold" Opacity="0.85" Margin="40,0,0,0"/>
                             </StackPanel>
                         </Grid>
                     </Border>
@@ -2002,6 +2046,26 @@
                                     </StackPanel>
                                 </DockPanel>
                             </Border>
+                            <!-- Small extras of the window itself: a click sound (off at first) and fewer animations -->
+                            <Border Style="{StaticResource Card}" Margin="0,0,0,16">
+                                <StackPanel>
+                                    <TextBlock Tag="t:ui.title" Text="Sounds and motion" Style="{StaticResource CardTitle}" Margin="0,0,0,10"/>
+                                    <DockPanel x:Name="UiSoundsRow" Margin="0,0,0,12">
+                                        <CheckBox x:Name="UiSoundsToggle" DockPanel.Dock="Right" Style="{StaticResource Switch}"/>
+                                        <StackPanel Margin="0,0,12,0">
+                                            <TextBlock Tag="t:ui.sounds" Text="UI sounds" FontWeight="SemiBold"/>
+                                            <TextBlock Tag="t:ui.sounds.d" Text="A soft click when you flip a switch or change the page." Style="{StaticResource Muted}" FontSize="12" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </DockPanel>
+                                    <DockPanel x:Name="ReduceMotionRow">
+                                        <CheckBox x:Name="ReduceMotionToggle" DockPanel.Dock="Right" Style="{StaticResource Switch}"/>
+                                        <StackPanel Margin="0,0,12,0">
+                                            <TextBlock Tag="t:ui.motion" Text="Reduce motion" FontWeight="SemiBold"/>
+                                            <TextBlock Tag="t:ui.motion.d" Text="Turns off the small animations of switches, dialogs, pages and progress cards." Style="{StaticResource Muted}" FontSize="12" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </DockPanel>
+                                </StackPanel>
+                            </Border>
                             <Border Style="{StaticResource Card}" Margin="0,0,0,16">
                                 <StackPanel>
                                     <TextBlock Tag="t:accent.title" Text="Accent color" Style="{StaticResource CardTitle}"/>
@@ -2111,6 +2175,26 @@
                         <StackPanel Orientation="Horizontal">
                             <TextBlock x:Name="ToastText" VerticalAlignment="Center" FontSize="13" MaxWidth="460" TextTrimming="CharacterEllipsis"/>
                             <Button x:Name="ToastUndo" Style="{StaticResource Pill}" Margin="14,0,0,0" Padding="12,4" Tag="t:toast.undo" Content="Undo"/>
+                        </StackPanel>
+                    </Border>
+                    <!-- Progress of a long job (Show-Progress): cleaner, app installs, uninstall queue, benchmarks -->
+                    <Border x:Name="ProgCard" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,0,16" Width="320" Visibility="Collapsed"
+                            Background="{DynamicResource Popup}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="12" Padding="14,12" RenderTransformOrigin="0.5,1">
+                        <Border.Effect><DropShadowEffect BlurRadius="18" ShadowDepth="4" Opacity="0.35"/></Border.Effect>
+                        <Border.RenderTransform><TranslateTransform x:Name="ProgShift"/></Border.RenderTransform>
+                        <StackPanel>
+                            <DockPanel>
+                                <Border DockPanel.Dock="Left" Style="{StaticResource IconBox}" Width="30" Height="30" CornerRadius="8" Margin="0,0,10,0" VerticalAlignment="Top">
+                                    <TextBlock Style="{StaticResource TileGlyph}" Text="&#xE9F5;" FontSize="13"/>
+                                </Border>
+                                <Button x:Name="ProgCancel" DockPanel.Dock="Right" Style="{StaticResource Outline}" Padding="10,4" Margin="8,0,0,0" VerticalAlignment="Top" Tag="t:cancel" Content="Cancel"/>
+                                <TextBlock x:Name="ProgPercent" DockPanel.Dock="Right" Style="{StaticResource MonoText}" FontSize="12" Margin="8,2,0,0" VerticalAlignment="Top" Text=""/>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock x:Name="ProgTitle" Text="" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock x:Name="ProgDetail" Text="" Style="{StaticResource Muted}" FontSize="12" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Margin="0,1,0,0"/>
+                                </StackPanel>
+                            </DockPanel>
+                            <ProgressBar x:Name="ProgBar" Style="{StaticResource Progress}" Margin="0,10,0,0" IsIndeterminate="True"/>
                         </StackPanel>
                     </Border>
                 </Grid>
@@ -2243,6 +2327,36 @@
                         </DockPanel>
                         <Border x:Name="SpotlightLine" Height="1" Background="{DynamicResource Line}" Visibility="Collapsed"/>
                         <StackPanel x:Name="SpotlightResults" Margin="6"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Dialog in the theme (Show-Ask): replaces the white Windows message boxes -->
+            <Grid x:Name="Ask" Grid.ColumnSpan="2" Visibility="Collapsed">
+                <Border x:Name="AskDim" Background="#99000000" CornerRadius="14"/>
+                <Border x:Name="AskCard" Background="{DynamicResource Popup}" BorderBrush="{DynamicResource FillHover}" BorderThickness="1" CornerRadius="14" Width="460" MaxWidth="560"
+                        VerticalAlignment="Center" HorizontalAlignment="Center" Padding="24,22" RenderTransformOrigin="0.5,0.5" KeyboardNavigation.TabNavigation="Cycle">
+                    <Border.Effect><DropShadowEffect BlurRadius="30" ShadowDepth="6" Opacity="0.5"/></Border.Effect>
+                    <Border.RenderTransform><ScaleTransform x:Name="AskScale"/></Border.RenderTransform>
+                    <StackPanel>
+                        <DockPanel>
+                            <Border x:Name="AskIconBox" DockPanel.Dock="Left" Width="40" Height="40" CornerRadius="10" BorderThickness="1" Margin="0,0,14,0" VerticalAlignment="Top"
+                                    Background="{DynamicResource AccentSoft}" BorderBrush="{DynamicResource AccentLine}">
+                                <TextBlock x:Name="AskIcon" Style="{StaticResource TileGlyph}" FontSize="18" Text="&#xE9CE;"/>
+                            </Border>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock x:Name="AskTitle" Text="Akati OS Center" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                <TextBlock x:Name="AskText" Text="" Foreground="{DynamicResource Text3}" TextWrapping="Wrap" Margin="0,6,0,0" LineHeight="19"/>
+                            </StackPanel>
+                        </DockPanel>
+                        <ScrollViewer MaxHeight="240" VerticalScrollBarVisibility="Auto" Margin="54,10,0,0" Focusable="False">
+                            <StackPanel x:Name="AskList"/>
+                        </ScrollViewer>
+                        <TextBlock x:Name="AskNote" Text="" Style="{StaticResource Muted}" FontSize="12" Margin="54,8,0,0" Visibility="Collapsed"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+                            <Button x:Name="AskSecondary" Style="{StaticResource Outline}" MinWidth="96" Margin="0,0,8,0" Content="No"/>
+                            <Button x:Name="AskPrimary" Style="{StaticResource Primary}" MinWidth="96" Content="Yes"/>
+                        </StackPanel>
                     </StackPanel>
                 </Border>
             </Grid>

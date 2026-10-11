@@ -190,6 +190,14 @@ if ($Screenshot) {
     $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 140)); $sv.UpdateLayout(); Save-Shot 'boost-en-scan.png'
     $sv.ScrollToVerticalOffset(0); $ui.BoostAppsPanel.Visibility = 'Collapsed'; $ui.GameScanPanel.Visibility = 'Collapsed'
     Show-Keys; Save-Shot 'keys-en.png'; $ui.Keys.Visibility = 'Collapsed'
+    # The dialog in the theme (a sample profile with three changes, one needs a restart) and the progress card
+    $askLines = @(((T 'tw.gamemode') + ': ' + (T 'profile.on')), ((T 'tw.timer') + ': ' + (T 'profile.on') + '  (' + (T 'tw.badge.restart') + ')'), ((T 'tw.mouseaccel') + ': ' + (T 'profile.off')))
+    $ui.NavTweaks.IsChecked = $true
+    Set-AskContent ((T 'profile.ask') -f (T 'profile.gaming'), 3) 'YesNo' 'Warning' $askLines (T 'profile.restart'); Save-Shot 'dialog-en.png'
+    Set-AskContent (T 'restart.ask') 'YesNo' 'Question'; Save-Shot 'dialog-en-question.png'; $ui.Ask.Visibility = 'Collapsed'
+    $script:progSample = $true; $ui.NavGaming.IsChecked = $true
+    Show-Progress 'apps' ((T 'status.installing') -f 'Steam') 45 ((T 'stage.download') + ' 45%  ·  ' + ((T 'prog.queued') -f 2)) { param($a) } $null
+    Save-Shot 'progress-en.png'; Hide-Progress 'apps'; $script:progSample = $false
     # CPU balance and process rules with sample settings
     Save-Setting ProcessRules ([string[]]@('chrome|BelowNormal|', 'obs64||12'))
     Save-Setting BalanceLog ([string[]]@("$((Get-Date).AddMinutes(-5).ToString('s'))|chrome|41", "$((Get-Date).AddMinutes(-42).ToString('s'))|OneDrive|33"))

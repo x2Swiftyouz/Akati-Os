@@ -1,5 +1,17 @@
 # Changelog: Akati OS for Windows 10
 
+## Unreleased
+
+### Added
+- Akati OS Center: a progress card at the bottom right for long jobs (cleaner scan and clean, gaming app installs and updates with Cancel, the uninstall queue, the core and priority benchmarks)
+- Appearance: "Sounds and motion" with UI sounds (a soft click for switches and the sidebar, off at first) and Reduce motion (turns off the small animations)
+- A switch that turns on gives a short pulse
+
+### Changed
+- Akati OS Center questions and messages open in a dialog in the window theme (dimmed window, Enter confirms, Esc cancels) instead of the white Windows message box. Lists, like the switches a profile changes or the programs to uninstall, show as bullet points
+- The Akati OS banner at the top of the sidebar follows the accent color and the style presets
+- Appearance: the theme previews always show the whole picture, so the Akati OS name is not cut off in a wide window
+
 ## v1.11.0
 
 ### Added

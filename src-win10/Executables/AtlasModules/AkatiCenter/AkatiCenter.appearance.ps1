@@ -30,11 +30,23 @@ function Add-ThemeCards {
         $card = New-Object System.Windows.Controls.Border
         $card.Style = $window.FindResource('Card'); $card.Margin = '8,0'; $card.Padding = '12'; $card.BorderThickness = 2
         $stack = New-Object System.Windows.Controls.StackPanel
+        # The whole picture is shown (Uniform), so the Akati OS name in its center is never cut off in a wide window.
+        # The space beside it is filled with the same picture, blurred and darker.
         $preview = New-Object System.Windows.Controls.Border
         $preview.CornerRadius = 8; $preview.Height = 130; $preview.ClipToBounds = $true; $preview.SetResourceReference([System.Windows.Controls.Border]::BackgroundProperty, 'Fill')
+        $source = Get-Image (Join-Path $wallpapers $th.Image) 480
+        $fill = New-Object System.Windows.Controls.Grid
+        if ($source) {
+            $back = New-Object System.Windows.Controls.Border
+            $backBrush = New-Object System.Windows.Media.ImageBrush $source; $backBrush.Stretch = 'UniformToFill'
+            $back.Background = $backBrush; $back.Opacity = 0.45; $back.Margin = '-12'
+            $back.Effect = New-Object System.Windows.Media.Effects.BlurEffect -Property @{ Radius = 16 }
+            [void]$fill.Children.Add($back)
+        }
         $img = New-Object System.Windows.Controls.Image
-        $img.Stretch = 'UniformToFill'; $img.Source = Get-Image (Join-Path $wallpapers $th.Image) 480
-        $preview.Child = $img
+        $img.Stretch = 'Uniform'; $img.Source = $source
+        [void]$fill.Children.Add($img)
+        $preview.Child = $fill
         $name = New-Text (T "theme.$($th.Key)") 14 'SemiBold' "t:theme.$($th.Key)"; $name.Margin = '2,12,0,0'
         $desc = New-Text '' 12; $desc.Foreground = $window.FindResource('MutedBrush'); $desc.Margin = '2,2,0,10'
         if ($th.Key -eq 'slideshow') { $desc.Tag = 't:theme.slideshow.d'; $desc.Text = T 'theme.slideshow.d' } else { $desc.Text = ' ' }
@@ -379,6 +391,16 @@ function Add-PresetButtons {
         [void]$ui.PresetPanel.Children.Add($btn)
     }
 }
+
+# Sounds and motion: a soft click for switches and the sidebar (off at first) and Reduce motion (AkatiCenter.ui.ps1)
+$ui.UiSoundsToggle.IsChecked = $script:uiSounds
+$ui.ReduceMotionToggle.IsChecked = $script:reduceMotion
+$ui.UiSoundsToggle.Add_Click({
+    $script:uiSounds = [bool]$this.IsChecked
+    # The click handler of the window runs after this one, so turning it on already plays the first click
+    Save-Setting UiSounds ([int]$script:uiSounds)
+})
+$ui.ReduceMotionToggle.Add_Click({ $script:reduceMotion = [bool]$this.IsChecked; Save-Setting ReduceMotion ([int]$script:reduceMotion) })
 
 function Initialize-Appearance {
     if ($script:appearanceBuilt) { return }

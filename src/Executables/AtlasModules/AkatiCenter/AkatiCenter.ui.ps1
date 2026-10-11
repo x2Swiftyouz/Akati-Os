@@ -123,7 +123,7 @@ function Show-Progress([string]$owner, [string]$title, [int]$percent = -1, [stri
     # Screenshot mode: only the sample card (jobs started there never finish, the timer does not run)
     if ($Screenshot -and !$script:progSample) { return }
     $shown = $ui.ProgCard.Visibility -eq 'Visible'
-    $same = $script:prog -and $script:prog.Owner -eq $owner
+    $same = $script:prog -and $script:prog.Owner -eq $owner -and [object]::ReferenceEquals($script:prog.Data, $data)
     $script:prog = @{ Owner = $owner; Cancel = $cancel; Data = $data }
     if ($ui.ProgTitle.Text -ne $title) { $ui.ProgTitle.Text = $title }
     if ($ui.ProgDetail.Text -ne $detail) { $ui.ProgDetail.Text = $detail }

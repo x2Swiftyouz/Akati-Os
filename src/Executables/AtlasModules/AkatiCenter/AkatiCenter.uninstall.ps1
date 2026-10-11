@@ -155,6 +155,10 @@ function Start-UninstItem($it, [switch]$NoAsk) {
     $script:uninstBusy = $true
     $it.Button.IsEnabled = $false; $it.Button.Content = T 'uninstalling'
     Set-Status ((T 'uninst.running') -f $it.Name) $true
+    # Progress card: one program, or the place in the queue ($script:uninstDone counts the finished ones of this run)
+    $all = [int]$script:uninstDone + 1 + $script:uninstQueue.Count
+    if ($all -gt 1) { Show-Progress 'uninst' ((T 'uninst.running') -f $it.Name) ([int](100 * [int]$script:uninstDone / $all)) ((T 'prog.of') -f ([int]$script:uninstDone + 1), $all) }
+    else { Show-Progress 'uninst' ((T 'uninst.running') -f $it.Name) }
     if ($it.Kind -eq 'store') {
         Start-Work { param($pkg) try { Remove-AppxPackage -Package $pkg -ErrorAction Stop; '' } catch { $_.Exception.Message } } @($it.Package) { param($r, $it) Complete-UninstItem $it ([string](Get-LastOutput $r)) } $it
     } else {
@@ -177,14 +181,15 @@ function Complete-UninstItem($it, [string]$err) {
         $left = @(Find-Leftovers $it)
         if ($left.Count) { Show-Leftovers $it $left }
     }
-    if ($script:uninstQueue.Count) { Start-UninstItem ($script:uninstQueue.Dequeue()) -NoAsk } else { Update-UninstView }
+    $script:uninstDone = [int]$script:uninstDone + 1
+    if ($script:uninstQueue.Count) { Start-UninstItem ($script:uninstQueue.Dequeue()) -NoAsk } else { $script:uninstDone = 0; Hide-Progress 'uninst'; Update-UninstView }
 }
 $ui.UninstSelected.Add_Click({
     $chosen = @($script:uninstItems | Where-Object { $_.Check.IsChecked })
     if (!$chosen.Count) { return }
     # The names as a list in the dialog
     $names = @($chosen | ForEach-Object { $_.Name })
-    if ((Show-Ask ((T 'uninst.selectedask') -f $chosen.Count, '').Trim() 'YesNo' 'Question' $names) -ne 'Yes') { return }
+    if ((Show-Ask $(((T 'uninst.selectedask') -f $chosen.Count, '').Trim()) 'YesNo' 'Question' $names) -ne 'Yes') { return }
     foreach ($it in $chosen) { $it.Check.IsChecked = $false }
     Update-UninstBatch
     $first = $chosen[0]

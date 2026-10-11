@@ -404,9 +404,10 @@ $ui.IrqBench.Add_Click({
     $ui.IrqBenchState.Tag = $null
     $ui.IrqBenchState.Text = (T 'irq.bench.running') -f [int][Math]::Ceiling($n * $rounds * ($ms + 2) / 1000)
     Set-Status $ui.IrqBenchState.Text $true
+    Show-Progress 'irq' (T 'prog.irq') -1 $ui.IrqBenchState.Text
     Start-Work { param($n, $rounds, $ms) , [AkatiOS.Cores]::Run($n, $rounds, $ms) } @($n, $rounds, $ms) {
         param($r)
-        $ui.IrqBench.IsEnabled = $true; Set-Status (T 'ready')
+        $ui.IrqBench.IsEnabled = $true; Set-Status (T 'ready'); Hide-Progress 'irq'
         $res = Get-LastOutput $r
         if ($res -is [double[]] -or $res -is [object[]]) { Show-IrqCores ([double[]]$res) } else { $ui.IrqBenchState.Text = T 'irq.failed' }
     } $null

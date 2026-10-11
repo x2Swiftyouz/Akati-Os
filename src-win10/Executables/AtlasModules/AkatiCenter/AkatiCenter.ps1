@@ -173,7 +173,16 @@ function Import-Code([string]$name, [string]$source) {
 $logoPath = Join-Path $appDir 'logo.png'
 $ui.LogoImage.Source = Get-Image $logoPath 128
 $ui.AboutLogo.Source = Get-Image $logoPath 256
-$ui.BrandImage.Source = Get-Image (Join-Path $wallpapers 'akatios-lockscreen.png') 600
+# The sidebar banner picture in gray: a texture on the accent gradient (Update-BrandBanner), without its own color
+function Set-BrandPicture($img) {
+    if (!$img) { return }
+    try {
+        $gray = New-Object System.Windows.Media.Imaging.FormatConvertedBitmap $img, ([System.Windows.Media.PixelFormats]::Gray8), $null, 0
+        $gray.Freeze()
+        $ui.BrandImage.Source = $gray
+    } catch { $ui.BrandImage.Source = $img }
+}
+Set-BrandPicture (Get-Image (Join-Path $wallpapers 'akatios-lockscreen.png') 600)
 $ui.HeroImage.Source = Get-Image (Join-Path $wallpapers 'akatios-lockscreen.png') 1200
 try { $window.Icon = Get-Image $logoPath 64 } catch { }
 
@@ -271,6 +280,14 @@ function Get-LookName {
 # The accent as a soft tint (selected sidebar item, icon boxes), a border and a text color. The text color is the
 # light shade on the dark look and the base shade on the light look, so it stays readable on both.
 $script:accentPair = @{ Base = '#8A3FD6'; Light = '#B07CF0' }
+# Sidebar banner: a gradient from the accent color to a darker shade of it (45 percent: dark enough for the white logo text)
+function Update-BrandBanner {
+    $base = [System.Windows.Media.ColorConverter]::ConvertFromString($script:accentPair.Base)
+    $dark = [System.Windows.Media.Color]::FromRgb([byte]($base.R * 0.45), [byte]($base.G * 0.45), [byte]($base.B * 0.45))
+    $brush = [System.Windows.Media.LinearGradientBrush]::new($dark, $base, [System.Windows.Point]::new(0, 1), [System.Windows.Point]::new(1, 0))
+    $brush.Freeze()
+    $ui.Brand.Background = $brush
+}
 function Update-AccentBrushes {
     $base = [System.Windows.Media.ColorConverter]::ConvertFromString($script:accentPair.Base)
     $light = $script:look -eq 'light'
@@ -280,6 +297,7 @@ function Update-AccentBrushes {
     $res['AccentText'] = [System.Windows.Media.SolidColorBrush]::new($text)
     $res['AccentSoft'] = [System.Windows.Media.SolidColorBrush]::new([System.Windows.Media.Color]::FromArgb($(if ($light) { 0x1F } else { 0x26 }), $base.R, $base.G, $base.B))
     $res['AccentLine'] = [System.Windows.Media.SolidColorBrush]::new([System.Windows.Media.Color]::FromArgb($(if ($light) { 0x70 } else { 0x80 }), $base.R, $base.G, $base.B))
+    Update-BrandBanner
 }
 function Set-CenterLook([string]$name) {
     $script:look = $name
@@ -355,6 +373,8 @@ function Update-NavBadges {
 # ---------------------------------------------------------------------------------------------
 # The pages, one file each (dot-sourced: they share this script's variables and functions)
 # ---------------------------------------------------------------------------------------------
+# First the dialog, the progress card and the switch effects that the pages use
+. (Join-Path $appDir 'AkatiCenter.ui.ps1')
 . (Join-Path $appDir 'AkatiCenter.dashboard.ps1')
 . (Join-Path $appDir 'AkatiCenter.gaming.ps1')
 . (Join-Path $appDir 'AkatiCenter.boost.ps1')
@@ -418,8 +438,8 @@ function Show-Page([string]$name) {
         $el = $ui["Page$(Get-PageId $p)"]
         if ($p -ne $name) { $el.Visibility = 'Collapsed'; continue }
         $el.Visibility = 'Visible'
-        # Fade and slide in
-        if (!$Screenshot) {
+        # Fade and slide in (not with Reduce motion)
+        if (Test-Motion) {
             $ease = New-Object System.Windows.Media.Animation.CubicEase
             $ease.EasingMode = 'EaseOut'
             $fade = New-Object System.Windows.Media.Animation.DoubleAnimation 0, 1, (New-Object System.Windows.Duration ([TimeSpan]::FromMilliseconds(220)))
@@ -576,6 +596,8 @@ function Get-SpotlightItems {
     & $add (T 'act.update') (Get-Both 'act.update') (T 'spot.action') ([char]0xE895) { param($d) $ui.NavAbout.IsChecked = $true; Start-UpdateCheck } $null
     & $add (T 'act.lang') (Get-Both 'act.lang') (T 'spot.action') ([char]0xE774) { param($d) $keys = @($languages.Keys); Set-AppLanguage $keys[([array]::IndexOf($keys, $lang) + 1) % $keys.Count] } $null
     & $add (T 'act.report') (Get-Both 'act.report') (T 'spot.action') ([char]0xE7BA) { param($d) $ui.ReportButton.RaiseEvent((New-Object System.Windows.RoutedEventArgs ([System.Windows.Controls.Primitives.ButtonBase]::ClickEvent))) } $null
+    & $add (T 'ui.sounds') ((Get-Both 'ui.sounds') + ' click sound') (T 'spot.setting') ([char]0xE767) { param($d) Show-Element 'appearance' $d } $ui.UiSoundsRow (Get-Both 'ui.sounds.d')
+    & $add (T 'ui.motion') ((Get-Both 'ui.motion') + ' animation') (T 'spot.setting') ([char]0xE7B3) { param($d) Show-Element 'appearance' $d } $ui.ReduceMotionRow (Get-Both 'ui.motion.d')
     & $add (T 'keys.title') ((Get-Both 'keys.title') + ' keyboard hotkeys') (T 'spot.action') ([char]0xE765) { param($d) Show-Keys } $null
     & $add (T 'irq.title') ((Get-Both 'irq.title') + ' msi affinity interrupt irq') (T 'spot.setting') ([char]0xE964) { param($d)
         if ($ui.IrqPanel.Visibility -ne 'Visible') { $ui.IrqShow.RaiseEvent((New-Object System.Windows.RoutedEventArgs ([System.Windows.Controls.Primitives.ButtonBase]::ClickEvent))) }
@@ -853,6 +875,8 @@ $window.Add_PreviewKeyDown({
     param($sender, $e)
     $ctrl = ([System.Windows.Input.Keyboard]::Modifiers -band [System.Windows.Input.ModifierKeys]::Control) -ne 0
     $key = [string]$e.Key
+    # The dialog (Show-Ask) takes the keys while it is open: Enter, Esc, Tab
+    if ($ui.Ask.Visibility -eq 'Visible') { Invoke-AskKey $e; return }
     if ($key -eq 'F1') { Start-Tour; $e.Handled = $true; return }
     # ?: the keyboard shortcuts (not while typing in a text box)
     if ($key -eq 'OemQuestion' -and [System.Windows.Input.Keyboard]::FocusedElement -isnot [System.Windows.Controls.TextBox] -and $ui.Welcome.Visibility -ne 'Visible') {
@@ -1112,6 +1136,8 @@ $window.Add_Loaded({
 # Where the window was and the page it showed, for the next start
 $window.Add_LocationChanged({ if (!$Screenshot) { $script:posAt = (Get-Date).AddSeconds(2) } })
 $window.Add_Closing({
+    # An open dialog answers No (or Cancel), so the code that waits for it can finish
+    if ($script:askFrame) { Close-Ask $script:askResults.Cancel }
     if ($Screenshot) { return }
     try {
         if (!$script:full -and $window.WindowState -eq 'Normal') { Save-Setting WindowX ([int]$window.Left); Save-Setting WindowY ([int]$window.Top) }

@@ -316,7 +316,7 @@ function Start-NextApp {
     $next = $apps | Where-Object { $_.State -eq 'queued' } | Select-Object -First 1
     if (!$next) { Set-Status (T 'ready'); return }
     $mode = if ($next.QueuedMode) { $next.QueuedMode } else { 'install' }
-    $next.State = $mode; $next.Stage = $null
+    $next.State = $mode; $next.Stage = $null; $next.Percent = -1
     $next.Shared = [hashtable]::Synchronized(@{ Pid = 0 })
     $progressFile = Join-Path $progressDir "GAMEAPPS-$($next.Key).progress"
     Remove-Item -LiteralPath $progressFile -Force -ErrorAction SilentlyContinue
@@ -395,6 +395,7 @@ function Update-AppProgress {
         if (!$line) { continue }
         $stage, $percent = $line.Trim() -split '\|'
         $percent = [int]$percent
+        $app.Percent = $percent
         if ($stage -ne $app.Stage) {
             $app.Stage = $stage
             if ($stage -eq 'finish') { Start-NextApp }
@@ -407,6 +408,13 @@ function Update-AppProgress {
             $app.Sub.Text = T "stage.$stage"
         }
     }
+    # Progress card: the app that installs or updates now, with Cancel (Stop-AppJob, like the square on its button)
+    if ($running) {
+        $pct = if ($running.State -eq 'install' -and $running.Stage -eq 'download' -and $running.Percent -ge 0) { [int]$running.Percent } else { -1 }
+        $waiting = @($apps | Where-Object { $_.State -eq 'queued' }).Count
+        $detail = [string]$running.Sub.Text + $(if ($waiting) { '  ·  ' + ((T 'prog.queued') -f $waiting) } else { '' })
+        Show-Progress 'apps' ((T $(if ($running.State -eq 'update') { 'status.updating' } else { 'status.installing' })) -f $running.Name) $pct $detail { param($a) Stop-AppJob $a } $running
+    } else { Hide-Progress 'apps' }
 }
 
 # The "..." menu of an installed app

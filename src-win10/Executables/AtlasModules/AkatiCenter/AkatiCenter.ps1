@@ -339,9 +339,11 @@ function Update-NavBadges {
             $badge.MinWidth = 18; $badge.Height = 18; $badge.CornerRadius = 9; $badge.Padding = '5,0'; $badge.Margin = '8,0,0,0'; $badge.VerticalAlignment = 'Center'
             $badge.SetResourceReference([System.Windows.Controls.Border]::BackgroundProperty, 'Accent')
             $num = New-Object System.Windows.Controls.TextBlock
-            $num.FontSize = 11; $num.FontWeight = 'SemiBold'; $num.Foreground = [System.Windows.Media.Brushes]::White; $num.HorizontalAlignment = 'Center'; $num.VerticalAlignment = 'Center'
+            $num.FontSize = 11; $num.FontWeight = 'SemiBold'; $num.Foreground = [System.Windows.Media.Brushes]::White; $num.HorizontalAlignment = 'Center'; $num.VerticalAlignment = 'Center'; $num.Margin = '0,0,0,1'
             $badge.Child = $num
             [void]$panel.Children.Add($badge)
+            # Page name and badge share one center line
+            $panel.Children[1].VerticalAlignment = 'Center'
         }
         $n = [int]$script:navBadges[$page]
         $b = $panel.Children[2]

@@ -364,7 +364,7 @@ function Show-TopApps {
             $btn.Style = $window.FindResource('Secondary'); $btn.Margin = '14,0,0,0'; $btn.Content = T 'top.end'; $btn.Tag = $p
             $btn.Add_Click({
                 $t = $this.Tag
-                $answer = [System.Windows.MessageBox]::Show(((T 'top.confirm') -f $t.Name), 'Akati OS Center', 'YesNo', 'Question')
+                $answer = (Show-Ask ((T 'top.confirm') -f $t.Name) 'YesNo' 'Question')
                 if ($answer -eq 'Yes') {
                     try { Stop-Process -Id $t.Pids -Force -ErrorAction Stop; Set-Status ((T 'status.ended') -f $t.Name) } catch { Set-Status $_.Exception.Message }
                 }

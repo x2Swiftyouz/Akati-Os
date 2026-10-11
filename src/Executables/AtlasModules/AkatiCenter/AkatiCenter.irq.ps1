@@ -339,7 +339,7 @@ function Invoke-IrqApply($d) {
     $w = $d.Want
     # Storage controllers hold Windows itself: a wrong MSI setting there can stop Windows from starting
     if ($d.Class -in 'SCSIAdapter', 'HDC' -and ($w.Msi -ne ($d.Msi -eq 1) -or $w.Limit -ne $d.Limit)) {
-        if ([System.Windows.MessageBox]::Show(((T 'irq.storageask') -f $d.Name), 'Akati OS Center', 'YesNo', 'Warning') -ne 'Yes') { return }
+        if ((Show-Ask ((T 'irq.storageask') -f $d.Name) 'YesNo' 'Warning') -ne 'Yes') { return }
     }
     try {
         if (!(Write-Irq $d $w)) { Set-Status (T 'irq.nochange'); return }
@@ -362,7 +362,7 @@ $ui.IrqShow.Add_Click({
     if (!$script:irqLoaded) { $script:irqLoaded = $true; Start-IrqLoad }
 })
 $ui.IrqUndoAll.Add_Click({
-    if ([System.Windows.MessageBox]::Show((T 'irq.undoall.ask'), 'Akati OS Center', 'YesNo', 'Question') -ne 'Yes') { return }
+    if ((Show-Ask (T 'irq.undoall.ask') 'YesNo' 'Question') -ne 'Yes') { return }
     foreach ($name in @((Get-Item $irqBackupKey -ErrorAction SilentlyContinue).Property)) { try { Restore-Irq ($name -replace '#', '\') } catch { } }
     Set-RestartNeeded; Set-Status (T 'irq.undoneall'); Start-IrqLoad
 })

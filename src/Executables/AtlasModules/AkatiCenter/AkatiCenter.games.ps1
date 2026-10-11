@@ -74,7 +74,7 @@ function Start-Game([string]$path) {
     $need = Get-GameProfile $path 'hvci'
     if ($null -ne $need -and ([bool]$need) -ne ((Get-RegValue $hvciKey 'Enabled') -eq 1)) {
         $ask = (T 'games.hvciask') -f $name, (T $(if ($need) { 'games.on' } else { 'games.off' }))
-        if ([System.Windows.MessageBox]::Show($ask, 'Akati OS Center', 'YesNo', 'Question') -eq 'Yes') { Set-AntiCheat ([bool]$need); return }
+        if ((Show-Ask $ask 'YesNo' 'Question') -eq 'Yes') { Set-AntiCheat ([bool]$need); return }
     }
     if ((Get-GameProfile $path 'boost') -eq 1 -and !(Test-Boost)) {
         try { Start-Boost; Show-BoostEffect } catch { }
@@ -497,7 +497,7 @@ $ui.FivemPause.Add_Click({
 # Network reset: flush the DNS cache and reset the Winsock catalog. Winsock is read when Windows starts, so a
 # restart is needed (the restart bar shows).
 $ui.FivemNet.Add_Click({
-    if (!$Screenshot -and [System.Windows.MessageBox]::Show((T 'fivem.net.ask'), 'Akati OS Center', 'YesNo', 'Warning') -ne 'Yes') { return }
+    if (!$Screenshot -and (Show-Ask (T 'fivem.net.ask') 'YesNo' 'Warning') -ne 'Yes') { return }
     Add-FivemLog (T 'fivem.log.net') 'step'
     $ui.FivemNet.IsEnabled = $false
     Start-Work {

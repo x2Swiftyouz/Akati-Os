@@ -150,7 +150,7 @@ function Start-UninstItem($it, [switch]$NoAsk) {
     if ($script:uninstBusy) { $script:uninstQueue.Enqueue($it); Set-Status ((T 'uninst.queued') -f $it.Name); return }
     if (!$NoAsk) {
         $ask = if ($it.Shared) { (T 'uninst.sharedask') -f $it.Name } else { (T 'uninstall.confirm') -f $it.Name }
-        if ([System.Windows.MessageBox]::Show($ask, 'Akati OS Center', 'YesNo', $(if ($it.Shared) { 'Warning' } else { 'Question' })) -ne 'Yes') { return }
+        if ((Show-Ask $ask 'YesNo' $(if ($it.Shared) { 'Warning' } else { 'Question' })) -ne 'Yes') { return }
     }
     $script:uninstBusy = $true
     $it.Button.IsEnabled = $false; $it.Button.Content = T 'uninstalling'
@@ -182,8 +182,9 @@ function Complete-UninstItem($it, [string]$err) {
 $ui.UninstSelected.Add_Click({
     $chosen = @($script:uninstItems | Where-Object { $_.Check.IsChecked })
     if (!$chosen.Count) { return }
-    $names = ($chosen | ForEach-Object { $_.Name }) -join "`n"
-    if ([System.Windows.MessageBox]::Show(((T 'uninst.selectedask') -f $chosen.Count, ("`n`n" + $names)), 'Akati OS Center', 'YesNo', 'Question') -ne 'Yes') { return }
+    # The names as a list in the dialog
+    $names = @($chosen | ForEach-Object { $_.Name })
+    if ((Show-Ask ((T 'uninst.selectedask') -f $chosen.Count, '').Trim() 'YesNo' 'Question' $names) -ne 'Yes') { return }
     foreach ($it in $chosen) { $it.Check.IsChecked = $false }
     Update-UninstBatch
     $first = $chosen[0]

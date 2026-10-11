@@ -99,7 +99,7 @@ $ui.UpdateDownload.Add_Click({
         }
         Set-Status ((T 'update.downloaded') -f $name)
         Start-Process explorer.exe -ArgumentList "/select,`"$($res.File)`""
-        [void][System.Windows.MessageBox]::Show(((T 'update.howto') -f $name), 'Akati OS Center', 'OK', 'Information')
+        [void](Show-Ask ((T 'update.howto') -f $name) 'OK' 'Information')
     } $name
 })
 $ui.QuickBoost.Add_Click({

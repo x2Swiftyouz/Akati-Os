@@ -176,7 +176,7 @@ function Invoke-DoctorFix([string]$k) {
         }
         'disk' { $ui.NavCleaner.IsChecked = $true }
         { $_ -in 'restart', 'hvci' } {
-            if ([System.Windows.MessageBox]::Show((T 'restart.ask'), 'Akati OS Center', 'YesNo', 'Question') -eq 'Yes') { Restart-Computer -Force }
+            if ((Show-Ask (T 'restart.ask') 'YesNo' 'Question') -eq 'Yes') { Restart-Computer -Force }
         }
         'devices' { Start-Process devmgmt.msc }
         'crash' { $ui.CrashList.BringIntoView() }
@@ -189,7 +189,7 @@ function Invoke-DoctorFix([string]$k) {
             Update-RefreshRow; Update-Chips; Start-Health
         }
         # The BIOS setting cannot be changed from Windows: how to turn it on
-        'xmp' { [void][System.Windows.MessageBox]::Show((T 'doc.xmp.howto'), 'Akati OS Center', 'OK', 'Information') }
+        'xmp' { [void](Show-Ask (T 'doc.xmp.howto') 'OK' 'Information') }
     }
 }
 function Show-HealthInfo($r) {
@@ -325,7 +325,7 @@ $ui.BackupLoad.Add_Click({
     if (!$d.ShowDialog($window)) { return }
     $data = try { [IO.File]::ReadAllText($d.FileName) | ConvertFrom-Json } catch { $null }
     if (!$data -or !$data.AkatiOS) { Set-Status (T 'backup.bad'); return }
-    if ([System.Windows.MessageBox]::Show((T 'backup.ask'), 'Akati OS Center', 'YesNo', 'Question') -ne 'Yes') { return }
+    if ((Show-Ask (T 'backup.ask') 'YesNo' 'Question') -ne 'Yes') { return }
     if (!(Test-Path $settingsKey)) { New-Item -Path $settingsKey -Force | Out-Null }
     foreach ($p in @($data.Settings.PSObject.Properties)) {
         $v = $p.Value

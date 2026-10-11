@@ -305,12 +305,13 @@ function Invoke-TweakProfile([string]$title, $map) {
     }
     if (!$changes.Count) { Set-Status ((T 'profile.same') -f $title); Add-Log 'TweakLog' ((T 'profile.same') -f $title); return }
     $restart = @($changes | Where-Object { $_.Tweak.Restart }).Count -gt 0
-    $lines = foreach ($c in $changes) {
-        [string][char]0x2022 + '  ' + (T "tw.$($c.Tweak.Key)") + ': ' + (T $(if ($c.On) { 'profile.on' } else { 'profile.off' })) + $(if ($c.Tweak.Restart) { '  (' + (T 'tw.badge.restart') + ')' } else { '' })
-    }
-    $msg = ((T 'profile.ask') -f $title, $changes.Count) + "`r`n`r`n" + ($lines -join "`r`n")
-    if ($restart) { $msg += "`r`n`r`n" + (T 'profile.restart') }
-    if (!$Screenshot -and [System.Windows.MessageBox]::Show($msg, 'Akati OS Center', 'YesNo', $(if ($restart) { 'Warning' } else { 'Question' })) -ne 'Yes') {
+    # One line per switch in the dialog list
+    $lines = @(foreach ($c in $changes) {
+        (T "tw.$($c.Tweak.Key)") + ': ' + (T $(if ($c.On) { 'profile.on' } else { 'profile.off' })) + $(if ($c.Tweak.Restart) { '  (' + (T 'tw.badge.restart') + ')' } else { '' })
+    })
+    $msg = (T 'profile.ask') -f $title, $changes.Count
+    $note = if ($restart) { T 'profile.restart' } else { '' }
+    if (!$Screenshot -and (Show-Ask $msg 'YesNo' $(if ($restart) { 'Warning' } else { 'Question' }) $lines $note) -ne 'Yes') {
         Add-Log 'TweakLog' ((T 'profile.cancel') -f $title); return
     }
     Add-Log 'TweakLog' ((T 'profile.applying') -f $title, $changes.Count)
@@ -338,7 +339,7 @@ $ui.ProfileSave.Add_Click({
     # Like the backup: switches that are read and not slow (Microsoft Store)
     $parts = @(foreach ($t in $tweaks) { if ($t.Toggle -and $t.Toggle.IsEnabled -and !$t.Slow -and $null -ne $t.Toggle.IsChecked) { '{0}={1}' -f $t.Key, [int][bool]$t.Toggle.IsChecked } })
     if (!$parts.Count) { return }
-    if (!$Screenshot -and (Get-CustomProfile).Count -and [System.Windows.MessageBox]::Show((T 'profile.replace'), 'Akati OS Center', 'YesNo', 'Question') -ne 'Yes') { return }
+    if (!$Screenshot -and (Get-CustomProfile).Count -and (Show-Ask (T 'profile.replace') 'YesNo' 'Question') -ne 'Yes') { return }
     Save-Setting TweakProfile ($parts -join ';')
     Save-Setting TweakProfileAt ((Get-Date).ToString('s', [Globalization.CultureInfo]::InvariantCulture))
     Update-ProfileTiles
@@ -461,7 +462,7 @@ function Invoke-Tweak($t, [bool]$on) {
 # A bar in the title bar when a change needs a restart, with "Restart now"
 function Set-RestartNeeded { if (!$Screenshot) { $ui.RestartBar.Visibility = 'Visible' } }
 $ui.RestartNow.Add_Click({
-    if ([System.Windows.MessageBox]::Show((T 'restart.ask'), 'Akati OS Center', 'YesNo', 'Question') -eq 'Yes') { Restart-Computer -Force }
+    if ((Show-Ask (T 'restart.ask') 'YesNo' 'Question') -eq 'Yes') { Restart-Computer -Force }
 })
 
 # A short message at the bottom of the page after a switch changed, with Undo
@@ -649,7 +650,7 @@ if ($Screenshot) { Initialize-Tweaks }
 
 # Reset: every tweak that has a Windows default (Default) goes back to it, and DNS to Automatic
 $ui.TweaksReset.Add_Click({
-    if ([System.Windows.MessageBox]::Show((T 'tweaks.resetask'), 'Akati OS Center', 'YesNo', 'Question') -ne 'Yes') { return }
+    if ((Show-Ask (T 'tweaks.resetask') 'YesNo' 'Question') -ne 'Yes') { return }
     Add-Log 'TweakLog' (T 'tweaks.reset')
     foreach ($t in $tweaks) {
         if (!$t.ContainsKey('Default') -or !$t.Toggle -or !$t.Toggle.IsEnabled) { continue }
@@ -691,7 +692,7 @@ function Set-AntiCheat([bool]$on) {
     $running = Test-HvciRunning
     $ask = if ($null -ne $running) { $on -ne $running } else { $changed }
     if ($ask) { Set-RestartNeeded }
-    if ($ask -and [System.Windows.MessageBox]::Show((T 'ac.restartask'), 'Akati OS Center', 'YesNo', 'Question') -eq 'Yes') { Restart-Computer -Force }
+    if ($ask -and (Show-Ask (T 'ac.restartask') 'YesNo' 'Question') -eq 'Yes') { Restart-Computer -Force }
 }
 $ui.AcValorant.Add_Click({ Set-AntiCheat $true })
 $ui.AcFiveM.Add_Click({ Set-AntiCheat $false })

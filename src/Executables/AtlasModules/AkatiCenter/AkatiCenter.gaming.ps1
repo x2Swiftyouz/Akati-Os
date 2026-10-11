@@ -263,7 +263,7 @@ function Get-AppDetails($app) {
     return $app.Details
 }
 function Start-Uninstall($app) {
-    $answer = [System.Windows.MessageBox]::Show(((T 'uninstall.confirm') -f $app.Name), 'Akati OS Center', 'YesNo', 'Question')
+    $answer = (Show-Ask ((T 'uninstall.confirm') -f $app.Name) 'YesNo' 'Question')
     if ($answer -ne 'Yes') { return }
     $command = Find-Uninstaller $app
     if (!$command) { Set-Status ((T 'status.nouninstaller') -f $app.Name); Start-Process 'ms-settings:appsfeatures'; return }

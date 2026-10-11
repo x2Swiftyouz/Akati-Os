@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v1.12.0
 
 ### Added
 - Akati OS Center: a progress card at the bottom right for long jobs (cleaner scan and clean, gaming app installs and updates with Cancel, the uninstall queue, the core and priority benchmarks)

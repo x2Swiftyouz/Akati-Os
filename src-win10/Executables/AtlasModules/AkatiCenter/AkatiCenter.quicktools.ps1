@@ -91,3 +91,104 @@ function Update-ToolsColumns {
 }
 $ui.PageQuicktools.Add_SizeChanged({ Update-ToolsColumns })
 $ui.ToolsLogClear.Add_Click({ Clear-Log 'ToolsLog' })
+
+# ---------------------------------------------------------------------------------------------
+# Network use per app: the open connections of each process, every 2 seconds while this page is on screen.
+# Windows has no reliable per-app byte counter without event tracing (the I/O counters of a process also count
+# disk and other I/O), so the list shows what Windows does know: TCP connections, the remote addresses they go to,
+# and UDP ports (games often use UDP).
+# ---------------------------------------------------------------------------------------------
+$netUseWork = {
+    $by = @{}
+    $entry = { param($id) if (!$by.ContainsKey($id)) { $by[$id] = @{ Conn = 0; Remote = @{}; Udp = 0 } }; $by[$id] }
+    try { $tcp = @(Get-NetTCPConnection -State Established -ErrorAction Stop) } catch { return @{ Error = $_.Exception.Message } }
+    foreach ($c in $tcp) {
+        $remote = [string]$c.RemoteAddress
+        if ($remote -in '127.0.0.1', '::1' -or [int]$c.OwningProcess -le 4) { continue }
+        $e = & $entry ([int]$c.OwningProcess)
+        $e.Conn++; $e.Remote[$remote] = $true
+    }
+    try {
+        foreach ($u in @(Get-NetUDPEndpoint -ErrorAction Stop)) {
+            if ([string]$u.LocalAddress -in '127.0.0.1', '::1' -or [int]$u.OwningProcess -le 4) { continue }
+            $e = & $entry ([int]$u.OwningProcess); $e.Udp++
+        }
+    } catch { }
+    $list = @(foreach ($id in $by.Keys) {
+        $p = Get-Process -Id $id -ErrorAction SilentlyContinue
+        if (!$p) { continue }
+        $path = try { [string]$p.Path } catch { '' }
+        @{ Id = $id; Name = $p.ProcessName; Session = [int]$p.SessionId; Path = $path; Conn = $by[$id].Conn; Remote = $by[$id].Remote.Count; Udp = $by[$id].Udp }
+    })
+    @{ List = @($list | Sort-Object { $_.Conn }, { $_.Udp }, { $_.Remote } -Descending | Select-Object -First 15); Total = $list.Count }
+}
+$script:netRows = @{}; $script:netIcons = @{}
+$script:netBusy = $false; $script:netNext = [datetime]::MinValue
+# Akati OS Center ends a process only after asking, never a Windows or protected one (Test-ProtectedProcess)
+function Test-NetEndable($p) { $p.Id -ne $PID -and !(Test-ProtectedProcess $p.Name $p.Session $p.Path $windir) }
+function Show-NetUse($res) {
+    $script:netResult = $res
+    if ($res -isnot [hashtable]) { $ui.NetUseEmpty.Text = T 'netuse.loading'; $ui.NetUseEmpty.Visibility = 'Visible'; return }
+    if ($res.Error) { $ui.NetUseEmpty.Text = (T 'netuse.error') -f $res.Error; $ui.NetUseEmpty.Visibility = 'Visible'; $ui.NetUseList.Children.Clear(); return }
+    $list = @($res.List | Where-Object { $_ })
+    $ui.NetUseEmpty.Text = T 'netuse.none'
+    $ui.NetUseEmpty.Visibility = if ($list.Count) { 'Collapsed' } else { 'Visible' }
+    $ui.NetUseCount.Text = (T 'netuse.count') -f [int]$res.Total
+    $ui.NetUseList.Children.Clear()
+    $seen = @{}
+    foreach ($p in $list) {
+        # The rows stay between refreshes (the same process keeps its row, its icon and its button)
+        $key = '{0}|{1}' -f $p.Id, $p.Name
+        $seen[$key] = $true
+        $row = $script:netRows[$key]
+        if (!$row) {
+            $right = New-Object System.Windows.Controls.StackPanel; $right.Orientation = 'Horizontal'
+            $count = New-Text '' 12; $count.Style = $window.FindResource('MonoText'); $count.FontSize = 12; $count.VerticalAlignment = 'Center'
+            [void]$right.Children.Add($count)
+            $endable = Test-NetEndable $p
+            if ($endable) {
+                $end = New-Object System.Windows.Controls.Button
+                $end.Style = $window.FindResource('Pill'); $end.Padding = '12,4'; $end.Margin = '12,0,0,0'; $end.Content = T 'netuse.end'; $end.Tag = $p
+                $end.Add_Click({ Stop-NetApp $this.Tag })
+                [void]$right.Children.Add($end)
+            }
+            $row = New-Row ([string][char]0xE774) $p.Name $null $right $null
+            $row.Num = $count
+            if ($p.Path) {
+                if (!$script:netIcons.ContainsKey($p.Path)) { $script:netIcons[$p.Path] = Get-FileIcon @($p.Path) }
+                Set-RowIcon $row $script:netIcons[$p.Path]
+            }
+            if (!$endable) { $row.Row.ToolTip = T 'netuse.protected' }
+            $script:netRows[$key] = $row
+        }
+        $row.Title.Text = $p.Name
+        $row.Sub.Text = (T 'netuse.row') -f $p.Conn, $p.Remote, $p.Udp
+        $row.Num.Text = "PID $($p.Id)"
+        [void]$ui.NetUseList.Children.Add($row.Row)
+    }
+    foreach ($k in @($script:netRows.Keys)) { if (!$seen.ContainsKey($k)) { $script:netRows.Remove($k) } }
+    Update-Separators $ui.NetUseList
+}
+# Called by the window timer: every 2 seconds, only while Quick tools is on screen and the window is not minimized
+function Update-NetUse {
+    if ($Screenshot -or $script:netBusy -or $script:page -ne 'quicktools' -or $window.WindowState -eq 'Minimized' -or (Get-Date) -lt $script:netNext) { return }
+    $script:netBusy = $true
+    if (!$script:netResult) { Show-NetUse $null }
+    Start-Work $netUseWork @() {
+        param($r)
+        $script:netBusy = $false; $script:netNext = (Get-Date).AddSeconds(2)
+        if ($script:page -eq 'quicktools') { Show-NetUse (Get-LastOutput $r) }
+    } $null
+}
+function Stop-NetApp($p) {
+    # Checked again: the list can be up to 2 seconds old
+    $now = Get-Process -Id $p.Id -ErrorAction SilentlyContinue
+    if (!$now -or $now.ProcessName -ne $p.Name -or !(Test-NetEndable $p)) { Set-Status ((T 'netuse.gone') -f $p.Name); return }
+    if ((Show-Ask ((T 'netuse.end.ask') -f $p.Name, $p.Id) 'YesNo' 'Warning' @() (T 'netuse.end.note')) -ne 'Yes') { return }
+    try {
+        Stop-Process -Id $p.Id -Force -ErrorAction Stop
+        Set-Status ((T 'netuse.ended') -f $p.Name)
+        Add-Log 'ToolsLog' ((T 'netuse.ended') -f $p.Name)
+        $script:netNext = [datetime]::MinValue
+    } catch { Set-Status $_.Exception.Message }
+}

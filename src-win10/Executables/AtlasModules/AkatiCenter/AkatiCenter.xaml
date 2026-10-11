@@ -1475,6 +1475,62 @@
                                     <StackPanel x:Name="PingList"/>
                                 </StackPanel>
                             </Border>
+                            <!-- Internet speed: download, upload, ping and jitter to speed.cloudflare.com over HTTPS, and the last 10 results -->
+                            <Border Style="{StaticResource Card}" Margin="0,0,0,16">
+                                <StackPanel x:Name="SpeedSection">
+                                    <DockPanel>
+                                        <Button x:Name="SpeedStart" DockPanel.Dock="Right" Style="{StaticResource Secondary}" VerticalAlignment="Top">
+                                            <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xEC4A;" FontSize="13" Margin="0,0,8,0"/><TextBlock Tag="t:speed.start" Text="Start"/></StackPanel>
+                                        </Button>
+                                        <StackPanel>
+                                            <TextBlock Tag="t:speed.title" Text="Internet speed" Style="{StaticResource CardTitle}"/>
+                                            <TextBlock Tag="t:speed.sub" Text="Download, upload, ping and jitter to the Cloudflare speed test over HTTPS. Run it before and after a DNS change to compare." Style="{StaticResource Muted}" Margin="0,4,12,12"/>
+                                        </StackPanel>
+                                    </DockPanel>
+                                    <UniformGrid x:Name="SpeedTiles" Columns="4" Margin="-5,0,-5,0">
+                                        <Border Background="{DynamicResource Field}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="12" Padding="14,12" Margin="5">
+                                            <StackPanel>
+                                                <TextBlock Tag="t:speed.down" Text="DOWNLOAD" Style="{StaticResource StatLabel}"/>
+                                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                                    <TextBlock x:Name="SpeedDown" Text="-" Style="{StaticResource StatValue}"/>
+                                                    <TextBlock Text="Mbps" Style="{StaticResource MonoText}" VerticalAlignment="Bottom" Margin="6,0,0,7"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Background="{DynamicResource Field}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="12" Padding="14,12" Margin="5">
+                                            <StackPanel>
+                                                <TextBlock Tag="t:speed.up" Text="UPLOAD" Style="{StaticResource StatLabel}"/>
+                                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                                    <TextBlock x:Name="SpeedUp" Text="-" Style="{StaticResource StatValue}"/>
+                                                    <TextBlock Text="Mbps" Style="{StaticResource MonoText}" VerticalAlignment="Bottom" Margin="6,0,0,7"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Background="{DynamicResource Field}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="12" Padding="14,12" Margin="5">
+                                            <StackPanel>
+                                                <TextBlock Tag="t:speed.ping" Text="PING" Style="{StaticResource StatLabel}"/>
+                                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                                    <TextBlock x:Name="SpeedPing" Text="-" Style="{StaticResource StatValue}"/>
+                                                    <TextBlock Text="ms" Style="{StaticResource MonoText}" VerticalAlignment="Bottom" Margin="6,0,0,7"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Background="{DynamicResource Field}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="12" Padding="14,12" Margin="5">
+                                            <StackPanel>
+                                                <TextBlock Tag="t:speed.jitter" Text="JITTER" Style="{StaticResource StatLabel}"/>
+                                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                                    <TextBlock x:Name="SpeedJitter" Text="-" Style="{StaticResource StatValue}"/>
+                                                    <TextBlock Text="ms" Style="{StaticResource MonoText}" VerticalAlignment="Bottom" Margin="6,0,0,7"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Border>
+                                    </UniformGrid>
+                                    <TextBlock x:Name="SpeedError" Text="" Foreground="{DynamicResource Warn}" TextWrapping="Wrap" Margin="0,10,0,0" Visibility="Collapsed"/>
+                                    <TextBlock Tag="t:speed.history" Text="LAST RESULTS" Style="{StaticResource StatLabel}" Margin="0,16,0,2"/>
+                                    <TextBlock x:Name="SpeedHistoryEmpty" Tag="t:speed.history.none" Text="No results yet." Style="{StaticResource Muted}" FontSize="12" Margin="0,6,0,0"/>
+                                    <StackPanel x:Name="SpeedHistory" Margin="-14,0,-14,-8"/>
+                                </StackPanel>
+                            </Border>
                             <Border Style="{StaticResource Card}" Padding="8" Margin="0,0,0,16">
                                 <StackPanel>
                                     <StackPanel Margin="14,8,14,6">
@@ -1719,6 +1775,13 @@
                             <Border Style="{StaticResource Card}" Padding="0" Margin="0,0,0,22">
                                 <StackPanel x:Name="DoctorList"/>
                             </Border>
+                            <!-- Disk health: what each physical disk reports to Windows (SMART), one card per disk (Show-DiskHealth) -->
+                            <StackPanel x:Name="DiskSection" Margin="0,0,0,12">
+                                <TextBlock Tag="t:smart.title" Text="Disk health" Style="{StaticResource Section}"/>
+                                <TextBlock Tag="t:smart.sub" Text="What each disk reports to Windows (SMART). Values a disk does not report show as not reported." Style="{StaticResource Muted}" FontSize="12" Margin="4,-4,0,10"/>
+                                <TextBlock x:Name="DiskEmpty" Text="" Style="{StaticResource Muted}" Margin="4,0,0,10"/>
+                                <StackPanel x:Name="DiskList"/>
+                            </StackPanel>
                             <TextBlock Tag="t:health.speed" Text="Startup and temperatures" Style="{StaticResource Section}"/>
                             <Border Style="{StaticResource Card}" Margin="0,0,0,22">
                                 <StackPanel>
@@ -1749,6 +1812,37 @@
                                         <Button x:Name="WuResume" Style="{StaticResource Secondary}" Margin="0,0,10,10" Tag="t:wu.resume" Content="Resume updates"/>
                                         <Button x:Name="WuOpen" Style="{StaticResource Secondary}" Margin="0,0,10,10" Tag="t:wu.open" Content="Open Windows Update"/>
                                     </WrapPanel>
+                                </StackPanel>
+                            </Border>
+                            <!-- Restore points: the last one, a weekly task (off at first) and one before a Tweaks profile (on at first) -->
+                            <TextBlock Tag="t:rp.title" Text="Restore points" Style="{StaticResource Section}"/>
+                            <Border x:Name="RpCard" Style="{StaticResource Card}" Margin="0,0,0,22">
+                                <StackPanel>
+                                    <DockPanel Margin="0,0,0,14">
+                                        <Button x:Name="RpOpen" DockPanel.Dock="Right" Style="{StaticResource Secondary}" VerticalAlignment="Center" Margin="12,0,0,0">
+                                            <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE777;" FontSize="13" Margin="0,0,8,0"/><TextBlock Tag="t:restore.open" Text="System Restore"/></StackPanel>
+                                        </Button>
+                                        <Border Style="{StaticResource IconBox}" Margin="0,0,14,0" VerticalAlignment="Center"><TextBlock Style="{StaticResource TileGlyph}" Text="&#xE81C;"/></Border>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock x:Name="RpLast" Text="-" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                            <TextBlock x:Name="RpResult" Text="" Style="{StaticResource Muted}" FontSize="12" Margin="0,2,0,0" Visibility="Collapsed"/>
+                                        </StackPanel>
+                                    </DockPanel>
+                                    <Border Height="1" Background="{DynamicResource Line}" Margin="0,0,0,12"/>
+                                    <DockPanel x:Name="RpWeeklyRow" Margin="0,0,0,12">
+                                        <CheckBox x:Name="RpWeekly" DockPanel.Dock="Right" Style="{StaticResource Switch}"/>
+                                        <StackPanel Margin="0,0,12,0">
+                                            <TextBlock Tag="t:rp.weekly" Text="Weekly restore point" FontWeight="SemiBold"/>
+                                            <TextBlock Tag="t:rp.weekly.d" Text="A Windows task makes one every Sunday at noon, or at the next start if the PC was off." Style="{StaticResource Muted}" FontSize="12" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </DockPanel>
+                                    <DockPanel x:Name="RpProfileRow">
+                                        <CheckBox x:Name="RpProfile" DockPanel.Dock="Right" Style="{StaticResource Switch}" IsChecked="True"/>
+                                        <StackPanel Margin="0,0,12,0">
+                                            <TextBlock Tag="t:rp.profile" Text="Restore point before applying a profile" FontWeight="SemiBold"/>
+                                            <TextBlock Tag="t:rp.profile.d" Text="Made before a Tweaks profile changes your switches. Windows makes at most one every 24 hours." Style="{StaticResource Muted}" FontSize="12" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </DockPanel>
                                 </StackPanel>
                             </Border>
                             <DockPanel>
@@ -1982,6 +2076,19 @@
                                         <TextBlock x:Name="SysDiskLabel" Text="DISK C:" Style="{StaticResource StatLabel}" Width="70" VerticalAlignment="Center"/>
                                         <ProgressBar x:Name="SysDiskBar" Style="{StaticResource Meter}" Height="4" VerticalAlignment="Center"/>
                                     </DockPanel>
+                                </StackPanel>
+                            </Border>
+                            <!-- Network use per app: open connections of each process (Get-NetTCPConnection, Get-NetUDPEndpoint),
+                                 every 2 s while this page is on screen. Windows has no per-app byte counter without tracing. -->
+                            <DockPanel>
+                                <TextBlock x:Name="NetUseCount" DockPanel.Dock="Right" Text="" Style="{StaticResource MonoText}" VerticalAlignment="Bottom" Margin="0,0,4,8"/>
+                                <TextBlock Tag="t:netuse.title" Text="Network use per app" Style="{StaticResource Section}"/>
+                            </DockPanel>
+                            <Border Style="{StaticResource Card}" Padding="0" Margin="0,0,0,22">
+                                <StackPanel x:Name="NetUseSection">
+                                    <TextBlock Tag="t:netuse.sub" Text="Apps with open network connections, refreshed every 2 seconds while this page is open. Windows does not count network bytes per app without tracing, so this list shows connections, not KB/s." Style="{StaticResource Muted}" FontSize="12" Margin="14,12,14,4"/>
+                                    <TextBlock x:Name="NetUseEmpty" Text="" Style="{StaticResource Muted}" Margin="14,8,14,12"/>
+                                    <StackPanel x:Name="NetUseList"/>
                                 </StackPanel>
                             </Border>
                             <TextBlock Tag="t:qt.tools" Text="Tools" Style="{StaticResource Section}"/>

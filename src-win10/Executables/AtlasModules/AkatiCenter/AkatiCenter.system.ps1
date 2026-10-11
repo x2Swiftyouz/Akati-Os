@@ -240,23 +240,36 @@ $ui.RestoreToggle.Add_Click({
 # System Protection: turn System Restore on for a drive, or open System Restore from there
 $ui.RestoreOpen.Add_Click({ Start-Process SystemPropertiesProtection.exe })
 
+# A restore point in the background, then $then is called as: & $then <made, recent or off> $ctx.
+# Used before an AtlasOS setting (above) and before a Tweaks profile (Health > Restore points).
+# recent: Windows skipped it because it made one in the last 24 hours (SystemRestorePointCreationFrequency, which
+# Akati OS leaves as it is). off: System Restore is off.
+$restoreWork = {
+    try {
+        $before = @(Get-ComputerRestorePoint -ErrorAction Stop).Count
+        Checkpoint-Computer -Description 'Akati OS Center' -RestorePointType MODIFY_SETTINGS -ErrorAction Stop -WarningAction SilentlyContinue
+        if (@(Get-ComputerRestorePoint).Count -gt $before) { 'made' } else { 'recent' }
+    } catch { 'off' }
+}
+function New-RestorePoint([string]$source, [scriptblock]$then, $ctx) {
+    Set-Status (T 'status.restoring') $true
+    Show-Progress 'restore' (T 'status.restoring')
+    Start-Work $restoreWork @() {
+        param($r, $c)
+        $result = [string](Get-LastOutput $r)
+        if ($result -notin 'made', 'recent', 'off') { $result = 'off' }
+        Hide-Progress 'restore'
+        Set-Status (T "status.restore.$result")
+        Save-RestoreResult $c.Source $result
+        if ($c.Then) { & $c.Then $result $c.Ctx }
+    } @{ Source = $source; Then = $then; Ctx = $ctx }
+}
+
 function Invoke-AtlasItem([IO.FileInfo]$file) {
     $changes = $file.Extension.ToLowerInvariant() -in '.reg', '.cmd', '.ps1'
     if ($changes -and $ui.RestoreToggle.IsChecked -and !$script:restoreDone) {
         $script:restoreDone = $true
-        Set-Status (T 'status.restoring') $true
-        Start-Work {
-            try {
-                $before = @(Get-ComputerRestorePoint -ErrorAction Stop).Count
-                Checkpoint-Computer -Description 'Akati OS Center' -RestorePointType MODIFY_SETTINGS -ErrorAction Stop -WarningAction SilentlyContinue
-                if (@(Get-ComputerRestorePoint).Count -gt $before) { 'made' } else { 'recent' }
-            } catch { 'off' }
-        } @() {
-            param($r, $f)
-            $result = Get-LastOutput $r
-            Set-Status (T "status.restore.$result")
-            Invoke-AtlasFile $f
-        } $file
+        New-RestorePoint 'atlas' { param($result, $f) Invoke-AtlasFile $f } $file
         return
     }
     Invoke-AtlasFile $file

@@ -330,6 +330,136 @@ function Update-Ping {
 }
 $ui.PingButton.Add_Click({ $script:pingOn = !$script:pingOn; $script:pingNext = [datetime]::MinValue; Set-PingButton; if (!$script:pingOn) { Set-Status (T 'ready') } })
 
+# Internet speed: download, upload, ping and jitter to the Cloudflare speed test (speed.cloudflare.com), over HTTPS
+# only. Nothing about the PC is sent: the upload is random bytes. The last 10 results are kept (SpeedHistory), to
+# compare before and after a DNS change. $state (shared with the background) holds the stage and the percentage,
+# and Cancel from the progress card.
+$speedWork = {
+    param($state)
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    $base = 'https://speed.cloudflare.com'
+    $res = @{ Times = @(); DownBytes = 0; DownSecs = 0; UpBytes = 0; UpSecs = 0; Error = '' }
+    # Ping: 11 small requests on one connection; the first opens it (DNS, TLS) and is not counted
+    $state.Stage = 'ping'
+    try {
+        for ($i = 0; $i -lt 11 -and !$state.Cancel; $i++) {
+            $req = [Net.WebRequest]::Create("$base/__down?bytes=0")
+            $req.UserAgent = 'AkatiOS-Center'; $req.Timeout = 8000; $req.KeepAlive = $true
+            $sw = [Diagnostics.Stopwatch]::StartNew()
+            $resp = $req.GetResponse(); $resp.Close()
+            if ($i -gt 0) { $res.Times += $sw.Elapsed.TotalMilliseconds }
+            $state.Percent = [int](10 * ($i + 1) / 11)
+        }
+    } catch { $res.Error = $_.Exception.Message; return $res }
+    if ($state.Cancel) { return $res }
+    # Download: up to 25 MB, at most 15 seconds (timed from the first byte)
+    $state.Stage = 'down'
+    try {
+        $req = [Net.WebRequest]::Create("$base/__down?bytes=25000000")
+        $req.UserAgent = 'AkatiOS-Center'; $req.Timeout = 10000; $req.ReadWriteTimeout = 10000
+        $resp = $req.GetResponse(); $stream = $resp.GetResponseStream()
+        $buf = New-Object byte[] 65536; $total = 0
+        $sw = [Diagnostics.Stopwatch]::StartNew()
+        while (!$state.Cancel -and $sw.Elapsed.TotalSeconds -lt 15) {
+            $n = $stream.Read($buf, 0, $buf.Length)
+            if ($n -le 0) { break }
+            $total += $n
+            $state.Percent = 10 + [int](50 * [Math]::Min(1, [Math]::Max($total / 25000000, $sw.Elapsed.TotalSeconds / 15)))
+        }
+        $res.DownSecs = $sw.Elapsed.TotalSeconds; $res.DownBytes = $total
+        if ($total -lt 25000000) { $req.Abort() } else { $resp.Close() }
+    } catch { $res.Error = $_.Exception.Message; return $res }
+    if ($state.Cancel) { return $res }
+    # Upload: up to 10 MB of random bytes, at most 15 seconds (timed until the server answers)
+    $state.Stage = 'up'
+    try {
+        $size = 10000000
+        $chunk = New-Object byte[] 65536; (New-Object Random).NextBytes($chunk)
+        $req = [Net.WebRequest]::Create("$base/__up")
+        $req.Method = 'POST'; $req.UserAgent = 'AkatiOS-Center'; $req.ContentType = 'application/octet-stream'
+        $req.ContentLength = $size; $req.AllowWriteStreamBuffering = $false; $req.Timeout = 20000; $req.ReadWriteTimeout = 15000
+        # The body goes at once, without waiting for "100 Continue"
+        $req.ServicePoint.Expect100Continue = $false
+        $stream = $req.GetRequestStream()
+        $sent = 0
+        $sw = [Diagnostics.Stopwatch]::StartNew()
+        while ($sent -lt $size -and !$state.Cancel -and $sw.Elapsed.TotalSeconds -lt 15) {
+            $n = [Math]::Min($chunk.Length, $size - $sent)
+            $stream.Write($chunk, 0, $n); $sent += $n
+            $state.Percent = 60 + [int](40 * [Math]::Min(1, [Math]::Max($sent / $size, $sw.Elapsed.TotalSeconds / 15)))
+        }
+        if ($sent -lt $size) { $res.UpSecs = $sw.Elapsed.TotalSeconds; $req.Abort() }
+        else { $stream.Close(); $resp = $req.GetResponse(); $res.UpSecs = $sw.Elapsed.TotalSeconds; $resp.Close() }
+        $res.UpBytes = $sent
+    } catch { $res.UpError = $_.Exception.Message }
+    $res
+}
+$script:speedState = $null
+$speedTimer = New-Object System.Windows.Threading.DispatcherTimer
+$speedTimer.Interval = [TimeSpan]::FromMilliseconds(250)
+$speedTimer.Add_Tick({
+    $s = $script:speedState
+    if (!$s) { $this.Stop(); return }
+    if ($s.Cancel) { return }
+    Show-Progress 'speed' (T 'speed.running') ([int]$s.Percent) (T "speed.stage.$($s.Stage)") { param($st) $st.Cancel = $true; Set-Status (T 'cancelling') $true } $s
+})
+function Format-SpeedValue([double]$v, [string]$fmt = '0.0') { if ($v -lt 0) { '-' } else { $v.ToString($fmt, (Get-LangCulture)) } }
+# The tiles show the newest result; the list the last 10
+function Show-SpeedResults {
+    $list = @(@(Get-RegValue $settingsKey 'SpeedHistory') | ForEach-Object { ConvertFrom-SpeedEntry $_ } | Where-Object { $_ })
+    $last = $list | Select-Object -First 1
+    $ui.SpeedDown.Text = if ($last) { Format-SpeedValue $last.Down } else { '-' }
+    $ui.SpeedUp.Text = if ($last) { Format-SpeedValue $last.Up } else { '-' }
+    $ui.SpeedPing.Text = if ($last) { Format-SpeedValue $last.Ping '0' } else { '-' }
+    $ui.SpeedJitter.Text = if ($last) { Format-SpeedValue $last.Jitter '0.0' } else { '-' }
+    $ui.SpeedHistory.Children.Clear()
+    $c = Get-LangCulture
+    foreach ($e in $list) {
+        $right = New-Text ((T 'speed.row.ping') -f (Format-SpeedValue $e.Ping '0'), (Format-SpeedValue $e.Jitter)) 12
+        $right.Style = $window.FindResource('MonoText'); $right.FontSize = 12
+        $row = New-Row ([string][char]0xEC4A) ((T 'speed.row') -f (Format-SpeedValue $e.Down), (Format-SpeedValue $e.Up)) $null $right $null
+        $row.Sub.Text = $e.Time.ToString('d MMM yyyy HH:mm', $c)
+        [void]$ui.SpeedHistory.Children.Add($row.Row)
+    }
+    $ui.SpeedHistoryEmpty.Visibility = if ($list.Count) { 'Collapsed' } else { 'Visible' }
+    Update-Separators $ui.SpeedHistory
+}
+function Start-SpeedTest {
+    if ($script:speedState) { return }
+    $state = [hashtable]::Synchronized(@{ Stage = 'ping'; Percent = 0; Cancel = $false })
+    $script:speedState = $state
+    $ui.SpeedStart.IsEnabled = $false
+    $ui.SpeedError.Visibility = 'Collapsed'
+    Set-Status (T 'speed.running') $true
+    $speedTimer.Start()
+    Start-Work $speedWork @(, $state) {
+        param($r, $state)
+        $script:speedState = $null
+        $speedTimer.Stop()
+        Hide-Progress 'speed'
+        $ui.SpeedStart.IsEnabled = $true
+        $res = Get-LastOutput $r
+        if ($state.Cancel) { Set-Status (T 'speed.cancelled'); return }
+        if ($res -isnot [hashtable] -or $res.Error -or $res.DownBytes -le 0) {
+            # Blocked or offline: say so, keep the old results
+            $why = if ($res -is [hashtable] -and $res.Error) { $res.Error } else { '-' }
+            $ui.SpeedError.Text = (T 'speed.error') -f $why
+            $ui.SpeedError.Visibility = 'Visible'
+            Set-Status (T 'speed.failed')
+            return
+        }
+        $ping = Get-PingStats ([double[]]@($res.Times))
+        $down = Get-Mbps $res.DownBytes $res.DownSecs
+        $up = if ($res.UpBytes -gt 0 -and !$res.UpError) { Get-Mbps $res.UpBytes $res.UpSecs } else { -1 }
+        if ($res.UpError) { $ui.SpeedError.Text = (T 'speed.uperror') -f $res.UpError; $ui.SpeedError.Visibility = 'Visible' }
+        Save-Setting SpeedHistory (Add-SpeedHistory @(Get-RegValue $settingsKey 'SpeedHistory') (New-SpeedEntry (Get-Date) $down $up $ping.Ping $ping.Jitter))
+        Show-SpeedResults
+        Set-Status ((T 'speed.done') -f (Format-SpeedValue $down), (Format-SpeedValue $up))
+    } $state
+}
+$ui.SpeedStart.Add_Click({ Start-SpeedTest })
+Show-SpeedResults
+
 # Startup apps, like the Startup tab of Task Manager: Windows keeps the on/off state in the
 # StartupApproved keys (first byte even = on, odd = off) and never changes the Run entries themselves.
 $approvedRoot = 'Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved'

@@ -112,3 +112,78 @@ function Get-ProgramBaseName([string]$name) {
     $n = $n -replace '\s+(x64|x86|64-bit|32-bit)$', ''
     $n.Trim().Trim('-').Trim()
 }
+
+# Disk health: the kind of a disk from Get-PhysicalDisk (names, or the numbers of MSFT_PhysicalDisk): NVMe by its
+# bus (17), SSD (4) or HDD (3) by its media type, '' when Windows does not say
+function Get-DiskKind($busType, $mediaType) {
+    $bus = [string]$busType; $media = [string]$mediaType
+    if ($bus -eq 'NVMe' -or $bus -eq '17') { return 'NVMe' }
+    if ($media -eq 'SSD' -or $media -eq '4') { return 'SSD' }
+    if ($media -eq 'HDD' -or $media -eq '3') { return 'HDD' }
+    return ''
+}
+# HealthStatus as a name (numbers: 0 Healthy, 1 Warning, 2 Unhealthy); '' when it is not reported
+function Get-DiskHealthName($status) {
+    $s = [string]$status
+    if ($s -in 'Healthy', '0') { return 'Healthy' }
+    if ($s -in 'Warning', '1') { return 'Warning' }
+    if ($s -in 'Unhealthy', '2') { return 'Unhealthy' }
+    if ($s) { return 'Unknown' }
+    return ''
+}
+# What Akati Doctor warns about: health reported and not Healthy, wear 90% or more, 70 °C or more.
+# $null means not reported and never counts. Returns the text keys.
+function Get-DiskWarnings($health, $wear, $temp) {
+    $w = @()
+    $h = Get-DiskHealthName $health
+    if ($h -and $h -ne 'Healthy') { $w += 'smart.warn.health' }
+    if ($null -ne $wear -and [double]$wear -ge 90) { $w += 'smart.warn.wear' }
+    if ($null -ne $temp -and [double]$temp -ge 70) { $w += 'smart.warn.temp' }
+    $w
+}
+
+# Speed test: bytes in a time -> megabits per second (1 Mbps = 1,000,000 bits per second, like speed test sites)
+function Get-Mbps([double]$bytes, [double]$seconds) {
+    if ($seconds -le 0 -or $bytes -le 0) { return 0 }
+    [Math]::Round($bytes * 8 / $seconds / 1e6, 1)
+}
+# Ping and jitter from round-trip times in ms: the median, and the average change from one time to the next.
+# -1 when there is no time.
+function Get-PingStats([double[]]$times) {
+    $t = @($times | Where-Object { $_ -ge 0 })
+    if (!$t.Count) { return @{ Ping = -1; Jitter = -1 } }
+    $s = @($t | Sort-Object)
+    $mid = [int][Math]::Floor($s.Count / 2)
+    $median = if ($s.Count % 2) { $s[$mid] } else { ($s[$mid - 1] + $s[$mid]) / 2 }
+    $j = 0
+    for ($i = 1; $i -lt $t.Count; $i++) { $j += [Math]::Abs($t[$i] - $t[$i - 1]) }
+    if ($t.Count -gt 1) { $j = $j / ($t.Count - 1) }
+    @{ Ping = [Math]::Round($median, 1); Jitter = [Math]::Round($j, 1) }
+}
+# Speed test history: "yyyy-MM-ddTHH:mm:ss|down|up|ping|jitter" (invariant numbers, -1 = not measured), newest first
+function New-SpeedEntry([datetime]$time, [double]$down, [double]$up, [double]$ping, [double]$jitter) {
+    $inv = [Globalization.CultureInfo]::InvariantCulture
+    [string]::Format($inv, '{0}|{1}|{2}|{3}|{4}', $time.ToString('s', $inv), $down, $up, $ping, $jitter)
+}
+function Add-SpeedHistory([string[]]$list, [string]$entry, [int]$keep = 10) {
+    $old = @($list | Where-Object { $_ -match '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\|-?[\d.]+){4}$' })
+    , [string[]]@(@($entry) + $old | Select-Object -First $keep)
+}
+function ConvertFrom-SpeedEntry([string]$entry) {
+    if ($entry -notmatch '^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})\|(-?[\d.]+)\|(-?[\d.]+)\|(-?[\d.]+)\|(-?[\d.]+)$') { return $null }
+    $inv = [Globalization.CultureInfo]::InvariantCulture
+    @{ Time = [datetime]::ParseExact($Matches[1], 's', $inv); Down = [double]::Parse($Matches[2], $inv); Up = [double]::Parse($Matches[3], $inv)
+       Ping = [double]::Parse($Matches[4], $inv); Jitter = [double]::Parse($Matches[5], $inv) }
+}
+
+# Network use per app: processes Akati OS Center never offers to end. Session 0 (services), Windows parts (a file
+# under the Windows folder or a known name) and processes whose file cannot be read (protected ones).
+$protectedProcesses = 'System', 'Idle', 'Registry', 'smss', 'csrss', 'wininit', 'winlogon', 'services', 'lsass', 'lsaiso', 'svchost',
+    'dwm', 'fontdrvhost', 'LogonUI', 'sihost', 'explorer', 'MsMpEng', 'NisSrv', 'audiodg', 'spoolsv', 'Memory Compression', 'SecurityHealthService'
+function Test-ProtectedProcess([string]$name, [int]$session, [string]$path, [string]$windir) {
+    if ($session -eq 0) { return $true }
+    if ($protectedProcesses -contains $name) { return $true }
+    if (!$path) { return $true }
+    if ($windir -and $path.StartsWith($windir.TrimEnd('\') + '\', [StringComparison]::OrdinalIgnoreCase)) { return $true }
+    return $false
+}

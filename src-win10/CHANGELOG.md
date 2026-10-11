@@ -6,6 +6,10 @@
 - Akati OS Center: a progress card at the bottom right for long jobs (cleaner scan and clean, gaming app installs and updates with Cancel, the uninstall queue, the core and priority benchmarks)
 - Appearance: "Sounds and motion" with UI sounds (a soft click for switches and the sidebar, off at first) and Reduce motion (turns off the small animations)
 - A switch that turns on gives a short pulse
+- Health: Disk health, a card for each disk with its model, size, type (SSD, HDD or NVMe), health, temperature, wear and power-on hours, as Windows reports them (SMART). Values a disk does not report show as "not reported". Akati Doctor warns when a disk is not healthy, is 90% worn or reaches 70 °C
+- Health: Restore points, with the date of the last one, a "Weekly restore point" task (off at first) and "Restore point before applying a profile" (on at first). When Windows skips one because it made one in the last 24 hours, the page says so
+- Game boost: Internet speed test (download, upload, ping and jitter to the Cloudflare speed test over HTTPS) with the last 10 results, to compare before and after a DNS change
+- Quick tools: Network use per app, a live list of apps with open connections (refreshed every 2 seconds while the page is open), with End task after a question. Windows and system processes have no End task. Windows does not count network bytes per app without tracing, so the list shows connections, not KB/s
 
 ### Changed
 - Akati OS Center questions and messages open in a dialog in the window theme (dimmed window, Enter confirms, Esc cancels) instead of the white Windows message box. Lists, like the switches a profile changes or the programs to uninstall, show as bullet points

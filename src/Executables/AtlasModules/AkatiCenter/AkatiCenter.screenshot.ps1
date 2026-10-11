@@ -19,6 +19,17 @@ if ($Screenshot) {
     Save-Setting TweakProfile 'gamemode=1;timer=1;access=0;mouseaccel=0;ducking=0;nagle=0;edgebg=1;startdelay=0;hotkeys=1'
     Save-Setting TweakProfileAt ((Get-Date).AddDays(-1).ToString('s', [Globalization.CultureInfo]::InvariantCulture))
     Update-ProfileTiles
+    # Sample speed tests (before and after a DNS change) and network use per app (one Windows service without End task)
+    Save-Setting SpeedHistory ([string[]]@((New-SpeedEntry (Get-Date).AddMinutes(-10) 241.8 40.9 11 1.1), (New-SpeedEntry (Get-Date).AddHours(-1) 236.1 41.3 12 1.4),
+                                           (New-SpeedEntry (Get-Date).AddDays(-1) 212.4 38.6 18 3.2)))
+    Show-SpeedResults
+    $script:netResult = @{ Total = 6; List = @(
+        @{ Id = 8412; Name = 'chrome'; Session = 1; Path = 'C:\Program Files\Google\Chrome\Application\chrome.exe'; Conn = 23; Remote = 14; Udp = 3 }
+        @{ Id = 10236; Name = 'Discord'; Session = 1; Path = 'C:\Users\Player\AppData\Local\Discord\app-1.0.9165\Discord.exe'; Conn = 6; Remote = 4; Udp = 2 }
+        @{ Id = 6120; Name = 'steam'; Session = 1; Path = 'C:\Program Files (x86)\Steam\steam.exe'; Conn = 5; Remote = 3; Udp = 1 }
+        @{ Id = 2748; Name = 'svchost'; Session = 0; Path = 'C:\Windows\System32\svchost.exe'; Conn = 4; Remote = 3; Udp = 6 }
+        @{ Id = 4420; Name = 'OneDrive'; Session = 1; Path = 'C:\Program Files\Microsoft OneDrive\OneDrive.exe'; Conn = 2; Remote = 2; Udp = 0 }) }
+    Show-NetUse $script:netResult
     # Sample cleaner results (sizes and file counts): the CI runner has almost nothing to clean
     $cleanSample = @{ temp = 1.42GB; wintemp = 386MB; update = 2.1GB; dumps = 74MB; logs = 52MB; thumbs = 118MB; apps = 640MB; browser = 910MB; shaders = 1.2GB; recycle = 0
                       _counts = @{ temp = 4812; wintemp = 933; update = 214; dumps = 12; logs = 37; thumbs = 9; apps = 2874; browser = 6120; shaders = 1530; recycle = 0 } }
@@ -204,6 +215,21 @@ if ($Screenshot) {
     $ui.BalanceOn.IsChecked = $true; Show-Rules; Show-BalLog
     $top = $ui.BalanceOn.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
     $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 40)); $sv.UpdateLayout(); Save-Shot 'boost-en-balance.png'; $sv.ScrollToVerticalOffset(0)
+    # Internet speed with the progress card, disk health (sample disks), restore points and network use per app
+    $top = $ui.SpeedSection.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
+    $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 60)); $sv.UpdateLayout()
+    $script:progSample = $true
+    Show-Progress 'speed' (T 'speed.running') 35 (T 'speed.stage.down') { param($s) } $null
+    Save-Shot 'boost-en-speed.png'; Hide-Progress 'speed'; $script:progSample = $false; $sv.ScrollToVerticalOffset(0)
+    $ui.NavHealth.IsChecked = $true; $sv = $ui.PageHealth; $sv.UpdateLayout()
+    $top = $ui.DiskSection.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
+    $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 20)); $sv.UpdateLayout(); Save-Shot 'health-en-disks.png'
+    $top = $ui.RpCard.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
+    $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 240)); $sv.UpdateLayout(); Save-Shot 'health-en-restore.png'; $sv.ScrollToVerticalOffset(0)
+    $ui.NavQuicktools.IsChecked = $true; $sv = $ui.PageQuicktools; $sv.UpdateLayout()
+    $top = $ui.NetUseSection.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
+    $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 60)); $sv.UpdateLayout(); Save-Shot 'quicktools-en-net.png'; $sv.ScrollToVerticalOffset(0)
+    $ui.NavBoost.IsChecked = $true; $sv = $ui.PageBoost
     try { [void](Save-ScoreCard (Join-Path $Screenshot 'share-card.png')) } catch { Write-Host "Share picture failed: $($_.Exception.Message)" }
     $script:navBadges['Gaming'] = 0; $script:navBadges['Health'] = 0; Update-NavBadges
     # Tweaks > Interrupts: the devices of the CI runner and a sample benchmark

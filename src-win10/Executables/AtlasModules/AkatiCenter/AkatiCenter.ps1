@@ -603,6 +603,11 @@ function Get-SpotlightItems {
         if ($ui.IrqPanel.Visibility -ne 'Visible') { $ui.IrqShow.RaiseEvent((New-Object System.Windows.RoutedEventArgs ([System.Windows.Controls.Primitives.ButtonBase]::ClickEvent))) }
         Show-Element 'tweaks' $ui.IrqShow.Parent.Parent } $null
     & $add (T 'games.scan') (Get-Both 'games.scan') (T 'spot.action') ([char]0xE721) { param($d) $ui.NavBoost.IsChecked = $true; $ui.GameScanButton.RaiseEvent((New-Object System.Windows.RoutedEventArgs ([System.Windows.Controls.Primitives.ButtonBase]::ClickEvent))) } $null
+    & $add (T 'smart.title') ((Get-Both 'smart.title') + ' smart ssd nvme hdd drive temperature wear') (T 'nav.health') ([char]0xEDA2) { param($d) Show-Element 'health' $d } $ui.DiskSection (Get-Both 'smart.sub')
+    & $add (T 'speed.title') ((Get-Both 'speed.title') + ' speed test internet download upload mbps jitter') (T 'spot.action') ([char]0xEC4A) { param($d) Show-Element 'boost' $d; Start-SpeedTest } $ui.SpeedSection (Get-Both 'speed.sub')
+    & $add (T 'netuse.title') ((Get-Both 'netuse.title') + ' network connections bandwidth per app end task') (T 'nav.quicktools') ([char]0xE774) { param($d) Show-Element 'quicktools' $d } $ui.NetUseSection (Get-Both 'netuse.sub')
+    & $add (T 'rp.weekly') ((Get-Both 'rp.weekly') + ' restore point system restore') (T 'spot.setting') ([char]0xE81C) { param($d) Show-Element 'health' $d } $ui.RpWeeklyRow (Get-Both 'rp.weekly.d')
+    & $add (T 'rp.profile') ((Get-Both 'rp.profile') + ' restore point system restore') (T 'spot.setting') ([char]0xE81C) { param($d) Show-Element 'health' $d } $ui.RpProfileRow (Get-Both 'rp.profile.d')
     return $items
 }
 function Update-SpotSelection {
@@ -799,6 +804,12 @@ function Update-Language {
     Update-ProfileTiles
     Update-CleanTotal
     if ($script:specs) { Show-Specs $script:specs }
+    if ($script:diskResult) { Show-DiskHealth $script:diskResult }
+    if ($script:rpInfo) { Show-RestoreInfo $script:rpInfo }
+    Show-SpeedResults
+    # The rows of Network use are made again, for the End task text
+    $script:netRows = @{}
+    if ($script:netResult) { Show-NetUse $script:netResult }
     foreach ($n in 'SysCopyOs', 'SysCopyArch', 'SysCopyPc') { $ui[$n].ToolTip = T 'sys.copy' }
 }
 
@@ -969,7 +980,7 @@ if (!$Screenshot) {
     $doctorTimer.Interval = [TimeSpan]::FromSeconds(5)
     $doctorTimer.Add_Tick({
         $doctorTimer.Stop()
-        if (!$script:doctorResult) { Start-Work $doctorWork @() { param($r) Show-Doctor (Get-LastOutput $r); Update-Chips } $null }
+        if (!$script:doctorResult) { Start-Work $doctorWork @($logicFile) { param($r) Show-Doctor (Get-LastOutput $r); Update-Chips } $null }
         # App updates, for the number on Gaming apps (once; the page does it too when opened first)
         if (!$script:appsChecked) { $script:appsChecked = $true; Start-AppUpdateCheck $true }
     })
@@ -1085,7 +1096,7 @@ $timer = New-Object System.Windows.Threading.DispatcherTimer
 $timer.Interval = [TimeSpan]::FromMilliseconds(500)
 $script:lookAt = Get-Date
 $timer.Add_Tick({
-    Update-Stats; Receive-Work; Update-AppProgress; Update-Ping
+    Update-Stats; Receive-Work; Update-AppProgress; Update-Ping; Update-NetUse
     if ($script:menuAt -and (Get-Date) -gt $script:menuAt) { Update-DesktopMenu }
     # Auto follows Windows, By time follows the clock
     if (!$Screenshot -and (Get-Date) -gt $script:lookAt) {

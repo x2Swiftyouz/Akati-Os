@@ -84,5 +84,40 @@ Check 'base plain' (Get-ProgramBaseName 'Brave') 'Brave'
 Check 'base version dash' (Get-ProgramBaseName 'Microsoft Visual C++ 2010  x64 Redistributable - 10.0.40219') 'Microsoft Visual C++ 2010  x64 Redistributable'
 Check 'base bitness' (Get-ProgramBaseName 'Notepad++ (64-bit x64)') 'Notepad++'
 
+# Disk health
+Check 'disk kind nvme' (Get-DiskKind 'NVMe' 'SSD') 'NVMe'
+Check 'disk kind nvme number' (Get-DiskKind 17 0) 'NVMe'
+Check 'disk kind ssd' (Get-DiskKind 'SATA' 'SSD') 'SSD'
+Check 'disk kind hdd number' (Get-DiskKind 11 3) 'HDD'
+Check 'disk kind unknown' (Get-DiskKind 'USB' 'Unspecified') ''
+Check 'disk health number' (Get-DiskHealthName 2) 'Unhealthy'
+Check 'disk health none' (Get-DiskHealthName $null) ''
+Check 'disk ok' ((Get-DiskWarnings 'Healthy' 12 41) -join ',') ''
+Check 'disk not reported' ((Get-DiskWarnings $null $null $null) -join ',') ''
+Check 'disk all bad' ((Get-DiskWarnings 'Warning' 90 70) -join ',') 'smart.warn.health,smart.warn.wear,smart.warn.temp'
+Check 'disk unknown health' ((Get-DiskWarnings 'Unknown' 0 69) -join ',') 'smart.warn.health'
+
+# Speed test
+Check 'mbps' (Get-Mbps 25000000 2) 100
+Check 'mbps no time' (Get-Mbps 1000 0) 0
+$pst = Get-PingStats @(10, 12, 11, 30, 12)
+Check 'ping median' $pst.Ping 12
+Check 'jitter' $pst.Jitter 10
+Check 'ping none' (Get-PingStats @()).Ping -1
+$entry = New-SpeedEntry ([datetime]'2026-10-11T09:30:00') 245.3 41.25 12 1.5
+Check 'speed entry' $entry '2026-10-11T09:30:00|245.3|41.25|12|1.5'
+Check 'speed entry back' (ConvertFrom-SpeedEntry $entry).Up 41.25
+Check 'speed entry bad' ($null -eq (ConvertFrom-SpeedEntry 'x|1')) 'True'
+$sh = Add-SpeedHistory @('2026-10-10T09:00:00|1|2|3|4', 'bad', '2026-10-09T09:00:00|-1|-1|-1|-1') $entry 2
+Check 'speed history keep' ($sh.Count) 2
+Check 'speed history newest first' ($sh[0]) $entry
+
+# Network use: processes without End task
+Check 'protected session 0' (Test-ProtectedProcess 'game' 0 'D:\Games\game.exe' 'C:\Windows') 'True'
+Check 'protected name' (Test-ProtectedProcess 'explorer' 1 'C:\Program Files\x.exe' 'C:\Windows') 'True'
+Check 'protected windows folder' (Test-ProtectedProcess 'notepad' 1 'C:\WINDOWS\System32\notepad.exe' 'C:\Windows') 'True'
+Check 'protected no path' (Test-ProtectedProcess 'anticheat' 1 '' 'C:\Windows') 'True'
+Check 'not protected' (Test-ProtectedProcess 'chrome' 1 'C:\Program Files\Google\Chrome\Application\chrome.exe' 'C:\Windows') 'False'
+
 Write-Host "$script:count checks, $script:failed failed"
 if ($script:failed) { exit 1 }

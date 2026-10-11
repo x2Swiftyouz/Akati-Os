@@ -314,10 +314,20 @@ function Invoke-TweakProfile([string]$title, $map) {
     if (!$Screenshot -and (Show-Ask $msg 'YesNo' $(if ($restart) { 'Warning' } else { 'Question' }) $lines $note) -ne 'Yes') {
         Add-Log 'TweakLog' ((T 'profile.cancel') -f $title); return
     }
-    Add-Log 'TweakLog' ((T 'profile.applying') -f $title, $changes.Count)
-    foreach ($c in $changes) { $c.Tweak.Toggle.IsChecked = $c.On; Invoke-Tweak $c.Tweak $c.On; Add-History $c.Tweak.Key $c.On }
-    if ($restart) { Set-RestartNeeded }
-    Set-Status ((T 'profile.applied') -f $title, $changes.Count)
+    $job = @{ Title = $title; Changes = $changes; Restart = $restart }
+    # Health > Restore points: a restore point first (on at first). The switches change after it, made or not.
+    if (!$Screenshot -and $ui.RpProfile.IsChecked) {
+        Add-Log 'TweakLog' (T 'status.restoring')
+        New-RestorePoint 'profile' { param($result, $j) Add-Log 'TweakLog' (T "status.restore.$result"); Complete-TweakProfile $j } $job
+        return
+    }
+    Complete-TweakProfile $job
+}
+function Complete-TweakProfile($job) {
+    Add-Log 'TweakLog' ((T 'profile.applying') -f $job.Title, $job.Changes.Count)
+    foreach ($c in $job.Changes) { $c.Tweak.Toggle.IsChecked = $c.On; Invoke-Tweak $c.Tweak $c.On; Add-History $c.Tweak.Key $c.On }
+    if ($job.Restart) { Set-RestartNeeded }
+    Set-Status ((T 'profile.applied') -f $job.Title, $job.Changes.Count)
 }
 function Update-ProfileTiles {
     $map = Get-CustomProfile

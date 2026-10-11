@@ -241,7 +241,7 @@
   /* Intro band (right after the hero) */
   .intro { padding: 120px 0 40px; }
   .intro-top { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 32px 56px; align-items: end; margin-bottom: 64px; }
-  .intro h2 { font-size: clamp(34px, 5.2vw, 64px); line-height: 1.04; margin: 0; }
+  .intro h2 { font-size: clamp(34px, 4.6vw, 58px); line-height: 1.04; margin: 0; }
   .intro h2 .l1 { display: block; }
   .intro h2 .l2 { display: block; }
   .intro-top p { color: var(--muted); font-size: 18px; margin: 0; }
@@ -255,12 +255,12 @@
   /* Why choose Akati OS */
   .why { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 22px; overflow: hidden; }
   .why-i { display: flex; gap: 18px; align-items: flex-start; padding: 28px 30px; background: var(--card); min-width: 0; }
-  .why-i .ic { margin: 0; }
+  .why-i .ic { margin: 0; flex: none; }
   .why-i h3 { margin: 1px 0 6px; font-size: 17px; letter-spacing: 0; line-height: 1.35; }
   .why-i p { margin: 0; color: var(--muted); font-size: 14.5px; }
 
   /* Open source */
-  .oss { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: 64px; align-items: center; }
+  .oss { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 56px; align-items: center; }
   .oss h2 { margin-bottom: 18px; }
   .oss-txt > p { color: var(--muted); font-size: 17px; margin: 0 0 24px; }
   .chips { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 28px; }
@@ -273,14 +273,14 @@
   .based .i { color: var(--link); margin-top: 2px; }
 
   /* Community */
-  .comm { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); gap: 28px 40px; align-items: center; margin-top: 20px; padding: 36px; border-radius: 28px; border: 1px solid var(--line); background: var(--card); }
+  .comm { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: 28px 40px; align-items: center; margin-top: 20px; padding: 36px; border-radius: 28px; border: 1px solid var(--line); background: var(--card); }
   .comm h2 { font-size: clamp(26px, 3vw, 36px); margin: 0 0 10px; }
   .comm > div > p { margin: 0; color: var(--muted); }
   .comm-links { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
   .comm-link { display: flex; flex-direction: column; gap: 6px; padding: 18px; border-radius: 18px; border: 1px solid var(--line); background: var(--bg2); color: var(--text); text-decoration: none; transition: border-color .2s ease, transform .2s ease; min-width: 0; }
   .comm-link:hover { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); transform: translateY(-2px); }
-  .comm-link b { display: flex; align-items: center; gap: 8px; font-size: 15.5px; }
-  .comm-link b .i { color: var(--link); }
+  .comm-link b { display: flex; align-items: flex-start; gap: 8px; font-size: 15.5px; }
+  .comm-link b .i { color: var(--link); margin-top: 3px; }
   .comm-link span.d { color: var(--muted); font-size: 13.5px; line-height: 1.5; }
 
   /* Download dialog */
@@ -314,7 +314,7 @@
   .dlm-pane li { margin-bottom: 4px; }
   .dlm-pane li::marker { color: var(--accent); }
   .dlm-acts { display: grid; gap: 10px; }
-  .dlm .btn { width: 100%; justify-content: center; }
+  .dlm .btn { width: 100%; justify-content: center; font: inherit; font-weight: 600; cursor: pointer; }
   .dlm .btn .t { align-items: flex-start; }
   .dlm .btn.ghost { background: transparent; }
   .warn { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; margin: 0 0 14px; border-radius: 14px; font-size: 14.5px; color: var(--text); background: color-mix(in srgb, var(--warn) 12%, transparent); border: 1px solid color-mix(in srgb, var(--warn) 42%, transparent); }
@@ -331,6 +331,8 @@
   .linkbtn { display: inline-flex; align-items: center; gap: 6px; padding: 4px 2px; border: 0; background: none; color: var(--link); font: inherit; font-size: 14.5px; font-weight: 600; cursor: pointer; }
   .linkbtn .i { width: 16px; height: 16px; }
   .linkbtn:hover { text-decoration: underline; }
+  .nw { white-space: nowrap; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
   /* Reveal on scroll (only when the script runs and motion is allowed) */
   .anim .rv { transition: opacity .8s ease, transform .8s cubic-bezier(.2,.7,.2,1); transition-delay: calc(var(--d, 0) * 80ms); }
@@ -429,6 +431,21 @@
   <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
   <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></symbol>
   <symbol id="i-code" viewBox="0 0 24 24"><path d="M8 8l-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 3.5l9.5 16.5h-19zM12 10v4.5M12 17.5h.01"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5M12 14.5v2"/></symbol>
+  <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></symbol>
+  <symbol id="i-laptop" viewBox="0 0 24 24"><path d="M5 6.5a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1V15H5zM2.5 18.5h19"/></symbol>
+  <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></symbol>
+  <symbol id="i-ban" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M6 6l12 12"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M19.5 11A7.5 7.5 0 0 0 6.2 6.9L4 9M4 4.5V9h4.5M4.5 13a7.5 7.5 0 0 0 13.3 4.1L20 15M20 19.5V15h-4.5"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H10l-6 4z"/></symbol>
+  <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></symbol>
+  <symbol id="i-branch" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="7" r="2"/><path d="M6 8v8M18 9a6 6 0 0 1-6 6H8"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></symbol>
   <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
 </svg>
 
@@ -438,6 +455,7 @@
     <div class="links" id="links">
       <a href="#features"><span data-l="en">Features</span><span data-l="th">ฟีเจอร์</span><span data-l="vi">Tính năng</span><span data-l="id">Fitur</span></a>
       <a href="#install"><span data-l="en">Install</span><span data-l="th">วิธีติดตั้ง</span><span data-l="vi">Cài đặt</span><span data-l="id">Instal</span></a>
+      <a href="docs.html"><span data-l="en">Docs</span><span data-l="th">คู่มือ</span><span data-l="vi">Tài liệu</span><span data-l="id">Dokumentasi</span></a>
       <a href="#compare"><span data-l="en">Compare</span><span data-l="th">เปรียบเทียบ</span><span data-l="vi">So sánh</span><span data-l="id">Perbandingan</span></a>
       <a href="#faq">FAQ</a>
       <a href="changelog.html"><span data-l="en">Changelog</span><span data-l="th">ประวัติเวอร์ชัน</span><span data-l="vi">Nhật ký thay đổi</span><span data-l="id">Catatan rilis</span></a>
@@ -448,7 +466,7 @@
         <button data-set="en" lang="en">EN</button><button data-set="th" lang="th">ไทย</button><button data-set="vi" lang="vi">VI</button><button data-set="id" lang="id">ID</button>
       </div>
       <button class="theme" id="theme" type="button" aria-label="Switch theme" title="Switch theme"><svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg><svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="currentColor"/><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg></button>
-      <a class="btn-nav" href="#download"><span data-l="en">Download</span><span data-l="th">ดาวน์โหลด</span><span data-l="vi">Tải về</span><span data-l="id">Unduh</span></a>
+      <a class="btn-nav" href="#download" data-open-dl><span data-l="en">Download</span><span data-l="th">ดาวน์โหลด</span><span data-l="vi">Tải về</span><span data-l="id">Unduh</span></a>
       <button class="menu" id="menu" type="button" aria-expanded="false" aria-controls="links" aria-label="Menu"><svg class="i" aria-hidden="true"><use href="#i-menu"/></svg></button>
     </div>
   </div>
@@ -508,6 +526,40 @@
     </div>
   </div>
 </div>
+
+<section class="intro" id="why-akati">
+  <div class="wrap">
+    <div class="intro-top">
+      <h2 class="rv"><span data-l="en"><span class="l1">Less in the way.</span><span class="l2 grad">More for your games.</span></span><span data-l="th"><span class="l1">ลดสิ่งที่เกะกะ</span><span class="l2 grad">เหลือพลังให้เกมมากขึ้น</span></span><span data-l="vi"><span class="l1">Bớt thứ cản đường.</span><span class="l2 grad">Dành nhiều hơn cho game.</span></span><span data-l="id"><span class="l1">Lebih sedikit gangguan.</span><span class="l2 grad">Lebih banyak untuk game.</span></span></h2>
+      <div class="rv" style="--d:1">
+        <p data-l="en">Akati OS is applied with AME Wizard on a normal Windows install, so there is no modified ISO to download. It keeps the AtlasOS tweaks and adds Akati OS Center on top, so every change stays easy to see and to manage.</p>
+        <p data-l="th">Akati OS ติดตั้งผ่าน AME Wizard บน Windows ปกติ ไม่ต้องโหลด ISO ที่ถูกดัดแปลง ใช้การปรับแต่งของ AtlasOS เป็นฐาน แล้วเพิ่ม Akati OS Center ไว้ด้านบน ทุกการเปลี่ยนแปลงจึงดูและจัดการได้ง่าย</p>
+        <p data-l="vi">Akati OS được áp dụng bằng AME Wizard trên một bản cài Windows bình thường, nên không cần tải ISO đã chỉnh sửa. Nó giữ các tinh chỉnh của AtlasOS và thêm Akati OS Center lên trên, để mọi thay đổi luôn dễ xem và dễ quản lý.</p>
+        <p data-l="id">Akati OS dipasang dengan AME Wizard di instalasi Windows biasa, jadi tidak ada ISO modifikasi yang perlu diunduh. Tweak AtlasOS tetap ada dan Akati OS Center ditambahkan di atasnya, sehingga setiap perubahan mudah dilihat dan dikelola.</p>
+      </div>
+    </div>
+    <div class="pillars">
+      <div class="pillar rv"><div class="ic"><svg class="i" aria-hidden="true"><use href="#i-gauge"/></svg></div>
+        <h3 data-l="en">Performance</h3><h3 data-l="th">ประสิทธิภาพ</h3><h3 data-l="vi">Hiệu năng</h3><h3 data-l="id">Performa</h3>
+        <p data-l="en">The AtlasOS performance tweaks, a maximum performance power plan by default and fewer services in the background. Game boost frees up a bit more right before you play.</p>
+        <p data-l="th">การปรับแต่งด้านประสิทธิภาพของ AtlasOS แผนพลังงานแบบแรงสุดเป็นค่าเริ่มต้น และเซอร์วิสเบื้องหลังที่น้อยลง บูสต์เกมช่วยคืนทรัพยากรเพิ่มอีกนิดก่อนเริ่มเล่น</p>
+        <p data-l="vi">Các tinh chỉnh hiệu năng của AtlasOS, gói nguồn hiệu năng tối đa theo mặc định và ít dịch vụ chạy nền hơn. Tăng tốc game giải phóng thêm một chút ngay trước khi bạn chơi.</p>
+        <p data-l="id">Tweak performa AtlasOS, power plan performa maksimum sebagai bawaan, dan lebih sedikit layanan di latar belakang. Game Boost membebaskan sedikit lagi tepat sebelum Anda bermain.</p></div>
+      <div class="pillar rv" style="--d:1"><div class="ic"><svg class="i" aria-hidden="true"><use href="#i-sliders"/></svg></div>
+        <h3 data-l="en">Usability</h3><h3 data-l="th">ใช้งานง่าย</h3><h3 data-l="vi">Dễ sử dụng</h3><h3 data-l="id">Kemudahan</h3>
+        <p data-l="en">Every setting is in one app, with a note on what it changes, a change history with Undo and Ctrl+K search. Gaming apps are installed only when you click them.</p>
+        <p data-l="th">ทุกการตั้งค่าอยู่ในแอปเดียว มีคำอธิบายว่าเปลี่ยนอะไร มีประวัติการเปลี่ยนแปลงพร้อมปุ่มเลิกทำ และค้นหาด้วย Ctrl+K แอปเกมจะติดตั้งก็ต่อเมื่อคุณกดเท่านั้น</p>
+        <p data-l="vi">Mọi cài đặt nằm trong một ứng dụng, có ghi chú về những gì nó thay đổi, lịch sử thay đổi có Hoàn tác và tìm kiếm Ctrl+K. Ứng dụng chơi game chỉ được cài khi bạn nhấp vào.</p>
+        <p data-l="id">Semua pengaturan ada di satu aplikasi, dengan catatan tentang apa yang diubah, riwayat perubahan dengan Urungkan, dan pencarian Ctrl+K. Aplikasi gaming hanya dipasang saat Anda mengekliknya.</p></div>
+      <div class="pillar rv" style="--d:2"><div class="ic"><svg class="i" aria-hidden="true"><use href="#i-lock"/></svg></div>
+        <h3 data-l="en">Privacy</h3><h3 data-l="th">ความเป็นส่วนตัว</h3><h3 data-l="vi">Quyền riêng tư</h3><h3 data-l="id">Privasi</h3>
+        <p data-l="en">The AtlasOS privacy tweaks cut back Windows telemetry. Akati OS Center collects no data: its problem report is a .zip on your desktop that you decide to share.</p>
+        <p data-l="th">การปรับแต่งด้านความเป็นส่วนตัวของ AtlasOS ลด telemetry ของ Windows ส่วน Akati OS Center ไม่เก็บข้อมูลใด ๆ รายงานปัญหาเป็นไฟล์ .zip บนเดสก์ท็อปที่คุณเลือกเองว่าจะส่งหรือไม่</p>
+        <p data-l="vi">Các tinh chỉnh quyền riêng tư của AtlasOS giảm telemetry của Windows. Akati OS Center không thu thập dữ liệu: báo cáo sự cố là một tệp .zip trên màn hình nền mà bạn tự quyết định có chia sẻ hay không.</p>
+        <p data-l="id">Tweak privasi AtlasOS mengurangi telemetri Windows. Akati OS Center tidak mengumpulkan data: laporan masalahnya berupa .zip di desktop yang Anda putuskan sendiri untuk dibagikan.</p></div>
+    </div>
+  </div>
+</section>
 
 <section id="features">
   <div class="wrap">
@@ -660,6 +712,77 @@
           <p data-l="vi">GPL-3.0. Tệp .apbx là tệp nén 7z của mã nguồn, và Akati OS Center viết bằng PowerShell và WPF: không có .exe, nên đọc được mọi script.</p>
           <p data-l="id">GPL-3.0. File .apbx adalah arsip 7z dari kode sumber, dan Akati OS Center ditulis dengan PowerShell dan WPF: tanpa .exe, jadi setiap skrip bisa dibaca.</p></div>
       </div>
+    </div>
+  </div>
+</section>
+
+<section id="why">
+  <div class="wrap">
+    <div class="head rv">
+      <span class="eyebrow"><span data-l="en">Why Akati OS</span><span data-l="th">ทำไมต้อง Akati OS</span><span data-l="vi">Vì sao chọn Akati OS</span><span data-l="id">Kenapa Akati OS</span></span>
+      <h2 data-l="en">Why choose Akati OS</h2><h2 data-l="th">เหตุผลที่ควรเลือก Akati OS</h2><h2 data-l="vi">Vì sao nên chọn Akati OS</h2><h2 data-l="id">Kenapa memilih Akati OS</h2>
+      <p class="sub" data-l="en">Eight reasons, and you can check each one in the source.</p>
+      <p class="sub" data-l="th">8 เหตุผล ที่ตรวจสอบได้จากซอร์สโค้ดทุกข้อ</p>
+      <p class="sub" data-l="vi">Tám lý do, và bạn có thể kiểm tra từng điều trong mã nguồn.</p>
+      <p class="sub" data-l="id">Delapan alasan, dan masing-masing bisa Anda cek di kode sumber.</p>
+    </div>
+    <div class="why rv">
+      <div class="why-i"><div class="ic"><svg class="i" aria-hidden="true"><use href="#i-code"/></svg></div><div>
+        <h3 data-l="en">Open source, nothing hidden</h3><h3 data-l="th">โอเพนซอร์ส ไม่มีอะไรซ่อน</h3><h3 data-l="vi">Mã nguồn mở, không giấu gì</h3><h3 data-l="id">Sumber terbuka, tanpa yang disembunyikan</h3>
+        <p data-l="en">GPL-3.0 on GitHub. Every difference from AtlasOS is listed in Changes from AtlasOS and can be checked with a single diff.</p>
+        <p data-l="th">GPL-3.0 บน GitHub ทุกจุดที่ต่างจาก AtlasOS มีรายการอยู่ใน Changes from AtlasOS และตรวจเองได้ด้วยคำสั่ง diff เดียว</p>
+        <p data-l="vi">GPL-3.0 trên GitHub. Mọi khác biệt so với AtlasOS đều được liệt kê trong Changes from AtlasOS và có thể kiểm tra bằng một lệnh diff.</p>
+        <p data-l="id">GPL-3.0 di GitHub. Setiap perbedaan dari AtlasOS tercantum di Changes from AtlasOS dan bisa dicek dengan satu perintah diff.</p>
+      </div></div>
+      <div class="why-i"><div class="ic"><svg class="i" aria-hidden="true"><use href="#i-undo"/></svg></div><div>
+        <h3 data-l="en">Undo, one change at a time</h3><h3 data-l="th">เลิกทำได้ทีละการเปลี่ยนแปลง</h3><h3 data-l="vi">Hoàn tác từng thay đổi</h3><h3 data-l="id">Urungkan satu per satu</h3>
+        <p data-l="en">Akati OS Center keeps a change history with Undo, backs up your settings to a .json file and can make a restore point first. To go back fully, reinstall Windows.</p>
+        <p data-l="th">Akati OS Center มีประวัติการเปลี่ยนแปลงพร้อมปุ่มเลิกทำ สำรองการตั้งค่าเป็นไฟล์ .json และสร้างจุดคืนค่าก่อนได้ ถ้าจะกลับไปเหมือนเดิมทั้งหมดต้องลง Windows ใหม่</p>
+        <p data-l="vi">Akati OS Center giữ lịch sử thay đổi có Hoàn tác, sao lưu cài đặt ra tệp .json và có thể tạo điểm khôi phục trước. Muốn quay lại hoàn toàn, hãy cài lại Windows.</p>
+        <p data-l="id">Akati OS Center menyimpan riwayat perubahan dengan Urungkan, mencadangkan pengaturan ke file .json, dan bisa membuat titik pemulihan dulu. Untuk kembali sepenuhnya, instal ulang Windows.</p>
+      </div></div>
+      <div class="why-i"><div class="ic"><svg class="i" aria-hidden="true"><use href="#i-laptop"/></svg></div><div>
+        <h3 data-l="en">Desktops and laptops</h3><h3 data-l="th">ทั้งพีซีและโน้ตบุ๊ก</h3><h3 data-l="vi">Máy bàn và laptop</h3><h3 data-l="id">Desktop dan laptop</h3>
+        <p data-l="en">Works on both. On a laptop, Akati Doctor and Game boost tell you when it runs on battery, because Windows then holds the CPU and GPU back.</p>
+        <p data-l="th">ใช้ได้ทั้งสองแบบ บนโน้ตบุ๊ก Akati Doctor และบูสต์เกมจะบอกเมื่อเครื่องใช้แบตเตอรี่อยู่ เพราะตอนนั้น Windows จะลดความแรงของ CPU และ GPU</p>
+        <p data-l="vi">Dùng được cho cả hai. Trên laptop, Akati Doctor và Tăng tốc game sẽ báo khi máy đang chạy bằng pin, vì lúc đó Windows giới hạn CPU và GPU.</p>
+        <p data-l="id">Bisa di keduanya. Di laptop, Akati Doctor dan Game Boost memberi tahu saat berjalan dengan baterai, karena Windows lalu menahan CPU dan GPU.</p>
+      </div></div>
+      <div class="why-i"><div class="ic"><svg class="i" aria-hidden="true"><use href="#i-monitor"/></svg></div><div>
+        <h3 data-l="en">Windows 11 and Windows 10</h3><h3 data-l="th">Windows 11 และ Windows 10</h3><h3 data-l="vi">Windows 11 và Windows 10</h3><h3 data-l="id">Windows 11 dan Windows 10</h3>
+        <p data-l="en">One playbook for Windows 11 24H2, 25H2 and 26H2, one for Windows 10 22H2. With the wrong file, AME Wizard stops before anything is changed.</p>
+        <p data-l="th">มี playbook สำหรับ Windows 11 24H2, 25H2 และ 26H2 และอีกตัวสำหรับ Windows 10 22H2 ถ้าใช้ผิดไฟล์ AME Wizard จะหยุดก่อนเปลี่ยนแปลงอะไร</p>
+        <p data-l="vi">Một playbook cho Windows 11 24H2, 25H2 và 26H2, một cho Windows 10 22H2. Nếu dùng sai tệp, AME Wizard dừng lại trước khi thay đổi bất cứ thứ gì.</p>
+        <p data-l="id">Satu playbook untuk Windows 11 24H2, 25H2, dan 26H2, satu untuk Windows 10 22H2. Dengan file yang salah, AME Wizard berhenti sebelum ada yang diubah.</p>
+      </div></div>
+      <div class="why-i"><div class="ic"><svg class="i" aria-hidden="true"><use href="#i-globe"/></svg></div><div>
+        <h3 data-l="en">In your language</h3><h3 data-l="th">ใช้ภาษาของคุณ</h3><h3 data-l="vi">Bằng ngôn ngữ của bạn</h3><h3 data-l="id">Dalam bahasa Anda</h3>
+        <p data-l="en">Akati OS Center and this site are in English, Thai, Vietnamese and Indonesian, one click on the language button.</p>
+        <p data-l="th">Akati OS Center และเว็บนี้มีภาษาอังกฤษ ไทย เวียดนาม และอินโดนีเซีย เปลี่ยนได้ในคลิกเดียวที่ปุ่มภาษา</p>
+        <p data-l="vi">Akati OS Center và trang web này có tiếng Anh, Thái, Việt và Indonesia, chỉ một cú nhấp vào nút ngôn ngữ.</p>
+        <p data-l="id">Akati OS Center dan situs ini tersedia dalam bahasa Inggris, Thai, Vietnam, dan Indonesia, cukup satu klik di tombol bahasa.</p>
+      </div></div>
+      <div class="why-i"><div class="ic"><svg class="i" aria-hidden="true"><use href="#i-shield"/></svg></div><div>
+        <h3 data-l="en">Your data stays yours</h3><h3 data-l="th">ข้อมูลของคุณเป็นของคุณ</h3><h3 data-l="vi">Dữ liệu của bạn là của bạn</h3><h3 data-l="id">Data Anda tetap milik Anda</h3>
+        <p data-l="en">Akati OS Center sends no usage data. It only checks GitHub for a new version, measures ping while it is open and downloads the apps you click.</p>
+        <p data-l="th">Akati OS Center ไม่ส่งข้อมูลการใช้งาน แค่เช็กเวอร์ชันใหม่จาก GitHub วัดปิงระหว่างที่เปิดแอปอยู่ และโหลดแอปที่คุณกดติดตั้ง</p>
+        <p data-l="vi">Akati OS Center không gửi dữ liệu sử dụng. Nó chỉ kiểm tra phiên bản mới trên GitHub, đo ping khi đang mở và tải các ứng dụng bạn nhấp vào.</p>
+        <p data-l="id">Akati OS Center tidak mengirim data penggunaan. Ia hanya mengecek versi baru di GitHub, mengukur ping saat terbuka, dan mengunduh aplikasi yang Anda klik.</p>
+      </div></div>
+      <div class="why-i"><div class="ic"><svg class="i" aria-hidden="true"><use href="#i-ban"/></svg></div><div>
+        <h3 data-l="en">No activation or piracy tools</h3><h3 data-l="th">ไม่มีเครื่องมือ Activate หรือของเถื่อน</h3><h3 data-l="vi">Không có công cụ kích hoạt hay bẻ khóa</h3><h3 data-l="id">Tanpa alat aktivasi atau bajakan</h3>
+        <p data-l="en">Akati OS does not touch Windows activation and includes nothing cracked. You need a genuine Windows licence.</p>
+        <p data-l="th">Akati OS ไม่แตะการ Activate ของ Windows และไม่มีของเถื่อนใด ๆ คุณต้องมีไลเซนส์ Windows ที่ถูกต้อง</p>
+        <p data-l="vi">Akati OS không đụng đến việc kích hoạt Windows và không chứa thứ gì bẻ khóa. Bạn cần giấy phép Windows chính hãng.</p>
+        <p data-l="id">Akati OS tidak menyentuh aktivasi Windows dan tidak menyertakan apa pun yang dibajak. Anda membutuhkan lisensi Windows yang asli.</p>
+      </div></div>
+      <div class="why-i"><div class="ic"><svg class="i" aria-hidden="true"><use href="#i-refresh"/></svg></div><div>
+        <h3 data-l="en">Updated often</h3><h3 data-l="th">อัปเดตสม่ำเสมอ</h3><h3 data-l="vi">Cập nhật thường xuyên</h3><h3 data-l="id">Sering diperbarui</h3>
+        <p data-l="en">Every release comes with a changelog and SHA256 sums, and Akati OS Center tells you when a new one is out. It never installs updates by itself.</p>
+        <p data-l="th">ทุกเวอร์ชันมีบันทึกการเปลี่ยนแปลงและค่า SHA256 และ Akati OS Center จะบอกเมื่อมีเวอร์ชันใหม่ โดยไม่ติดตั้งอัปเดตเอง</p>
+        <p data-l="vi">Mỗi bản phát hành đều có nhật ký thay đổi và mã SHA256, và Akati OS Center báo cho bạn khi có bản mới. Nó không bao giờ tự cài cập nhật.</p>
+        <p data-l="id">Setiap rilis disertai catatan perubahan dan SHA256, dan Akati OS Center memberi tahu saat ada versi baru. Ia tidak pernah memasang pembaruan sendiri.</p>
+      </div></div>
     </div>
   </div>
 </section>
@@ -823,6 +946,37 @@ Get-Content .\SHA256SUMS.txt</code></pre>
   </div>
 </section>
 
+<section id="opensource">
+  <div class="wrap">
+    <div class="oss">
+      <div class="frame rv"><img src="images/screenshots/tweaks-en.png" data-dark="images/screenshots/tweaks-en.png" data-light="images/screenshots/light-tweaks.png" alt="Akati OS Center: Tweaks, every setting with a note on what it changes" loading="lazy" width="1008" height="700"></div>
+      <div class="oss-txt rv" style="--d:1">
+        <span class="eyebrow"><span data-l="en">Open source</span><span data-l="th">โอเพนซอร์ส</span><span data-l="vi">Mã nguồn mở</span><span data-l="id">Sumber terbuka</span></span>
+        <h2 data-l="en">An open-source <span class="nw">GPL-3.0</span> project</h2><h2 data-l="th">โปรเจกต์โอเพนซอร์ส <span class="nw">GPL-3.0</span></h2><h2 data-l="vi">Một dự án mã nguồn mở <span class="nw">GPL-3.0</span></h2><h2 data-l="id">Proyek sumber terbuka <span class="nw">GPL-3.0</span></h2>
+        <p data-l="en">The playbook, Akati OS Center and this website live in one GitHub repository. Each release is built from that code by GitHub Actions, so what you download is what you can read.</p>
+        <p data-l="th">ตัว playbook, Akati OS Center และเว็บนี้อยู่ใน GitHub repository เดียวกัน ทุกเวอร์ชันสร้างจากโค้ดนั้นด้วย GitHub Actions ไฟล์ที่คุณโหลดจึงเป็นโค้ดเดียวกับที่คุณอ่านได้</p>
+        <p data-l="vi">Playbook, Akati OS Center và trang web này đều nằm trong một kho GitHub. Mỗi bản phát hành được GitHub Actions dựng từ chính mã đó, nên thứ bạn tải về chính là thứ bạn có thể đọc.</p>
+        <p data-l="id">Playbook, Akati OS Center, dan situs ini ada di satu repositori GitHub. Setiap rilis dibuat dari kode itu oleh GitHub Actions, jadi yang Anda unduh adalah yang bisa Anda baca.</p>
+        <div class="chips" id="oss-stats" hidden>
+          <span class="chip" id="oss-stars" hidden><svg class="i" aria-hidden="true"><use href="#i-star"/></svg><b class="n"></b><span data-l="en">stars</span><span data-l="th">ดาว</span><span data-l="vi">sao</span><span data-l="id">bintang</span></span>
+          <span class="chip" id="oss-dl" hidden><svg class="i" aria-hidden="true"><use href="#i-dl"/></svg><b class="n"></b><span data-l="en">playbook downloads</span><span data-l="th">ยอดดาวน์โหลด playbook</span><span data-l="vi">lượt tải playbook</span><span data-l="id">unduhan playbook</span></span>
+          <span class="chip" id="oss-rel" hidden><svg class="i" aria-hidden="true"><use href="#i-branch"/></svg><b class="n"></b><span data-l="en">releases</span><span data-l="th">เวอร์ชันที่ปล่อยแล้ว</span><span data-l="vi">bản phát hành</span><span data-l="id">rilis</span></span>
+        </div>
+        <div class="buttons">
+          <a class="btn primary" href="https://github.com/x2Swiftyouz/Akati-Os"><svg class="i" aria-hidden="true"><use href="#i-code"/></svg><span class="t"><span><span data-l="en">View on GitHub</span><span data-l="th">ดูบน GitHub</span><span data-l="vi">Xem trên GitHub</span><span data-l="id">Lihat di GitHub</span></span><small>x2Swiftyouz/Akati-Os</small></span></a>
+          <a class="btn" href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/CHANGES-FROM-ATLAS.md"><svg class="i" aria-hidden="true"><use href="#i-file"/></svg><span class="t"><span>Changes from AtlasOS</span><small><span data-l="en">Every difference, file by file</span><span data-l="th">ทุกจุดที่ต่าง ทีละไฟล์</span><span data-l="vi">Mọi khác biệt, từng tệp</span><span data-l="id">Setiap perbedaan, per file</span></small></span></a>
+        </div>
+        <div class="based"><svg class="i" aria-hidden="true"><use href="#i-branch"/></svg>
+          <span data-l="en"><b>Built on AtlasOS.</b> The tweaks underneath are the work of the <a href="https://github.com/Atlas-OS/Atlas">AtlasOS</a> team (v0.5.0 for Windows 11, v0.4.1 for Windows 10, GPL-3.0). Akati OS is not an official AtlasOS project.</span>
+          <span data-l="th"><b>สร้างต่อจาก AtlasOS</b> การปรับแต่งที่อยู่เบื้องหลังเป็นผลงานของทีม <a href="https://github.com/Atlas-OS/Atlas">AtlasOS</a> (v0.5.0 สำหรับ Windows 11, v0.4.1 สำหรับ Windows 10, GPL-3.0) Akati OS ไม่ใช่โปรเจกต์ทางการของ AtlasOS</span>
+          <span data-l="vi"><b>Xây dựng trên AtlasOS.</b> Các tinh chỉnh bên dưới là công sức của nhóm <a href="https://github.com/Atlas-OS/Atlas">AtlasOS</a> (v0.5.0 cho Windows 11, v0.4.1 cho Windows 10, GPL-3.0). Akati OS không phải dự án chính thức của AtlasOS.</span>
+          <span data-l="id"><b>Dibangun di atas AtlasOS.</b> Tweak di baliknya adalah karya tim <a href="https://github.com/Atlas-OS/Atlas">AtlasOS</a> (v0.5.0 untuk Windows 11, v0.4.1 untuk Windows 10, GPL-3.0). Akati OS bukan proyek resmi AtlasOS.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section id="faq" class="alt-bg">
   <div class="wrap">
     <div class="head rv">
@@ -891,6 +1045,20 @@ Get-Content .\SHA256SUMS.txt</code></pre>
         <a class="btn" data-dl="10" href="https://github.com/x2Swiftyouz/Akati-Os/releases/latest"><svg class="i" aria-hidden="true"><use href="#i-dl"/></svg><span class="t"><span><span data-l="en">Download for Windows 10</span><span data-l="th">ดาวน์โหลดสำหรับ Windows 10</span><span data-l="vi">Tải cho Windows 10</span><span data-l="id">Unduh untuk Windows 10</span></span><small>22H2</small></span></a>
       </div>
     </div>
+    <div class="comm rv">
+      <div>
+        <h2 data-l="en">Be part of the community</h2><h2 data-l="th">มาเป็นส่วนหนึ่งของชุมชน</h2><h2 data-l="vi">Cùng tham gia cộng đồng</h2><h2 data-l="id">Jadi bagian dari komunitas</h2>
+        <p data-l="en">Akati OS gets better with every report. Tell us what broke, what you miss, or help with the code.</p>
+        <p data-l="th">Akati OS ดีขึ้นได้จากทุกรายงาน บอกเราว่าอะไรพัง อยากได้อะไรเพิ่ม หรือมาช่วยกันเขียนโค้ด</p>
+        <p data-l="vi">Akati OS tốt hơn sau mỗi báo cáo. Hãy cho chúng tôi biết cái gì hỏng, bạn còn thiếu gì, hoặc giúp viết mã.</p>
+        <p data-l="id">Akati OS makin baik dengan setiap laporan. Beri tahu kami apa yang rusak, apa yang kurang, atau bantu dengan kodenya.</p>
+      </div>
+      <div class="comm-links">
+        <a class="comm-link" href="https://github.com/x2Swiftyouz/Akati-Os/issues/new?template=bug_report.yml"><b><svg class="i" aria-hidden="true"><use href="#i-chat"/></svg><span data-l="en">Report a problem</span><span data-l="th">แจ้งปัญหา</span><span data-l="vi">Báo lỗi</span><span data-l="id">Laporkan masalah</span></b><span class="d" data-l="en">Attach the report from Akati OS Center &gt; About.</span><span class="d" data-l="th">แนบรายงานจาก Akati OS Center &gt; เกี่ยวกับ</span><span class="d" data-l="vi">Đính kèm báo cáo từ Akati OS Center &gt; Giới thiệu.</span><span class="d" data-l="id">Lampirkan laporan dari Akati OS Center &gt; Tentang.</span></a>
+        <a class="comm-link" href="https://github.com/x2Swiftyouz/Akati-Os/issues/new?template=feature_request.yml"><b><svg class="i" aria-hidden="true"><use href="#i-bulb"/></svg><span data-l="en">Suggest an idea</span><span data-l="th">เสนอไอเดีย</span><span data-l="vi">Góp ý tưởng</span><span data-l="id">Usulkan ide</span></b><span class="d" data-l="en">Tell us what you would like to see next.</span><span class="d" data-l="th">บอกเราว่าอยากเห็นอะไรต่อไป</span><span class="d" data-l="vi">Cho chúng tôi biết bạn muốn thấy gì tiếp theo.</span><span class="d" data-l="id">Beri tahu apa yang ingin Anda lihat berikutnya.</span></a>
+        <a class="comm-link" href="https://github.com/x2Swiftyouz/Akati-Os"><b><svg class="i" aria-hidden="true"><use href="#i-star"/></svg><span data-l="en">Contribute</span><span data-l="th">ร่วมพัฒนา</span><span data-l="vi">Đóng góp</span><span data-l="id">Berkontribusi</span></b><span class="d" data-l="en">Star the project, read the code or send a pull request.</span><span class="d" data-l="th">กดดาวให้โปรเจกต์ อ่านโค้ด หรือส่ง pull request</span><span class="d" data-l="vi">Gắn sao cho dự án, đọc mã hoặc gửi pull request.</span><span class="d" data-l="id">Beri bintang, baca kodenya, atau kirim pull request.</span></a>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -913,6 +1081,7 @@ Get-Content .\SHA256SUMS.txt</code></pre>
         <ul>
           <li><a href="#features"><span data-l="en">Features</span><span data-l="th">ฟีเจอร์</span><span data-l="vi">Tính năng</span><span data-l="id">Fitur</span></a></li>
           <li><a href="#install"><span data-l="en">Install</span><span data-l="th">วิธีติดตั้ง</span><span data-l="vi">Cài đặt</span><span data-l="id">Instal</span></a></li>
+          <li><a href="docs.html"><span data-l="en">Docs</span><span data-l="th">คู่มือ</span><span data-l="vi">Tài liệu</span><span data-l="id">Dokumentasi</span></a></li>
           <li><a href="#compare"><span data-l="en">Compare</span><span data-l="th">เปรียบเทียบ</span><span data-l="vi">So sánh</span><span data-l="id">Perbandingan</span></a></li>
           <li><a href="#faq">FAQ</a></li>
           <li><a href="changelog.html"><span data-l="en">Changelog</span><span data-l="th">ประวัติเวอร์ชัน</span><span data-l="vi">Nhật ký thay đổi</span><span data-l="id">Catatan rilis</span></a></li>
@@ -945,6 +1114,47 @@ Get-Content .\SHA256SUMS.txt</code></pre>
     </div>
   </div>
 </footer>
+
+<div class="dlm" id="dlm" data-step="1" hidden>
+  <div class="dlm-back" data-close></div>
+  <div class="dlm-card" role="dialog" aria-modal="true" aria-labelledby="dlm-title" aria-describedby="dlm-desc" tabindex="-1">
+    <button class="dlm-x" type="button" data-close><svg class="i" aria-hidden="true"><use href="#i-x"/></svg><span class="sr" data-l="en">Close</span><span class="sr" data-l="th">ปิด</span><span class="sr" data-l="vi">Đóng</span><span class="sr" data-l="id">Tutup</span></button>
+    <span class="eyebrow"><span data-l="en">Download</span><span data-l="th">ดาวน์โหลด</span><span data-l="vi">Tải về</span><span data-l="id">Unduh</span></span>
+    <h2 id="dlm-title"><span data-l="en">Installing Akati OS</span><span data-l="th">การติดตั้ง Akati OS</span><span data-l="vi">Cài đặt Akati OS</span><span data-l="id">Memasang Akati OS</span></h2>
+    <ol class="dlm-steps">
+      <li id="dlm-st1" class="on" aria-current="step"><span class="n"><b>1</b><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></span><span data-l="en">Read the guide</span><span data-l="th">อ่านคู่มือ</span><span data-l="vi">Đọc hướng dẫn</span><span data-l="id">Baca panduan</span></li>
+      <li class="bar" aria-hidden="true"></li>
+      <li id="dlm-st2"><span class="n"><b>2</b><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></span><span data-l="en">Download</span><span data-l="th">ดาวน์โหลด</span><span data-l="vi">Tải về</span><span data-l="id">Unduh</span></li>
+    </ol>
+
+    <div class="dlm-pane" id="dlm-s1">
+      <h3 data-l="en">Follow the install guide first</h3><h3 data-l="th">ทำตามคู่มือติดตั้งก่อน</h3><h3 data-l="vi">Hãy làm theo hướng dẫn cài đặt trước</h3><h3 data-l="id">Ikuti panduan instal dulu</h3>
+      <p id="dlm-desc"><span data-l="en">Akati OS changes a lot of Windows in one go, and a playbook cannot be fully undone. The guide shows how to get ready:</span><span data-l="th">Akati OS เปลี่ยน Windows หลายอย่างในครั้งเดียว และ playbook ย้อนกลับไม่ได้ทั้งหมด คู่มือจะบอกวิธีเตรียมตัว:</span><span data-l="vi">Akati OS thay đổi nhiều thứ trong Windows cùng lúc, và không thể hoàn tác hoàn toàn một playbook. Hướng dẫn chỉ cách chuẩn bị:</span><span data-l="id">Akati OS mengubah banyak hal di Windows sekaligus, dan playbook tidak bisa dibatalkan sepenuhnya. Panduan menunjukkan cara bersiap:</span></p>
+      <ul data-l="en"><li>update Windows and back up your files</li><li>check the SHA256 of the file</li><li>pick safe options for anti-cheat games</li></ul>
+      <ul data-l="th"><li>อัปเดต Windows และสำรองไฟล์</li><li>ตรวจ SHA256 ของไฟล์</li><li>เลือกตัวเลือกที่ปลอดภัยสำหรับเกมที่มีแอนตี้ชีต</li></ul>
+      <ul data-l="vi"><li>cập nhật Windows và sao lưu tệp</li><li>kiểm tra SHA256 của tệp</li><li>chọn tùy chọn an toàn cho game có chống gian lận</li></ul>
+      <ul data-l="id"><li>perbarui Windows dan cadangkan file</li><li>cek SHA256 file</li><li>pilih opsi aman untuk game dengan anti-cheat</li></ul>
+      <div class="dlm-acts">
+        <a class="btn primary" href="docs.html#install"><svg class="i" aria-hidden="true"><use href="#i-book"/></svg><span><span data-l="en">Open the install guide</span><span data-l="th">เปิดคู่มือติดตั้ง</span><span data-l="vi">Mở hướng dẫn cài đặt</span><span data-l="id">Buka panduan instal</span></span></a>
+        <button class="btn ghost" type="button" id="dlm-next"><span><span data-l="en">I already read it, continue</span><span data-l="th">อ่านแล้ว ไปต่อ</span><span data-l="vi">Tôi đã đọc rồi, tiếp tục</span><span data-l="id">Sudah saya baca, lanjut</span></span><svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></button>
+      </div>
+    </div>
+
+    <div class="dlm-pane" id="dlm-s2" hidden>
+      <h3 data-l="en">Download Akati OS</h3><h3 data-l="th">ดาวน์โหลด Akati OS</h3><h3 data-l="vi">Tải Akati OS</h3><h3 data-l="id">Unduh Akati OS</h3>
+      <div class="warn" role="note"><svg class="i" aria-hidden="true"><use href="#i-warn"/></svg><span><span data-l="en">Only download if you follow the guide. Back up your files and try it in a virtual machine first.</span><span data-l="th">ดาวน์โหลดเฉพาะเมื่อคุณทำตามคู่มือ สำรองไฟล์และลองใน VM ก่อน</span><span data-l="vi">Chỉ tải về nếu bạn làm theo hướng dẫn. Hãy sao lưu tệp và thử trong máy ảo trước.</span><span data-l="id">Unduh hanya jika Anda mengikuti panduan. Cadangkan file dan coba dulu di mesin virtual.</span></span></div>
+      <label class="agree" id="agree-box"><input type="checkbox" id="agree"><span><span data-l="en">I have read and followed the install guide</span><span data-l="th">ฉันอ่านและทำตามคู่มือติดตั้งแล้ว</span><span data-l="vi">Tôi đã đọc và làm theo hướng dẫn cài đặt</span><span data-l="id">Saya sudah membaca dan mengikuti panduan instal</span></span></label>
+      <div class="dlm-dl" id="dlm-dl">
+        <a class="btn primary" id="m11" data-v="11" role="link" aria-disabled="true"><svg class="i" aria-hidden="true"><use href="#i-dl"/></svg><span class="rec" hidden><span data-l="en">Recommended for your PC</span><span data-l="th">แนะนำสำหรับเครื่องของคุณ</span><span data-l="vi">Khuyên dùng cho máy của bạn</span><span data-l="id">Disarankan untuk PC Anda</span></span><span class="t"><span><span data-l="en">Download for Windows 11</span><span data-l="th">ดาวน์โหลดสำหรับ Windows 11</span><span data-l="vi">Tải cho Windows 11</span><span data-l="id">Unduh untuk Windows 11</span></span><small id="m11v">24H2 · 25H2 · 26H2</small></span></a>
+        <a class="btn" id="m10" data-v="10" role="link" aria-disabled="true"><svg class="i" aria-hidden="true"><use href="#i-dl"/></svg><span class="rec" hidden><span data-l="en">Recommended for your PC</span><span data-l="th">แนะนำสำหรับเครื่องของคุณ</span><span data-l="vi">Khuyên dùng cho máy của bạn</span><span data-l="id">Disarankan untuk PC Anda</span></span><span class="t"><span><span data-l="en">Download for Windows 10</span><span data-l="th">ดาวน์โหลดสำหรับ Windows 10</span><span data-l="vi">Tải cho Windows 10</span><span data-l="id">Unduh untuk Windows 10</span></span><small id="m10v">22H2</small></span></a>
+      </div>
+      <div class="dlm-foot">
+        <button class="linkbtn" type="button" id="dlm-back"><svg class="i" aria-hidden="true"><use href="#i-back"/></svg><span data-l="en">Back</span><span data-l="th">ย้อนกลับ</span><span data-l="vi">Quay lại</span><span data-l="id">Kembali</span></button>
+        <span id="dlm-hint"><span data-l="en">Tick the box to enable the downloads.</span><span data-l="th">ติ๊กช่องด้านบนเพื่อเปิดปุ่มดาวน์โหลด</span><span data-l="vi">Đánh dấu ô để bật nút tải.</span><span data-l="id">Centang kotak untuk mengaktifkan unduhan.</span></span>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
   (function () {
@@ -1045,6 +1255,127 @@ Get-Content .\SHA256SUMS.txt</code></pre>
       root.classList.add('anim');
     }
 
+    // Download dialog: step 1 points to the install guide, step 2 has the downloads, enabled once the box is ticked.
+    // Without the script every download button is a normal link to the latest release.
+    var RELEASES = 'https://github.com/x2Swiftyouz/Akati-Os/releases/latest';
+    var DL = { '11': RELEASES, '10': RELEASES };
+    var recV = '11', recKnown = false, wantV = null, opener = null, hideTimer = null;
+    var dlm = document.getElementById('dlm');
+    var dlmCard = dlm.querySelector('.dlm-card');
+    var agree = document.getElementById('agree');
+    function dlmOpen() { return !dlm.hidden && dlm.classList.contains('open'); }
+    function paintDl() {
+      var on = agree.checked;
+      document.getElementById('agree-box').classList.toggle('on', on);
+      document.getElementById('dlm-hint').hidden = on;
+      ['11', '10'].forEach(function (v) {
+        var a = document.getElementById('m' + v);
+        if (on) { a.href = DL[v]; a.removeAttribute('aria-disabled'); a.removeAttribute('role'); }
+        else { a.removeAttribute('href'); a.setAttribute('aria-disabled', 'true'); a.setAttribute('role', 'link'); }
+      });
+    }
+    function paintChoice() {
+      // The version that was clicked (or the recommended one) comes first and is the main button
+      var v = wantV || recV, box = document.getElementById('dlm-dl');
+      ['11', '10'].forEach(function (k) {
+        var a = document.getElementById('m' + k);
+        a.classList.toggle('primary', k === v);
+        a.querySelector('.rec').hidden = !(recKnown && k === recV);
+      });
+      box.insertBefore(document.getElementById('m' + v), box.firstChild);
+    }
+    function showStep(n, focus) {
+      dlm.setAttribute('data-step', String(n));
+      document.getElementById('dlm-s1').hidden = n !== 1;
+      document.getElementById('dlm-s2').hidden = n !== 2;
+      var s1 = document.getElementById('dlm-st1'), s2 = document.getElementById('dlm-st2');
+      s1.className = n === 1 ? 'on' : 'done'; s2.className = n === 2 ? 'on' : '';
+      if (n === 1) { s1.setAttribute('aria-current', 'step'); s2.removeAttribute('aria-current'); }
+      else { s2.setAttribute('aria-current', 'step'); s1.removeAttribute('aria-current'); }
+      dlmCard.scrollTop = 0;
+      if (focus) (n === 1 ? document.getElementById('dlm-next') : agree).focus();
+    }
+    function others() { return Array.prototype.filter.call(document.body.children, function (el) { return el !== dlm && el.tagName !== 'SCRIPT'; }); }
+    function openDl(from, v) {
+      if (dlmOpen()) return;
+      clearTimeout(hideTimer);
+      opener = from || document.activeElement;
+      wantV = v || null;
+      closeMenu();
+      paintChoice(); paintDl();
+      showStep(agree.checked ? 2 : 1, false);
+      var sbw = window.innerWidth - root.clientWidth;
+      root.classList.add('locked');
+      if (sbw > 0) document.body.style.paddingRight = sbw + 'px';
+      others().forEach(function (el) { el.inert = true; el.setAttribute('aria-hidden', 'true'); });
+      dlm.hidden = false;
+      void dlm.offsetWidth; // start the fade and scale from the hidden state
+      dlm.classList.add('open');
+      dlmCard.focus();
+    }
+    function closeDl() {
+      if (dlm.hidden) return;
+      dlm.classList.remove('open');
+      others().forEach(function (el) { el.inert = false; el.removeAttribute('aria-hidden'); });
+      root.classList.remove('locked');
+      document.body.style.paddingRight = '';
+      hideTimer = setTimeout(function () { dlm.hidden = true; }, reduce ? 0 : 260);
+      if (opener && opener.focus && document.contains(opener)) { try { opener.focus({ preventScroll: true }); } catch (e) { opener.focus(); } }
+      opener = null;
+    }
+    document.querySelectorAll('#dl11, #dl10, [data-dl], [data-open-dl]').forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        e.preventDefault();
+        var v = a.id === 'dl10' ? '10' : a.id === 'dl11' ? '11' : a.getAttribute('data-dl');
+        openDl(a, v === '10' || v === '11' ? v : null);
+      });
+    });
+    dlm.querySelectorAll('[data-close]').forEach(function (el) { el.addEventListener('click', closeDl); });
+    document.getElementById('dlm-next').addEventListener('click', function () { showStep(2, true); });
+    document.getElementById('dlm-back').addEventListener('click', function () { showStep(1, true); });
+    agree.addEventListener('change', paintDl);
+    document.querySelectorAll('#m11, #m10').forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        if (!agree.checked || !a.getAttribute('href')) { e.preventDefault(); return; }
+        setTimeout(closeDl, 150); // the download starts, then the dialog closes
+      });
+    });
+    document.addEventListener('keydown', function (e) {
+      if (!dlmOpen()) return;
+      if (e.key === 'Escape') { e.preventDefault(); closeDl(); return; }
+      if (e.key !== 'Tab') return;
+      var f = Array.prototype.filter.call(dlmCard.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'), function (el) { return el.offsetParent !== null; });
+      if (!f.length) { e.preventDefault(); return; }
+      var first = f[0], last = f[f.length - 1], cur = document.activeElement;
+      if (e.shiftKey && (cur === first || cur === dlmCard || !dlmCard.contains(cur))) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && (cur === last || !dlmCard.contains(cur))) { e.preventDefault(); first.focus(); }
+    });
+    // Keep focus inside the dialog if something else gets it
+    document.addEventListener('focusin', function (e) { if (dlmOpen() && !dlm.contains(e.target)) dlmCard.focus(); });
+
+    // Numbers in the open-source section (hidden until the GitHub API answers)
+    function showChip(id, n) {
+      var chip = document.getElementById(id), b = chip.querySelector('.n'), t = {};
+      LANGS.forEach(function (l) { try { t[l] = n.toLocaleString(l); } catch (e) { t[l] = String(n); } });
+      b.textContent = ''; langSpans(b, t);
+      chip.hidden = false; document.getElementById('oss-stats').hidden = false;
+      set(lang);
+    }
+    (function stars() {
+      var cached = null;
+      try { var c = JSON.parse(sessionStorage.getItem('akati-repo')); if (c && typeof c.s === 'number' && Date.now() - c.t < 600000) cached = c.s; } catch (e) {}
+      var got = cached !== null ? Promise.resolve(cached) : (window.fetch ? fetch('https://api.github.com/repos/x2Swiftyouz/Akati-Os').then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      }).then(function (d) {
+        var s = d && typeof d.stargazers_count === 'number' ? d.stargazers_count : null;
+        if (s === null) throw new Error('bad data');
+        try { sessionStorage.setItem('akati-repo', JSON.stringify({ t: Date.now(), s: s })); } catch (e) {}
+        return s;
+      }) : Promise.reject(new Error('no fetch')));
+      got.then(function (s) { if (s > 0) showChip('oss-stars', s); }).catch(function () {});
+    })();
+
     // Recommended download: Windows 11 unless the browser reports Windows 10 (platformVersion 1-12; 13 and up is Windows 11)
     function recommend(v) {
       try {
@@ -1058,6 +1389,7 @@ Get-Content .\SHA256SUMS.txt</code></pre>
         cta.querySelectorAll('[data-dl]').forEach(function (a) { a.classList.toggle('white', a.getAttribute('data-dl') === v); });
         var first = cta.querySelector('[data-dl="' + v + '"]');
         if (first) cta.insertBefore(first, cta.firstChild);
+        recV = v; recKnown = true; paintChoice();
       } catch (e) {}
     }
     try {
@@ -1154,6 +1486,11 @@ Get-Content .\SHA256SUMS.txt</code></pre>
           if (/^AkatiOS-Win10_.*\.apbx$/.test(a.name)) { urls['10'] = a.browser_download_url; document.getElementById('dl10').href = a.browser_download_url; }
         });
         document.querySelectorAll('[data-dl]').forEach(function (a) { var u = urls[a.getAttribute('data-dl')]; if (u) a.href = u; });
+        if (urls['11']) DL['11'] = urls['11'];
+        if (urls['10']) DL['10'] = urls['10'];
+        paintDl();
+        document.getElementById('m11v').textContent = rel.tag_name + ' · 24H2 · 25H2 · 26H2';
+        document.getElementById('m10v').textContent = rel.tag_name + ' · 22H2';
         document.getElementById('v11').textContent = rel.tag_name + ' · 24H2 · 25H2 · 26H2';
         document.getElementById('v10').textContent = rel.tag_name + ' · 22H2';
         // "vX is out" in the pill above the title
@@ -1171,6 +1508,9 @@ Get-Content .\SHA256SUMS.txt</code></pre>
       // Total downloads of all playbook files
       var total = 0;
       list.forEach(function (r) { r.assets.forEach(function (a) { if (/\.apbx$/i.test(a.name)) total += a.download_count; }); });
+      var stable = list.filter(function (r) { return !r.prerelease; }).length;
+      if (stable > 0) showChip('oss-rel', stable);
+      if (total > 0) showChip('oss-dl', total);
       if (total > 0) {
         var label = {
           en: total === 1 ? 'playbook download' : 'playbook downloads',

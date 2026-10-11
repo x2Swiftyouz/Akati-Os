@@ -19,6 +19,13 @@ if ($Screenshot) {
     Save-Setting TweakProfile 'gamemode=1;timer=1;access=0;mouseaccel=0;ducking=0;nagle=0;edgebg=1;startdelay=0;hotkeys=1'
     Save-Setting TweakProfileAt ((Get-Date).AddDays(-1).ToString('s', [Globalization.CultureInfo]::InvariantCulture))
     Update-ProfileTiles
+    # Sample badges (some unlocked), history rows of a service and an app, and what Windows Update turned back on
+    $inv = [Globalization.CultureInfo]::InvariantCulture
+    $ago = { param($d) (Get-Date).Date.AddDays(-$d).ToString('yyyy-MM-dd', $inv) }
+    Save-Setting Badges ([string[]]@("firstclean=$(& $ago 40)", "clean1gb=$(& $ago 26)", "firstboost=$(& $ago 39)", "days7=$(& $ago 7)", "profile=$(& $ago 1)", "speedtest=$(& $ago 0)"))
+    Save-Setting History ([string[]]@("$((Get-Date).AddMinutes(-3).ToString('s', $inv))|svc:MapsBroker|4,2", "$((Get-Date).AddMinutes(-4).ToString('s', $inv))|app:Microsoft.BingNews|removed",
+                                      "$((Get-Date).AddHours(-1).ToString('s', $inv))|gamemode|1"))
+    Start-WuCheck
     # Sample speed tests (before and after a DNS change) and network use per app (one Windows service without End task)
     Save-Setting SpeedHistory ([string[]]@((New-SpeedEntry (Get-Date).AddMinutes(-10) 241.8 40.9 11 1.1), (New-SpeedEntry (Get-Date).AddHours(-1) 236.1 41.3 12 1.4),
                                            (New-SpeedEntry (Get-Date).AddDays(-1) 212.4 38.6 18 3.2)))
@@ -148,6 +155,7 @@ if ($Screenshot) {
                     if (!(Test-Path $gamesKey)) { New-Item -Path $gamesKey -Force | Out-Null }
                     Set-ItemProperty -Path $gamesKey -Name (Join-Path $windir 'notepad.exe') -Value 1 -Type DWord -Force
                     Set-GameProfile (Join-Path $windir 'notepad.exe') 'boost' 1; Set-GameProfile (Join-Path $windir 'notepad.exe') 'hvci' 0
+                    Set-GameProfile (Join-Path $windir 'notepad.exe') 'tweaks' 1
                     Show-Games
                     $top = $ui.GamesList.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
                     $sv.UpdateLayout(); $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 80)); $sv.UpdateLayout()
@@ -225,7 +233,14 @@ if ($Screenshot) {
     $top = $ui.DiskSection.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
     $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 20)); $sv.UpdateLayout(); Save-Shot 'health-en-disks.png'
     $top = $ui.RpCard.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
-    $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 240)); $sv.UpdateLayout(); Save-Shot 'health-en-restore.png'; $sv.ScrollToVerticalOffset(0)
+    $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 240)); $sv.UpdateLayout(); Save-Shot 'health-en-restore.png'
+    # Badges, and the banner of what Windows Update turned back on (sample) at the top of the page
+    $top = $ui.BadgeSection.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
+    $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 20)); $sv.UpdateLayout(); Save-Shot 'health-en-badges.png'
+    $sv.ScrollToVerticalOffset(0); $sv.UpdateLayout(); Save-Shot 'health-en-wuback.png'
+    # The change history with a service and an app
+    $top = $ui.HistoryList.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
+    $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 80)); $sv.UpdateLayout(); Save-Shot 'health-en-history.png'; $sv.ScrollToVerticalOffset(0)
     $ui.NavQuicktools.IsChecked = $true; $sv = $ui.PageQuicktools; $sv.UpdateLayout()
     $top = $ui.NetUseSection.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
     $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 60)); $sv.UpdateLayout(); Save-Shot 'quicktools-en-net.png'; $sv.ScrollToVerticalOffset(0)
@@ -242,6 +257,14 @@ if ($Screenshot) {
     $top = $ui.IrqPanel.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
     $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 150)); $sv.UpdateLayout(); Save-Shot 'tweaks-en-irq.png'
     $sv.ScrollToVerticalOffset($top + 260); $sv.UpdateLayout(); Save-Shot 'tweaks-en-irq2.png'
+    # Service helper (sample services) and the privacy status (sample PC)
+    $ui.SvcShow.RaiseEvent((New-Object System.Windows.RoutedEventArgs ([System.Windows.Controls.Primitives.ButtonBase]::ClickEvent)))
+    $sv.UpdateLayout()
+    $top = $ui.SvcSection.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
+    $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 20)); $sv.UpdateLayout(); Save-Shot 'tweaks-en-svchelper.png'
+    $top = $ui.PrivacySection.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
+    $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 20)); $sv.UpdateLayout(); Save-Shot 'tweaks-en-privacy.png'
+    $ui.SvcShow.RaiseEvent((New-Object System.Windows.RoutedEventArgs ([System.Windows.Controls.Primitives.ButtonBase]::ClickEvent)))
     $sv.ScrollToVerticalOffset(0)
     # A narrow window (the smallest size): one column of switch cards, the cleaner summary under its list
     $wide = $window.Width; $window.Width = $window.MinWidth

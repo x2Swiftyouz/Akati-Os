@@ -131,12 +131,13 @@ function Get-DiskHealthName($status) {
     if ($s) { return 'Unknown' }
     return ''
 }
-# What Akati Doctor warns about: health reported and not Healthy, wear 90% or more, 70 °C or more.
-# $null means not reported and never counts. Returns the text keys.
+# What Akati Doctor warns about: health Warning or Unhealthy, wear 90% or more, 70 °C or more.
+# Unknown is not a warning (virtual and USB disks often report it). $null means not reported and never counts.
+# Returns the text keys.
 function Get-DiskWarnings($health, $wear, $temp) {
     $w = @()
     $h = Get-DiskHealthName $health
-    if ($h -and $h -ne 'Healthy') { $w += 'smart.warn.health' }
+    if ($h -in 'Warning', 'Unhealthy') { $w += 'smart.warn.health' }
     if ($null -ne $wear -and [double]$wear -ge 90) { $w += 'smart.warn.wear' }
     if ($null -ne $temp -and [double]$temp -ge 70) { $w += 'smart.warn.temp' }
     $w
@@ -186,4 +187,152 @@ function Test-ProtectedProcess([string]$name, [int]$session, [string]$path, [str
     if (!$path) { return $true }
     if ($windir -and $path.StartsWith($windir.TrimEnd('\') + '\', [StringComparison]::OrdinalIgnoreCase)) { return $true }
     return $false
+}
+
+# ---------------------------------------------------------------------------------------------
+# Tweaks profiles. The Gaming profile (also read by the icon next to the clock) and "key=1;key=0" texts
+# (the custom profile TweakProfile, and the game profile state)
+# ---------------------------------------------------------------------------------------------
+function Get-GamingProfile {
+    [ordered]@{ gamemode = $true; maxperf = $true; timer = $true; access = $false; mouseaccel = $false; ducking = $false; nagle = $false; edgebg = $true; startdelay = $false }
+}
+function ConvertFrom-ProfileText([string]$text) {
+    $map = [ordered]@{}
+    foreach ($part in $text.Split(';')) {
+        $m = [regex]::Match($part, '^(\w+)=([01])$')
+        if ($m.Success) { $map[$m.Groups[1].Value] = $m.Groups[2].Value -eq '1' }
+    }
+    $map
+}
+# Switches a game profile never sets: settings of Akati OS itself and the look of Windows
+$gameTweakSkip = 'store', 'tray', 'desktopmenu', 'hotkeys', 'widget', 'schedtheme', 'updatenotify', 'darkmode', 'accentbars', 'transparency'
+# Switches that need a restart (the Restart switches of AkatiCenter.tweaks.ps1; tools/test-center.ps1 checks the list)
+$restartTweaks = 'hags', 'timer', 'access', 'nagle', 'mpo', 'msi', 'memcomp', 'extrasvc', 'svcxbox', 'svciphelper', 'svchello', 'svcscanner',
+    'svchotspot', 'svcnotify', 'svccdp', 'svcprint', 'svcbt', 'vbs'
+# What a game profile changes: the switches of $map that differ from $current (key -> $true or $false; $null or missing
+# when it cannot be read here). $restart: keys that need a restart, skipped and reported. $only: when given, the only
+# keys that can be set here (the icon next to the clock: switches without administrator rights); the others are
+# reported as Admin. Set: key -> new value; Prev: key -> the value before, to put back when the game closes.
+function Get-GameTweakPlan($map, $current, [string[]]$restart, $only = $null) {
+    $set = [ordered]@{}; $prev = [ordered]@{}; $skipRestart = @(); $skipAdmin = @()
+    foreach ($k in @($map.Keys)) {
+        if ($k -in $gameTweakSkip) { continue }
+        $want = [bool]$map[$k]
+        $now = if ($current.Contains($k)) { $current[$k] } else { $null }
+        if ($null -ne $now -and [bool]$now -eq $want) { continue }
+        if ($k -in $restart) { $skipRestart += $k; continue }
+        if ($null -ne $only -and $k -notin @($only)) { $skipAdmin += $k; continue }
+        if ($null -eq $now) { continue }
+        $set[$k] = $want; $prev[$k] = [bool]$now
+    }
+    @{ Set = $set; Prev = $prev; Restart = $skipRestart; Admin = $skipAdmin }
+}
+# The switches a game profile changed, kept until the game closes (setting GameTweaks): "by|time|path|key=0;key=1".
+# by: center (Play) or tray (automatic); the values are the switches as they were before the game started.
+function ConvertTo-GameTweakState([string]$by, [string]$time, [string]$path, $prev) {
+    $pairs = @(foreach ($k in @($prev.Keys)) { '{0}={1}' -f $k, [int][bool]$prev[$k] })
+    '{0}|{1}|{2}|{3}' -f $by, $time, $path, ($pairs -join ';')
+}
+function ConvertFrom-GameTweakState([string]$text) {
+    $m = [regex]::Match($text, '^(center|tray)\|([^|]*)\|([^|]+)\|(.*)$')
+    if (!$m.Success) { return $null }
+    @{ By = $m.Groups[1].Value; Time = $m.Groups[2].Value; Path = $m.Groups[3].Value; Prev = (ConvertFrom-ProfileText $m.Groups[4].Value) }
+}
+
+# ---------------------------------------------------------------------------------------------
+# Privacy status (Tweaks): On or Off from the values read from the registry and the services ($v: name -> value,
+# $null when missing). Windows defaults: telemetry, advertising ID, location, activity history, tailored experiences
+# and app diagnostics are on until something turns them off; online speech recognition is off until accepted.
+# ---------------------------------------------------------------------------------------------
+function Test-PrivacyOff([string]$item, $v) {
+    switch ($item) {
+        'telemetry' {
+            $policy = @($v.AllowTelemetry, $v.AllowTelemetry2) | Where-Object { $null -ne $_ } | Select-Object -First 1
+            return ($null -ne $policy -and [int]$policy -eq 0) -and ($null -eq $v.DiagTrackStart -or [int]$v.DiagTrackStart -eq 4)
+        }
+        'adid' { return [int]$v.AdPolicy -eq 1 -or ($null -ne $v.AdEnabled -and [int]$v.AdEnabled -eq 0) }
+        'location' { return [int]$v.LocationPolicy -eq 1 -or [string]$v.LocationMachine -eq 'Deny' -or [string]$v.LocationUser -eq 'Deny' }
+        'activity' { return ($null -ne $v.ActivityFeed -and [int]$v.ActivityFeed -eq 0) -or ($null -ne $v.PublishActivities -and [int]$v.PublishActivities -eq 0) }
+        'recall' { return [int]$v.RecallMachine -eq 1 -or [int]$v.RecallUser -eq 1 -or ($null -ne $v.RecallAllow -and [int]$v.RecallAllow -eq 0) }
+        'copilot' { return [int]$v.CopilotUser -eq 1 -or [int]$v.CopilotMachine -eq 1 }
+        'tailored' { return [int]$v.TailoredPolicy -eq 1 -or ($null -ne $v.Tailored -and [int]$v.Tailored -eq 0) }
+        'speech' { return ($null -ne $v.SpeechPolicy -and [int]$v.SpeechPolicy -eq 0) -or [int]$v.SpeechAccepted -ne 1 }
+        'appdiag' { return [int]$v.AppDiagPolicy -eq 2 -or [string]$v.AppDiagMachine -eq 'Deny' -or [string]$v.AppDiagUser -eq 'Deny' }
+    }
+    $false
+}
+
+# ---------------------------------------------------------------------------------------------
+# After Windows Update. Baseline entries (setting WuBaseline): "svc:<service>=4" (turned off), "app:<package name>"
+# (removed) and "pol:<id>=<value>" (a policy Akati OS or AtlasOS set). The key is the part before "=".
+# ---------------------------------------------------------------------------------------------
+function ConvertFrom-WuEntry([string]$entry) {
+    $m = [regex]::Match($entry, '^(svc|app|pol):([\w.\-]+)(=(.*))?$')
+    if (!$m.Success) { return $null }
+    @{ Kind = $m.Groups[1].Value; Id = $m.Groups[2].Value; Key = $m.Groups[1].Value + ':' + $m.Groups[2].Value; Value = $m.Groups[4].Value }
+}
+# What came back on: baseline entries whose current value ($now: key -> value as text) shows them on again, without the
+# keys the user turned on in Akati OS Center ($keep). A service counts when its start type is automatic (2) or manual (3)
+# again, an app when it is installed again ('1'), a policy when its value is not the baseline value any more.
+function Compare-WuBaseline([string[]]$baseline, $now, [string[]]$keep) {
+    @(foreach ($e in @($baseline)) {
+        $p = ConvertFrom-WuEntry $e
+        if (!$p -or $p.Key -in @($keep) -or !$now.ContainsKey($p.Key)) { continue }
+        $value = [string]$now[$p.Key]
+        $back = switch ($p.Kind) { 'svc' { $value -in '2', '3' } 'app' { $value -eq '1' } default { $value -ne $p.Value } }
+        if ($back) { $p }
+    })
+}
+# A list with one entry for a key: the entry is added, or replaces the one with the same key
+function Set-WuEntry([string[]]$list, [string]$entry) {
+    $key = (ConvertFrom-WuEntry $entry).Key
+    , [string[]]@(@($list | Where-Object { $_ -and (ConvertFrom-WuEntry $_).Key -ne $key }) + $entry)
+}
+function Remove-WuEntry([string[]]$list, [string]$key) {
+    , [string[]]@($list | Where-Object { $_ -and $_ -ne $key -and (ConvertFrom-WuEntry $_).Key -ne $key })
+}
+
+# ---------------------------------------------------------------------------------------------
+# Badges (Health): the ids unlocked by the numbers Akati OS Center keeps. $d: CleanBytes (all time), Cleaned (a clean
+# ran), Boosts (all time), BestScore, ScoreDays, Profile (a custom profile is saved), DoctorGood (Akati Doctor found
+# nothing once), SpeedTests, FpsTests.
+# ---------------------------------------------------------------------------------------------
+$badgeIds = 'firstclean', 'clean1gb', 'clean10gb', 'firstboost', 'boost10', 'score90', 'days7', 'days30', 'profile', 'doctor', 'speedtest', 'fpstest'
+function Get-BadgeUnlocks($d) {
+    $on = @()
+    if ($d.Cleaned -or [double]$d.CleanBytes -gt 0) { $on += 'firstclean' }
+    if ([double]$d.CleanBytes -ge 1GB) { $on += 'clean1gb' }
+    if ([double]$d.CleanBytes -ge 10GB) { $on += 'clean10gb' }
+    if ([int]$d.Boosts -ge 1) { $on += 'firstboost' }
+    if ([int]$d.Boosts -ge 10) { $on += 'boost10' }
+    if ([int]$d.BestScore -ge 90) { $on += 'score90' }
+    if ([int]$d.ScoreDays -ge 7) { $on += 'days7' }
+    if ([int]$d.ScoreDays -ge 30) { $on += 'days30' }
+    if ($d.Profile) { $on += 'profile' }
+    if ($d.DoctorGood) { $on += 'doctor' }
+    if ([int]$d.SpeedTests -ge 1) { $on += 'speedtest' }
+    if ([int]$d.FpsTests -ge 1) { $on += 'fpstest' }
+    , [string[]]$on
+}
+# Saved badges: "id=yyyy-MM-dd" (the day each was unlocked). Returns the new list and the ids that are new.
+function Update-BadgeList([string[]]$saved, [string[]]$unlocked, [string]$day) {
+    $list = @($saved | Where-Object { $_ -match '^\w+=\d{4}-\d{2}-\d{2}$' })
+    $have = @($list | ForEach-Object { $_.Split('=')[0] })
+    $new = @($unlocked | Where-Object { $_ -notin $have })
+    @{ List = [string[]]@($list + @($new | ForEach-Object { "$_=$day" })); New = [string[]]$new }
+}
+
+# ---------------------------------------------------------------------------------------------
+# Service helper (Tweaks): services that must never be offered for a change, whatever the list says
+# ---------------------------------------------------------------------------------------------
+$criticalServices = 'RpcSs', 'DcomLaunch', 'RpcEptMapper', 'LSM', 'Winmgmt', 'WinDefend', 'WdNisSvc', 'WdBoot', 'WdFilter', 'Sense', 'MDCoreSvc',
+    'SecurityHealthService', 'mpssvc', 'BFE', 'EventLog', 'Schedule', 'ProfSvc', 'Power', 'PlugPlay', 'SamSs', 'BrokerInfrastructure',
+    'CoreMessagingRegistrar', 'StateRepository', 'SystemEventsBroker', 'UserManager', 'Dhcp', 'Dnscache', 'nsi', 'AudioEndpointBuilder',
+    'Audiosrv', 'CryptSvc', 'gpsvc', 'KeyIso', 'TrustedInstaller', 'msiserver', 'sppsvc', 'wscsvc', 'EventSystem', 'Appinfo', 'TimeBrokerSvc',
+    'LanmanServer', 'VaultSvc', 'Wcmsvc', 'netprofm', 'NlaSvc', 'FontCache', 'AppXSvc', 'ClipSVC', 'camsvc', 'DeviceInstall', 'DsmSvc'
+# $updating: Windows Update is installing now (then wuauserv is not offered either)
+function Test-ServiceChangeable([string]$name, [string]$level, [bool]$updating) {
+    if ($name -in $criticalServices) { return $false }
+    if ($name -eq 'wuauserv' -and $updating) { return $false }
+    $level -in 'safe', 'careful'
 }

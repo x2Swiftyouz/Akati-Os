@@ -135,4 +135,8 @@ if ($CleanNow) {
     }
     $old = 0.0; [void][double]::TryParse([string](Get-ItemProperty -Path $key -Name WeekCleanBytes -ErrorAction SilentlyContinue).WeekCleanBytes, [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$old)
     Set-ItemProperty -Path $key -Name WeekCleanBytes -Value ([string][long]($old + $freed)) -Force
+    # All-time total for the badges of Akati OS Center (started from this week when missing)
+    $sum = 0.0
+    if (![double]::TryParse([string](Get-ItemProperty -Path $key -Name TotalCleanBytes -ErrorAction SilentlyContinue).TotalCleanBytes, [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$sum)) { $sum = $old }
+    Set-ItemProperty -Path $key -Name TotalCleanBytes -Value ([string][long]($sum + $freed)) -Force
 }

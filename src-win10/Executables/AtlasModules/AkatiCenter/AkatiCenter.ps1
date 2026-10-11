@@ -98,6 +98,8 @@ trap { Close-Splash; break }
 . (Join-Path $appDir 'AkatiCenter.strings.ps1')
 # Small functions without windows (tested by tools/test-logic.ps1)
 . (Join-Path $appDir 'AkatiCenter.logic.ps1')
+# Code the icon next to the clock uses too: switches without administrator rights, game profile state, history
+. (Join-Path $appDir 'AkatiCenter.shared.ps1')
 
 $settingsKey = 'HKCU:\Software\AkatiOS\Center'
 $lang = (Get-ItemProperty -Path $settingsKey -Name Language -ErrorAction SilentlyContinue).Language
@@ -389,6 +391,9 @@ if ($null -ne $script:exitNow) { exit $script:exitNow }
 . (Join-Path $appDir 'AkatiCenter.appearance.ps1')
 . (Join-Path $appDir 'AkatiCenter.system.ps1')
 . (Join-Path $appDir 'AkatiCenter.health.ps1')
+. (Join-Path $appDir 'AkatiCenter.privacy.ps1')
+. (Join-Path $appDir 'AkatiCenter.services.ps1')
+. (Join-Path $appDir 'AkatiCenter.badges.ps1')
 . (Join-Path $appDir 'AkatiCenter.quicktools.ps1')
 
 # ---------------------------------------------------------------------------------------------
@@ -427,7 +432,7 @@ $numberText = { param($v) [string][int][Math]::Round($v) }
 
 function Show-Page([string]$name) {
     $script:page = $name
-    if ($name -eq 'tweaks') { Initialize-Tweaks }
+    if ($name -eq 'tweaks') { Initialize-Tweaks; Show-Privacy }
     if ($name -eq 'gaming') { Initialize-Apps }
     if ($name -eq 'appearance') { Initialize-Appearance }
     if ($name -eq 'quicktools') { Initialize-QuickTools }
@@ -467,6 +472,7 @@ function Show-Page([string]$name) {
         if ($ui.ScoreValue.Text -match '^\d+$') { Start-CountUp $ui.ScoreValue ([int]$ui.ScoreValue.Text) $numberText 900 }
         if (!$script:healthLoaded) { $script:healthLoaded = $true; Start-Health }
         Show-History; Update-WuState; Update-TempText
+        Update-Badges -Now; Show-Badges
     }
     # Gaming apps: look for app updates once, the first time the page opens
     if ($name -eq 'gaming' -and !$script:appsChecked -and !$Screenshot) { $script:appsChecked = $true; Start-AppUpdateCheck $true }
@@ -608,6 +614,13 @@ function Get-SpotlightItems {
     & $add (T 'netuse.title') ((Get-Both 'netuse.title') + ' network connections bandwidth per app end task') (T 'nav.quicktools') ([char]0xE774) { param($d) Show-Element 'quicktools' $d } $ui.NetUseSection (Get-Both 'netuse.sub')
     & $add (T 'rp.weekly') ((Get-Both 'rp.weekly') + ' restore point system restore') (T 'spot.setting') ([char]0xE81C) { param($d) Show-Element 'health' $d } $ui.RpWeeklyRow (Get-Both 'rp.weekly.d')
     & $add (T 'rp.profile') ((Get-Both 'rp.profile') + ' restore point system restore') (T 'spot.setting') ([char]0xE81C) { param($d) Show-Element 'health' $d } $ui.RpProfileRow (Get-Both 'rp.profile.d')
+    & $add (T 'privacy.title') ((Get-Both 'privacy.title') + ' privacy telemetry advertising location recall copilot diagnostics') (T 'spot.setting') ([char]0xE72E) { param($d) Show-Element 'tweaks' $d } $ui.PrivacySection (Get-Both 'privacy.sub')
+    & $add (T 'svc.title') ((Get-Both 'svc.title') + ' services service disable startup') (T 'spot.setting') ([char]0xE912) { param($d)
+        if ($ui.SvcPanel.Visibility -ne 'Visible') { $ui.SvcShow.RaiseEvent((New-Object System.Windows.RoutedEventArgs ([System.Windows.Controls.Primitives.ButtonBase]::ClickEvent))) }
+        Show-Element 'tweaks' $d } $ui.SvcSection (Get-Both 'svc.sub')
+    & $add (T 'wuback.check') ((Get-Both 'wuback.check') + ' windows update services apps policy') (T 'spot.action') ([char]0xE895) { param($d) Show-Element 'health' $d; Start-WuCheck -Manual } $ui.WuBackCard
+    & $add (T 'badge.title') ((Get-Both 'badge.title') + ' achievements badges') (T 'nav.health') ([char]0xE735) { param($d) Show-Element 'health' $d } $ui.BadgeSection (Get-Both 'badge.sub')
+    & $add (T 'games.tw.spot') ((Get-Both 'games.tw.spot') + ' game profile tweaks play') (T 'spot.setting') ([char]0xE7FC) { param($d) Show-Element 'boost' $d } $ui.GamesList (Get-Both 'games.tw.tip')
     return $items
 }
 function Update-SpotSelection {
@@ -807,6 +820,11 @@ function Update-Language {
     if ($script:diskResult) { Show-DiskHealth $script:diskResult }
     if ($script:rpInfo) { Show-RestoreInfo $script:rpInfo }
     Show-SpeedResults
+    if ($script:page -eq 'tweaks') { Show-Privacy }
+    if ($ui.SvcPanel.Visibility -eq 'Visible') { $ui.SvcShowText.Text = T 'svc.hide' }
+    if ($script:svcResult) { Show-Services }
+    Show-WuBack $script:wuBack
+    Show-Badges
     # The rows of Network use are made again, for the End task text
     $script:netRows = @{}
     if ($script:netResult) { Show-NetUse $script:netResult }
@@ -981,6 +999,8 @@ if (!$Screenshot) {
     $doctorTimer.Add_Tick({
         $doctorTimer.Stop()
         if (!$script:doctorResult) { Start-Work $doctorWork @($logicFile) { param($r) Show-Doctor (Get-LastOutput $r); Update-Chips } $null }
+        # What Windows Update turned back on (the first start makes the baseline)
+        Start-WuCheck
         # App updates, for the number on Gaming apps (once; the page does it too when opened first)
         if (!$script:appsChecked) { $script:appsChecked = $true; Start-AppUpdateCheck $true }
     })
@@ -1097,6 +1117,7 @@ $timer.Interval = [TimeSpan]::FromMilliseconds(500)
 $script:lookAt = Get-Date
 $timer.Add_Tick({
     Update-Stats; Receive-Work; Update-AppProgress; Update-Ping; Update-NetUse
+    Watch-GameTweaks; Update-Badges
     if ($script:menuAt -and (Get-Date) -gt $script:menuAt) { Update-DesktopMenu }
     # Auto follows Windows, By time follows the clock
     if (!$Screenshot -and (Get-Date) -gt $script:lookAt) {

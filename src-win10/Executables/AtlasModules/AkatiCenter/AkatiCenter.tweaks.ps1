@@ -73,17 +73,9 @@ $tweaks = @(
        Get = { (Get-RegValue $gpuKey 'HwSchMode') -eq 2 }
        Set = { param($on) Set-ItemProperty -Path $gpuKey -Name HwSchMode -Value $(if ($on) { 2 } else { 1 }) -Type DWord -Force } }
     @{ Key = 'windowed'; Glyph = [char]0xE737; Win11 = $true
-       Get = { (Get-RegValue $dxKey 'DirectXUserGlobalSettings') -match 'SwapEffectUpgradeEnable=1' }
-       Set = { param($on)
-               if (!(Test-Path $dxKey)) { New-Item -Path $dxKey -Force | Out-Null }
-               $parts = @((Get-RegValue $dxKey 'DirectXUserGlobalSettings') -split ';' | Where-Object { $_ -and $_ -notlike 'SwapEffectUpgradeEnable=*' })
-               $parts += "SwapEffectUpgradeEnable=$(if ($on) { 1 } else { 0 })"
-               Set-ItemProperty -Path $dxKey -Name DirectXUserGlobalSettings -Value (($parts -join ';') + ';') -Type String -Force } }
+       Get = $userTweaks.windowed.Get; Set = $userTweaks.windowed.Set }
     @{ Key = 'gamemode'; Glyph = [char]0xE7FC; Default = $true
-       Get = { (Get-RegValue 'HKCU:\Software\Microsoft\GameBar' 'AutoGameModeEnabled') -ne 0 }
-       Set = { param($on)
-               if (!(Test-Path 'HKCU:\Software\Microsoft\GameBar')) { New-Item -Path 'HKCU:\Software\Microsoft\GameBar' -Force | Out-Null }
-               Set-ItemProperty -Path 'HKCU:\Software\Microsoft\GameBar' -Name AutoGameModeEnabled -Value $(if ($on) { 1 } else { 0 }) -Type DWord -Force } }
+       Get = $userTweaks.gamemode.Get; Set = $userTweaks.gamemode.Set }
     @{ Key = 'maxperf'; Glyph = [char]0xE945; Async = $true
        Script = @{ Folder = '3. General Configuration\Power-saving'; On = 'Disable Power-saving*.cmd'; Off = 'Default Power-saving*.cmd' }
        Get = { [string](powercfg /getactivescheme) -match '11111111-1111-1111-1111-111111111111' } }
@@ -208,26 +200,11 @@ $tweaks = @(
                    Start-ScheduledTask -TaskPath '\AkatiOS\' -TaskName 'Akati OS tray' -ErrorAction SilentlyContinue
                } } }
     @{ Key = 'mouseaccel'; Group = 'latency'; Glyph = [char]0xE962; Default = $true
-       Get = { (Get-RegValue 'HKCU:\Control Panel\Mouse' 'MouseSpeed') -ne '0' }
-       Set = { param($on)
-               $v = if ($on) { '1', '6', '10' } else { '0', '0', '0' }
-               Set-ItemProperty -Path 'HKCU:\Control Panel\Mouse' -Name MouseSpeed -Value $v[0] -Type String -Force
-               Set-ItemProperty -Path 'HKCU:\Control Panel\Mouse' -Name MouseThreshold1 -Value $v[1] -Type String -Force
-               Set-ItemProperty -Path 'HKCU:\Control Panel\Mouse' -Name MouseThreshold2 -Value $v[2] -Type String -Force
-               # Applies now, not only after the next sign-in (SPI_SETMOUSE)
-               if (!('AkatiOS.Mouse' -as [type])) { Add-Type -Namespace AkatiOS -Name Mouse -MemberDefinition '[DllImport("user32.dll")] public static extern bool SystemParametersInfo(int action, int param, int[] values, int flags);' }
-               [void][AkatiOS.Mouse]::SystemParametersInfo(4, 0, [int[]]@([int]$v[1], [int]$v[2], [int]$v[0]), 3) } }
+       Get = $userTweaks.mouseaccel.Get; Set = $userTweaks.mouseaccel.Set }
     @{ Key = 'ducking'; Group = 'latency'; Glyph = [char]0xE767; Default = $true
-       Get = { (Get-RegValue 'HKCU:\Software\Microsoft\Multimedia\Audio' 'UserDuckingPreference') -ne 3 }
-       Set = { param($on)
-               if ($on) { Remove-ItemProperty -Path 'HKCU:\Software\Microsoft\Multimedia\Audio' -Name UserDuckingPreference -ErrorAction SilentlyContinue }
-               else {
-                   if (!(Test-Path 'HKCU:\Software\Microsoft\Multimedia\Audio')) { New-Item -Path 'HKCU:\Software\Microsoft\Multimedia\Audio' -Force | Out-Null }
-                   Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Multimedia\Audio' -Name UserDuckingPreference -Value 3 -Type DWord -Force
-               } } }
+       Get = $userTweaks.ducking.Get; Set = $userTweaks.ducking.Set }
     @{ Key = 'keydelay'; Group = 'latency'; Glyph = [char]0xE92E; Default = $false
-       Get = { (Get-RegValue 'HKCU:\Control Panel\Keyboard' 'KeyboardDelay') -eq '0' }
-       Set = { param($on) Set-ItemProperty -Path 'HKCU:\Control Panel\Keyboard' -Name KeyboardDelay -Value $(if ($on) { '0' } else { '1' }) -Type String -Force } }
+       Get = $userTweaks.keydelay.Get; Set = $userTweaks.keydelay.Set }
     @{ Key = 'widget'; Group = 'system'; Glyph = [char]0xE9D9; Default = $false
        Get = { (Get-RegValue $settingsKey 'Widget') -eq 1 }
        Set = { param($on)
@@ -262,14 +239,7 @@ $tweaks = @(
        Get = { (Get-RegValue $settingsKey 'UpdateNotify') -ne 0 }
        Set = { param($on) Save-Setting UpdateNotify ([int]$on) } }
     @{ Key = 'startdelay'; Group = 'system'; Glyph = [char]0xE823; Default = $true
-       Get = { (Get-RegValue $serializeKey 'StartupDelayInMSec') -ne 0 }
-       Set = { param($on)
-               if ($on) { Remove-ItemProperty -Path $serializeKey -Name StartupDelayInMSec, WaitForIdleState -ErrorAction SilentlyContinue }
-               else {
-                   if (!(Test-Path $serializeKey)) { New-Item -Path $serializeKey -Force | Out-Null }
-                   Set-ItemProperty -Path $serializeKey -Name StartupDelayInMSec -Value 0 -Type DWord -Force
-                   Set-ItemProperty -Path $serializeKey -Name WaitForIdleState -Value 0 -Type DWord -Force
-               } } }
+       Get = $userTweaks.startdelay.Get; Set = $userTweaks.startdelay.Set }
 )
 
 # ---------------------------------------------------------------------------------------------
@@ -278,20 +248,14 @@ $tweaks = @(
 # default is off). Save current: every switch as it is now, kept in the setting TweakProfile ("key=1;key=0").
 # ---------------------------------------------------------------------------------------------
 $tweakProfiles = @{
-    gaming = [ordered]@{ gamemode = $true; maxperf = $true; timer = $true; access = $false; mouseaccel = $false; ducking = $false; nagle = $false; edgebg = $true; startdelay = $false }
+    gaming = Get-GamingProfile
     normal = [ordered]@{}
 }
 foreach ($k in $tweakProfiles.gaming.Keys) {
     $tp = $tweaks | Where-Object { $_.Key -eq $k } | Select-Object -First 1
     $tweakProfiles.normal[$k] = if ($tp.ContainsKey('Default')) { [bool]$tp.Default } else { $false }
 }
-function Get-CustomProfile {
-    $map = [ordered]@{}
-    foreach ($part in ([string](Get-RegValue $settingsKey 'TweakProfile')).Split(';')) {
-        if ($part -match '^(\w+)=([01])$') { $map[$Matches[1]] = $Matches[2] -eq '1' }
-    }
-    return $map
-}
+function Get-CustomProfile { ConvertFrom-ProfileText ([string](Get-RegValue $settingsKey 'TweakProfile')) }
 # Shows what changes and asks first (with a warning when a change needs a restart), then sets each switch
 # like a click: Invoke-Tweak, the change history (Health page, Undo) and the Action log
 function Invoke-TweakProfile([string]$title, $map) {
@@ -487,10 +451,12 @@ function Show-Toast([string]$text, $undo) {
     $ui.Toast.Visibility = 'Visible'
     $toastTimer.Stop(); $toastTimer.Start()
 }
+# Undo: a switch (Tweak, Before) or any other change (Action, called as: & $Action $undo)
 $ui.ToastUndo.Add_Click({
     $u = $script:toastUndo; $script:toastUndo = $null
     $toastTimer.Stop(); $ui.Toast.Visibility = 'Collapsed'
-    if ($u) { $u.Tweak.Toggle.IsChecked = $u.Before; Invoke-Tweak $u.Tweak $u.Before; Add-History $u.Tweak.Key $u.Before }
+    if ($u -and $u.Action) { & $u.Action $u }
+    elseif ($u -and $u.Tweak) { $u.Tweak.Toggle.IsChecked = $u.Before; Invoke-Tweak $u.Tweak $u.Before; Add-History $u.Tweak.Key $u.Before }
 })
 
 # "What it changes" under a switch: the PowerShell the switch runs, or the AtlasOS scripts it starts

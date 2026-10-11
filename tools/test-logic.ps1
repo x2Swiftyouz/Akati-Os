@@ -95,7 +95,8 @@ Check 'disk health none' (Get-DiskHealthName $null) ''
 Check 'disk ok' ((Get-DiskWarnings 'Healthy' 12 41) -join ',') ''
 Check 'disk not reported' ((Get-DiskWarnings $null $null $null) -join ',') ''
 Check 'disk all bad' ((Get-DiskWarnings 'Warning' 90 70) -join ',') 'smart.warn.health,smart.warn.wear,smart.warn.temp'
-Check 'disk unknown health' ((Get-DiskWarnings 'Unknown' 0 69) -join ',') 'smart.warn.health'
+Check 'disk unknown health' ((Get-DiskWarnings 'Unknown' 0 69) -join ',') ''
+Check 'disk unhealthy' ((Get-DiskWarnings 'Unhealthy' $null $null) -join ',') 'smart.warn.health'
 
 # Speed test
 Check 'mbps' (Get-Mbps 25000000 2) 100
@@ -118,6 +119,68 @@ Check 'protected name' (Test-ProtectedProcess 'explorer' 1 'C:\Program Files\x.e
 Check 'protected windows folder' (Test-ProtectedProcess 'notepad' 1 'C:\WINDOWS\System32\notepad.exe' 'C:\Windows') 'True'
 Check 'protected no path' (Test-ProtectedProcess 'anticheat' 1 '' 'C:\Windows') 'True'
 Check 'not protected' (Test-ProtectedProcess 'chrome' 1 'C:\Program Files\Google\Chrome\Application\chrome.exe' 'C:\Windows') 'False'
+
+# Profiles and the game profile
+Check 'gaming profile' ((Get-GamingProfile).Keys -join ',') 'gamemode,maxperf,timer,access,mouseaccel,ducking,nagle,edgebg,startdelay'
+$pt = ConvertFrom-ProfileText 'gamemode=1;timer=0;bad;x=2'
+Check 'profile text' (($pt.Keys | ForEach-Object { "$_=$($pt[$_])" }) -join ',') 'gamemode=True,timer=False'
+Check 'profile text empty' (ConvertFrom-ProfileText '').Count 0
+$cur = @{ gamemode = $false; timer = $false; mouseaccel = $true; ducking = $false; edgebg = $null; hotkeys = $false; maxperf = $false }
+$plan = Get-GameTweakPlan ([ordered]@{ gamemode = $true; timer = $true; mouseaccel = $false; ducking = $false; edgebg = $true; hotkeys = $true; maxperf = $true }) $cur @('timer')
+Check 'plan set' (($plan.Set.Keys | ForEach-Object { "$_=$($plan.Set[$_])" }) -join ',') 'gamemode=True,mouseaccel=False,maxperf=True'
+Check 'plan prev' (($plan.Prev.Keys | ForEach-Object { "$_=$($plan.Prev[$_])" }) -join ',') 'gamemode=False,mouseaccel=True,maxperf=False'
+Check 'plan restart skipped' ($plan.Restart -join ',') 'timer'
+$plan = Get-GameTweakPlan ([ordered]@{ gamemode = $true; maxperf = $true; nagle = $false }) @{ gamemode = $false } @('nagle') @('gamemode', 'mouseaccel')
+Check 'plan tray set' ($plan.Set.Keys -join ',') 'gamemode'
+Check 'plan tray admin' ($plan.Admin -join ',') 'maxperf'
+Check 'plan tray restart' ($plan.Restart -join ',') 'nagle'
+$st = ConvertTo-GameTweakState 'center' '2026-10-11T10:00:00' 'C:\Games\game.exe' ([ordered]@{ gamemode = $false; mouseaccel = $true })
+Check 'state text' $st 'center|2026-10-11T10:00:00|C:\Games\game.exe|gamemode=0;mouseaccel=1'
+$back = ConvertFrom-GameTweakState $st
+Check 'state back' ('{0} {1} {2}' -f $back.By, $back.Path, $back.Prev['mouseaccel']) 'center C:\Games\game.exe True'
+Check 'state bad' ($null -eq (ConvertFrom-GameTweakState 'other|x|y|z')) 'True'
+
+# Privacy status
+Check 'privacy telemetry off' (Test-PrivacyOff 'telemetry' @{ AllowTelemetry = 0; DiagTrackStart = 4 }) 'True'
+Check 'privacy telemetry service on' (Test-PrivacyOff 'telemetry' @{ AllowTelemetry = 0; DiagTrackStart = 2 }) 'False'
+Check 'privacy telemetry no policy' (Test-PrivacyOff 'telemetry' @{ DiagTrackStart = 4 }) 'False'
+Check 'privacy adid default' (Test-PrivacyOff 'adid' @{}) 'False'
+Check 'privacy adid user off' (Test-PrivacyOff 'adid' @{ AdEnabled = 0 }) 'True'
+Check 'privacy location deny' (Test-PrivacyOff 'location' @{ LocationMachine = 'Deny' }) 'True'
+Check 'privacy location allow' (Test-PrivacyOff 'location' @{ LocationMachine = 'Allow' }) 'False'
+Check 'privacy recall policy' (Test-PrivacyOff 'recall' @{ RecallMachine = 1 }) 'True'
+Check 'privacy speech default' (Test-PrivacyOff 'speech' @{}) 'True'
+Check 'privacy speech accepted' (Test-PrivacyOff 'speech' @{ SpeechAccepted = 1 }) 'False'
+Check 'privacy appdiag policy' (Test-PrivacyOff 'appdiag' @{ AppDiagPolicy = 2 }) 'True'
+
+# After Windows Update
+$e = ConvertFrom-WuEntry 'svc:diagnosticshub.standardcollector.service=4'
+Check 'wu entry' ('{0} {1} {2}' -f $e.Kind, $e.Id, $e.Value) 'svc diagnosticshub.standardcollector.service 4'
+Check 'wu entry app' (ConvertFrom-WuEntry 'app:Microsoft.BingNews').Key 'app:Microsoft.BingNews'
+Check 'wu entry bad' ($null -eq (ConvertFrom-WuEntry 'x:y')) 'True'
+$base = @('svc:DiagTrack=4', 'svc:Spooler=4', 'svc:SysMain=4', 'app:Microsoft.BingNews', 'app:Microsoft.Todos', 'pol:telemetry=0', 'pol:recall=1')
+$now = @{ 'svc:DiagTrack' = '2'; 'svc:Spooler' = '3'; 'svc:SysMain' = '4'; 'app:Microsoft.BingNews' = '1'; 'app:Microsoft.Todos' = '0'; 'pol:telemetry' = ''; 'pol:recall' = '1' }
+Check 'wu compare' ((Compare-WuBaseline $base $now @('svc:Spooler') | ForEach-Object { $_.Key }) -join ',') 'svc:DiagTrack,app:Microsoft.BingNews,pol:telemetry'
+Check 'wu compare none' (@(Compare-WuBaseline $base @{} @()).Count) 0
+Check 'wu set entry' ((Set-WuEntry @('svc:A=4', 'app:B') 'svc:A=4') -join ',') 'app:B,svc:A=4'
+Check 'wu remove entry' ((Remove-WuEntry @('svc:A=4', 'app:B', 'pol:x') 'svc:A') -join ',') 'app:B,pol:x'
+
+# Badges
+Check 'badges none' ((Get-BadgeUnlocks @{}) -join ',') ''
+$bu = Get-BadgeUnlocks @{ CleanBytes = 2GB; Boosts = 10; BestScore = 91; ScoreDays = 7; Profile = $true; DoctorGood = $true; SpeedTests = 1; FpsTests = 0 }
+Check 'badges some' ($bu -join ',') 'firstclean,clean1gb,firstboost,boost10,score90,days7,profile,doctor,speedtest'
+Check 'badges all ids' ($badgeIds.Count) 12
+$bl = Update-BadgeList @('firstclean=2026-10-01', 'bad') @('firstclean', 'boost10') '2026-10-11'
+Check 'badge list' ($bl.List -join ',') 'firstclean=2026-10-01,boost10=2026-10-11'
+Check 'badge new' ($bl.New -join ',') 'boost10'
+
+# Service helper
+Check 'service critical' (Test-ServiceChangeable 'RpcSs' 'safe' $false) 'False'
+Check 'service defender' (Test-ServiceChangeable 'WinDefend' 'careful' $false) 'False'
+Check 'service safe' (Test-ServiceChangeable 'DiagTrack' 'safe' $false) 'True'
+Check 'service keep' (Test-ServiceChangeable 'Themes' 'keep' $false) 'False'
+Check 'service update running' (Test-ServiceChangeable 'wuauserv' 'careful' $true) 'False'
+Check 'service update idle' (Test-ServiceChangeable 'wuauserv' 'careful' $false) 'True'
 
 Write-Host "$script:count checks, $script:failed failed"
 if ($script:failed) { exit 1 }

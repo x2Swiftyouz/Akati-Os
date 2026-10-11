@@ -137,6 +137,13 @@ function Add-WeekStat([string]$name, [double]$value) {
     }
     $old = 0.0; [void][double]::TryParse([string](Get-RegValue $key $name), [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$old)
     Set-ItemProperty -Path $key -Name $name -Value ([string][long]($old + $value))
+    # All-time totals for the badges (Health): TotalCleanBytes and TotalBoosts, started from this week when missing
+    $total = @{ WeekCleanBytes = 'TotalCleanBytes'; WeekBoosts = 'TotalBoosts' }[$name]
+    if ($total) {
+        $sum = 0.0
+        if (![double]::TryParse([string](Get-RegValue $key $total), [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$sum)) { $sum = $old }
+        Set-ItemProperty -Path $key -Name $total -Value ([string][long]($sum + $value))
+    }
 }
 # The last session for the Game boost page: "start|minutes|apps closed|services paused"
 function Save-BoostSession {

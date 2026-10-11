@@ -73,7 +73,7 @@ $doctorWork = {
             else { $r.xmp = $r.ramNow -ge $r.ramMax * 0.97 }
         } else { $r.skip += 'xmp' }
     } catch { $r.skip += 'xmp' }
-    # Disks (SMART through Windows): health not Healthy, wear 90% or more or 70 °C or more (Get-DiskWarnings)
+    # Disks (SMART through Windows): health Warning or Unhealthy (Unknown is not a warning), wear 90% or more or 70 °C or more (Get-DiskWarnings)
     try {
         $disks = @(Get-PhysicalDisk -ErrorAction Stop)
         $badDisks = @(foreach ($d in $disks) {
@@ -136,7 +136,9 @@ function Show-Doctor($r) {
     $row.Sub.Text = T 'doc.repair.d'
     [void]$ui.DoctorList.Children.Add($row.Row)
     Update-Separators $ui.DoctorList
-    $script:navBadges['Health'] = $bad; Update-NavBadges
+    $script:doctorBad = $bad; Update-HealthBadge
+    # Badges: Akati Doctor found nothing once
+    if (!$bad -and !$Screenshot -and !(Get-RegValue $settingsKey 'DoctorAllGood')) { Save-Setting DoctorAllGood ((Get-Date).ToString('yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture)) }
     Update-Score
     $ui.DoctorSummary.Text = $(if ($bad) { (T 'doc.issues') -f $bad } else { T 'doc.allgood' }) + ' · ' + ((T 'doc.checked') -f (Get-Date).ToString('HH:mm'))
 }
@@ -208,6 +210,12 @@ function Invoke-DoctorFix([string]$k) {
         # The BIOS setting cannot be changed from Windows: how to turn it on
         'xmp' { [void](Show-Ask (T 'doc.xmp.howto') 'OK' 'Information') }
     }
+}
+# The number on Health in the sidebar: Akati Doctor findings and what Windows Update turned back on
+function Update-HealthBadge {
+    # (Screenshot mode: the sample of the Windows Update banner does not count, so the other shots stay as they were)
+    $script:navBadges['Health'] = [int]$script:doctorBad + $(if ($Screenshot) { 0 } else { @($script:wuBack).Count })
+    Update-NavBadges
 }
 function Show-HealthInfo($r) {
     $script:healthResult = $r
@@ -497,14 +505,47 @@ $ui.RpWeekly.Add_Click({
 })
 $ui.RpOpen.Add_Click({ Start-Process SystemPropertiesProtection.exe })
 
-# Change history: the last 30 switches changed in Akati OS Center, newest first ("time|key|1 or 0")
+# Change history: the last 30 changes made in Akati OS Center (and by a game profile of the icon next to the clock),
+# newest first: "time|key|1 or 0" for a switch, and for other changes "time|svc:<service>|<start type>,<before>",
+# "time|pol:<id>|<value>,<before>" ('' = no value) and "time|app:<package name>|removed"
 function Add-History([string]$key, [bool]$on) {
-    try {
-        if (!(Test-Path $settingsKey)) { New-Item -Path $settingsKey -Force | Out-Null }
-        $list = @("$((Get-Date).ToString('s'))|$key|$([int]$on)") + @(Get-RegValue $settingsKey 'History' | Where-Object { $_ })
-        Set-ItemProperty -Path $settingsKey -Name History -Value ([string[]]@($list | Select-Object -First 30)) -Type MultiString -Force
-    } catch { }
+    Add-HistoryLine $key ([string][int]$on)
+    Update-WuTrackTweak $key $on
     if ($script:page -eq 'health') { Show-History }
+}
+function Add-ChangeHistory([string]$key, [string]$state) {
+    Add-HistoryLine $key $state
+    if ($script:page -eq 'health') { Show-History }
+}
+# A history row for a service, a policy or an app (Undo while it is still as the change left it; none for an app)
+function New-ChangeRow([string]$kind, [string]$id, [string]$state) {
+    $to, $from = "$state,".Split(',')[0, 1]
+    $undo = New-Object System.Windows.Controls.Button
+    $undo.Style = $window.FindResource('Pill'); $undo.Padding = '12,4'; $undo.Content = T 'toast.undo'
+    switch ($kind) {
+        'svc' {
+            $title = (T 'history.svc') -f (Get-ServiceLabel $id); $glyph = 0xE912
+            $sub = T $(if ($to -eq '4') { 'history.off' } else { 'history.on' })
+            $undo.IsEnabled = $from -match '^[234]$' -and [string](Get-RegValue "$servicesKey\$id" 'Start') -eq $to
+            $undo.Tag = @{ Id = $id; From = $from }
+            $undo.Add_Click({ Set-ServiceStart $this.Tag.Id ([int]$this.Tag.From) })
+        }
+        'pol' {
+            $title = T "wu.pol.$id"; $glyph = 0xE72E
+            $sub = T $(if ($wuPolicies.Contains($id) -and $to -eq [string]$wuPolicies[$id].Value) { 'history.off' } else { 'history.on' })
+            $d = $wuPolicies[$id]
+            $undo.IsEnabled = $d -and [string](Get-RegValue $d.Path $d.Name) -eq $to
+            $undo.Tag = @{ Id = $id; From = $from }
+            $undo.Add_Click({ Set-WuPolicy $this.Tag.Id $this.Tag.From })
+        }
+        default {
+            $title = (T 'history.app') -f $id; $glyph = 0xE74D; $sub = T 'history.removed'
+            $undo = New-Object System.Windows.Controls.Border
+        }
+    }
+    $row = New-Row ([string][char]$glyph) $title $null $undo $null
+    $row.Sub.Text = $sub
+    $row
 }
 function Show-History {
     Initialize-Tweaks
@@ -512,6 +553,13 @@ function Show-History {
     $c = & $getCulture
     foreach ($item in @(Get-RegValue $settingsKey 'History' | Where-Object { $_ })) {
         $time, $key, $state = $item -split '\|', 3
+        $when = try { [datetime]::ParseExact($time, 's', [Globalization.CultureInfo]::InvariantCulture).ToString('d MMM HH:mm', $c) } catch { $time }
+        if ($key -match '^(svc|pol|app):([\w.\-]+)$') {
+            $row = New-ChangeRow $Matches[1] $Matches[2] $state
+            $row.Sub.Text += ' · ' + $when
+            [void]$ui.HistoryList.Children.Add($row.Row)
+            continue
+        }
         $t = $tweaks | Where-Object { $_.Key -eq $key } | Select-Object -First 1
         if (!$t -or !$t.Toggle) { continue }
         $on = $state -eq '1'
@@ -521,7 +569,6 @@ function Show-History {
         $undo.IsEnabled = $t.Toggle.IsEnabled -and ([bool]$t.Toggle.IsChecked -eq $on)
         $undo.Add_Click({ $u = $this.Tag; $back = !$u.On; $u.Tweak.Toggle.IsChecked = $back; Invoke-Tweak $u.Tweak $back; Add-History $u.Tweak.Key $back })
         $row = New-Row ([string]$t.Glyph) (T "tw.$key") $null $undo $null
-        $when = try { [datetime]::ParseExact($time, 's', [Globalization.CultureInfo]::InvariantCulture).ToString('d MMM HH:mm', $c) } catch { $time }
         $row.Sub.Text = (T $(if ($on) { 'history.on' } else { 'history.off' })) + ' · ' + $when
         [void]$ui.HistoryList.Children.Add($row.Row)
     }

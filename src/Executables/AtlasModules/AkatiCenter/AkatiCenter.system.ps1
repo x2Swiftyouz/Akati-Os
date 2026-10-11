@@ -277,6 +277,8 @@ function Invoke-AtlasItem([IO.FileInfo]$file) {
 
 function Invoke-AtlasFile([IO.FileInfo]$file) {
     $name = $file.BaseName
+    # The check after Windows Update must not turn off again what the user turns on here (Update-WuTrackAtlas)
+    try { Update-WuTrackAtlas $file } catch { }
     switch ($file.Extension.ToLowerInvariant()) {
         '.reg' {
             Start-Process reg.exe -ArgumentList "import `"$($file.FullName)`"" -WindowStyle Hidden -Wait

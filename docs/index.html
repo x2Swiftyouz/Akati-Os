@@ -218,9 +218,9 @@
   .mrec-tips .checks { font-size: 15px; color: var(--muted); }
   .mrec-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin-bottom: 14px; }
   .mrec-head .btn { font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
-  table.rec { min-width: 520px; }
-  table.rec td.tool { color: var(--muted); }
-  table.rec td.blank { width: 18%; background: repeating-linear-gradient(90deg, transparent 0 6px, color-mix(in srgb, var(--line2) 60%, transparent) 6px 7px) left calc(100% - 12px) / calc(100% - 28px) 1px no-repeat; background-origin: content-box; }
+  table.rectable { min-width: 520px; }
+  table.rectable td.tool { color: var(--muted); }
+  table.rectable td.blank { width: 18%; background: repeating-linear-gradient(90deg, transparent 0 6px, var(--line2) 6px 7px) left calc(100% - 12px) / calc(100% - 28px) 1px no-repeat; background-origin: content-box; }
   #measure .note { margin: 12px 0 0; max-width: none; text-align: left; }
   #measure .based { margin-top: 32px; }
 
@@ -397,6 +397,8 @@
     .why { grid-template-columns: minmax(0, 1fr); }
     .mgrid, .mrec { grid-template-columns: minmax(0, 1fr); }
     .mcard { padding: 20px 18px; }
+    table.rectable { min-width: 0; font-size: 13.5px; }
+    table.rectable td, table.rectable th { padding: 10px; }
     .comm-links { grid-template-columns: minmax(0, 1fr); }
   }
   @media (max-width: 640px) {
@@ -994,7 +996,7 @@ Get-Content .\SHA256SUMS.txt</code></pre>
           <h3><span data-l="en">Record your numbers</span><span data-l="th">จดตัวเลขของคุณ</span><span data-l="vi">Ghi lại số của bạn</span><span data-l="id">Catat angka Anda</span></h3>
           <button class="btn sm" type="button" id="copy-measure"><svg class="i" aria-hidden="true"><use href="#i-file"/></svg><span class="t"><span class="cm-idle"><span data-l="en">Copy template</span><span data-l="th">คัดลอกตาราง</span><span data-l="vi">Sao chép mẫu</span><span data-l="id">Salin templat</span></span><span class="cm-done" hidden><span data-l="en">Copied</span><span data-l="th">คัดลอกแล้ว</span><span data-l="vi">Đã sao chép</span><span data-l="id">Disalin</span></span></span></button>
         </div>
-        <div class="tablewrap"><table class="rec" id="measure-table">
+        <div class="tablewrap"><table class="rectable" id="measure-table">
           <thead><tr><th><span data-l="en">What</span><span data-l="th">ค่าที่วัด</span><span data-l="vi">Chỉ số</span><span data-l="id">Yang diukur</span></th><th><span data-l="en">Tool</span><span data-l="th">เครื่องมือ</span><span data-l="vi">Công cụ</span><span data-l="id">Alat</span></th><th><span data-l="en">Before</span><span data-l="th">ก่อนติดตั้ง</span><span data-l="vi">Trước</span><span data-l="id">Sebelum</span></th><th><span data-l="en">After</span><span data-l="th">หลังติดตั้ง</span><span data-l="vi">Sau</span><span data-l="id">Sesudah</span></th></tr></thead>
           <tbody><tr><td><span data-l="en">Windows build</span><span data-l="th">Windows build</span><span data-l="vi">Bản Windows</span><span data-l="id">Build Windows</span></td><td class="tool"><code>winver</code></td><td class="blank"></td><td class="blank"></td></tr><tr><td><span data-l="en">Startup time (s)</span><span data-l="th">เวลาเปิดเครื่อง (วินาที)</span><span data-l="vi">Thời gian khởi động (giây)</span><span data-l="id">Waktu startup (detik)</span></td><td class="tool"><span data-l="en">Event 100 / Health</span><span data-l="th">Event 100 / สุขภาพเครื่อง</span><span data-l="vi">Event 100 / Sức khỏe</span><span data-l="id">Event 100 / Kesehatan</span></td><td class="blank"></td><td class="blank"></td></tr><tr><td><span data-l="en">RAM in use at idle (GB)</span><span data-l="th">RAM ที่ใช้ตอนว่าง (GB)</span><span data-l="vi">RAM đang dùng khi rảnh (GB)</span><span data-l="id">RAM terpakai saat idle (GB)</span></td><td class="tool">Task Manager</td><td class="blank"></td><td class="blank"></td></tr><tr><td><span data-l="en">Processes at idle</span><span data-l="th">จำนวนโปรเซสตอนว่าง</span><span data-l="vi">Số tiến trình khi rảnh</span><span data-l="id">Proses saat idle</span></td><td class="tool">Task Manager</td><td class="blank"></td><td class="blank"></td></tr><tr><td><span data-l="en">Running services</span><span data-l="th">service ที่ทำงานอยู่</span><span data-l="vi">Dịch vụ đang chạy</span><span data-l="id">Layanan berjalan</span></td><td class="tool">PowerShell</td><td class="blank"></td><td class="blank"></td></tr><tr><td><span data-l="en">Startup apps</span><span data-l="th">แอปที่เปิดตอนล็อกอิน</span><span data-l="vi">Ứng dụng khởi động</span><span data-l="id">Aplikasi startup</span></td><td class="tool">Task Manager</td><td class="blank"></td><td class="blank"></td></tr><tr><td><span data-l="en">Ping (ms), same address</span><span data-l="th">ปิง (ms) ปลายทางเดิม</span><span data-l="vi">Ping (ms), cùng địa chỉ</span><span data-l="id">Ping (ms), alamat sama</span></td><td class="tool"><code>ping -n 20</code></td><td class="blank"></td><td class="blank"></td></tr><tr><td><span data-l="en">FPS average, same scene</span><span data-l="th">FPS เฉลี่ย ฉากเดิม</span><span data-l="vi">FPS trung bình, cùng cảnh</span><span data-l="id">FPS rata-rata, adegan sama</span></td><td class="tool"><span data-l="en">PresentMon / FPS test</span><span data-l="th">PresentMon / ทดสอบ FPS</span><span data-l="vi">PresentMon / Kiểm tra FPS</span><span data-l="id">PresentMon / Tes FPS</span></td><td class="blank"></td><td class="blank"></td></tr><tr><td><span data-l="en">FPS 1% low</span><span data-l="th">FPS 1% low</span><span data-l="vi">FPS 1% low</span><span data-l="id">FPS 1% low</span></td><td class="tool"><span data-l="en">PresentMon / FPS test</span><span data-l="th">PresentMon / ทดสอบ FPS</span><span data-l="vi">PresentMon / Kiểm tra FPS</span><span data-l="id">PresentMon / Tes FPS</span></td><td class="blank"></td><td class="blank"></td></tr></tbody>
         </table></div>

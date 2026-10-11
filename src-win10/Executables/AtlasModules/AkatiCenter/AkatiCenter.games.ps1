@@ -60,6 +60,7 @@ function Set-GameOption([string]$path, [string]$kind, [bool]$on) {
 #   boost = 1: Play starts Game boost first
 #   core0 = 1: the icon next to the clock keeps the game off CPU 0 (where Windows handles most interrupts)
 #   hvci  = 1 / 0: the game needs Memory integrity on (Valorant) / off (FiveM); Play offers to switch it
+#   tweaks = 1 / 2: the Tweaks profile Gaming / My profile while the game runs (Start-GameTweaks)
 $profilesKey = "$settingsKey\GameProfiles"
 function Get-GameProfile([string]$path, [string]$name) { Get-RegValue $profilesKey "$path|$name" }
 function Set-GameProfile([string]$path, [string]$name, $value) {
@@ -74,14 +75,101 @@ function Start-Game([string]$path) {
     $need = Get-GameProfile $path 'hvci'
     if ($null -ne $need -and ([bool]$need) -ne ((Get-RegValue $hvciKey 'Enabled') -eq 1)) {
         $ask = (T 'games.hvciask') -f $name, (T $(if ($need) { 'games.on' } else { 'games.off' }))
-        if ([System.Windows.MessageBox]::Show($ask, 'Akati OS Center', 'YesNo', 'Question') -eq 'Yes') { Set-AntiCheat ([bool]$need); return }
+        if ((Show-Ask $ask 'YesNo' 'Question') -eq 'Yes') { Set-AntiCheat ([bool]$need); return }
     }
     if ((Get-GameProfile $path 'boost') -eq 1 -and !(Test-Boost)) {
         try { Start-Boost; Show-BoostEffect } catch { }
         Update-BoostCard
     }
+    Start-GameTweaks $path
     Start-Process explorer.exe -ArgumentList "`"$path`""
     Set-Status ((T 'status.gamestarted') -f $name)
+}
+
+# ---------------------------------------------------------------------------------------------
+# Tweaks profile per game. Play sets the switches of the chosen profile that differ, and puts back exactly those when
+# the game closes. What they were before is saved first (setting GameTweaks, AkatiCenter.shared.ps1), so a crash or a
+# restart still puts them back when Akati OS Center or the icon next to the clock starts again.
+# Switches that need a restart are never set for a game (skipped, written to the Action log), and neither are the
+# settings of Akati OS itself and the look of Windows ($gameTweakSkip). Every change goes to the change history.
+# The icon next to the clock (automatic, when it sees the game run) runs as the user without administrator rights: it
+# sets only the switches that need none ($userTweaks) and skips the others. Play here sets all of them.
+# ---------------------------------------------------------------------------------------------
+function Get-GameTweaksText($value) { T $(switch ($value) { 1 { 'games.tw.gaming' } 2 { 'games.tw.custom' } default { 'games.tw.none' } }) }
+function Get-GameTweaksMap($value) { switch ($value) { 1 { $tweakProfiles.gaming } 2 { Get-CustomProfile } default { $null } } }
+function Get-TweakNames($keys) { (@($keys) | ForEach-Object { T "tw.$_" }) -join ', ' }
+function Find-Tweak([string]$key) { $tweaks | Where-Object { $_.Key -eq $key } | Select-Object -First 1 }
+function Start-GameTweaks([string]$path) {
+    $map = Get-GameTweaksMap (Get-GameProfile $path 'tweaks')
+    if (!$map -or !$map.Count) { return }
+    $name = [IO.Path]::GetFileNameWithoutExtension($path)
+    $old = Get-GameTweakState
+    if ($old) {
+        # Started again while its profile is still set
+        if ($old.Path -eq $path) { return }
+        if (Test-GameRunning $old.Path) { Add-Log 'TweakLog' ((T 'gtw.busy') -f [IO.Path]::GetFileNameWithoutExtension($old.Path)); return }
+        Restore-GameTweaks
+    }
+    Initialize-Tweaks
+    $current = @{}; $restart = @()
+    foreach ($k in @($map.Keys)) {
+        $t = Find-Tweak $k
+        # Not on this PC (Windows 11 only, hidden)
+        if (!$t -or !$t.Toggle) { continue }
+        if ($t.Restart) { $restart += $k }
+        $current[$k] = if ($t.Toggle.IsEnabled -and $null -ne $t.Toggle.IsChecked) { [bool]$t.Toggle.IsChecked }
+                       else { try { $v = Get-LastOutput @(& $t.Get); if ($v -is [bool]) { $v } else { $null } } catch { $null } }
+    }
+    $plan = Get-GameTweakPlan $map $current $restart
+    if ($plan.Restart.Count) { Add-Log 'TweakLog' ((T 'gtw.skipped') -f (Get-TweakNames $plan.Restart)) }
+    if (!$plan.Set.Count) { Add-Log 'TweakLog' ((T 'gtw.none') -f $name); return }
+    Save-GameTweakState @{ By = 'center'; Time = (Get-Date).ToString('s', [Globalization.CultureInfo]::InvariantCulture); Path = $path; Prev = $plan.Prev }
+    $script:gameTweaksSeen = $false; $script:gameTweaksStarted = Get-Date
+    foreach ($k in @($plan.Set.Keys)) {
+        $t = Find-Tweak $k; $on = [bool]$plan.Set[$k]
+        $t.Toggle.IsChecked = $on; Invoke-Tweak $t $on; Add-History $k $on
+    }
+    Add-Log 'TweakLog' ((T 'gtw.applied') -f $name, (Get-TweakNames $plan.Set.Keys))
+}
+# Puts back the switches a game profile changed (all of them: Akati OS Center runs as administrator)
+function Restore-GameTweaks {
+    $state = Get-GameTweakState
+    if (!$state) { return }
+    Save-GameTweakState $null
+    Initialize-Tweaks
+    $done = @()
+    foreach ($k in @($state.Prev.Keys)) {
+        $t = Find-Tweak $k
+        if (!$t -or !$t.Toggle) { continue }
+        $want = [bool]$state.Prev[$k]
+        if ($t.Toggle.IsEnabled -and $null -ne $t.Toggle.IsChecked -and [bool]$t.Toggle.IsChecked -eq $want) { continue }
+        $t.Toggle.IsChecked = $want; Invoke-Tweak $t $want; Add-History $k $want
+        $done += $k
+    }
+    $script:gameTweaksStarted = $null
+    if ($done.Count) {
+        $msg = (T 'gtw.restored') -f [IO.Path]::GetFileNameWithoutExtension($state.Path), (Get-TweakNames $done)
+        Add-Log 'TweakLog' $msg; Set-Status $msg
+    }
+}
+# Every 5 seconds (the window timer): puts the switches back when the game is closed. After Play it waits until the
+# game was seen running, or 3 minutes (launchers take a while). A state left from before (crash, restart) is put back
+# at once when its game does not run. A state of the icon next to the clock is left to the icon while it runs.
+$script:gameWatchAt = [datetime]::MinValue; $script:aliveAt = [datetime]::MinValue
+function Watch-GameTweaks {
+    if ($Screenshot -or (Get-Date) -lt $script:gameWatchAt) { return }
+    $script:gameWatchAt = (Get-Date).AddSeconds(5)
+    # The icon next to the clock reads this to know that Akati OS Center is open
+    if ((Get-Date) -gt $script:aliveAt) { $script:aliveAt = (Get-Date).AddSeconds(30); Save-Setting CenterAlive ((Get-Date).ToString('s', [Globalization.CultureInfo]::InvariantCulture)) }
+    $first = !$script:gameWatchDone; $script:gameWatchDone = $true
+    $state = Get-GameTweakState
+    if (!$state) { return }
+    if (Test-GameRunning $state.Path) { $script:gameTweaksSeen = $true; return }
+    if (!$first) {
+        if ($state.By -ne 'center') { return }
+        if (!$script:gameTweaksSeen -and $script:gameTweaksStarted -and ((Get-Date) - $script:gameTweaksStarted).TotalMinutes -lt 3) { return }
+    }
+    Restore-GameTweaks
 }
 function Show-Games {
     $ui.GamesList.Children.Clear()
@@ -122,6 +210,17 @@ function Show-Games {
             $this.Content = Get-HvciText $next
         })
         [void]$chips.Children.Add($hv)
+        # Tweaks profile while the game runs: none > Gaming > My profile (only when one is saved) > none
+        $tp = New-Object System.Windows.Controls.Button
+        $tp.Style = $window.FindResource('Pill'); $tp.Padding = '10,3'; $tp.Margin = '0,0,6,6'; $tp.FontSize = 12
+        $tp.Content = Get-GameTweaksText (Get-GameProfile $path 'tweaks'); $tp.Tag = $path; $tp.ToolTip = T 'games.tw.tip'
+        $tp.Add_Click({
+            $now = Get-GameProfile $this.Tag 'tweaks'
+            $next = switch ($now) { 1 { if ((Get-CustomProfile).Count) { 2 } else { $null } } 2 { $null } default { 1 } }
+            Set-GameProfile $this.Tag 'tweaks' $next
+            $this.Content = Get-GameTweaksText $next
+        })
+        [void]$chips.Children.Add($tp)
 
         $right = New-Object System.Windows.Controls.StackPanel; $right.Orientation = 'Horizontal'
         $play = New-Object System.Windows.Controls.Button
@@ -139,7 +238,7 @@ function Show-Games {
             $path = $this.Tag
             foreach ($kind in 'cpu', 'gpu', 'defender') { try { Set-GameOption $path $kind $false } catch { } }
             if (Get-GameOption $path 'qos') { try { Set-GameOption $path 'qos' $false } catch { } }
-            foreach ($kind in 'boost', 'core0', 'hvci') { Set-GameProfile $path $kind $null }
+            foreach ($kind in 'boost', 'core0', 'hvci', 'tweaks') { Set-GameProfile $path $kind $null }
             Remove-ItemProperty -Path $gamesKey -Name $path -ErrorAction SilentlyContinue
             Set-Status ((T 'status.gameremoved') -f [IO.Path]::GetFileNameWithoutExtension($path))
             Show-Games
@@ -497,7 +596,7 @@ $ui.FivemPause.Add_Click({
 # Network reset: flush the DNS cache and reset the Winsock catalog. Winsock is read when Windows starts, so a
 # restart is needed (the restart bar shows).
 $ui.FivemNet.Add_Click({
-    if (!$Screenshot -and [System.Windows.MessageBox]::Show((T 'fivem.net.ask'), 'Akati OS Center', 'YesNo', 'Warning') -ne 'Yes') { return }
+    if (!$Screenshot -and (Show-Ask (T 'fivem.net.ask') 'YesNo' 'Warning') -ne 'Yes') { return }
     Add-FivemLog (T 'fivem.log.net') 'step'
     $ui.FivemNet.IsEnabled = $false
     Start-Work {

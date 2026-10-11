@@ -1,5 +1,29 @@
 # Changelog: Akati OS for Windows 10
 
+## Unreleased
+
+### Added
+- Akati OS Center: a progress card at the bottom right for long jobs (cleaner scan and clean, gaming app installs and updates with Cancel, the uninstall queue, the core and priority benchmarks)
+- Appearance: "Sounds and motion" with UI sounds (a soft click for switches and the sidebar, off at first) and Reduce motion (turns off the small animations)
+- A switch that turns on gives a short pulse
+- Health: Disk health, a card for each disk with its model, size, type (SSD, HDD or NVMe), health, temperature, wear and power-on hours, as Windows reports them (SMART). Values a disk does not report show as "not reported". Akati Doctor warns when a disk is not healthy, is 90% worn or reaches 70 °C
+- Health: Restore points, with the date of the last one, a "Weekly restore point" task (off at first) and "Restore point before applying a profile" (on at first). When Windows skips one because it made one in the last 24 hours, the page says so
+- Game boost: Internet speed test (download, upload, ping and jitter to the Cloudflare speed test over HTTPS) with the last 10 results, to compare before and after a DNS change
+- Quick tools: Network use per app, a live list of apps with open connections (refreshed every 2 seconds while the page is open), with End task after a question. Windows and system processes have no End task. Windows does not count network bytes per app without tracing, so the list shows connections, not KB/s
+- Game boost > My games: a Tweaks profile for each game (none, Gaming or My profile). Play sets the switches of that profile while the game runs and puts back exactly the ones it changed when the game closes. Switches that need a restart are skipped and named in the Action log. What the switches were before is saved first, so a crash or a restart still puts them back at the next start of Akati OS Center or the icon next to the clock. Every change goes to the change history
+- The icon next to the clock sets the game profile too when it sees the game run (for example a game started from Steam). It runs without administrator rights, so it sets only the switches that need none (Game Mode, mouse acceleration, sound ducking, key delay, startup delay, windowed games) and writes the skipped ones to its log; Play in Akati OS Center sets all of them
+- Tweaks: Privacy status, a read-only card with the current state of telemetry (policy and the DiagTrack service), the advertising ID, location, activity history, Recall and Copilot (on Windows builds that have them), tailored experiences, online speech recognition and app diagnostics. Each row shows a green Off or an amber On with a short explanation, and Change opens the matching setting (or the Windows Settings page)
+- Tweaks: Service helper, the running and automatic services with a short explanation in every language of Akati OS Center, their state and start type, and a badge: Safe to turn off, Careful, Keep on, or Unknown (leave it). Only Safe and Careful ones have a switch; Careful ones ask first and say what stops working. Core Windows services (RPC, DCOM, WMI, Defender, the firewall and more) are never offered, and neither is Windows Update while it installs. Every change goes to the change history with Undo
+- Health: a banner when Windows Update turned back on what Akati OS or AtlasOS turned off (services, removed apps and privacy policies), with the list and "Turn off again". The first start makes a list of what is off now; what you turn on yourself in Akati OS Center is never listed. The icon next to the clock also checks once a week (read only) and says so
+- Health: Badges, twelve of them, earned from what Akati OS Center already counts on this PC (cleaned files, Game boost sessions, the Akati Score history, a saved profile, Akati Doctor, the speed and FPS tests), each with the day it was unlocked and a short message when a new one unlocks. No network and no account
+
+### Changed
+- Akati OS Center questions and messages open in a dialog in the window theme (dimmed window, Enter confirms, Esc cancels) instead of the white Windows message box. Lists, like the switches a profile changes or the programs to uninstall, show as bullet points
+- The Akati OS banner at the top of the sidebar follows the accent color and the style presets
+- Appearance: the theme previews always show the whole picture, so the Akati OS name is not cut off in a wide window
+- Akati Doctor no longer warns about a disk that reports its health as Unknown (virtual and USB disks often do); it warns on Warning or Unhealthy, 90% wear or 70 °C
+- The change history also shows services, policies and removed apps, with Undo for services and policies
+
 ## v1.11.0
 
 ### Added

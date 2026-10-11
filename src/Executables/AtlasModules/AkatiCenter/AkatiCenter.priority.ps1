@@ -143,10 +143,11 @@ $ui.W32Measure.Add_Click({
     $ui.W32Measure.IsEnabled = $false; $ui.W32Run.IsEnabled = $false
     $ui.W32MeasureText.Visibility = 'Visible'; $ui.W32MeasureText.Text = T 'w32.measuring'
     Set-Status (T 'w32.measuring') $true
+    Show-Progress 'w32' (T 'prog.w32') -1 (T 'w32.measuring')
     $now = Get-W32Value
     Start-Work $w32Work @([int[]]@($now), 3, 0) {
         param($r, $now)
-        $ui.W32Measure.IsEnabled = $true; $ui.W32Run.IsEnabled = $true; Set-Status (T 'ready')
+        $ui.W32Measure.IsEnabled = $true; $ui.W32Run.IsEnabled = $true; Set-Status (T 'ready'); Hide-Progress 'w32'
         $res = Get-LastOutput $r
         if ($res -isnot [hashtable] -or !$res.ContainsKey($now)) { $ui.W32MeasureText.Text = T 'w32.failed'; return }
         $ui.W32MeasureText.Text = (T 'w32.result') -f ('{0:N0}' -f $res[$now].Share), ('{0:N0}' -f $res[$now].Delay)
@@ -159,10 +160,11 @@ $ui.W32Run.Add_Click({
     $ui.W32Run.IsEnabled = $false; $ui.W32Measure.IsEnabled = $false
     $ui.W32State.Text = (T 'w32.running') -f [int]($values.Count * $rounds * 1.0 + 2)
     Set-Status $ui.W32State.Text $true
+    Show-Progress 'w32' (T 'prog.w32') -1 $ui.W32State.Text
     $ui.W32Results.Children.Clear()
     Start-Work $w32Work @($values, $rounds, 0) {
         param($r)
-        $ui.W32Run.IsEnabled = $true; $ui.W32Measure.IsEnabled = $true; Set-Status (T 'ready'); Update-W32
+        $ui.W32Run.IsEnabled = $true; $ui.W32Measure.IsEnabled = $true; Set-Status (T 'ready'); Hide-Progress 'w32'; Update-W32
         $res = Get-LastOutput $r
         if ($res -isnot [hashtable]) { $ui.W32State.Text = T 'w32.failed'; return }
         Show-W32Results $res

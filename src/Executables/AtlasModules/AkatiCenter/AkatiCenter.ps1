@@ -98,6 +98,8 @@ trap { Close-Splash; break }
 . (Join-Path $appDir 'AkatiCenter.strings.ps1')
 # Small functions without windows (tested by tools/test-logic.ps1)
 . (Join-Path $appDir 'AkatiCenter.logic.ps1')
+# Code the icon next to the clock uses too: switches without administrator rights, game profile state, history
+. (Join-Path $appDir 'AkatiCenter.shared.ps1')
 
 $settingsKey = 'HKCU:\Software\AkatiOS\Center'
 $lang = (Get-ItemProperty -Path $settingsKey -Name Language -ErrorAction SilentlyContinue).Language
@@ -173,7 +175,16 @@ function Import-Code([string]$name, [string]$source) {
 $logoPath = Join-Path $appDir 'logo.png'
 $ui.LogoImage.Source = Get-Image $logoPath 128
 $ui.AboutLogo.Source = Get-Image $logoPath 256
-$ui.BrandImage.Source = Get-Image (Join-Path $wallpapers 'akatios-lockscreen.png') 600
+# The sidebar banner picture in gray: a texture on the accent gradient (Update-BrandBanner), without its own color
+function Set-BrandPicture($img) {
+    if (!$img) { return }
+    try {
+        $gray = New-Object System.Windows.Media.Imaging.FormatConvertedBitmap $img, ([System.Windows.Media.PixelFormats]::Gray8), $null, 0
+        $gray.Freeze()
+        $ui.BrandImage.Source = $gray
+    } catch { $ui.BrandImage.Source = $img }
+}
+Set-BrandPicture (Get-Image (Join-Path $wallpapers 'akatios-lockscreen.png') 600)
 $ui.HeroImage.Source = Get-Image (Join-Path $wallpapers 'akatios-lockscreen.png') 1200
 try { $window.Icon = Get-Image $logoPath 64 } catch { }
 
@@ -271,6 +282,14 @@ function Get-LookName {
 # The accent as a soft tint (selected sidebar item, icon boxes), a border and a text color. The text color is the
 # light shade on the dark look and the base shade on the light look, so it stays readable on both.
 $script:accentPair = @{ Base = '#8A3FD6'; Light = '#B07CF0' }
+# Sidebar banner: a gradient from the accent color to a darker shade of it (45 percent: dark enough for the white logo text)
+function Update-BrandBanner {
+    $base = [System.Windows.Media.ColorConverter]::ConvertFromString($script:accentPair.Base)
+    $dark = [System.Windows.Media.Color]::FromRgb([byte]($base.R * 0.45), [byte]($base.G * 0.45), [byte]($base.B * 0.45))
+    $brush = [System.Windows.Media.LinearGradientBrush]::new($dark, $base, [System.Windows.Point]::new(0, 1), [System.Windows.Point]::new(1, 0))
+    $brush.Freeze()
+    $ui.Brand.Background = $brush
+}
 function Update-AccentBrushes {
     $base = [System.Windows.Media.ColorConverter]::ConvertFromString($script:accentPair.Base)
     $light = $script:look -eq 'light'
@@ -280,6 +299,7 @@ function Update-AccentBrushes {
     $res['AccentText'] = [System.Windows.Media.SolidColorBrush]::new($text)
     $res['AccentSoft'] = [System.Windows.Media.SolidColorBrush]::new([System.Windows.Media.Color]::FromArgb($(if ($light) { 0x1F } else { 0x26 }), $base.R, $base.G, $base.B))
     $res['AccentLine'] = [System.Windows.Media.SolidColorBrush]::new([System.Windows.Media.Color]::FromArgb($(if ($light) { 0x70 } else { 0x80 }), $base.R, $base.G, $base.B))
+    Update-BrandBanner
 }
 function Set-CenterLook([string]$name) {
     $script:look = $name
@@ -355,6 +375,8 @@ function Update-NavBadges {
 # ---------------------------------------------------------------------------------------------
 # The pages, one file each (dot-sourced: they share this script's variables and functions)
 # ---------------------------------------------------------------------------------------------
+# First the dialog, the progress card and the switch effects that the pages use
+. (Join-Path $appDir 'AkatiCenter.ui.ps1')
 . (Join-Path $appDir 'AkatiCenter.dashboard.ps1')
 . (Join-Path $appDir 'AkatiCenter.gaming.ps1')
 . (Join-Path $appDir 'AkatiCenter.boost.ps1')
@@ -369,6 +391,9 @@ if ($null -ne $script:exitNow) { exit $script:exitNow }
 . (Join-Path $appDir 'AkatiCenter.appearance.ps1')
 . (Join-Path $appDir 'AkatiCenter.system.ps1')
 . (Join-Path $appDir 'AkatiCenter.health.ps1')
+. (Join-Path $appDir 'AkatiCenter.privacy.ps1')
+. (Join-Path $appDir 'AkatiCenter.services.ps1')
+. (Join-Path $appDir 'AkatiCenter.badges.ps1')
 . (Join-Path $appDir 'AkatiCenter.quicktools.ps1')
 
 # ---------------------------------------------------------------------------------------------
@@ -407,7 +432,7 @@ $numberText = { param($v) [string][int][Math]::Round($v) }
 
 function Show-Page([string]$name) {
     $script:page = $name
-    if ($name -eq 'tweaks') { Initialize-Tweaks }
+    if ($name -eq 'tweaks') { Initialize-Tweaks; Show-Privacy }
     if ($name -eq 'gaming') { Initialize-Apps }
     if ($name -eq 'appearance') { Initialize-Appearance }
     if ($name -eq 'quicktools') { Initialize-QuickTools }
@@ -418,8 +443,8 @@ function Show-Page([string]$name) {
         $el = $ui["Page$(Get-PageId $p)"]
         if ($p -ne $name) { $el.Visibility = 'Collapsed'; continue }
         $el.Visibility = 'Visible'
-        # Fade and slide in
-        if (!$Screenshot) {
+        # Fade and slide in (not with Reduce motion)
+        if (Test-Motion) {
             $ease = New-Object System.Windows.Media.Animation.CubicEase
             $ease.EasingMode = 'EaseOut'
             $fade = New-Object System.Windows.Media.Animation.DoubleAnimation 0, 1, (New-Object System.Windows.Duration ([TimeSpan]::FromMilliseconds(220)))
@@ -447,6 +472,7 @@ function Show-Page([string]$name) {
         if ($ui.ScoreValue.Text -match '^\d+$') { Start-CountUp $ui.ScoreValue ([int]$ui.ScoreValue.Text) $numberText 900 }
         if (!$script:healthLoaded) { $script:healthLoaded = $true; Start-Health }
         Show-History; Update-WuState; Update-TempText
+        Update-Badges -Now; Show-Badges
     }
     # Gaming apps: look for app updates once, the first time the page opens
     if ($name -eq 'gaming' -and !$script:appsChecked -and !$Screenshot) { $script:appsChecked = $true; Start-AppUpdateCheck $true }
@@ -576,11 +602,25 @@ function Get-SpotlightItems {
     & $add (T 'act.update') (Get-Both 'act.update') (T 'spot.action') ([char]0xE895) { param($d) $ui.NavAbout.IsChecked = $true; Start-UpdateCheck } $null
     & $add (T 'act.lang') (Get-Both 'act.lang') (T 'spot.action') ([char]0xE774) { param($d) $keys = @($languages.Keys); Set-AppLanguage $keys[([array]::IndexOf($keys, $lang) + 1) % $keys.Count] } $null
     & $add (T 'act.report') (Get-Both 'act.report') (T 'spot.action') ([char]0xE7BA) { param($d) $ui.ReportButton.RaiseEvent((New-Object System.Windows.RoutedEventArgs ([System.Windows.Controls.Primitives.ButtonBase]::ClickEvent))) } $null
+    & $add (T 'ui.sounds') ((Get-Both 'ui.sounds') + ' click sound') (T 'spot.setting') ([char]0xE767) { param($d) Show-Element 'appearance' $d } $ui.UiSoundsRow (Get-Both 'ui.sounds.d')
+    & $add (T 'ui.motion') ((Get-Both 'ui.motion') + ' animation') (T 'spot.setting') ([char]0xE7B3) { param($d) Show-Element 'appearance' $d } $ui.ReduceMotionRow (Get-Both 'ui.motion.d')
     & $add (T 'keys.title') ((Get-Both 'keys.title') + ' keyboard hotkeys') (T 'spot.action') ([char]0xE765) { param($d) Show-Keys } $null
     & $add (T 'irq.title') ((Get-Both 'irq.title') + ' msi affinity interrupt irq') (T 'spot.setting') ([char]0xE964) { param($d)
         if ($ui.IrqPanel.Visibility -ne 'Visible') { $ui.IrqShow.RaiseEvent((New-Object System.Windows.RoutedEventArgs ([System.Windows.Controls.Primitives.ButtonBase]::ClickEvent))) }
         Show-Element 'tweaks' $ui.IrqShow.Parent.Parent } $null
     & $add (T 'games.scan') (Get-Both 'games.scan') (T 'spot.action') ([char]0xE721) { param($d) $ui.NavBoost.IsChecked = $true; $ui.GameScanButton.RaiseEvent((New-Object System.Windows.RoutedEventArgs ([System.Windows.Controls.Primitives.ButtonBase]::ClickEvent))) } $null
+    & $add (T 'smart.title') ((Get-Both 'smart.title') + ' smart ssd nvme hdd drive temperature wear') (T 'nav.health') ([char]0xEDA2) { param($d) Show-Element 'health' $d } $ui.DiskSection (Get-Both 'smart.sub')
+    & $add (T 'speed.title') ((Get-Both 'speed.title') + ' speed test internet download upload mbps jitter') (T 'spot.action') ([char]0xEC4A) { param($d) Show-Element 'boost' $d; Start-SpeedTest } $ui.SpeedSection (Get-Both 'speed.sub')
+    & $add (T 'netuse.title') ((Get-Both 'netuse.title') + ' network connections bandwidth per app end task') (T 'nav.quicktools') ([char]0xE774) { param($d) Show-Element 'quicktools' $d } $ui.NetUseSection (Get-Both 'netuse.sub')
+    & $add (T 'rp.weekly') ((Get-Both 'rp.weekly') + ' restore point system restore') (T 'spot.setting') ([char]0xE81C) { param($d) Show-Element 'health' $d } $ui.RpWeeklyRow (Get-Both 'rp.weekly.d')
+    & $add (T 'rp.profile') ((Get-Both 'rp.profile') + ' restore point system restore') (T 'spot.setting') ([char]0xE81C) { param($d) Show-Element 'health' $d } $ui.RpProfileRow (Get-Both 'rp.profile.d')
+    & $add (T 'privacy.title') ((Get-Both 'privacy.title') + ' privacy telemetry advertising location recall copilot diagnostics') (T 'spot.setting') ([char]0xE72E) { param($d) Show-Element 'tweaks' $d } $ui.PrivacySection (Get-Both 'privacy.sub')
+    & $add (T 'svc.title') ((Get-Both 'svc.title') + ' services service disable startup') (T 'spot.setting') ([char]0xE912) { param($d)
+        if ($ui.SvcPanel.Visibility -ne 'Visible') { $ui.SvcShow.RaiseEvent((New-Object System.Windows.RoutedEventArgs ([System.Windows.Controls.Primitives.ButtonBase]::ClickEvent))) }
+        Show-Element 'tweaks' $d } $ui.SvcSection (Get-Both 'svc.sub')
+    & $add (T 'wuback.check') ((Get-Both 'wuback.check') + ' windows update services apps policy') (T 'spot.action') ([char]0xE895) { param($d) Show-Element 'health' $d; Start-WuCheck -Manual } $ui.WuBackCard
+    & $add (T 'badge.title') ((Get-Both 'badge.title') + ' achievements badges') (T 'nav.health') ([char]0xE735) { param($d) Show-Element 'health' $d } $ui.BadgeSection (Get-Both 'badge.sub')
+    & $add (T 'games.tw.spot') ((Get-Both 'games.tw.spot') + ' game profile tweaks play') (T 'spot.setting') ([char]0xE7FC) { param($d) Show-Element 'boost' $d } $ui.GamesList (Get-Both 'games.tw.tip')
     return $items
 }
 function Update-SpotSelection {
@@ -777,6 +817,17 @@ function Update-Language {
     Update-ProfileTiles
     Update-CleanTotal
     if ($script:specs) { Show-Specs $script:specs }
+    if ($script:diskResult) { Show-DiskHealth $script:diskResult }
+    if ($script:rpInfo) { Show-RestoreInfo $script:rpInfo }
+    Show-SpeedResults
+    if ($script:page -eq 'tweaks') { Show-Privacy }
+    if ($ui.SvcPanel.Visibility -eq 'Visible') { $ui.SvcShowText.Text = T 'svc.hide' }
+    if ($script:svcResult) { Show-Services }
+    Show-WuBack $script:wuBack
+    Show-Badges
+    # The rows of Network use are made again, for the End task text
+    $script:netRows = @{}
+    if ($script:netResult) { Show-NetUse $script:netResult }
     foreach ($n in 'SysCopyOs', 'SysCopyArch', 'SysCopyPc') { $ui[$n].ToolTip = T 'sys.copy' }
 }
 
@@ -853,6 +904,8 @@ $window.Add_PreviewKeyDown({
     param($sender, $e)
     $ctrl = ([System.Windows.Input.Keyboard]::Modifiers -band [System.Windows.Input.ModifierKeys]::Control) -ne 0
     $key = [string]$e.Key
+    # The dialog (Show-Ask) takes the keys while it is open: Enter, Esc, Tab
+    if ($ui.Ask.Visibility -eq 'Visible') { Invoke-AskKey $e; return }
     if ($key -eq 'F1') { Start-Tour; $e.Handled = $true; return }
     # ?: the keyboard shortcuts (not while typing in a text box)
     if ($key -eq 'OemQuestion' -and [System.Windows.Input.Keyboard]::FocusedElement -isnot [System.Windows.Controls.TextBox] -and $ui.Welcome.Visibility -ne 'Visible') {
@@ -945,7 +998,9 @@ if (!$Screenshot) {
     $doctorTimer.Interval = [TimeSpan]::FromSeconds(5)
     $doctorTimer.Add_Tick({
         $doctorTimer.Stop()
-        if (!$script:doctorResult) { Start-Work $doctorWork @() { param($r) Show-Doctor (Get-LastOutput $r); Update-Chips } $null }
+        if (!$script:doctorResult) { Start-Work $doctorWork @($logicFile) { param($r) Show-Doctor (Get-LastOutput $r); Update-Chips } $null }
+        # What Windows Update turned back on (the first start makes the baseline)
+        Start-WuCheck
         # App updates, for the number on Gaming apps (once; the page does it too when opened first)
         if (!$script:appsChecked) { $script:appsChecked = $true; Start-AppUpdateCheck $true }
     })
@@ -1061,7 +1116,8 @@ $timer = New-Object System.Windows.Threading.DispatcherTimer
 $timer.Interval = [TimeSpan]::FromMilliseconds(500)
 $script:lookAt = Get-Date
 $timer.Add_Tick({
-    Update-Stats; Receive-Work; Update-AppProgress; Update-Ping
+    Update-Stats; Receive-Work; Update-AppProgress; Update-Ping; Update-NetUse
+    Watch-GameTweaks; Update-Badges
     if ($script:menuAt -and (Get-Date) -gt $script:menuAt) { Update-DesktopMenu }
     # Auto follows Windows, By time follows the clock
     if (!$Screenshot -and (Get-Date) -gt $script:lookAt) {
@@ -1112,6 +1168,8 @@ $window.Add_Loaded({
 # Where the window was and the page it showed, for the next start
 $window.Add_LocationChanged({ if (!$Screenshot) { $script:posAt = (Get-Date).AddSeconds(2) } })
 $window.Add_Closing({
+    # An open dialog answers No (or Cancel), so the code that waits for it can finish
+    if ($script:askFrame) { Close-Ask $script:askResults.Cancel }
     if ($Screenshot) { return }
     try {
         if (!$script:full -and $window.WindowState -eq 'Normal') { Save-Setting WindowX ([int]$window.Left); Save-Setting WindowY ([int]$window.Top) }

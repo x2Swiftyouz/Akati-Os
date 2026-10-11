@@ -10,9 +10,13 @@ Add-Mark 'Health'
 $getCulture = { Get-LangCulture }
 $orange = (New-Object System.Windows.Media.BrushConverter).ConvertFromString('#FF9F0A')
 
-# Akati Doctor: each check is $true when fine. Runs in the background (no functions of this script)
-$doctorChecks = 'tray', 'menu', 'power', 'battery', 'refresh', 'xmp', 'disk', 'restart', 'hvci', 'devices', 'crash', 'activation'
+# Akati Doctor: each check is $true when fine. Runs in the background: only the functions of AkatiCenter.logic.ps1
+# ($logic, dot-sourced there; not needed when it runs here in screenshot mode)
+$doctorChecks = 'tray', 'menu', 'power', 'battery', 'refresh', 'xmp', 'disk', 'smart', 'restart', 'hvci', 'devices', 'crash', 'activation'
+$logicFile = Join-Path $appDir 'AkatiCenter.logic.ps1'
 $doctorWork = {
+    param($logic)
+    if ($logic) { . $logic }
     $r = @{}
     $wanted = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\AkatiOS' -Name TrayIcon -ErrorAction SilentlyContinue).TrayIcon -eq 1
     $r.tray = !$wanted -or [bool](Get-ScheduledTask -TaskPath '\AkatiOS\' -TaskName 'Akati OS tray' -ErrorAction SilentlyContinue)
@@ -69,6 +73,18 @@ $doctorWork = {
             else { $r.xmp = $r.ramNow -ge $r.ramMax * 0.97 }
         } else { $r.skip += 'xmp' }
     } catch { $r.skip += 'xmp' }
+    # Disks (SMART through Windows): health Warning or Unhealthy (Unknown is not a warning), wear 90% or more or 70 °C or more (Get-DiskWarnings)
+    try {
+        $disks = @(Get-PhysicalDisk -ErrorAction Stop)
+        $badDisks = @(foreach ($d in $disks) {
+            $c = $null
+            try { $c = $d | Get-StorageReliabilityCounter -ErrorAction Stop } catch { }
+            $temp = if ($c -and $c.Temperature -gt 0) { $c.Temperature } else { $null }
+            $wear = if ($c -and $null -ne $c.Wear) { $c.Wear } else { $null }
+            if (@(Get-DiskWarnings ([string]$d.HealthStatus) $wear $temp).Count) { [string]$d.FriendlyName }
+        })
+        if ($disks.Count) { $r.smart = !$badDisks.Count; $r.smartBad = $badDisks -join ', ' } else { $r.skip += 'smart' }
+    } catch { $r.skip += 'smart' }
     $r
 }
 # Startup time (Diagnostics-Performance log) and crashes of the last 30 days
@@ -99,7 +115,7 @@ function Show-Doctor($r) {
         if ($k -in @($r.skip)) { continue }
         $ok = [bool]$r[$k]
         if (!$ok) { $bad++ }
-        $arg = switch ($k) { 'disk' { $r.diskFree } 'devices' { $r.devicesBad } 'crash' { $r.crashCount }
+        $arg = switch ($k) { 'disk' { $r.diskFree } 'smart' { $r.smartBad } 'devices' { $r.devicesBad } 'crash' { $r.crashCount }
                              'refresh' { , @($r.hzNow, $r.hzMax) } 'xmp' { , @($r.ramNow, $r.ramMax) } default { '' } }
         $right = New-Object System.Windows.Controls.Border
         if (!$ok) {
@@ -120,7 +136,9 @@ function Show-Doctor($r) {
     $row.Sub.Text = T 'doc.repair.d'
     [void]$ui.DoctorList.Children.Add($row.Row)
     Update-Separators $ui.DoctorList
-    $script:navBadges['Health'] = $bad; Update-NavBadges
+    $script:doctorBad = $bad; Update-HealthBadge
+    # Badges: Akati Doctor found nothing once
+    if (!$bad -and !$Screenshot -and !(Get-RegValue $settingsKey 'DoctorAllGood')) { Save-Setting DoctorAllGood ((Get-Date).ToString('yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture)) }
     Update-Score
     $ui.DoctorSummary.Text = $(if ($bad) { (T 'doc.issues') -f $bad } else { T 'doc.allgood' }) + ' · ' + ((T 'doc.checked') -f (Get-Date).ToString('HH:mm'))
 }
@@ -175,8 +193,9 @@ function Invoke-DoctorFix([string]$k) {
             if ($t -and $t.Toggle) { $t.Toggle.IsChecked = $true; Invoke-Tweak $t $true; Add-History $t.Key $true }
         }
         'disk' { $ui.NavCleaner.IsChecked = $true }
+        'smart' { $ui.DiskSection.BringIntoView() }
         { $_ -in 'restart', 'hvci' } {
-            if ([System.Windows.MessageBox]::Show((T 'restart.ask'), 'Akati OS Center', 'YesNo', 'Question') -eq 'Yes') { Restart-Computer -Force }
+            if ((Show-Ask (T 'restart.ask') 'YesNo' 'Question') -eq 'Yes') { Restart-Computer -Force }
         }
         'devices' { Start-Process devmgmt.msc }
         'crash' { $ui.CrashList.BringIntoView() }
@@ -189,8 +208,14 @@ function Invoke-DoctorFix([string]$k) {
             Update-RefreshRow; Update-Chips; Start-Health
         }
         # The BIOS setting cannot be changed from Windows: how to turn it on
-        'xmp' { [void][System.Windows.MessageBox]::Show((T 'doc.xmp.howto'), 'Akati OS Center', 'OK', 'Information') }
+        'xmp' { [void](Show-Ask (T 'doc.xmp.howto') 'OK' 'Information') }
     }
+}
+# The number on Health in the sidebar: Akati Doctor findings and what Windows Update turned back on
+function Update-HealthBadge {
+    # (Screenshot mode: the sample of the Windows Update banner does not count, so the other shots stay as they were)
+    $script:navBadges['Health'] = [int]$script:doctorBad + $(if ($Screenshot) { 0 } else { @($script:wuBack).Count })
+    Update-NavBadges
 }
 function Show-HealthInfo($r) {
     $script:healthResult = $r
@@ -222,9 +247,10 @@ function Update-TempText {
     $ui.TempDetail.Text = if ($parts.Count) { (T 'temp.now') -f ($parts -join ' · ') } else { T 'temp.none' }
 }
 function Start-Health {
+    Start-DiskHealth; Update-RestoreInfo
     if ($Screenshot) { Show-Doctor (& $doctorWork); Show-HealthInfo (& $healthWork); return }
     $ui.DoctorRun.IsEnabled = $false; $ui.DoctorSummary.Text = T 'doc.checking'
-    Start-Work $doctorWork @() { param($r) Show-Doctor (Get-LastOutput $r); $ui.DoctorRun.IsEnabled = $true } $null
+    Start-Work $doctorWork @($logicFile) { param($r) Show-Doctor (Get-LastOutput $r); $ui.DoctorRun.IsEnabled = $true } $null
     Start-Work $healthWork @() { param($r) Show-HealthInfo (Get-LastOutput $r) } $null
 }
 $ui.DoctorRun.Add_Click({ Start-Health })
@@ -262,14 +288,264 @@ $ui.WuPause35.Add_Click({ Set-WuPause 35 })
 $ui.WuResume.Add_Click({ Set-WuPause 0 })
 $ui.WuOpen.Add_Click({ Start-Process 'ms-settings:windowsupdate' })
 
-# Change history: the last 30 switches changed in Akati OS Center, newest first ("time|key|1 or 0")
-function Add-History([string]$key, [bool]$on) {
+# ---------------------------------------------------------------------------------------------
+# Disk health: what each physical disk reports to Windows (Get-PhysicalDisk and Get-StorageReliabilityCounter, the
+# SMART values Windows reads; needs administrator rights). A value a disk does not report shows as "not reported".
+# ---------------------------------------------------------------------------------------------
+$diskHealthWork = {
+    $list = @()
+    try { $disks = @(Get-PhysicalDisk -ErrorAction Stop) } catch { return @{ Error = $_.Exception.Message } }
+    # $null: not reported
+    $num = { param($v) if ($null -eq $v -or [string]$v -eq '') { $null } else { [double]$v } }
+    foreach ($d in $disks) {
+        $c = $null
+        try { $c = $d | Get-StorageReliabilityCounter -ErrorAction Stop } catch { }
+        $temp = if ($c) { & $num $c.Temperature } else { $null }
+        # 0 °C is not a reading: the disk has no sensor or does not share it
+        if ($null -ne $temp -and $temp -le 0) { $temp = $null }
+        $list += @{ Name = ([string]$d.FriendlyName).Trim(); Size = [double]$d.Size; Bus = [string]$d.BusType; Media = [string]$d.MediaType
+                    Health = [string]$d.HealthStatus; Status = (@($d.OperationalStatus) | ForEach-Object { [string]$_ }) -join ', '; Temp = $temp
+                    Wear = $(if ($c) { & $num $c.Wear } else { $null }); Hours = $(if ($c) { & $num $c.PowerOnHours } else { $null })
+                    ReadErrors = $(if ($c) { & $num $c.ReadErrorsTotal } else { $null }); WriteErrors = $(if ($c) { & $num $c.WriteErrorsUncorrected } else { $null }) }
+    }
+    @{ Disks = $list }
+}
+# Screenshot mode: sample disks (one of them worn out), not the disks of the CI runner
+$diskSamples = @(
+    @{ Name = 'Samsung SSD 980 PRO 1TB'; Size = 1000204886016; Bus = 'NVMe'; Media = 'SSD'; Health = 'Healthy'; Status = 'OK'; Temp = 41; Wear = 3; Hours = 2140; ReadErrors = 0; WriteErrors = 0 }
+    @{ Name = 'WDC WD20EZBX-00AYRA0'; Size = 2000398934016; Bus = 'SATA'; Media = 'HDD'; Health = 'Healthy'; Status = 'OK'; Temp = 36; Wear = $null; Hours = 18210; ReadErrors = $null; WriteErrors = 0 }
+    @{ Name = 'Kingston SA400S37480G'; Size = 480103981056; Bus = 'SATA'; Media = 'SSD'; Health = 'Warning'; Status = 'OK'; Temp = 52; Wear = 92; Hours = 26350; ReadErrors = 14; WriteErrors = 0 }
+)
+# Healthy (green), Warning (amber), Unhealthy (red), Unknown or not reported (gray)
+function New-HealthBadge([string]$health) {
+    $b = New-Object System.Windows.Controls.Border
+    $b.CornerRadius = 6; $b.Padding = '8,2'; $b.BorderThickness = '1'; $b.VerticalAlignment = 'Center'; $b.Margin = '12,0,0,0'
+    $back, $fore = switch ($health) { 'Healthy' { 'Fill', 'Good' } 'Warning' { 'WarnSoft', 'Warn' } 'Unhealthy' { 'DangerSoft', 'Danger' } default { 'Fill', 'MutedBrush' } }
+    $b.SetResourceReference([System.Windows.Controls.Border]::BackgroundProperty, $back)
+    $b.SetResourceReference([System.Windows.Controls.Border]::BorderBrushProperty, $back)
+    $t = New-Text (T $(if ($health) { "smart.h.$($health.ToLowerInvariant())" } else { 'smart.notreported' })) 11.5 'SemiBold'
+    $t.SetResourceReference([System.Windows.Controls.TextBlock]::ForegroundProperty, $fore)
+    $b.Child = $t
+    return $b
+}
+# One value of a disk card: a small label and the value (amber when $warn)
+function New-DiskStat([string]$label, [string]$value, [bool]$warn = $false) {
+    $s = New-Object System.Windows.Controls.StackPanel; $s.Margin = '0,0,12,0'
+    $l = New-Text (T $label) 10.5; $l.Style = $window.FindResource('StatLabel')
+    $v = New-Text $value 15 'SemiBold'; $v.Margin = '0,3,0,0'; $v.TextWrapping = 'NoWrap'; $v.TextTrimming = 'CharacterEllipsis'
+    if ($warn) { $v.SetResourceReference([System.Windows.Controls.TextBlock]::ForegroundProperty, 'Warn') }
+    [void]$s.Children.Add($l); [void]$s.Children.Add($v)
+    return $s
+}
+function New-DiskCard($d) {
+    $nr = T 'smart.notreported'
+    $c = Get-LangCulture
+    $card = New-Object System.Windows.Controls.Border
+    $card.Style = $window.FindResource('Card'); $card.Margin = '0,0,0,10'
+    $stack = New-Object System.Windows.Controls.StackPanel
+    # Model, size and kind, health
+    $top = New-Object System.Windows.Controls.DockPanel
+    $box = New-Object System.Windows.Controls.Border; $box.Style = $window.FindResource('IconBox'); $box.Margin = '0,0,14,0'; $box.VerticalAlignment = 'Center'
+    $g = New-Text ([string][char]0xEDA2) 15; $g.Style = $window.FindResource('TileGlyph'); $box.Child = $g
+    [System.Windows.Controls.DockPanel]::SetDock($box, 'Left')
+    $health = Get-DiskHealthName $d.Health
+    $badge = New-HealthBadge $health
+    [System.Windows.Controls.DockPanel]::SetDock($badge, 'Right')
+    $names = New-Object System.Windows.Controls.StackPanel; $names.VerticalAlignment = 'Center'
+    $title = New-Text $(if ($d.Name) { $d.Name } else { $nr }) 14 'SemiBold'; $title.TextWrapping = 'NoWrap'; $title.TextTrimming = 'CharacterEllipsis'
+    $kind = Get-DiskKind $d.Bus $d.Media
+    $parts = @($(if ($d.Size -gt 0) { Format-Size $d.Size } else { $nr }), $(if ($kind) { $kind } else { $nr }))
+    if ($d.Status) { $parts += $d.Status }
+    $sub = New-Text ($parts -join '  ·  ') 12; $sub.Style = $window.FindResource('Muted'); $sub.Margin = '0,2,0,0'
+    [void]$names.Children.Add($title); [void]$names.Children.Add($sub)
+    [void]$top.Children.Add($box); [void]$top.Children.Add($badge); [void]$top.Children.Add($names)
+    [void]$stack.Children.Add($top)
+    # Temperature, power-on time, errors
+    $grid = New-Object System.Windows.Controls.Primitives.UniformGrid; $grid.Columns = 3; $grid.Margin = '0,14,0,0'
+    $temp = if ($null -ne $d.Temp) { (T 'smart.temp.v') -f ([double]$d.Temp).ToString('0', $c) } else { $nr }
+    [void]$grid.Children.Add((New-DiskStat 'smart.temp' $temp ($null -ne $d.Temp -and $d.Temp -ge 70)))
+    $hours = if ($null -ne $d.Hours) { (T 'smart.hours.v') -f ([double]$d.Hours).ToString('N0', $c) } else { $nr }
+    [void]$grid.Children.Add((New-DiskStat 'smart.hours' $hours))
+    $errors = if ($null -eq $d.ReadErrors -and $null -eq $d.WriteErrors) { $nr } else {
+        (T 'smart.errors.v') -f $(if ($null -ne $d.ReadErrors) { ([double]$d.ReadErrors).ToString('N0', $c) } else { $nr }), $(if ($null -ne $d.WriteErrors) { ([double]$d.WriteErrors).ToString('N0', $c) } else { $nr }) }
+    [void]$grid.Children.Add((New-DiskStat 'smart.errors' $errors ([double]$d.ReadErrors -gt 0 -or [double]$d.WriteErrors -gt 0)))
+    [void]$stack.Children.Add($grid)
+    # Wear (percent used): SSDs and NVMe disks; hard disks do not wear out this way
+    $wearRow = New-Object System.Windows.Controls.DockPanel; $wearRow.Margin = '0,14,0,0'
+    $wl = New-Text (T 'smart.wear') 10.5; $wl.Style = $window.FindResource('StatLabel'); $wl.Width = 90; $wl.VerticalAlignment = 'Center'
+    [System.Windows.Controls.DockPanel]::SetDock($wl, 'Left')
+    $hasWear = $null -ne $d.Wear -and $kind -ne 'HDD'
+    $wv = New-Text $(if ($hasWear) { '{0}%' -f [int]$d.Wear } elseif ($kind -eq 'HDD') { T 'smart.wear.hdd' } else { $nr }) 12
+    $wv.Style = $window.FindResource('MonoText'); $wv.FontSize = 12; $wv.VerticalAlignment = 'Center'; $wv.Margin = '12,0,0,0'
+    [System.Windows.Controls.DockPanel]::SetDock($wv, 'Right')
+    [void]$wearRow.Children.Add($wl); [void]$wearRow.Children.Add($wv)
+    if ($hasWear) {
+        $bar = New-Object System.Windows.Controls.ProgressBar
+        $bar.Style = $window.FindResource('Meter'); $bar.Height = 6; $bar.VerticalAlignment = 'Center'; $bar.Value = [Math]::Min(100, [Math]::Max(0, [double]$d.Wear))
+        if ($d.Wear -ge 90) { $bar.SetResourceReference([System.Windows.Controls.Control]::ForegroundProperty, 'Danger') }
+        elseif ($d.Wear -ge 70) { $bar.SetResourceReference([System.Windows.Controls.Control]::ForegroundProperty, 'Warn') }
+        [void]$wearRow.Children.Add($bar)
+    } else { [void]$wearRow.Children.Add((New-Object System.Windows.Controls.Border)) }
+    [void]$stack.Children.Add($wearRow)
+    # What Akati Doctor warns about
+    foreach ($w in @(Get-DiskWarnings $d.Health $d.Wear $d.Temp)) {
+        $wt = New-Text (T $w) 12.5; $wt.Margin = '0,10,0,0'
+        $wt.SetResourceReference([System.Windows.Controls.TextBlock]::ForegroundProperty, 'Warn')
+        [void]$stack.Children.Add($wt)
+    }
+    $card.Child = $stack
+    return $card
+}
+function Show-DiskHealth($res) {
+    $ui.DiskList.Children.Clear()
+    $disks = @(if ($res -is [hashtable]) { $res.Disks | Where-Object { $_ } })
+    if (!$disks.Count) {
+        $ui.DiskEmpty.Text = if ($res -is [hashtable] -and $res.Error) { (T 'smart.error') -f $res.Error } elseif ($res -is [hashtable]) { T 'smart.none' } else { T 'smart.loading' }
+        $ui.DiskEmpty.Visibility = 'Visible'
+        return
+    }
+    $ui.DiskEmpty.Visibility = 'Collapsed'
+    foreach ($d in $disks) { [void]$ui.DiskList.Children.Add((New-DiskCard $d)) }
+}
+function Start-DiskHealth {
+    if ($Screenshot) { $script:diskResult = @{ Disks = $diskSamples }; Show-DiskHealth $script:diskResult; return }
+    if ($script:diskBusy) { return }
+    $script:diskBusy = $true
+    if (!$script:diskResult) { Show-DiskHealth $null }
+    Start-Work $diskHealthWork @() { param($r) $script:diskBusy = $false; $script:diskResult = Get-LastOutput $r; Show-DiskHealth $script:diskResult } $null
+}
+
+# ---------------------------------------------------------------------------------------------
+# Restore points: the last one, a weekly task (off at first) and one before a Tweaks profile (on at first).
+# Windows makes at most one restore point every 24 hours (SystemRestorePointCreationFrequency). Akati OS leaves that
+# value as it is and shows a skipped one as skipped.
+# ---------------------------------------------------------------------------------------------
+$rpTaskName = 'Akati OS weekly restore point'
+$rpResultKey = 'HKLM:\SOFTWARE\AkatiOS'
+# What the weekly task runs as SYSTEM: the restore point, then its result for this page ("time|made|weekly").
+# Only single quotes inside, because the task passes it in double quotes.
+$rpTaskCommand = @(
+    'try { $n = @(Get-ComputerRestorePoint -ErrorAction Stop).Count; Checkpoint-Computer -Description ''Akati OS weekly'' -RestorePointType MODIFY_SETTINGS -ErrorAction Stop -WarningAction SilentlyContinue; $r = if (@(Get-ComputerRestorePoint).Count -gt $n) { ''made'' } else { ''recent'' } } catch { $r = ''off'' }'
+    '$k = ''HKLM:\SOFTWARE\AkatiOS''; if (!(Test-Path $k)) { New-Item -Path $k -Force | Out-Null }'
+    'Set-ItemProperty -Path $k -Name RestoreResult -Value ((Get-Date).ToString(''s'') + ''|'' + $r + ''|weekly'')'
+) -join '; '
+$rpTaskWork = {
+    param($on, $name, $command)
     try {
-        if (!(Test-Path $settingsKey)) { New-Item -Path $settingsKey -Force | Out-Null }
-        $list = @("$((Get-Date).ToString('s'))|$key|$([int]$on)") + @(Get-RegValue $settingsKey 'History' | Where-Object { $_ })
-        Set-ItemProperty -Path $settingsKey -Name History -Value ([string[]]@($list | Select-Object -First 30)) -Type MultiString -Force
-    } catch { }
+        if ($on) {
+            $action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument ('-NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Hidden -Command "' + $command + '"')
+            $trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Sunday -At ([datetime]::Today.AddHours(12))
+            $principal = New-ScheduledTaskPrincipal -UserId 'SYSTEM' -LogonType ServiceAccount -RunLevel Highest
+            # A PC that was off on Sunday at noon makes it at the next start
+            $set = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Minutes 30)
+            Register-ScheduledTask -TaskPath '\AkatiOS\' -TaskName $name -Action $action -Trigger $trigger -Principal $principal -Settings $set -Description 'Akati OS Center: a restore point once a week' -Force -ErrorAction Stop | Out-Null
+        } else {
+            Unregister-ScheduledTask -TaskPath '\AkatiOS\' -TaskName $name -Confirm:$false -ErrorAction SilentlyContinue
+        }
+        'ok'
+    } catch { $_.Exception.Message }
+}
+$rpInfoWork = {
+    param($name, $key)
+    $r = @{ Task = [bool](Get-ScheduledTask -TaskPath '\AkatiOS\' -TaskName $name -ErrorAction SilentlyContinue) }
+    try {
+        $last = @(Get-ComputerRestorePoint -ErrorAction Stop) | Sort-Object { [int64]$_.SequenceNumber } | Select-Object -Last 1
+        if ($last) { $r.Time = [Management.ManagementDateTimeConverter]::ToDateTime($last.CreationTime); $r.Desc = [string]$last.Description }
+    } catch { $r.Off = $true }
+    $r.Result = [string](Get-ItemProperty -Path $key -Name RestoreResult -ErrorAction SilentlyContinue).RestoreResult
+    $r
+}
+# The last try of Akati OS ("time|made, recent or off|weekly, profile or atlas"), from the task or this window
+function Save-RestoreResult([string]$source, [string]$result) {
+    $value = '{0}|{1}|{2}' -f (Get-Date).ToString('s', [Globalization.CultureInfo]::InvariantCulture), $result, $source
+    if (!$Screenshot) {
+        try {
+            if (!(Test-Path $rpResultKey)) { New-Item -Path $rpResultKey -Force | Out-Null }
+            Set-ItemProperty -Path $rpResultKey -Name RestoreResult -Value $value -Force
+        } catch { }
+    }
+    if ($script:rpInfo -is [hashtable]) { $script:rpInfo.Result = $value }
+    if ($script:healthLoaded) { Update-RestoreInfo }
+}
+function Show-RestoreInfo($r) {
+    $script:rpInfo = $r
+    if ($r -isnot [hashtable]) { $ui.RpLast.Text = T 'rp.loading'; $ui.RpResult.Visibility = 'Collapsed'; return }
+    $c = Get-LangCulture
+    $ui.RpLast.Text = if ($r.Time) { (T 'rp.last') -f ([datetime]$r.Time).ToString('d MMM yyyy HH:mm', $c), $r.Desc } elseif ($r.Off) { T 'rp.off' } else { T 'rp.none' }
+    $ui.RpWeekly.IsChecked = [bool]$r.Task
+    $time, $result, $source = ([string]$r.Result) -split '\|', 3
+    $when = try { [datetime]::ParseExact($time, 's', [Globalization.CultureInfo]::InvariantCulture) } catch { $null }
+    if ($when -and $result -in 'made', 'recent', 'off' -and $source -in 'weekly', 'profile', 'atlas') {
+        $ui.RpResult.Text = (T 'rp.result') -f (T "rp.src.$source"), $when.ToString('d MMM HH:mm', $c), (T "rp.res.$result")
+        $ui.RpResult.Visibility = 'Visible'
+    } else { $ui.RpResult.Visibility = 'Collapsed' }
+}
+function Update-RestoreInfo {
+    if ($Screenshot) {
+        $inv = [Globalization.CultureInfo]::InvariantCulture
+        Show-RestoreInfo @{ Task = $true; Time = (Get-Date).Date.AddDays(-1).AddHours(12); Desc = 'Akati OS weekly'
+                            Result = '{0}|recent|profile' -f (Get-Date).Date.AddHours(9).ToString('s', $inv) }
+        return
+    }
+    if (!$script:rpInfo) { Show-RestoreInfo $null }
+    Start-Work $rpInfoWork @($rpTaskName, $rpResultKey) { param($r) Show-RestoreInfo (Get-LastOutput $r) } $null
+}
+$ui.RpProfile.IsChecked = (Get-RegValue $settingsKey 'ProfileRestore') -ne 0
+$ui.RpProfile.Add_Click({ Save-Setting ProfileRestore ([int][bool]$this.IsChecked) })
+$ui.RpWeekly.Add_Click({
+    $on = [bool]$this.IsChecked
+    $this.IsEnabled = $false
+    Start-Work $rpTaskWork @($on, $rpTaskName, $rpTaskCommand) {
+        param($r, $on)
+        $ui.RpWeekly.IsEnabled = $true
+        $msg = [string](Get-LastOutput $r)
+        if ($msg -eq 'ok') { Set-Status (T $(if ($on) { 'rp.weekly.on' } else { 'rp.weekly.off' })) }
+        else { $ui.RpWeekly.IsChecked = !$on; Set-Status ((T 'rp.taskfail') -f $msg) }
+    } $on
+})
+$ui.RpOpen.Add_Click({ Start-Process SystemPropertiesProtection.exe })
+
+# Change history: the last 30 changes made in Akati OS Center (and by a game profile of the icon next to the clock),
+# newest first: "time|key|1 or 0" for a switch, and for other changes "time|svc:<service>|<start type>,<before>",
+# "time|pol:<id>|<value>,<before>" ('' = no value) and "time|app:<package name>|removed"
+function Add-History([string]$key, [bool]$on) {
+    Add-HistoryLine $key ([string][int]$on)
+    Update-WuTrackTweak $key $on
     if ($script:page -eq 'health') { Show-History }
+}
+function Add-ChangeHistory([string]$key, [string]$state) {
+    Add-HistoryLine $key $state
+    if ($script:page -eq 'health') { Show-History }
+}
+# A history row for a service, a policy or an app (Undo while it is still as the change left it; none for an app)
+function New-ChangeRow([string]$kind, [string]$id, [string]$state) {
+    $to, $from = "$state,".Split(',')[0, 1]
+    $undo = New-Object System.Windows.Controls.Button
+    $undo.Style = $window.FindResource('Pill'); $undo.Padding = '12,4'; $undo.Content = T 'toast.undo'
+    switch ($kind) {
+        'svc' {
+            $title = (T 'history.svc') -f (Get-ServiceLabel $id); $glyph = 0xE912
+            $sub = T $(if ($to -eq '4') { 'history.off' } else { 'history.on' })
+            $undo.IsEnabled = $from -match '^[234]$' -and [string](Get-RegValue "$servicesKey\$id" 'Start') -eq $to
+            $undo.Tag = @{ Id = $id; From = $from }
+            $undo.Add_Click({ Set-ServiceStart $this.Tag.Id ([int]$this.Tag.From) })
+        }
+        'pol' {
+            $title = T "wu.pol.$id"; $glyph = 0xE72E
+            $sub = T $(if ($wuPolicies.Contains($id) -and $to -eq [string]$wuPolicies[$id].Value) { 'history.off' } else { 'history.on' })
+            $d = $wuPolicies[$id]
+            $undo.IsEnabled = $d -and [string](Get-RegValue $d.Path $d.Name) -eq $to
+            $undo.Tag = @{ Id = $id; From = $from }
+            $undo.Add_Click({ Set-WuPolicy $this.Tag.Id $this.Tag.From })
+        }
+        default {
+            $title = (T 'history.app') -f $id; $glyph = 0xE74D; $sub = T 'history.removed'
+            $undo = New-Object System.Windows.Controls.Border
+        }
+    }
+    $row = New-Row ([string][char]$glyph) $title $null $undo $null
+    $row.Sub.Text = $sub
+    $row
 }
 function Show-History {
     Initialize-Tweaks
@@ -277,6 +553,13 @@ function Show-History {
     $c = & $getCulture
     foreach ($item in @(Get-RegValue $settingsKey 'History' | Where-Object { $_ })) {
         $time, $key, $state = $item -split '\|', 3
+        $when = try { [datetime]::ParseExact($time, 's', [Globalization.CultureInfo]::InvariantCulture).ToString('d MMM HH:mm', $c) } catch { $time }
+        if ($key -match '^(svc|pol|app):([\w.\-]+)$') {
+            $row = New-ChangeRow $Matches[1] $Matches[2] $state
+            $row.Sub.Text += ' · ' + $when
+            [void]$ui.HistoryList.Children.Add($row.Row)
+            continue
+        }
         $t = $tweaks | Where-Object { $_.Key -eq $key } | Select-Object -First 1
         if (!$t -or !$t.Toggle) { continue }
         $on = $state -eq '1'
@@ -286,7 +569,6 @@ function Show-History {
         $undo.IsEnabled = $t.Toggle.IsEnabled -and ([bool]$t.Toggle.IsChecked -eq $on)
         $undo.Add_Click({ $u = $this.Tag; $back = !$u.On; $u.Tweak.Toggle.IsChecked = $back; Invoke-Tweak $u.Tweak $back; Add-History $u.Tweak.Key $back })
         $row = New-Row ([string]$t.Glyph) (T "tw.$key") $null $undo $null
-        $when = try { [datetime]::ParseExact($time, 's', [Globalization.CultureInfo]::InvariantCulture).ToString('d MMM HH:mm', $c) } catch { $time }
         $row.Sub.Text = (T $(if ($on) { 'history.on' } else { 'history.off' })) + ' · ' + $when
         [void]$ui.HistoryList.Children.Add($row.Row)
     }
@@ -325,7 +607,7 @@ $ui.BackupLoad.Add_Click({
     if (!$d.ShowDialog($window)) { return }
     $data = try { [IO.File]::ReadAllText($d.FileName) | ConvertFrom-Json } catch { $null }
     if (!$data -or !$data.AkatiOS) { Set-Status (T 'backup.bad'); return }
-    if ([System.Windows.MessageBox]::Show((T 'backup.ask'), 'Akati OS Center', 'YesNo', 'Question') -ne 'Yes') { return }
+    if ((Show-Ask (T 'backup.ask') 'YesNo' 'Question') -ne 'Yes') { return }
     if (!(Test-Path $settingsKey)) { New-Item -Path $settingsKey -Force | Out-Null }
     foreach ($p in @($data.Settings.PSObject.Properties)) {
         $v = $p.Value

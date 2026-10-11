@@ -201,6 +201,29 @@
   table.compare .no { color: var(--muted); }
   #compare .note { margin: 16px 0 0; max-width: none; }
 
+  /* Measure it on your PC */
+  .mgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .mgrid > div { min-width: 0; }
+  .mcard { height: 100%; background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 24px; min-width: 0; }
+  .mc-h { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }
+  .mc-h .ic { margin: 0; flex: none; }
+  .mc-h h3 { margin: 0; font-size: 19px; letter-spacing: -.01em; }
+  .mcard p { margin: 0 0 8px; color: var(--muted); font-size: 14.5px; }
+  .mcard p.mc-l { margin: 16px 0 4px; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--link); }
+  html[lang="th"] .mcard p.mc-l { letter-spacing: .02em; }
+  .mcard pre.cmd { margin: 4px 0 4px; }
+  .mrec { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); gap: 32px; align-items: start; margin-top: 40px; }
+  .mrec h3 { margin: 0; font-size: 19px; }
+  .mrec-tips h3 { margin-bottom: 16px; }
+  .mrec-tips .checks { font-size: 15px; color: var(--muted); }
+  .mrec-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin-bottom: 14px; }
+  .mrec-head .btn { font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+  table.rectable { min-width: 520px; }
+  table.rectable td.tool { color: var(--muted); }
+  table.rectable td.blank { width: 18%; background: repeating-linear-gradient(90deg, transparent 0 6px, var(--line2) 6px 7px) left calc(100% - 12px) / calc(100% - 28px) 1px no-repeat; background-origin: content-box; }
+  #measure .note { margin: 12px 0 0; max-width: none; text-align: left; }
+  #measure .based { margin-top: 32px; }
+
   /* FAQ */
   .faq { max-width: 860px; margin: 0 auto; }
   details { background: var(--card); border: 1px solid var(--line); border-radius: 16px; margin-bottom: 12px; transition: border-color .2s; }
@@ -372,6 +395,10 @@
   }
   @media (max-width: 760px) {
     .why { grid-template-columns: minmax(0, 1fr); }
+    .mgrid, .mrec { grid-template-columns: minmax(0, 1fr); }
+    .mcard { padding: 20px 18px; }
+    table.rectable { min-width: 0; font-size: 13.5px; }
+    table.rectable td, table.rectable th { padding: 10px; }
     .comm-links { grid-template-columns: minmax(0, 1fr); }
   }
   @media (max-width: 640px) {
@@ -946,6 +973,42 @@ Get-Content .\SHA256SUMS.txt</code></pre>
   </div>
 </section>
 
+<section id="measure" class="alt-bg">
+  <div class="wrap">
+    <div class="head rv">
+      <span class="eyebrow"><span data-l="en">Measure it yourself</span><span data-l="th">วัดเองได้</span><span data-l="vi">Tự đo</span><span data-l="id">Ukur sendiri</span></span>
+      <h2 data-l="en">Measure it on your PC</h2><h2 data-l="th">วัดผลบนเครื่องของคุณเอง</h2><h2 data-l="vi">Đo trên máy của bạn</h2><h2 data-l="id">Ukur di PC Anda</h2>
+      <p class="sub" data-l="en">We do not publish speed numbers: every PC is different. Write down a few numbers before you install and again after, with the same tools, and see what changes on your own PC.</p><p class="sub" data-l="th">เราไม่ประกาศตัวเลขความเร็ว เพราะแต่ละเครื่องไม่เหมือนกัน จดตัวเลขไว้สักสองสามค่าก่อนติดตั้งและหลังติดตั้ง ด้วยเครื่องมือเดิม แล้วดูว่าเครื่องของคุณเปลี่ยนไปอย่างไร</p><p class="sub" data-l="vi">Chúng tôi không công bố số liệu tốc độ: mỗi máy một khác. Hãy ghi lại vài con số trước khi cài và sau khi cài, bằng cùng công cụ, để thấy máy của bạn thay đổi thế nào.</p><p class="sub" data-l="id">Kami tidak menerbitkan angka kecepatan: setiap PC berbeda. Catat beberapa angka sebelum dan sesudah instalasi, dengan alat yang sama, dan lihat apa yang berubah di PC Anda.</p>
+    </div>
+    <div class="mgrid">
+      <div class="rv" style="--d:0"><div class="mcard"><div class="mc-h"><span class="ic"><svg class="i" aria-hidden="true"><use href="#i-clock"/></svg></span><h3><span data-l="en">Startup time</span><span data-l="th">เวลาเปิดเครื่อง</span><span data-l="vi">Thời gian khởi động</span><span data-l="id">Waktu startup</span></h3></div><p class="mc-l"><span data-l="en">Before</span><span data-l="th">ก่อนติดตั้ง</span><span data-l="vi">Trước</span><span data-l="id">Sebelum</span></p><p data-l="en">Windows writes how long each start took to the Diagnostics-Performance log (event 100, Boot Duration). Restart twice, then read the last starts in PowerShell as administrator:</p><p data-l="th">Windows บันทึกเวลาเปิดเครื่องแต่ละครั้งไว้ใน log ชื่อ Diagnostics-Performance (event 100, Boot Duration) รีสตาร์ต 2 ครั้ง แล้วอ่านค่าล่าสุดใน PowerShell แบบผู้ดูแลระบบ:</p><p data-l="vi">Windows ghi thời gian mỗi lần khởi động vào log Diagnostics-Performance (event 100, Boot Duration). Khởi động lại hai lần, rồi đọc các lần gần nhất trong PowerShell với quyền quản trị:</p><p data-l="id">Windows mencatat lama setiap startup di log Diagnostics-Performance (event 100, Boot Duration). Restart dua kali, lalu baca startup terakhir di PowerShell sebagai administrator:</p><pre class="cmd"><code>Get-WinEvent -FilterHashtable @{ LogName = 'Microsoft-Windows-Diagnostics-Performance/Operational'; Id = 100 } -MaxEvents 5 |
+  ForEach-Object { $d = @{}; ([xml]$_.ToXml()).Event.EventData.Data | ForEach-Object { $d[$_.Name] = $_.'#text' }
+    '{0}  {1:N1} s' -f $_.TimeCreated, ([int]$d['BootTime'] / 1000) }</code></pre><p class="mc-l"><span data-l="en">After</span><span data-l="th">หลังติดตั้ง</span><span data-l="vi">Sau</span><span data-l="id">Sesudah</span></p><p data-l="en">The same command, or Akati OS Center &gt; <strong>Health</strong> &gt; Startup and temperatures: the last start and the average of the last starts, read from the same log. If the log is off, <em>Record the startup time</em> turns it on.</p><p data-l="th">ใช้คำสั่งเดิม หรือ Akati OS Center &gt; <strong>สุขภาพเครื่อง</strong> &gt; การเปิดเครื่องและอุณหภูมิ ซึ่งแสดงครั้งล่าสุดและค่าเฉลี่ยจาก log เดียวกัน ถ้า log ปิดอยู่ กด <em>เปิดการบันทึกเวลาเปิดเครื่อง</em></p><p data-l="vi">Cùng lệnh đó, hoặc Akati OS Center &gt; <strong>Sức khỏe</strong> &gt; Khởi động và nhiệt độ: lần gần nhất và trung bình các lần gần đây, đọc từ cùng log. Nếu log đang tắt, <em>Ghi lại thời gian khởi động</em> sẽ bật nó.</p><p data-l="id">Perintah yang sama, atau Akati OS Center &gt; <strong>Kesehatan</strong> &gt; Startup dan suhu: startup terakhir dan rata-rata beberapa startup terakhir, dibaca dari log yang sama. Jika log mati, <em>Rekam waktu startup</em> menyalakannya.</p></div></div><div class="rv" style="--d:1"><div class="mcard"><div class="mc-h"><span class="ic"><svg class="i" aria-hidden="true"><use href="#i-gauge"/></svg></span><h3><span data-l="en">RAM and processes at idle</span><span data-l="th">RAM และจำนวนโปรเซสตอนว่าง</span><span data-l="vi">RAM và số tiến trình khi rảnh</span><span data-l="id">RAM dan proses saat idle</span></h3></div><p class="mc-l"><span data-l="en">Before</span><span data-l="th">ก่อนติดตั้ง</span><span data-l="vi">Trước</span><span data-l="id">Sebelum</span></p><p data-l="en">Restart, sign in and wait a few minutes without opening apps. Task Manager (Ctrl+Shift+Esc) &gt; Performance: Memory shows <em>In use</em>, CPU shows <em>Processes</em>. Startup apps lists what starts at sign-in. Or count in PowerShell:</p><p data-l="th">รีสตาร์ต ล็อกอิน แล้วรอสักสองสามนาทีโดยไม่เปิดแอป Task Manager (Ctrl+Shift+Esc) &gt; Performance: หน้า Memory ดู <em>In use</em> หน้า CPU ดู <em>Processes</em> และแท็บ Startup apps คือแอปที่เปิดตอนล็อกอิน หรือนับใน PowerShell:</p><p data-l="vi">Khởi động lại, đăng nhập và đợi vài phút mà không mở ứng dụng. Task Manager (Ctrl+Shift+Esc) &gt; Performance: Memory hiện <em>In use</em>, CPU hiện <em>Processes</em>. Startup apps liệt kê những gì chạy khi đăng nhập. Hoặc đếm trong PowerShell:</p><p data-l="id">Restart, masuk, dan tunggu beberapa menit tanpa membuka aplikasi. Task Manager (Ctrl+Shift+Esc) &gt; Performance: Memory menunjukkan <em>In use</em>, CPU menunjukkan <em>Processes</em>. Startup apps berisi yang berjalan saat masuk. Atau hitung di PowerShell:</p><pre class="cmd"><code>(Get-Process).Count
+(Get-Service | Where-Object Status -eq 'Running').Count</code></pre><p class="mc-l"><span data-l="en">After</span><span data-l="th">หลังติดตั้ง</span><span data-l="vi">Sau</span><span data-l="id">Sesudah</span></p><p data-l="en">The same steps after setup. The Akati OS Center Dashboard also shows live RAM use and the busiest apps; Task Manager is in Quick tools.</p><p data-l="th">ทำขั้นตอนเดิมหลังติดตั้ง แดชบอร์ดของ Akati OS Center ยังแสดงการใช้ RAM แบบสดและแอปที่ใช้ทรัพยากรมากที่สุด ส่วน Task Manager อยู่ในเครื่องมือด่วน</p><p data-l="vi">Làm lại các bước đó sau khi cài. Dashboard của Akati OS Center cũng hiện RAM đang dùng theo thời gian thực và các ứng dụng nặng nhất; Task Manager có trong Công cụ nhanh.</p><p data-l="id">Langkah yang sama setelah instalasi. Dashboard Akati OS Center juga menampilkan pemakaian RAM langsung dan aplikasi tersibuk; Task Manager ada di Alat cepat.</p></div></div><div class="rv" style="--d:2"><div class="mcard"><div class="mc-h"><span class="ic"><svg class="i" aria-hidden="true"><use href="#i-pad"/></svg></span><h3><span data-l="en">FPS in a game</span><span data-l="th">FPS ในเกม</span><span data-l="vi">FPS trong game</span><span data-l="id">FPS di game</span></h3></div><p class="mc-l"><span data-l="en">Before</span><span data-l="th">ก่อนติดตั้ง</span><span data-l="vi">Trước</span><span data-l="id">Sebelum</span></p><p data-l="en">Pick one game and one repeatable scene (a built-in benchmark is best). Keep the same settings, resolution and GPU driver. Write down the average FPS and the 1% low, for example with Intel PresentMon or the game's own counter.</p><p data-l="th">เลือกเกม 1 เกมและฉากที่เล่นซ้ำได้ (benchmark ในเกมดีที่สุด) ใช้การตั้งค่า ความละเอียด และไดรเวอร์การ์ดจอเดิม จด FPS เฉลี่ยและ 1% low เช่นด้วย PresentMon ของ Intel หรือตัวนับของเกมเอง</p><p data-l="vi">Chọn một game và một cảnh lặp lại được (benchmark có sẵn trong game là tốt nhất). Giữ nguyên cài đặt, độ phân giải và driver GPU. Ghi lại FPS trung bình và 1% low, ví dụ bằng Intel PresentMon hoặc bộ đếm của game.</p><p data-l="id">Pilih satu game dan satu adegan yang bisa diulang (benchmark bawaan game paling baik). Pakai pengaturan, resolusi, dan driver GPU yang sama. Catat FPS rata-rata dan 1% low, misalnya dengan Intel PresentMon atau penghitung bawaan game.</p><p class="mc-l"><span data-l="en">After</span><span data-l="th">หลังติดตั้ง</span><span data-l="vi">Sau</span><span data-l="id">Sesudah</span></p><p data-l="en">The same scene and tool. Akati OS Center &gt; Game boost &gt; <strong>FPS test</strong> measures 30 seconds of a game from My games with PresentMon (average and 1% low); run it once with and once without Game boost.</p><p data-l="th">ใช้ฉากและเครื่องมือเดิม Akati OS Center &gt; บูสต์เกม &gt; <strong>ทดสอบ FPS</strong> วัด 30 วินาทีของเกมในเกมของฉันด้วย PresentMon (FPS เฉลี่ยและ 1% low) ลองวัดทั้งตอนเปิดและไม่เปิดบูสต์เกม</p><p data-l="vi">Cùng cảnh và công cụ. Akati OS Center &gt; Tăng tốc game &gt; <strong>Kiểm tra FPS</strong> đo 30 giây của một game trong Game của tôi bằng PresentMon (trung bình và 1% low); chạy một lần có và một lần không có Tăng tốc game.</p><p data-l="id">Adegan dan alat yang sama. Akati OS Center &gt; Game Boost &gt; <strong>Tes FPS</strong> mengukur 30 detik game dari Game Saya dengan PresentMon (rata-rata dan 1% low); jalankan sekali dengan dan sekali tanpa Game Boost.</p></div></div><div class="rv" style="--d:3"><div class="mcard"><div class="mc-h"><span class="ic"><svg class="i" aria-hidden="true"><use href="#i-globe"/></svg></span><h3><span data-l="en">Ping</span><span data-l="th">ปิง</span><span data-l="vi">Ping</span><span data-l="id">Ping</span></h3></div><p class="mc-l"><span data-l="en">Before</span><span data-l="th">ก่อนติดตั้ง</span><span data-l="vi">Trước</span><span data-l="id">Sebelum</span></p><p data-l="en">Use a cable or the same Wi-Fi spot, at the same time of day, to the same address (a game server you play on, or a public one). In Command Prompt, note the Average:</p><p data-l="th">ใช้สายแลนหรือ Wi-Fi จุดเดิม ในช่วงเวลาเดียวกันของวัน ไปที่ปลายทางเดิม (เซิร์ฟเวอร์เกมที่เล่น หรือที่อยู่สาธารณะ) ใน Command Prompt ให้จดค่า Average:</p><p data-l="vi">Dùng cáp hoặc cùng vị trí Wi-Fi, cùng thời điểm trong ngày, tới cùng một địa chỉ (server game bạn chơi hoặc một địa chỉ công khai). Trong Command Prompt, ghi lại Average:</p><p data-l="id">Pakai kabel atau posisi Wi-Fi yang sama, di jam yang sama, ke alamat yang sama (server game yang Anda mainkan, atau alamat publik). Di Command Prompt, catat nilai Average:</p><pre class="cmd"><code>ping -n 20 1.1.1.1</code></pre><p class="mc-l"><span data-l="en">After</span><span data-l="th">หลังติดตั้ง</span><span data-l="vi">Sau</span><span data-l="id">Sesudah</span></p><p data-l="en">The same command. Game boost &gt; <strong>Ping to game servers</strong> tests Bangkok, Singapore, Hong Kong and Tokyo; it measures a TCP connection, so compare it only with itself.</p><p data-l="th">ใช้คำสั่งเดิม บูสต์เกม &gt; <strong>ปิงไปเซิร์ฟเวอร์เกม</strong> ทดสอบกรุงเทพ สิงคโปร์ ฮ่องกง และโตเกียว แต่วัดจากการเชื่อมต่อ TCP จึงควรเทียบกับผลของตัวเองเท่านั้น</p><p data-l="vi">Cùng lệnh đó. Tăng tốc game &gt; <strong>Ping tới server game</strong> đo Bangkok, Singapore, Hồng Kông và Tokyo; nó đo kết nối TCP, nên chỉ so sánh với chính nó.</p><p data-l="id">Perintah yang sama. Game Boost &gt; <strong>Ping ke server game</strong> menguji Bangkok, Singapura, Hong Kong, dan Tokyo; ia mengukur koneksi TCP, jadi bandingkan hanya dengan hasilnya sendiri.</p></div></div>
+    </div>
+    <div class="mrec rv">
+      <div class="mrec-tips">
+        <h3><span data-l="en">Fair numbers</span><span data-l="th">วัดให้ยุติธรรม</span><span data-l="vi">Đo cho công bằng</span><span data-l="id">Angka yang adil</span></h3>
+        <ul class="checks"><li><span data-l="en">Same PC, same Windows build, same GPU driver and the same game settings before and after.</span><span data-l="th">ใช้เครื่องเดิม Windows build เดิม ไดรเวอร์การ์ดจอเดิม และการตั้งค่าเกมเดิมทั้งก่อนและหลัง</span><span data-l="vi">Cùng máy, cùng bản Windows, cùng driver GPU và cùng cài đặt game trước và sau.</span><span data-l="id">PC yang sama, build Windows yang sama, driver GPU yang sama, dan pengaturan game yang sama sebelum dan sesudah.</span></li><li><span data-l="en">Measure each number three times and keep the middle one.</span><span data-l="th">วัดแต่ละค่า 3 ครั้งแล้วใช้ค่าตรงกลาง</span><span data-l="vi">Đo mỗi số ba lần và lấy giá trị ở giữa.</span><span data-l="id">Ukur setiap angka tiga kali dan ambil nilai tengahnya.</span></li><li><span data-l="en">Every PC is different: some numbers may not change, or get worse. Then turn that tweak back in Tweaks or with Undo.</span><span data-l="th">แต่ละเครื่องไม่เหมือนกัน บางค่าอาจไม่เปลี่ยนหรือแย่ลง ถ้าเป็นแบบนั้นให้ปิดการปรับแต่งนั้นในหน้าปรับแต่งหรือกดเลิกทำ</span><span data-l="vi">Mỗi máy một khác: có số có thể không đổi, hoặc tệ hơn. Khi đó hãy tắt tinh chỉnh đó trong Tinh chỉnh hoặc dùng Hoàn tác.</span><span data-l="id">Setiap PC berbeda: beberapa angka mungkin tidak berubah, atau lebih buruk. Kembalikan tweak itu di Tweak atau dengan Urungkan.</span></li><li><span data-l="en">Akati OS Center only exists after setup, so measure the "before" numbers with the Windows tools above and use the same tools again after.</span><span data-l="th">Akati OS Center มีหลังติดตั้งเท่านั้น ค่า "ก่อนติดตั้ง" จึงต้องวัดด้วยเครื่องมือของ Windows ข้างบน แล้ววัดซ้ำด้วยเครื่องมือเดิมหลังติดตั้ง</span><span data-l="vi">Akati OS Center chỉ có sau khi cài, nên hãy đo số "trước" bằng các công cụ Windows ở trên và dùng lại đúng các công cụ đó sau khi cài.</span><span data-l="id">Akati OS Center baru ada setelah instalasi, jadi ukur angka "sebelum" dengan alat Windows di atas dan pakai alat yang sama lagi sesudahnya.</span></li></ul>
+      </div>
+      <div class="mrec-table">
+        <div class="mrec-head">
+          <h3><span data-l="en">Record your numbers</span><span data-l="th">จดตัวเลขของคุณ</span><span data-l="vi">Ghi lại số của bạn</span><span data-l="id">Catat angka Anda</span></h3>
+          <button class="btn sm" type="button" id="copy-measure"><svg class="i" aria-hidden="true"><use href="#i-file"/></svg><span class="t"><span class="cm-idle"><span data-l="en">Copy template</span><span data-l="th">คัดลอกตาราง</span><span data-l="vi">Sao chép mẫu</span><span data-l="id">Salin templat</span></span><span class="cm-done" hidden><span data-l="en">Copied</span><span data-l="th">คัดลอกแล้ว</span><span data-l="vi">Đã sao chép</span><span data-l="id">Disalin</span></span></span></button>
+        </div>
+        <div class="tablewrap"><table class="rectable" id="measure-table">
+          <thead><tr><th><span data-l="en">What</span><span data-l="th">ค่าที่วัด</span><span data-l="vi">Chỉ số</span><span data-l="id">Yang diukur</span></th><th><span data-l="en">Tool</span><span data-l="th">เครื่องมือ</span><span data-l="vi">Công cụ</span><span data-l="id">Alat</span></th><th><span data-l="en">Before</span><span data-l="th">ก่อนติดตั้ง</span><span data-l="vi">Trước</span><span data-l="id">Sebelum</span></th><th><span data-l="en">After</span><span data-l="th">หลังติดตั้ง</span><span data-l="vi">Sau</span><span data-l="id">Sesudah</span></th></tr></thead>
+          <tbody><tr><td><span data-l="en">Windows build</span><span data-l="th">Windows build</span><span data-l="vi">Bản Windows</span><span data-l="id">Build Windows</span></td><td class="tool"><code>winver</code></td><td class="blank"></td><td class="blank"></td></tr><tr><td><span data-l="en">Startup time (s)</span><span data-l="th">เวลาเปิดเครื่อง (วินาที)</span><span data-l="vi">Thời gian khởi động (giây)</span><span data-l="id">Waktu startup (detik)</span></td><td class="tool"><span data-l="en">Event 100 / Health</span><span data-l="th">Event 100 / สุขภาพเครื่อง</span><span data-l="vi">Event 100 / Sức khỏe</span><span data-l="id">Event 100 / Kesehatan</span></td><td class="blank"></td><td class="blank"></td></tr><tr><td><span data-l="en">RAM in use at idle (GB)</span><span data-l="th">RAM ที่ใช้ตอนว่าง (GB)</span><span data-l="vi">RAM đang dùng khi rảnh (GB)</span><span data-l="id">RAM terpakai saat idle (GB)</span></td><td class="tool">Task Manager</td><td class="blank"></td><td class="blank"></td></tr><tr><td><span data-l="en">Processes at idle</span><span data-l="th">จำนวนโปรเซสตอนว่าง</span><span data-l="vi">Số tiến trình khi rảnh</span><span data-l="id">Proses saat idle</span></td><td class="tool">Task Manager</td><td class="blank"></td><td class="blank"></td></tr><tr><td><span data-l="en">Running services</span><span data-l="th">service ที่ทำงานอยู่</span><span data-l="vi">Dịch vụ đang chạy</span><span data-l="id">Layanan berjalan</span></td><td class="tool">PowerShell</td><td class="blank"></td><td class="blank"></td></tr><tr><td><span data-l="en">Startup apps</span><span data-l="th">แอปที่เปิดตอนล็อกอิน</span><span data-l="vi">Ứng dụng khởi động</span><span data-l="id">Aplikasi startup</span></td><td class="tool">Task Manager</td><td class="blank"></td><td class="blank"></td></tr><tr><td><span data-l="en">Ping (ms), same address</span><span data-l="th">ปิง (ms) ปลายทางเดิม</span><span data-l="vi">Ping (ms), cùng địa chỉ</span><span data-l="id">Ping (ms), alamat sama</span></td><td class="tool"><code>ping -n 20</code></td><td class="blank"></td><td class="blank"></td></tr><tr><td><span data-l="en">FPS average, same scene</span><span data-l="th">FPS เฉลี่ย ฉากเดิม</span><span data-l="vi">FPS trung bình, cùng cảnh</span><span data-l="id">FPS rata-rata, adegan sama</span></td><td class="tool"><span data-l="en">PresentMon / FPS test</span><span data-l="th">PresentMon / ทดสอบ FPS</span><span data-l="vi">PresentMon / Kiểm tra FPS</span><span data-l="id">PresentMon / Tes FPS</span></td><td class="blank"></td><td class="blank"></td></tr><tr><td><span data-l="en">FPS 1% low</span><span data-l="th">FPS 1% low</span><span data-l="vi">FPS 1% low</span><span data-l="id">FPS 1% low</span></td><td class="tool"><span data-l="en">PresentMon / FPS test</span><span data-l="th">PresentMon / ทดสอบ FPS</span><span data-l="vi">PresentMon / Kiểm tra FPS</span><span data-l="id">PresentMon / Tes FPS</span></td><td class="blank"></td><td class="blank"></td></tr></tbody>
+        </table></div>
+        <p class="note" data-l="en">Copy template copies this table as text (Markdown), ready for Notepad, a spreadsheet or a GitHub issue.</p><p class="note" data-l="th">ปุ่มคัดลอกตารางจะคัดลอกตารางนี้เป็นข้อความ (Markdown) วางใน Notepad, สเปรดชีต หรือ issue บน GitHub ได้เลย</p><p class="note" data-l="vi">Sao chép mẫu sẽ sao chép bảng này dưới dạng văn bản (Markdown), dán được vào Notepad, bảng tính hoặc issue GitHub.</p><p class="note" data-l="id">Salin templat menyalin tabel ini sebagai teks (Markdown), siap untuk Notepad, spreadsheet, atau issue GitHub.</p>
+      </div>
+    </div>
+    <div class="based rv"><svg class="i" aria-hidden="true"><use href="#i-warn"/></svg>
+      <span data-l="en"><b>Something went wrong after setup?</b> The <a href="docs.html#troubleshoot">troubleshooting guide</a> covers anti-cheat games, no internet after a DNS change, the Microsoft Store, printers, removed apps and more.</span><span data-l="th"><b>มีปัญหาหลังติดตั้งใช่ไหม</b> <a href="docs.html#troubleshoot">คู่มือแก้ปัญหา</a> มีวิธีแก้เรื่องเกมที่มีแอนตี้ชีต เน็ตหลุดหลังเปลี่ยน DNS, Microsoft Store, เครื่องพิมพ์ แอปที่ถูกลบ และอื่น ๆ</span><span data-l="vi"><b>Có sự cố sau khi cài?</b> <a href="docs.html#troubleshoot">Hướng dẫn khắc phục sự cố</a> nói về game có chống gian lận, mất internet sau khi đổi DNS, Microsoft Store, máy in, ứng dụng bị gỡ và hơn nữa.</span><span data-l="id"><b>Ada masalah setelah instalasi?</b> <a href="docs.html#troubleshoot">Panduan pemecahan masalah</a> membahas game anti-cheat, internet putus setelah ganti DNS, Microsoft Store, printer, aplikasi yang terhapus, dan lainnya.</span>
+    </div>
+  </div>
+</section>
+
 <section id="opensource">
   <div class="wrap">
     <div class="oss">
@@ -1084,6 +1147,7 @@ Get-Content .\SHA256SUMS.txt</code></pre>
           <li><a href="docs.html"><span data-l="en">Docs</span><span data-l="th">คู่มือ</span><span data-l="vi">Tài liệu</span><span data-l="id">Dokumentasi</span></a></li>
           <li><a href="#compare"><span data-l="en">Compare</span><span data-l="th">เปรียบเทียบ</span><span data-l="vi">So sánh</span><span data-l="id">Perbandingan</span></a></li>
           <li><a href="#faq">FAQ</a></li>
+          <li><a href="docs.html#troubleshoot"><span data-l="en">Troubleshooting</span><span data-l="th">แก้ปัญหา</span><span data-l="vi">Khắc phục sự cố</span><span data-l="id">Pemecahan masalah</span></a></li>
           <li><a href="changelog.html"><span data-l="en">Changelog</span><span data-l="th">ประวัติเวอร์ชัน</span><span data-l="vi">Nhật ký thay đổi</span><span data-l="id">Catatan rilis</span></a></li>
         </ul>
       </div>
@@ -1253,6 +1317,43 @@ Get-Content .\SHA256SUMS.txt</code></pre>
         if (r.top < window.innerHeight && r.bottom > 0) el.classList.add('in'); else io.observe(el);
       });
       root.classList.add('anim');
+    }
+
+    // "Record your numbers": copy the table as a Markdown table in the page language
+    var copyMeasure = document.getElementById('copy-measure');
+    if (copyMeasure) {
+      var cellText = function (c) {
+        var shown = c.querySelector('[data-l].show');
+        return ((shown || c).textContent || '').replace(/\s+/g, ' ').trim();
+      };
+      var copyPlain = function (text) {
+        if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+        return new Promise(function (ok, fail) {
+          var ta = document.createElement('textarea');
+          ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+          document.body.appendChild(ta); ta.select();
+          try { document.execCommand('copy') ? ok() : fail(); } catch (e) { fail(e); }
+          document.body.removeChild(ta);
+        });
+      };
+      var measureTimer;
+      copyMeasure.addEventListener('click', function () {
+        var lines = [];
+        document.querySelectorAll('#measure-table tr').forEach(function (tr, i) {
+          var cells = Array.prototype.map.call(tr.children, cellText);
+          lines.push('| ' + cells.join(' | ') + ' |');
+          if (i === 0) lines.push('|' + cells.map(function () { return '---'; }).join('|') + '|');
+        });
+        copyPlain(lines.join('\n') + '\n').then(function () {
+          copyMeasure.querySelector('.cm-idle').hidden = true;
+          copyMeasure.querySelector('.cm-done').hidden = false;
+          clearTimeout(measureTimer);
+          measureTimer = setTimeout(function () {
+            copyMeasure.querySelector('.cm-idle').hidden = false;
+            copyMeasure.querySelector('.cm-done').hidden = true;
+          }, 1800);
+        }, function () {});
+      });
     }
 
     // Download dialog: step 1 points to the install guide, step 2 has the downloads, enabled once the box is ticked.

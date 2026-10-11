@@ -112,3 +112,227 @@ function Get-ProgramBaseName([string]$name) {
     $n = $n -replace '\s+(x64|x86|64-bit|32-bit)$', ''
     $n.Trim().Trim('-').Trim()
 }
+
+# Disk health: the kind of a disk from Get-PhysicalDisk (names, or the numbers of MSFT_PhysicalDisk): NVMe by its
+# bus (17), SSD (4) or HDD (3) by its media type, '' when Windows does not say
+function Get-DiskKind($busType, $mediaType) {
+    $bus = [string]$busType; $media = [string]$mediaType
+    if ($bus -eq 'NVMe' -or $bus -eq '17') { return 'NVMe' }
+    if ($media -eq 'SSD' -or $media -eq '4') { return 'SSD' }
+    if ($media -eq 'HDD' -or $media -eq '3') { return 'HDD' }
+    return ''
+}
+# HealthStatus as a name (numbers: 0 Healthy, 1 Warning, 2 Unhealthy); '' when it is not reported
+function Get-DiskHealthName($status) {
+    $s = [string]$status
+    if ($s -in 'Healthy', '0') { return 'Healthy' }
+    if ($s -in 'Warning', '1') { return 'Warning' }
+    if ($s -in 'Unhealthy', '2') { return 'Unhealthy' }
+    if ($s) { return 'Unknown' }
+    return ''
+}
+# What Akati Doctor warns about: health Warning or Unhealthy, wear 90% or more, 70 °C or more.
+# Unknown is not a warning (virtual and USB disks often report it). $null means not reported and never counts.
+# Returns the text keys.
+function Get-DiskWarnings($health, $wear, $temp) {
+    $w = @()
+    $h = Get-DiskHealthName $health
+    if ($h -in 'Warning', 'Unhealthy') { $w += 'smart.warn.health' }
+    if ($null -ne $wear -and [double]$wear -ge 90) { $w += 'smart.warn.wear' }
+    if ($null -ne $temp -and [double]$temp -ge 70) { $w += 'smart.warn.temp' }
+    $w
+}
+
+# Speed test: bytes in a time -> megabits per second (1 Mbps = 1,000,000 bits per second, like speed test sites)
+function Get-Mbps([double]$bytes, [double]$seconds) {
+    if ($seconds -le 0 -or $bytes -le 0) { return 0 }
+    [Math]::Round($bytes * 8 / $seconds / 1e6, 1)
+}
+# Ping and jitter from round-trip times in ms: the median, and the average change from one time to the next.
+# -1 when there is no time.
+function Get-PingStats([double[]]$times) {
+    $t = @($times | Where-Object { $_ -ge 0 })
+    if (!$t.Count) { return @{ Ping = -1; Jitter = -1 } }
+    $s = @($t | Sort-Object)
+    $mid = [int][Math]::Floor($s.Count / 2)
+    $median = if ($s.Count % 2) { $s[$mid] } else { ($s[$mid - 1] + $s[$mid]) / 2 }
+    $j = 0
+    for ($i = 1; $i -lt $t.Count; $i++) { $j += [Math]::Abs($t[$i] - $t[$i - 1]) }
+    if ($t.Count -gt 1) { $j = $j / ($t.Count - 1) }
+    @{ Ping = [Math]::Round($median, 1); Jitter = [Math]::Round($j, 1) }
+}
+# Speed test history: "yyyy-MM-ddTHH:mm:ss|down|up|ping|jitter" (invariant numbers, -1 = not measured), newest first
+function New-SpeedEntry([datetime]$time, [double]$down, [double]$up, [double]$ping, [double]$jitter) {
+    $inv = [Globalization.CultureInfo]::InvariantCulture
+    [string]::Format($inv, '{0}|{1}|{2}|{3}|{4}', $time.ToString('s', $inv), $down, $up, $ping, $jitter)
+}
+function Add-SpeedHistory([string[]]$list, [string]$entry, [int]$keep = 10) {
+    $old = @($list | Where-Object { $_ -match '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\|-?[\d.]+){4}$' })
+    , [string[]]@(@($entry) + $old | Select-Object -First $keep)
+}
+function ConvertFrom-SpeedEntry([string]$entry) {
+    if ($entry -notmatch '^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})\|(-?[\d.]+)\|(-?[\d.]+)\|(-?[\d.]+)\|(-?[\d.]+)$') { return $null }
+    $inv = [Globalization.CultureInfo]::InvariantCulture
+    @{ Time = [datetime]::ParseExact($Matches[1], 's', $inv); Down = [double]::Parse($Matches[2], $inv); Up = [double]::Parse($Matches[3], $inv)
+       Ping = [double]::Parse($Matches[4], $inv); Jitter = [double]::Parse($Matches[5], $inv) }
+}
+
+# Network use per app: processes Akati OS Center never offers to end. Session 0 (services), Windows parts (a file
+# under the Windows folder or a known name) and processes whose file cannot be read (protected ones).
+$protectedProcesses = 'System', 'Idle', 'Registry', 'smss', 'csrss', 'wininit', 'winlogon', 'services', 'lsass', 'lsaiso', 'svchost',
+    'dwm', 'fontdrvhost', 'LogonUI', 'sihost', 'explorer', 'MsMpEng', 'NisSrv', 'audiodg', 'spoolsv', 'Memory Compression', 'SecurityHealthService'
+function Test-ProtectedProcess([string]$name, [int]$session, [string]$path, [string]$windir) {
+    if ($session -eq 0) { return $true }
+    if ($protectedProcesses -contains $name) { return $true }
+    if (!$path) { return $true }
+    if ($windir -and $path.StartsWith($windir.TrimEnd('\') + '\', [StringComparison]::OrdinalIgnoreCase)) { return $true }
+    return $false
+}
+
+# ---------------------------------------------------------------------------------------------
+# Tweaks profiles. The Gaming profile (also read by the icon next to the clock) and "key=1;key=0" texts
+# (the custom profile TweakProfile, and the game profile state)
+# ---------------------------------------------------------------------------------------------
+function Get-GamingProfile {
+    [ordered]@{ gamemode = $true; maxperf = $true; timer = $true; access = $false; mouseaccel = $false; ducking = $false; nagle = $false; edgebg = $true; startdelay = $false }
+}
+function ConvertFrom-ProfileText([string]$text) {
+    $map = [ordered]@{}
+    foreach ($part in $text.Split(';')) {
+        $m = [regex]::Match($part, '^(\w+)=([01])$')
+        if ($m.Success) { $map[$m.Groups[1].Value] = $m.Groups[2].Value -eq '1' }
+    }
+    $map
+}
+# Switches a game profile never sets: settings of Akati OS itself and the look of Windows
+$gameTweakSkip = 'store', 'tray', 'desktopmenu', 'hotkeys', 'widget', 'schedtheme', 'updatenotify', 'darkmode', 'accentbars', 'transparency'
+# Switches that need a restart (the Restart switches of AkatiCenter.tweaks.ps1; tools/test-center.ps1 checks the list)
+$restartTweaks = 'hags', 'timer', 'access', 'nagle', 'mpo', 'msi', 'memcomp', 'extrasvc', 'svcxbox', 'svciphelper', 'svchello', 'svcscanner',
+    'svchotspot', 'svcnotify', 'svccdp', 'svcprint', 'svcbt', 'vbs'
+# What a game profile changes: the switches of $map that differ from $current (key -> $true or $false; $null or missing
+# when it cannot be read here). $restart: keys that need a restart, skipped and reported. $only: when given, the only
+# keys that can be set here (the icon next to the clock: switches without administrator rights); the others are
+# reported as Admin. Set: key -> new value; Prev: key -> the value before, to put back when the game closes.
+function Get-GameTweakPlan($map, $current, [string[]]$restart, $only = $null) {
+    $set = [ordered]@{}; $prev = [ordered]@{}; $skipRestart = @(); $skipAdmin = @()
+    foreach ($k in @($map.Keys)) {
+        if ($k -in $gameTweakSkip) { continue }
+        $want = [bool]$map[$k]
+        $now = if ($current.Contains($k)) { $current[$k] } else { $null }
+        if ($null -ne $now -and [bool]$now -eq $want) { continue }
+        if ($k -in $restart) { $skipRestart += $k; continue }
+        if ($null -ne $only -and $k -notin @($only)) { $skipAdmin += $k; continue }
+        if ($null -eq $now) { continue }
+        $set[$k] = $want; $prev[$k] = [bool]$now
+    }
+    @{ Set = $set; Prev = $prev; Restart = $skipRestart; Admin = $skipAdmin }
+}
+# The switches a game profile changed, kept until the game closes (setting GameTweaks): "by|time|path|key=0;key=1".
+# by: center (Play) or tray (automatic); the values are the switches as they were before the game started.
+function ConvertTo-GameTweakState([string]$by, [string]$time, [string]$path, $prev) {
+    $pairs = @(foreach ($k in @($prev.Keys)) { '{0}={1}' -f $k, [int][bool]$prev[$k] })
+    '{0}|{1}|{2}|{3}' -f $by, $time, $path, ($pairs -join ';')
+}
+function ConvertFrom-GameTweakState([string]$text) {
+    $m = [regex]::Match($text, '^(center|tray)\|([^|]*)\|([^|]+)\|(.*)$')
+    if (!$m.Success) { return $null }
+    @{ By = $m.Groups[1].Value; Time = $m.Groups[2].Value; Path = $m.Groups[3].Value; Prev = (ConvertFrom-ProfileText $m.Groups[4].Value) }
+}
+
+# ---------------------------------------------------------------------------------------------
+# Privacy status (Tweaks): On or Off from the values read from the registry and the services ($v: name -> value,
+# $null when missing). Windows defaults: telemetry, advertising ID, location, activity history, tailored experiences
+# and app diagnostics are on until something turns them off; online speech recognition is off until accepted.
+# ---------------------------------------------------------------------------------------------
+function Test-PrivacyOff([string]$item, $v) {
+    switch ($item) {
+        'telemetry' {
+            $policy = @($v.AllowTelemetry, $v.AllowTelemetry2) | Where-Object { $null -ne $_ } | Select-Object -First 1
+            return ($null -ne $policy -and [int]$policy -eq 0) -and ($null -eq $v.DiagTrackStart -or [int]$v.DiagTrackStart -eq 4)
+        }
+        'adid' { return [int]$v.AdPolicy -eq 1 -or ($null -ne $v.AdEnabled -and [int]$v.AdEnabled -eq 0) }
+        'location' { return [int]$v.LocationPolicy -eq 1 -or [string]$v.LocationMachine -eq 'Deny' -or [string]$v.LocationUser -eq 'Deny' }
+        'activity' { return ($null -ne $v.ActivityFeed -and [int]$v.ActivityFeed -eq 0) -or ($null -ne $v.PublishActivities -and [int]$v.PublishActivities -eq 0) }
+        'recall' { return [int]$v.RecallMachine -eq 1 -or [int]$v.RecallUser -eq 1 -or ($null -ne $v.RecallAllow -and [int]$v.RecallAllow -eq 0) }
+        'copilot' { return [int]$v.CopilotUser -eq 1 -or [int]$v.CopilotMachine -eq 1 }
+        'tailored' { return [int]$v.TailoredPolicy -eq 1 -or ($null -ne $v.Tailored -and [int]$v.Tailored -eq 0) }
+        'speech' { return ($null -ne $v.SpeechPolicy -and [int]$v.SpeechPolicy -eq 0) -or [int]$v.SpeechAccepted -ne 1 }
+        'appdiag' { return [int]$v.AppDiagPolicy -eq 2 -or [string]$v.AppDiagMachine -eq 'Deny' -or [string]$v.AppDiagUser -eq 'Deny' }
+    }
+    $false
+}
+
+# ---------------------------------------------------------------------------------------------
+# After Windows Update. Baseline entries (setting WuBaseline): "svc:<service>=4" (turned off), "app:<package name>"
+# (removed) and "pol:<id>=<value>" (a policy Akati OS or AtlasOS set). The key is the part before "=".
+# ---------------------------------------------------------------------------------------------
+function ConvertFrom-WuEntry([string]$entry) {
+    $m = [regex]::Match($entry, '^(svc|app|pol):([\w.\-]+)(=(.*))?$')
+    if (!$m.Success) { return $null }
+    @{ Kind = $m.Groups[1].Value; Id = $m.Groups[2].Value; Key = $m.Groups[1].Value + ':' + $m.Groups[2].Value; Value = $m.Groups[4].Value }
+}
+# What came back on: baseline entries whose current value ($now: key -> value as text) shows them on again, without the
+# keys the user turned on in Akati OS Center ($keep). A service counts when its start type is automatic (2) or manual (3)
+# again, an app when it is installed again ('1'), a policy when its value is not the baseline value any more.
+function Compare-WuBaseline([string[]]$baseline, $now, [string[]]$keep) {
+    @(foreach ($e in @($baseline)) {
+        $p = ConvertFrom-WuEntry $e
+        if (!$p -or $p.Key -in @($keep) -or !$now.ContainsKey($p.Key)) { continue }
+        $value = [string]$now[$p.Key]
+        $back = switch ($p.Kind) { 'svc' { $value -in '2', '3' } 'app' { $value -eq '1' } default { $value -ne $p.Value } }
+        if ($back) { $p }
+    })
+}
+# A list with one entry for a key: the entry is added, or replaces the one with the same key
+function Set-WuEntry([string[]]$list, [string]$entry) {
+    $key = (ConvertFrom-WuEntry $entry).Key
+    , [string[]]@(@($list | Where-Object { $_ -and (ConvertFrom-WuEntry $_).Key -ne $key }) + $entry)
+}
+function Remove-WuEntry([string[]]$list, [string]$key) {
+    , [string[]]@($list | Where-Object { $_ -and $_ -ne $key -and (ConvertFrom-WuEntry $_).Key -ne $key })
+}
+
+# ---------------------------------------------------------------------------------------------
+# Badges (Health): the ids unlocked by the numbers Akati OS Center keeps. $d: CleanBytes (all time), Cleaned (a clean
+# ran), Boosts (all time), BestScore, ScoreDays, Profile (a custom profile is saved), DoctorGood (Akati Doctor found
+# nothing once), SpeedTests, FpsTests.
+# ---------------------------------------------------------------------------------------------
+$badgeIds = 'firstclean', 'clean1gb', 'clean10gb', 'firstboost', 'boost10', 'score90', 'days7', 'days30', 'profile', 'doctor', 'speedtest', 'fpstest'
+function Get-BadgeUnlocks($d) {
+    $on = @()
+    if ($d.Cleaned -or [double]$d.CleanBytes -gt 0) { $on += 'firstclean' }
+    if ([double]$d.CleanBytes -ge 1GB) { $on += 'clean1gb' }
+    if ([double]$d.CleanBytes -ge 10GB) { $on += 'clean10gb' }
+    if ([int]$d.Boosts -ge 1) { $on += 'firstboost' }
+    if ([int]$d.Boosts -ge 10) { $on += 'boost10' }
+    if ([int]$d.BestScore -ge 90) { $on += 'score90' }
+    if ([int]$d.ScoreDays -ge 7) { $on += 'days7' }
+    if ([int]$d.ScoreDays -ge 30) { $on += 'days30' }
+    if ($d.Profile) { $on += 'profile' }
+    if ($d.DoctorGood) { $on += 'doctor' }
+    if ([int]$d.SpeedTests -ge 1) { $on += 'speedtest' }
+    if ([int]$d.FpsTests -ge 1) { $on += 'fpstest' }
+    , [string[]]$on
+}
+# Saved badges: "id=yyyy-MM-dd" (the day each was unlocked). Returns the new list and the ids that are new.
+function Update-BadgeList([string[]]$saved, [string[]]$unlocked, [string]$day) {
+    $list = @($saved | Where-Object { $_ -match '^\w+=\d{4}-\d{2}-\d{2}$' })
+    $have = @($list | ForEach-Object { $_.Split('=')[0] })
+    $new = @($unlocked | Where-Object { $_ -notin $have })
+    @{ List = [string[]]@($list + @($new | ForEach-Object { "$_=$day" })); New = [string[]]$new }
+}
+
+# ---------------------------------------------------------------------------------------------
+# Service helper (Tweaks): services that must never be offered for a change, whatever the list says
+# ---------------------------------------------------------------------------------------------
+$criticalServices = 'RpcSs', 'DcomLaunch', 'RpcEptMapper', 'LSM', 'Winmgmt', 'WinDefend', 'WdNisSvc', 'WdBoot', 'WdFilter', 'Sense', 'MDCoreSvc',
+    'SecurityHealthService', 'mpssvc', 'BFE', 'EventLog', 'Schedule', 'ProfSvc', 'Power', 'PlugPlay', 'SamSs', 'BrokerInfrastructure',
+    'CoreMessagingRegistrar', 'StateRepository', 'SystemEventsBroker', 'UserManager', 'Dhcp', 'Dnscache', 'nsi', 'AudioEndpointBuilder',
+    'Audiosrv', 'CryptSvc', 'gpsvc', 'KeyIso', 'TrustedInstaller', 'msiserver', 'sppsvc', 'wscsvc', 'EventSystem', 'Appinfo', 'TimeBrokerSvc',
+    'LanmanServer', 'VaultSvc', 'Wcmsvc', 'netprofm', 'NlaSvc', 'FontCache', 'AppXSvc', 'ClipSVC', 'camsvc', 'DeviceInstall', 'DsmSvc'
+# $updating: Windows Update is installing now (then wuauserv is not offered either)
+function Test-ServiceChangeable([string]$name, [string]$level, [bool]$updating) {
+    if ($name -in $criticalServices) { return $false }
+    if ($name -eq 'wuauserv' -and $updating) { return $false }
+    $level -in 'safe', 'careful'
+}

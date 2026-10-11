@@ -102,6 +102,7 @@ $ui.CleanNone.Add_Click({ foreach ($ci in $cleanItems) { $ci.Check.IsChecked = $
 
 function Start-Scan([scriptblock]$then) {
     Set-Status (T 'status.scanning') $true
+    Show-Progress 'cleaner' (T 'status.scanning') -1 (T 'nav.cleaner')
     $ui.ScanButton.IsEnabled = $false; $ui.CleanButton.IsEnabled = $false
     $items = @($cleanItems | ForEach-Object { @{ Key = $_.Key; Folders = $_.Folders; Files = $_.Files; Recycle = $_.Recycle } })
     Start-Work $measureWork @($items, $true) {
@@ -110,7 +111,7 @@ function Start-Scan([scriptblock]$then) {
         $found = 0; foreach ($ci in $cleanItems) { $found += $ci.Bytes }
         Add-Log 'CleanLog' ((T 'cleaner.log.scan') -f (Format-Size $found), $cleanItems.Count)
         $ui.ScanButton.IsEnabled = $true; $ui.CleanButton.IsEnabled = $true
-        Set-Status (T 'ready')
+        Set-Status (T 'ready'); Hide-Progress 'cleaner'
         if ($ctx.Then) { & $ctx.Then }
     } @{ Then = $then }
 }
@@ -121,6 +122,7 @@ function Start-Clean {
     if (!$selected.Count) { return }
     Set-Status (T 'status.cleaning') $true
     Add-Log 'CleanLog' ((T 'cleaner.log.clean') -f $selected.Count, (Format-Size $script:cleanBefore))
+    Show-Progress 'cleaner' (T 'status.cleaning') -1 ((T 'cleaner.log.clean') -f $selected.Count, (Format-Size $script:cleanBefore))
     $ui.ScanButton.IsEnabled = $false; $ui.CleanButton.IsEnabled = $false
     Start-Work $cleanWork @(, $selected) {
         param($r, $ctx)

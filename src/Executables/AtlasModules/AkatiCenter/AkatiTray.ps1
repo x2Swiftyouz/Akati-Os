@@ -9,6 +9,11 @@
     again when no such game runs any more (only if it started it itself). Games with "Keep off CPU 0" in
     their profile get every CPU except CPU 0. Ctrl+Alt+B starts or stops Game boost and Ctrl+Alt+R frees
     up RAM (unless "Hotkeys" is 0).
+    Game profiles (My games > Tweaks profile): when such a game runs and Akati OS Center did not set its profile
+    already (Play), the icon sets the switches of the profile that need no administrator rights, and puts them back
+    when the game closes. Switches that need administrator rights or a restart are skipped and written to
+    %ProgramData%\AkatiOS\AkatiTray.log (Play in Akati OS Center sets the administrator ones).
+    Once a week it checks, read only, whether Windows Update turned back on what Akati OS turned off, and says so.
     -Install   (administrator) registers the sign-in task for this user and starts the icon now.
     -Setup     (administrator, used by the playbook) starts -Install in its own hidden process and returns at once,
                so setup in AME Wizard never waits for the Task Scheduler (it once hung there for minutes).
@@ -106,6 +111,10 @@ $mutex = New-Object System.Threading.Mutex($false, 'Local\AkatiOSTray')
 if (!$mutex.WaitOne(0)) { exit 0 }
 
 Add-Type -AssemblyName System.Windows.Forms, System.Drawing
+# The small functions and the code shared with Akati OS Center (switches without administrator rights, game profile
+# state, history, the Windows Update check)
+. (Join-Path $PSScriptRoot 'AkatiCenter.logic.ps1')
+. (Join-Path $PSScriptRoot 'AkatiCenter.shared.ps1')
 
 $lang = try { (Get-ItemProperty -Path $userKey -Name Language -ErrorAction Stop).Language } catch { 'en' }
 $texts = @{
@@ -117,6 +126,7 @@ $texts = @{
         acNote = 'Takes effect after a restart'; power = 'Power plan'; widget = 'Performance widget'
         tipKeys = 'Ctrl+Alt+B Game boost · Ctrl+Alt+R Free up RAM'
         update = 'Akati OS {0} is available'; updateTip = 'Click to see what is new and how to update.'
+        wuBack = 'Windows Update turned some things back on ({0})'; wuBackTip = 'Click to see the list in Akati OS Center and turn them off again.'
     }
     th = @{
         tip = 'Akati OS · CPU {0}% · RAM {1}%'; open = 'เปิด Akati OS Center'; freeram = 'ล้าง RAM'; apps = 'แอปของฉัน'
@@ -126,6 +136,7 @@ $texts = @{
         acNote = 'มีผลหลังรีสตาร์ท'; power = 'แผนการใช้พลังงาน'; widget = 'วิดเจ็ตประสิทธิภาพ'
         tipKeys = 'Ctrl+Alt+B บูสต์เกม · Ctrl+Alt+R ล้าง RAM'
         update = 'Akati OS {0} ออกแล้ว'; updateTip = 'คลิกเพื่อดูว่ามีอะไรใหม่และวิธีอัปเดต'
+        wuBack = 'Windows Update เปิดบางอย่างกลับมา ({0})'; wuBackTip = 'คลิกเพื่อดูรายการใน Akati OS Center และปิดอีกครั้ง'
     }
     vi = @{
         tip = 'Akati OS · CPU {0}% · RAM {1}%'; open = 'Mở Akati OS Center'; freeram = 'Giải phóng RAM'; apps = 'Ứng dụng của tôi'
@@ -135,6 +146,7 @@ $texts = @{
         acNote = 'Có hiệu lực sau khi khởi động lại'; power = 'Gói nguồn'; widget = 'Tiện ích hiệu năng'
         tipKeys = 'Ctrl+Alt+B Tăng tốc game · Ctrl+Alt+R Giải phóng RAM'
         update = 'Đã có Akati OS {0}'; updateTip = 'Nhấn để xem có gì mới và cách cập nhật.'
+        wuBack = 'Windows Update đã bật lại một số thứ ({0})'; wuBackTip = 'Nhấn để xem danh sách trong Akati OS Center và tắt lại.'
     }
     id = @{
         tip = 'Akati OS · CPU {0}% · RAM {1}%'; open = 'Buka Akati OS Center'; freeram = 'Kosongkan RAM'; apps = 'Aplikasi saya'
@@ -144,6 +156,7 @@ $texts = @{
         acNote = 'Berlaku setelah restart'; power = 'Rencana daya'; widget = 'Widget performa'
         tipKeys = 'Ctrl+Alt+B Game Boost · Ctrl+Alt+R Kosongkan RAM'
         update = 'Akati OS {0} sudah tersedia'; updateTip = 'Klik untuk melihat yang baru dan cara memperbarui.'
+        wuBack = 'Windows Update menyalakan kembali beberapa hal ({0})'; wuBackTip = 'Klik untuk melihat daftarnya di Akati OS Center dan mematikannya lagi.'
     }
 }
 function T([string]$key) { $l = (Get-ItemProperty -Path $userKey -Name Language -ErrorAction SilentlyContinue).Language; if (!$texts.ContainsKey([string]$l)) { $l = 'en' }; $texts[$l][$key] }
@@ -375,6 +388,78 @@ function Invoke-Balance {
     }
     foreach ($id in @($script:cpuLast.Keys)) { if (!$seen.ContainsKey($id)) { $script:cpuLast.Remove($id); $script:hot.Remove($id); $script:restrained.Remove($id) } }
 }
+# Game profiles (My games > Tweaks profile). This icon runs without administrator rights, so it sets only the switches of
+# $userTweaks (HKCU) and skips the others; Play in Akati OS Center sets all of them. The switches as they were are saved
+# first (GameTweaks), so they are put back when the game closes, or at the next start of this icon or of Akati OS Center
+# after a crash. A profile Akati OS Center set (Play) is left to it while it is open (CenterAlive, written every 30 seconds).
+$script:gameProfileSeen = @{}
+$winBuild = [Environment]::OSVersion.Version.Build
+function Get-TrayGameMap([string]$path) {
+    $map = switch (Read-RegValue "$userKey\GameProfiles" "$path|tweaks") { 1 { Get-GamingProfile } 2 { ConvertFrom-ProfileText ([string](Get-Setting 'TweakProfile')) } default { $null } }
+    # Windows 11 only (as on the Tweaks page)
+    if ($map -and $winBuild -lt 22000) { $map.Remove('windowed') }
+    $map
+}
+function Test-CenterOpen {
+    $at = [datetime]::MinValue
+    [datetime]::TryParseExact([string](Get-Setting 'CenterAlive'), 's', [Globalization.CultureInfo]::InvariantCulture, 'None', [ref]$at) -and ((Get-Date) - $at).TotalSeconds -lt 90
+}
+function Invoke-TrayGameTweaks([string[]]$running) {
+    foreach ($p in @($script:gameProfileSeen.Keys)) { if ($p -notin $running) { $script:gameProfileSeen.Remove($p) } }
+    $state = Get-GameTweakState
+    if ($state) {
+        if (Test-GameRunning $state.Path) { return }
+        # Set by Play in Akati OS Center: left to it while it is open, and for 3 minutes after Play (launchers take a while)
+        if ($state.By -eq 'center') {
+            $at = [datetime]::MinValue
+            [void][datetime]::TryParseExact($state.Time, 's', [Globalization.CultureInfo]::InvariantCulture, 'None', [ref]$at)
+            if ((Test-CenterOpen) -or ((Get-Date) - $at).TotalMinutes -lt 3) { return }
+        }
+        $done = @(); $left = [ordered]@{}
+        foreach ($k in @($state.Prev.Keys)) {
+            if (!$userTweaks.Contains($k)) { $left[$k] = $state.Prev[$k]; continue }
+            try { & $userTweaks[$k].Set ([bool]$state.Prev[$k]); Add-HistoryLine $k ([string][int][bool]$state.Prev[$k]); $done += $k } catch { $left[$k] = $state.Prev[$k] }
+        }
+        if (!$done.Count) { return }
+        $state.Prev = $left; Save-GameTweakState $state
+        $text = 'game profile {0}: put back {1}' -f [IO.Path]::GetFileNameWithoutExtension($state.Path), ($done -join ', ')
+        if ($left.Count) { $text += '; left for Akati OS Center: ' + (@($left.Keys) -join ', ') }
+        Write-TrayLog $text
+        return
+    }
+    foreach ($path in $running) {
+        if ($script:gameProfileSeen.ContainsKey($path)) { continue }
+        $script:gameProfileSeen[$path] = $true
+        $map = Get-TrayGameMap $path
+        if (!$map -or !$map.Count) { continue }
+        $current = @{}
+        foreach ($k in $userTweaks.Keys) { try { $current[$k] = [bool](& $userTweaks[$k].Get) } catch { } }
+        $plan = Get-GameTweakPlan $map $current $restartTweaks @($userTweaks.Keys)
+        $name = [IO.Path]::GetFileNameWithoutExtension($path)
+        if ($plan.Restart.Count) { Write-TrayLog "game profile ${name}: skipped, needs a restart: $($plan.Restart -join ', ')" }
+        if ($plan.Admin.Count) { Write-TrayLog "game profile ${name}: skipped, needs administrator rights (Play in Akati OS Center sets them): $($plan.Admin -join ', ')" }
+        if (!$plan.Set.Count) { continue }
+        Save-GameTweakState @{ By = 'tray'; Time = (Get-Date).ToString('s', [Globalization.CultureInfo]::InvariantCulture); Path = $path; Prev = $plan.Prev }
+        foreach ($k in @($plan.Set.Keys)) { try { & $userTweaks[$k].Set ([bool]$plan.Set[$k]); Add-HistoryLine $k ([string][int][bool]$plan.Set[$k]) } catch { } }
+        Write-TrayLog "game profile ${name}: set $(@($plan.Set.Keys) -join ', ')"
+        return
+    }
+}
+# After Windows Update: once a week, read only, the baseline Akati OS Center made (WuBaseline) against this PC.
+# The list and "Turn off again" are on the Health page of Akati OS Center.
+$script:balloonPage = 'about'
+function Invoke-WuWeekly {
+    $last = [datetime]::MinValue
+    if ([datetime]::TryParseExact([string](Get-Setting 'WuCheckAt'), 's', [Globalization.CultureInfo]::InvariantCulture, 'None', [ref]$last) -and ((Get-Date) - $last).TotalDays -lt 7) { return }
+    $base = [string[]]@(Get-Setting 'WuBaseline' | Where-Object { $_ })
+    if (!$base.Count) { return }
+    try { Set-ItemProperty -Path $userKey -Name WuCheckAt -Value (Get-Date).ToString('s', [Globalization.CultureInfo]::InvariantCulture) -Force } catch { }
+    $found = @(Compare-WuBaseline $base (Read-WuCurrent $base) ([string[]]@(Get-Setting 'WuKeep' | Where-Object { $_ })))
+    if (!$found.Count -or (Get-Setting 'UpdateNotify') -eq 0) { return }
+    $script:balloonPage = 'health'
+    $notify.ShowBalloonTip(10000, ((T 'wuBack') -f $found.Count), (T 'wuBackTip'), [System.Windows.Forms.ToolTipIcon]::Info)
+}
+
 $timer = New-Object System.Windows.Forms.Timer
 $timer.Interval = 3000
 $timer.Add_Tick({
@@ -407,6 +492,7 @@ $timer.Add_Tick({
     try { Invoke-Balance } catch { }
     try {
         $script:ticks++
+        $seen = @{}
         $gamePaths = @(if (Test-Path "$userKey\Games") { (Get-Item "$userKey\Games").Property })
         if ($gamePaths.Count) {
             $byName = @{}
@@ -420,6 +506,9 @@ $timer.Add_Tick({
         }
         if ($script:ticks % 20 -eq 0) { Save-PlayTime; Update-ScheduledTheme }
     } catch { }
+    try { Invoke-TrayGameTweaks ([string[]]@(if ($seen) { $seen.Keys })) } catch { }
+    # The weekly check: 15 seconds after sign-in, then every 10 minutes it looks whether a week has passed
+    if ($script:ticks % 200 -eq 5) { try { Invoke-WuWeekly } catch { } }
     if ((Get-Setting 'AutoBoost') -ne 1) { $script:autoStarted = $null; return }
     $games = @(if (Test-Path "$userKey\Games") { (Get-Item "$userKey\Games").Property | ForEach-Object { [IO.Path]::GetFileNameWithoutExtension($_) } })
     if (!$games.Count) { return }
@@ -458,7 +547,7 @@ $updateTimer.Add_Tick({
     $script:updateRun = @{ PS = $check; Handle = $check.BeginInvoke() }
 })
 $updateTimer.Start()
-$notify.Add_BalloonTipClicked({ Start-Hidden $center '-Page about' })
+$notify.Add_BalloonTipClicked({ Start-Hidden $center "-Page $script:balloonPage" })
 $updateShow = New-Object System.Windows.Forms.Timer
 $updateShow.Interval = 5000
 $updateShow.Add_Tick({
@@ -470,6 +559,7 @@ $updateShow.Add_Tick({
     $script:update.Newer = $newer
     if (!$newer -or (Get-Setting 'UpdateNotify') -eq 0 -or (Get-Setting 'NotifiedVersion') -eq $tag) { return }
     try { Set-ItemProperty -Path $userKey -Name NotifiedVersion -Value $tag -Force } catch { }
+    $script:balloonPage = 'about'
     $notify.ShowBalloonTip(10000, ((T 'update') -f "v$tag"), (T 'updateTip'), [System.Windows.Forms.ToolTipIcon]::Info)
 })
 $updateShow.Start()

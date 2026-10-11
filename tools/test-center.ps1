@@ -87,6 +87,13 @@ foreach ($tree in 'src', 'src-win10') {
     if (!$centerServices -or ($centerServices -join ',') -ne ($setupServices -join ',')) { Fail "$tree akati-services.yml and `$serviceGroups.extra list different services" }
 }
 
+# Game profiles skip the switches that need a restart: the list in AkatiCenter.logic.ps1 (also read by the icon next to
+# the clock) has the same switches as Restart = $true in AkatiCenter.tweaks.ps1
+$tweaksText = Get-Content -Raw -Encoding UTF8 (Join-Path $center 'AkatiCenter.tweaks.ps1')
+$restartKeys = @([regex]::Matches($tweaksText, '@\{ Key = ''(\w+)'';[^\r\n]*Restart = \$true') | ForEach-Object { $_.Groups[1].Value } | Sort-Object)
+. (Join-Path $center 'AkatiCenter.logic.ps1')
+if (!$restartKeys -or ($restartKeys -join ',') -ne (@($restartTweaks | Sort-Object) -join ',')) { Fail "`$restartTweaks in AkatiCenter.logic.ps1 differs from the Restart switches: $($restartKeys -join ', ')" }
+
 # Both playbooks ship the same Akati OS Center
 foreach ($f in Get-ChildItem -LiteralPath $center -File) {
     $other = Join-Path $root "src-win10/Executables/AtlasModules/AkatiCenter/$($f.Name)"

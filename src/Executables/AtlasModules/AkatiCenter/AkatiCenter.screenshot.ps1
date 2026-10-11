@@ -19,6 +19,24 @@ if ($Screenshot) {
     Save-Setting TweakProfile 'gamemode=1;timer=1;access=0;mouseaccel=0;ducking=0;nagle=0;edgebg=1;startdelay=0;hotkeys=1'
     Save-Setting TweakProfileAt ((Get-Date).AddDays(-1).ToString('s', [Globalization.CultureInfo]::InvariantCulture))
     Update-ProfileTiles
+    # Sample badges (some unlocked), history rows of a service and an app, and what Windows Update turned back on
+    $inv = [Globalization.CultureInfo]::InvariantCulture
+    $ago = { param($d) (Get-Date).Date.AddDays(-$d).ToString('yyyy-MM-dd', $inv) }
+    Save-Setting Badges ([string[]]@("firstclean=$(& $ago 40)", "clean1gb=$(& $ago 26)", "firstboost=$(& $ago 39)", "days7=$(& $ago 7)", "profile=$(& $ago 1)", "speedtest=$(& $ago 0)"))
+    Save-Setting History ([string[]]@("$((Get-Date).AddMinutes(-3).ToString('s', $inv))|svc:MapsBroker|4,2", "$((Get-Date).AddMinutes(-4).ToString('s', $inv))|app:Microsoft.BingNews|removed",
+                                      "$((Get-Date).AddHours(-1).ToString('s', $inv))|gamemode|1"))
+    Start-WuCheck
+    # Sample speed tests (before and after a DNS change) and network use per app (one Windows service without End task)
+    Save-Setting SpeedHistory ([string[]]@((New-SpeedEntry (Get-Date).AddMinutes(-10) 241.8 40.9 11 1.1), (New-SpeedEntry (Get-Date).AddHours(-1) 236.1 41.3 12 1.4),
+                                           (New-SpeedEntry (Get-Date).AddDays(-1) 212.4 38.6 18 3.2)))
+    Show-SpeedResults
+    $script:netResult = @{ Total = 6; List = @(
+        @{ Id = 8412; Name = 'chrome'; Session = 1; Path = 'C:\Program Files\Google\Chrome\Application\chrome.exe'; Conn = 23; Remote = 14; Udp = 3 }
+        @{ Id = 10236; Name = 'Discord'; Session = 1; Path = 'C:\Users\Player\AppData\Local\Discord\app-1.0.9165\Discord.exe'; Conn = 6; Remote = 4; Udp = 2 }
+        @{ Id = 6120; Name = 'steam'; Session = 1; Path = 'C:\Program Files (x86)\Steam\steam.exe'; Conn = 5; Remote = 3; Udp = 1 }
+        @{ Id = 2748; Name = 'svchost'; Session = 0; Path = 'C:\Windows\System32\svchost.exe'; Conn = 4; Remote = 3; Udp = 6 }
+        @{ Id = 4420; Name = 'OneDrive'; Session = 1; Path = 'C:\Program Files\Microsoft OneDrive\OneDrive.exe'; Conn = 2; Remote = 2; Udp = 0 }) }
+    Show-NetUse $script:netResult
     # Sample cleaner results (sizes and file counts): the CI runner has almost nothing to clean
     $cleanSample = @{ temp = 1.42GB; wintemp = 386MB; update = 2.1GB; dumps = 74MB; logs = 52MB; thumbs = 118MB; apps = 640MB; browser = 910MB; shaders = 1.2GB; recycle = 0
                       _counts = @{ temp = 4812; wintemp = 933; update = 214; dumps = 12; logs = 37; thumbs = 9; apps = 2874; browser = 6120; shaders = 1530; recycle = 0 } }
@@ -137,6 +155,7 @@ if ($Screenshot) {
                     if (!(Test-Path $gamesKey)) { New-Item -Path $gamesKey -Force | Out-Null }
                     Set-ItemProperty -Path $gamesKey -Name (Join-Path $windir 'notepad.exe') -Value 1 -Type DWord -Force
                     Set-GameProfile (Join-Path $windir 'notepad.exe') 'boost' 1; Set-GameProfile (Join-Path $windir 'notepad.exe') 'hvci' 0
+                    Set-GameProfile (Join-Path $windir 'notepad.exe') 'tweaks' 1
                     Show-Games
                     $top = $ui.GamesList.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
                     $sv.UpdateLayout(); $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 80)); $sv.UpdateLayout()
@@ -190,12 +209,42 @@ if ($Screenshot) {
     $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 140)); $sv.UpdateLayout(); Save-Shot 'boost-en-scan.png'
     $sv.ScrollToVerticalOffset(0); $ui.BoostAppsPanel.Visibility = 'Collapsed'; $ui.GameScanPanel.Visibility = 'Collapsed'
     Show-Keys; Save-Shot 'keys-en.png'; $ui.Keys.Visibility = 'Collapsed'
+    # The dialog in the theme (a sample profile with three changes, one needs a restart) and the progress card
+    $askLines = @(((T 'tw.gamemode') + ': ' + (T 'profile.on')), ((T 'tw.timer') + ': ' + (T 'profile.on') + '  (' + (T 'tw.badge.restart') + ')'), ((T 'tw.mouseaccel') + ': ' + (T 'profile.off')))
+    $ui.NavTweaks.IsChecked = $true
+    Set-AskContent ((T 'profile.ask') -f (T 'profile.gaming'), 3) 'YesNo' 'Warning' $askLines (T 'profile.restart'); Save-Shot 'dialog-en.png'
+    Set-AskContent (T 'restart.ask') 'YesNo' 'Question'; Save-Shot 'dialog-en-question.png'; $ui.Ask.Visibility = 'Collapsed'
+    $script:progSample = $true; $ui.NavGaming.IsChecked = $true
+    Show-Progress 'apps' ((T 'status.installing') -f 'Steam') 45 ((T 'stage.download') + ' 45%  ·  ' + ((T 'prog.queued') -f 2)) { param($a) } $null
+    Save-Shot 'progress-en.png'; Hide-Progress 'apps'; $script:progSample = $false
     # CPU balance and process rules with sample settings
     Save-Setting ProcessRules ([string[]]@('chrome|BelowNormal|', 'obs64||12'))
     Save-Setting BalanceLog ([string[]]@("$((Get-Date).AddMinutes(-5).ToString('s'))|chrome|41", "$((Get-Date).AddMinutes(-42).ToString('s'))|OneDrive|33"))
     $ui.BalanceOn.IsChecked = $true; Show-Rules; Show-BalLog
     $top = $ui.BalanceOn.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
     $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 40)); $sv.UpdateLayout(); Save-Shot 'boost-en-balance.png'; $sv.ScrollToVerticalOffset(0)
+    # Internet speed with the progress card, disk health (sample disks), restore points and network use per app
+    $top = $ui.SpeedSection.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
+    $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 60)); $sv.UpdateLayout()
+    $script:progSample = $true
+    Show-Progress 'speed' (T 'speed.running') 35 (T 'speed.stage.down') { param($s) } $null
+    Save-Shot 'boost-en-speed.png'; Hide-Progress 'speed'; $script:progSample = $false; $sv.ScrollToVerticalOffset(0)
+    $ui.NavHealth.IsChecked = $true; $sv = $ui.PageHealth; $sv.UpdateLayout()
+    $top = $ui.DiskSection.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
+    $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 20)); $sv.UpdateLayout(); Save-Shot 'health-en-disks.png'
+    $top = $ui.RpCard.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
+    $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 240)); $sv.UpdateLayout(); Save-Shot 'health-en-restore.png'
+    # Badges, and the banner of what Windows Update turned back on (sample) at the top of the page
+    $top = $ui.BadgeSection.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
+    $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 20)); $sv.UpdateLayout(); Save-Shot 'health-en-badges.png'
+    $sv.ScrollToVerticalOffset(0); $sv.UpdateLayout(); Save-Shot 'health-en-wuback.png'
+    # The change history with a service and an app
+    $top = $ui.HistoryList.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
+    $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 80)); $sv.UpdateLayout(); Save-Shot 'health-en-history.png'; $sv.ScrollToVerticalOffset(0)
+    $ui.NavQuicktools.IsChecked = $true; $sv = $ui.PageQuicktools; $sv.UpdateLayout()
+    $top = $ui.NetUseSection.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
+    $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 60)); $sv.UpdateLayout(); Save-Shot 'quicktools-en-net.png'; $sv.ScrollToVerticalOffset(0)
+    $ui.NavBoost.IsChecked = $true; $sv = $ui.PageBoost
     try { [void](Save-ScoreCard (Join-Path $Screenshot 'share-card.png')) } catch { Write-Host "Share picture failed: $($_.Exception.Message)" }
     $script:navBadges['Gaming'] = 0; $script:navBadges['Health'] = 0; Update-NavBadges
     # Tweaks > Interrupts: the devices of the CI runner and a sample benchmark
@@ -208,6 +257,14 @@ if ($Screenshot) {
     $top = $ui.IrqPanel.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
     $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 150)); $sv.UpdateLayout(); Save-Shot 'tweaks-en-irq.png'
     $sv.ScrollToVerticalOffset($top + 260); $sv.UpdateLayout(); Save-Shot 'tweaks-en-irq2.png'
+    # Service helper (sample services) and the privacy status (sample PC)
+    $ui.SvcShow.RaiseEvent((New-Object System.Windows.RoutedEventArgs ([System.Windows.Controls.Primitives.ButtonBase]::ClickEvent)))
+    $sv.UpdateLayout()
+    $top = $ui.SvcSection.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
+    $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 20)); $sv.UpdateLayout(); Save-Shot 'tweaks-en-svchelper.png'
+    $top = $ui.PrivacySection.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
+    $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 20)); $sv.UpdateLayout(); Save-Shot 'tweaks-en-privacy.png'
+    $ui.SvcShow.RaiseEvent((New-Object System.Windows.RoutedEventArgs ([System.Windows.Controls.Primitives.ButtonBase]::ClickEvent)))
     $sv.ScrollToVerticalOffset(0)
     # A narrow window (the smallest size): one column of switch cards, the cleaner summary under its list
     $wide = $window.Width; $window.Width = $window.MinWidth

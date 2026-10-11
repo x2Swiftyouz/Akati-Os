@@ -1,5 +1,10 @@
 # Changelog: Akati OS for Windows 10
 
+## Unreleased
+
+### Changed
+- File Explorer: Desktop, Documents, Downloads, Music, Pictures and Videos stay in This PC and the side bar again (they were hidden, and on Windows builds without Quick access the side bar showed only This PC). To get them on a PC that is already set up: Akati OS Center > Tweaks > Folders in This PC > Restore
+
 ## v1.10.1
 
 ### Changed

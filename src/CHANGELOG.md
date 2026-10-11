@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v1.11.0
 
 ### Added
 - Akati OS Center: Quick tools (new page, Ctrl+8): Task Manager, Device Manager, Performance Options, Flush DNS (runs in the background, the result goes to the log), Services, Disk Management, Event Viewer, System Configuration, Network connections, Sound, Power options, Windows Update, Resource Monitor, System Information, DirectX Diagnostic, Display, Startup apps and Free up RAM, each as a card, with an activity log. All of them are also in the Ctrl+K search

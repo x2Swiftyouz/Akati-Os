@@ -774,6 +774,8 @@ function Update-Language {
     Show-SystemList
     Update-ProfileTiles
     Update-CleanTotal
+    if ($script:specs) { Show-Specs $script:specs }
+    foreach ($n in 'SysCopyOs', 'SysCopyArch', 'SysCopyPc') { $ui[$n].ToolTip = T 'sys.copy' }
 }
 
 # Welcome, the first time Akati OS Center opens

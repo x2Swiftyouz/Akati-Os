@@ -31,6 +31,11 @@ if ($Screenshot) {
         Add-Log 'ToolsLog' ((T 'qt.running') -f (T 'qt.flushdns'))
         Add-Log 'ToolsLog' ('{0}: {1}' -f (T 'qt.flushdns'), 'Successfully flushed the DNS Resolver Cache.')
         Add-Log 'CleanLog' ((T 'cleaner.log.scan') -f (Format-Size 6.9GB), $cleanItems.Count)
+        # FiveM result log: each kind of line once
+        $script:fivemLog.Clear()
+        Add-FivemLog (T 'fivem.log.prio') 'step'; Add-FivemLog (T 'fivem.log.noproc') 'warn'
+        Add-FivemLog (T 'fivem.log.drivers') 'step'; Add-FivemLog 'GPU   NVIDIA GeForce RTX 4070  32.0.15.6094  2024-09-20' 'info'
+        Add-FivemLog ((T 'fivem.log.drivers.done') -f 1) 'done'
     }
     Update-BoostCard
     $stats.Run = $false
@@ -51,6 +56,10 @@ if ($Screenshot) {
     $ui.EditionText.Text = 'Windows 11'; $ui.AboutVersion.Text = "$version  ·  Windows 11"
     $ui.PcName.Text = 'GAMING-PC'; $ui.OsLine.Text = 'Windows 11 Pro  ·  25H2'
     $ui.CpuName.Text = 'AMD Ryzen 7 7800X3D 8-Core Processor'; $ui.GpuName.Text = 'NVIDIA GeForce RTX 4070'
+    # The same sample PC in the System info of Quick tools
+    Show-Specs @{ Cpu = 'AMD Ryzen 7 7800X3D 8-Core Processor'; Cores = 8; Threads = 16; Ram = 32GB; Gpu = 'NVIDIA GeForce RTX 4070'; GpuDriver = '32.0.15.6094'
+                  OsName = 'Windows 11 Pro 25H2 (26200.6584)'; Arch = '64-bit' }
+    $ui.SysPc.Text = 'GAMING-PC'
     function Save-Shot([string]$file) {
         $size = New-Object System.Windows.Size $window.Width, $window.Height
         $rootEl.Measure($size)
@@ -124,7 +133,7 @@ if ($Screenshot) {
                     Save-Shot "$p-$l-mid.png"
                 }
                 if ($p -eq 'boost') {
-                    # My games with one game (CI runner: Notepad) and the FiveM card
+                    # My games with one game (CI runner: Notepad) and the FiveM toolkit
                     if (!(Test-Path $gamesKey)) { New-Item -Path $gamesKey -Force | Out-Null }
                     Set-ItemProperty -Path $gamesKey -Name (Join-Path $windir 'notepad.exe') -Value 1 -Type DWord -Force
                     Set-GameProfile (Join-Path $windir 'notepad.exe') 'boost' 1; Set-GameProfile (Join-Path $windir 'notepad.exe') 'hvci' 0
@@ -132,6 +141,10 @@ if ($Screenshot) {
                     $top = $ui.GamesList.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
                     $sv.UpdateLayout(); $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 80)); $sv.UpdateLayout()
                     Save-Shot "$p-$l-mid.png"
+                    # The FiveM toolkit: action cards and the result log
+                    $top = $ui.FivemPrio.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
+                    $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 120)); $sv.UpdateLayout()
+                    Save-Shot "$p-$l-fivem.png"
                 }
                 $sv.UpdateLayout(); $sv.ScrollToVerticalOffset(100000); $sv.UpdateLayout()
                 Save-Shot "$p-$l-2.png"

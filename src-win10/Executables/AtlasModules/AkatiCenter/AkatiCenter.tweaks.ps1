@@ -272,23 +272,142 @@ $tweaks = @(
                } } }
 )
 
-# One gray heading and one grouped list per section (Gaming is in the XAML)
+# ---------------------------------------------------------------------------------------------
+# Profiles. Gaming: a set of the switches above for lower input delay and full performance. Normal: the
+# same switches back to their Windows defaults (the Default of each; Max performance has none, its Windows
+# default is off). Save current: every switch as it is now, kept in the setting TweakProfile ("key=1;key=0").
+# ---------------------------------------------------------------------------------------------
+$tweakProfiles = @{
+    gaming = [ordered]@{ gamemode = $true; maxperf = $true; timer = $true; access = $false; mouseaccel = $false; ducking = $false; nagle = $false; edgebg = $true; startdelay = $false }
+    normal = [ordered]@{}
+}
+foreach ($k in $tweakProfiles.gaming.Keys) {
+    $tp = $tweaks | Where-Object { $_.Key -eq $k } | Select-Object -First 1
+    $tweakProfiles.normal[$k] = if ($tp.ContainsKey('Default')) { [bool]$tp.Default } else { $false }
+}
+function Get-CustomProfile {
+    $map = [ordered]@{}
+    foreach ($part in ([string](Get-RegValue $settingsKey 'TweakProfile')).Split(';')) {
+        if ($part -match '^(\w+)=([01])$') { $map[$Matches[1]] = $Matches[2] -eq '1' }
+    }
+    return $map
+}
+# Shows what changes and asks first (with a warning when a change needs a restart), then sets each switch
+# like a click: Invoke-Tweak, the change history (Health page, Undo) and the Action log
+function Invoke-TweakProfile([string]$title, $map) {
+    Initialize-Tweaks
+    $changes = New-Object System.Collections.ArrayList
+    foreach ($k in $map.Keys) {
+        $t = $tweaks | Where-Object { $_.Key -eq $k } | Select-Object -First 1
+        # Not on this PC (Windows 11 only, hidden) or still being read
+        if (!$t -or !$t.Toggle -or !$t.Toggle.IsEnabled) { continue }
+        if ([bool]$t.Toggle.IsChecked -ne [bool]$map[$k]) { [void]$changes.Add(@{ Tweak = $t; On = [bool]$map[$k] }) }
+    }
+    if (!$changes.Count) { Set-Status ((T 'profile.same') -f $title); Add-Log 'TweakLog' ((T 'profile.same') -f $title); return }
+    $restart = @($changes | Where-Object { $_.Tweak.Restart }).Count -gt 0
+    $lines = foreach ($c in $changes) {
+        [string][char]0x2022 + '  ' + (T "tw.$($c.Tweak.Key)") + ': ' + (T $(if ($c.On) { 'profile.on' } else { 'profile.off' })) + $(if ($c.Tweak.Restart) { '  (' + (T 'tw.badge.restart') + ')' } else { '' })
+    }
+    $msg = ((T 'profile.ask') -f $title, $changes.Count) + "`r`n`r`n" + ($lines -join "`r`n")
+    if ($restart) { $msg += "`r`n`r`n" + (T 'profile.restart') }
+    if (!$Screenshot -and [System.Windows.MessageBox]::Show($msg, 'Akati OS Center', 'YesNo', $(if ($restart) { 'Warning' } else { 'Question' })) -ne 'Yes') {
+        Add-Log 'TweakLog' ((T 'profile.cancel') -f $title); return
+    }
+    Add-Log 'TweakLog' ((T 'profile.applying') -f $title, $changes.Count)
+    foreach ($c in $changes) { $c.Tweak.Toggle.IsChecked = $c.On; Invoke-Tweak $c.Tweak $c.On; Add-History $c.Tweak.Key $c.On }
+    if ($restart) { Set-RestartNeeded }
+    Set-Status ((T 'profile.applied') -f $title, $changes.Count)
+}
+function Update-ProfileTiles {
+    $map = Get-CustomProfile
+    $has = $map.Count -gt 0
+    $ui.ProfileCustom.Visibility = if ($has) { 'Visible' } else { 'Collapsed' }
+    $ui.ProfileGrid.Columns = if ($script:tweakCols -eq 1) { 2 } elseif ($has) { 4 } else { 3 }
+    $ui.ProfileCustomName.Text = T 'profile.custom'
+    if ($has) {
+        $at = [string](Get-RegValue $settingsKey 'TweakProfileAt')
+        $when = try { [datetime]::ParseExact($at, 's', [Globalization.CultureInfo]::InvariantCulture).ToString('d MMM HH:mm', (Get-LangCulture)) } catch { '-' }
+        $ui.ProfileCustomSub.Text = (T 'profile.custom.d') -f $map.Count, $when
+    }
+}
+$ui.ProfileGaming.Add_Click({ Invoke-TweakProfile (T 'profile.gaming') $tweakProfiles.gaming })
+$ui.ProfileNormal.Add_Click({ Invoke-TweakProfile (T 'profile.normal') $tweakProfiles.normal })
+$ui.ProfileCustom.Add_Click({ Invoke-TweakProfile (T 'profile.custom') (Get-CustomProfile) })
+$ui.ProfileSave.Add_Click({
+    Initialize-Tweaks
+    # Like the backup: switches that are read and not slow (Microsoft Store)
+    $parts = @(foreach ($t in $tweaks) { if ($t.Toggle -and $t.Toggle.IsEnabled -and !$t.Slow -and $null -ne $t.Toggle.IsChecked) { '{0}={1}' -f $t.Key, [int][bool]$t.Toggle.IsChecked } })
+    if (!$parts.Count) { return }
+    if (!$Screenshot -and (Get-CustomProfile).Count -and [System.Windows.MessageBox]::Show((T 'profile.replace'), 'Akati OS Center', 'YesNo', 'Question') -ne 'Yes') { return }
+    Save-Setting TweakProfile ($parts -join ';')
+    Save-Setting TweakProfileAt ((Get-Date).ToString('s', [Globalization.CultureInfo]::InvariantCulture))
+    Update-ProfileTiles
+    Set-Status ((T 'profile.saved') -f $parts.Count); Add-Log 'TweakLog' ((T 'profile.saved') -f $parts.Count)
+})
+$ui.TweakLogClear.Add_Click({ Clear-Log 'TweakLog' })
+
+# One gray heading and one grid of switch cards per section (Gaming is in the XAML)
 $tweakLists = @{ gaming = $ui.TweaksList }
 foreach ($g in 'latency', 'network', 'graphics', 'system', 'looks', 'services') {
     $head = New-Text (T "tw.group.$g") 13 'SemiBold' "t:tw.group.$g"
     $head.Style = $window.FindResource('Section')
-    $card = New-Object System.Windows.Controls.Border
-    $card.Style = $window.FindResource('Card'); $card.Padding = '0'; $card.Margin = '0,0,0,22'
-    $list = New-Object System.Windows.Controls.StackPanel
-    $card.Child = $list
-    [void]$ui.TweakGroups.Children.Add($head); [void]$ui.TweakGroups.Children.Add($card)
+    $list = New-Object System.Windows.Controls.Grid
+    $list.Margin = '0,0,0,22'
+    [void]$ui.TweakGroups.Children.Add($head); [void]$ui.TweakGroups.Children.Add($list)
     $tweakLists[$g] = $list
 }
+
+# Each switch is a card of its own: the row of New-Row inside a Card border. The row keeps a transparent
+# background (Ctrl+K highlights it) and the rounded corners of the card.
+function New-TweakCard($row) {
+    $card = New-Object System.Windows.Controls.Border
+    $card.Style = $window.FindResource('Card'); $card.Padding = '0'
+    $row.Row.CornerRadius = 13; $row.Row.Padding = '14,12'
+    $card.Child = $row.Row
+    $row.Card = $card
+    return $card
+}
+# A small colored label under the description: warn (amber), danger (red) or accent
+function New-Badge([string]$key, [string]$kind) {
+    $b = New-Object System.Windows.Controls.Border
+    $b.CornerRadius = 6; $b.Padding = '7,1'; $b.Margin = '0,6,6,0'; $b.BorderThickness = '1'
+    $back, $fore = switch ($kind) { 'warn' { 'WarnSoft', 'Warn' } 'danger' { 'DangerSoft', 'Danger' } default { 'AccentSoft', 'AccentText' } }
+    $b.SetResourceReference([System.Windows.Controls.Border]::BackgroundProperty, $back)
+    $b.SetResourceReference([System.Windows.Controls.Border]::BorderBrushProperty, $(if ($kind -eq 'accent') { 'AccentLine' } else { $back }))
+    $t = New-Text (T $key) 10.5 'SemiBold' "t:$key"
+    $t.SetResourceReference([System.Windows.Controls.TextBlock]::ForegroundProperty, $fore)
+    $b.Child = $t
+    return $b
+}
+# Two columns of cards when the page is wide enough, one column in a narrow window
+$script:tweakCols = 0
+function Set-CardGrid($grid, [int]$cols) {
+    $grid.ColumnDefinitions.Clear(); $grid.RowDefinitions.Clear()
+    for ($c = 0; $c -lt $cols; $c++) { $cd = New-Object System.Windows.Controls.ColumnDefinition; $cd.Width = '*'; $grid.ColumnDefinitions.Add($cd) }
+    $i = 0
+    foreach ($child in $grid.Children) {
+        if ($child.Visibility -ne 'Visible') { continue }
+        $r = [Math]::Floor($i / $cols); $c = $i % $cols
+        while ($grid.RowDefinitions.Count -le $r) { $rd = New-Object System.Windows.Controls.RowDefinition; $rd.Height = 'Auto'; $grid.RowDefinitions.Add($rd) }
+        [System.Windows.Controls.Grid]::SetRow($child, $r); [System.Windows.Controls.Grid]::SetColumn($child, $c)
+        $child.Margin = if ($cols -eq 1) { '0,0,0,12' } elseif ($c -eq 0) { '0,0,6,12' } else { '6,0,0,12' }
+        $i++
+    }
+}
+function Update-TweakColumns([switch]$Force) {
+    $cols = if ($ui.PageTweaks.ActualWidth -ge 720) { 2 } else { 1 }
+    if (!$Force -and $cols -eq $script:tweakCols) { return }
+    $script:tweakCols = $cols
+    foreach ($grid in $tweakLists.Values) { Set-CardGrid $grid $cols }
+    Update-ProfileTiles
+}
+$ui.PageTweaks.Add_SizeChanged({ Update-TweakColumns })
 
 # Turns one tweak on or off (switch click, and Reset to Windows defaults)
 function Invoke-Tweak($t, [bool]$on) {
     $name = T "tw.$($t.Key)"
     Set-Status ((T 'status.tweak') -f $name) $true
+    Add-Log 'TweakLog' (((T $(if ($on) { 'toast.on' } else { 'toast.off' })) -f $name) + $(if ($t.Restart) { '  · ' + (T 'restart') } else { '' }))
     $t.Toggle.IsEnabled = $false
     $context = @{ Tweak = $t; Name = $name }
     $finish = {
@@ -298,7 +417,7 @@ function Invoke-Tweak($t, [bool]$on) {
         $tg.IsEnabled = $true
         # A Work block returns an error message when it failed
         $err = Get-LastOutput $r
-        if ($err -is [string] -and $err) { Set-Status "$($ctx.Name): $err"; return }
+        if ($err -is [string] -and $err) { Set-Status "$($ctx.Name): $err"; Add-Log 'TweakLog' "$($ctx.Name): $err"; return }
         $msg = (T 'status.tweakdone') -f $ctx.Name
         if ($ctx.Tweak.Restart) { $msg += ' · ' + (T 'restart'); Set-RestartNeeded }
         Set-Status $msg
@@ -413,6 +532,13 @@ function Initialize-Tweaks {
         $code = if ($tw.Script) { "AtlasDesktop\$($tw.Script.Folder)\$($tw.Script.On)`r`nAtlasDesktop\$($tw.Script.Folder)\$($tw.Script.Off)" }
                 elseif ($tw.Work) { Format-Code $tw.Work } elseif ($tw.Set) { Format-Code $tw.Set } else { '' }
         if ($code) { Add-Details $row $code }
+        # Badges under the description: restart needed, a security setting, part of the Gaming profile.
+        # (No administrator badge: Akati OS Center always runs as administrator, so every switch has the rights it needs.)
+        $badges = New-Object System.Windows.Controls.WrapPanel
+        if ($tw.Restart) { [void]$badges.Children.Add((New-Badge 'tw.badge.restart' 'warn')) }
+        if ($tw.Key -eq 'vbs') { [void]$badges.Children.Add((New-Badge 'tw.badge.security' 'danger')) }
+        if ($tweakProfiles.gaming.Contains($tw.Key)) { [void]$badges.Children.Add((New-Badge 'tw.badge.profile' 'accent')) }
+        if ($badges.Children.Count) { $panel = $row.Sub.Parent; $panel.Children.Insert($panel.Children.IndexOf($row.Sub) + 1, $badges) }
         if ($tw.Async -and !$Screenshot) {
             # Slow to read (modules, Store, network): read in the background, the switch is filled in when done.
             # These Get blocks use only cmdlets, no variables of this script.
@@ -435,9 +561,9 @@ function Initialize-Tweaks {
         })
         $group = if ($tw.Group) { $tw.Group } else { 'gaming' }
         $tw.Row = $row.Row
-        [void]$tweakLists[$group].Children.Add($row.Row)
+        [void]$tweakLists[$group].Children.Add((New-TweakCard $row))
     }
-    foreach ($list in $tweakLists.Values) { Update-Separators $list }
+    Update-TweakColumns -Force
     Update-TweakHints
 }
 
@@ -455,7 +581,7 @@ function Set-Dns([string]$choice) {
             else { Set-DnsClientServerAddress -InterfaceIndex $i.ifIndex -ServerAddresses $servers }
         }
         Clear-DnsClientCache
-    } @($choice, $dnsServers[$choice]) { param($r, $c) Set-Status ((T 'status.dns') -f (T "dns.$c")) } $choice
+    } @($choice, $dnsServers[$choice]) { param($r, $c) Set-Status ((T 'status.dns') -f (T "dns.$c")); Add-Log 'TweakLog' ((T 'status.dns') -f (T "dns.$c")) } $choice
 }
 function Get-DnsChoice {
     $idx = @(Get-NetAdapter -Physical -ErrorAction SilentlyContinue | Where-Object Status -eq 'Up' | ForEach-Object { $_.ifIndex })
@@ -482,15 +608,17 @@ if ($Screenshot) { Set-DnsSegments (Get-DnsChoice) }
 else { Start-Work ([scriptblock]::Create("function Get-DnsChoice {$((Get-Item function:Get-DnsChoice).Definition)}; Get-DnsChoice")) @() { param($r, $c) Set-DnsSegments (Get-LastOutput $r) } $null }
 $dnsRow = New-Row ([string][char]0xE774) (T 'tw.dns') 't:tw.dns' $dnsSegments 't:tw.dns.d'
 $dnsRow.Sub.Text = T 'tw.dns.d'
-$tweakLists['network'].Children.Insert(0, $dnsRow.Row)
+$tweakLists['network'].Children.Insert(0, (New-TweakCard $dnsRow))
 
 # Screen refresh rate: the highest the primary screen can do at its resolution
 $refreshButton = New-Object System.Windows.Controls.Button
 $refreshButton.Style = $window.FindResource('PillAccent')
 $refreshRow = New-Row ([string][char]0xE7F8) (T 'tw.refresh') 't:tw.refresh' $refreshButton $null
+[void](New-TweakCard $refreshRow)
 function Update-RefreshRow {
     try { $script:screenNow = [AkatiOS.Perf]::Current()[2]; $script:screenMax = [AkatiOS.Perf]::MaxHz() } catch { $script:screenNow = 0; $script:screenMax = 0 }
-    $refreshRow.Row.Visibility = if ($script:screenMax -gt 1) { 'Visible' } else { 'Collapsed' }
+    $vis = if ($script:screenMax -gt 1) { 'Visible' } else { 'Collapsed' }
+    if ($refreshRow.Card.Visibility -ne $vis) { $refreshRow.Card.Visibility = $vis; if ($script:tweakCols) { Set-CardGrid $tweakLists['graphics'] $script:tweakCols } }
     if ($script:screenMax -gt $script:screenNow) {
         $refreshRow.Sub.Text = (T 'tw.refresh.now') -f $script:screenNow, $script:screenMax
         $refreshButton.Content = (T 'tw.refresh.use') -f $script:screenMax; $refreshButton.Visibility = 'Visible'
@@ -504,7 +632,7 @@ $refreshButton.Add_Click({
     if ($result -eq 0) { Set-Status ((T 'status.refresh') -f $script:screenMax) } else { Set-Status ((T 'status.refreshfail') -f $result) }
     Update-RefreshRow; Update-Chips
 })
-$tweakLists['graphics'].Children.Insert(0, $refreshRow.Row)
+$tweakLists['graphics'].Children.Insert(0, $refreshRow.Card)
 Update-RefreshRow
 
 # Memory compression: the advice depends on the RAM of this PC
@@ -516,12 +644,13 @@ function Update-TweakHints {
     $hint = if (!$mc.Toggle.IsEnabled) { T 'tw.memcomp.nosysmain' } elseif ($ramGb -ge 16) { (T 'tw.memcomp.off') -f $ramGb } else { (T 'tw.memcomp.on') -f $ramGb }
     $mc.Sub.Text = (T 'tw.memcomp.d') + ' ' + $hint
 }
-foreach ($list in $tweakLists.Values) { Update-Separators $list }
+Update-TweakColumns -Force
 if ($Screenshot) { Initialize-Tweaks }
 
 # Reset: every tweak that has a Windows default (Default) goes back to it, and DNS to Automatic
 $ui.TweaksReset.Add_Click({
     if ([System.Windows.MessageBox]::Show((T 'tweaks.resetask'), 'Akati OS Center', 'YesNo', 'Question') -ne 'Yes') { return }
+    Add-Log 'TweakLog' (T 'tweaks.reset')
     foreach ($t in $tweaks) {
         if (!$t.ContainsKey('Default') -or !$t.Toggle -or !$t.Toggle.IsEnabled) { continue }
         if ([bool]$t.Toggle.IsChecked -ne $t.Default) { $t.Toggle.IsChecked = $t.Default; Invoke-Tweak $t $t.Default }

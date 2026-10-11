@@ -1340,12 +1340,73 @@
                                 <StackPanel>
                                     <TextBlock Tag="t:fivem.title" Text="FiveM" Style="{StaticResource CardTitle}"/>
                                     <TextBlock Tag="t:fivem.sub" Text="Clean the cache when servers load slowly or textures break, and check the connection time to your server." Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,4,0,10"/>
-                                    <TextBlock x:Name="FivemState" Text="-" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,0,0,10"/>
-                                    <WrapPanel Margin="0,0,0,12">
-                                        <Button x:Name="FivemClear" Style="{StaticResource Secondary}" Margin="0,0,8,8" Tag="t:fivem.clear" Content="Clear cache"/>
-                                        <Button x:Name="FivemOpen" Style="{StaticResource Secondary}" Margin="0,0,8,8" Tag="t:fivem.open" Content="Open folder"/>
-                                        <Button x:Name="FivemAdd" Style="{StaticResource Secondary}" Margin="0,0,8,8" Tag="t:fivem.add" Content="Add to My games"/>
-                                    </WrapPanel>
+                                    <DockPanel Margin="0,0,0,10">
+                                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Button x:Name="FivemOpen" Style="{StaticResource Pill}" MinWidth="0" Padding="12,4" Margin="8,0,0,0" Tag="t:fivem.open" Content="Open folder"/>
+                                            <Button x:Name="FivemAdd" Style="{StaticResource Pill}" MinWidth="0" Padding="12,4" Margin="8,0,0,0" Tag="t:fivem.add" Content="Add to My games"/>
+                                        </StackPanel>
+                                        <TextBlock x:Name="FivemState" Text="-" Style="{StaticResource MonoText}" Foreground="{DynamicResource Text2}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                    </DockPanel>
+                                    <!-- Toolkit: four action cards and the driver check (AkatiCenter.games.ps1), results in the log below -->
+                                    <Grid Margin="-5,0,-5,6">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                                    <Button x:Name="FivemPrio" Style="{StaticResource Tile}" Grid.Row="0" Grid.Column="0" Margin="5">
+                                        <DockPanel>
+                                            <Border Style="{StaticResource IconBox}" Margin="0,0,12,0" VerticalAlignment="Top"><TextBlock Style="{StaticResource TileGlyph}" Text="&#xE9F5;"/></Border>
+                                            <StackPanel>
+                                                <TextBlock Tag="t:fivem.prio" Text="Raise game priority" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Tag="t:fivem.prio.d" Text="FiveM and GTA V get high CPU priority now" Style="{StaticResource Muted}" FontSize="11" Margin="0,2,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
+                                        </DockPanel>
+                                    </Button>
+                                    <Button x:Name="FivemPause" Style="{StaticResource Tile}" Grid.Row="0" Grid.Column="1" Margin="5">
+                                        <DockPanel>
+                                            <Border Style="{StaticResource IconBox}" Margin="0,0,12,0" VerticalAlignment="Top"><TextBlock Style="{StaticResource TileGlyph}" Text="&#xE769;"/></Border>
+                                            <StackPanel>
+                                                <TextBlock Tag="t:fivem.pause" Text="Pause downloads" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Tag="t:fivem.pause.d" Text="Windows Update, BITS and Delivery Optimization" Style="{StaticResource Muted}" FontSize="11" Margin="0,2,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
+                                        </DockPanel>
+                                    </Button>
+                                    <Button x:Name="FivemNet" Style="{StaticResource Tile}" Grid.Row="1" Grid.Column="0" Margin="5">
+                                        <DockPanel>
+                                            <Border Style="{StaticResource IconBox}" Margin="0,0,12,0" VerticalAlignment="Top"><TextBlock Style="{StaticResource TileGlyph}" Text="&#xE968;"/></Border>
+                                            <StackPanel>
+                                                <TextBlock Tag="t:fivem.net" Text="Reset network" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Tag="t:fivem.net.d" Text="Flush DNS and reset Winsock" Style="{StaticResource Muted}" FontSize="11" Margin="0,2,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                                                <Border x:Name="FivemNetBadge" Background="{DynamicResource WarnSoft}" BorderBrush="{DynamicResource WarnSoft}" BorderThickness="1" CornerRadius="6" Padding="7,1" Margin="0,6,0,0" HorizontalAlignment="Left">
+                                                    <TextBlock Tag="t:tw.badge.restart" Text="Needs restart" FontSize="10.5" FontWeight="SemiBold" Foreground="{DynamicResource Warn}"/>
+                                                </Border>
+                                            </StackPanel>
+                                        </DockPanel>
+                                    </Button>
+                                    <Button x:Name="FivemClear" Style="{StaticResource Tile}" Grid.Row="1" Grid.Column="1" Margin="5">
+                                        <DockPanel>
+                                            <Border Style="{StaticResource IconBox}" Margin="0,0,12,0" VerticalAlignment="Top"><TextBlock Style="{StaticResource TileGlyph}" Text="&#xE74D;"/></Border>
+                                            <StackPanel>
+                                                <TextBlock Tag="t:fivem.clear" Text="Clear cache" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Tag="t:fivem.clear.d" Text="Server and game caches, FiveM rebuilds them" Style="{StaticResource Muted}" FontSize="11" Margin="0,2,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
+                                        </DockPanel>
+                                    </Button>
+                                    <Button x:Name="FivemDrivers" Style="{StaticResource Tile}" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="5">
+                                        <DockPanel>
+                                            <Border Style="{StaticResource IconBox}" Margin="0,0,12,0" VerticalAlignment="Top"><TextBlock Style="{StaticResource TileGlyph}" Text="&#xE964;"/></Border>
+                                            <StackPanel>
+                                                <TextBlock Tag="t:fivem.drivers" Text="Check drivers" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Tag="t:fivem.drivers.d" Text="Graphics, audio and network drivers with version and date" Style="{StaticResource Muted}" FontSize="11" Margin="0,2,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
+                                        </DockPanel>
+                                    </Button>
+                                    </Grid>
+                                    <TextBlock Tag="t:fivem.log" Text="RESULT LOG" Style="{StaticResource StatLabel}" Margin="0,0,0,6"/>
+                                    <!-- Colored lines: accent = a step starts, green = done, amber = warning, red = error -->
+                                    <Border Background="{DynamicResource LogBg}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="10" Padding="10,8" Margin="0,0,0,14">
+                                        <ScrollViewer x:Name="FivemLogScroll" Height="120" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                            <StackPanel x:Name="FivemLog" TextElement.FontFamily="{StaticResource MonoFont}" TextElement.FontSize="11"/>
+                                        </ScrollViewer>
+                                    </Border>
                                     <DockPanel>
                                         <Button x:Name="FivemPing" DockPanel.Dock="Right" Style="{StaticResource PillAccent}" Margin="8,0,0,0" Padding="16,6" Tag="t:fivem.ping" Content="Test"/>
                                         <Grid>
@@ -1801,6 +1862,85 @@
                     <ScrollViewer x:Name="PageQuicktools" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
                         <StackPanel>
                             <TextBlock Tag="t:qt.sub" Text="The Windows tools you need most, one click away. Every tool that runs is listed in the log below." Style="{StaticResource Muted}" Margin="0,4,0,16"/>
+                            <!-- System info: this PC at a glance (filled by Show-Specs, the bars by the dashboard timer). No hardware IDs. -->
+                            <TextBlock Tag="t:sys.title" Text="This PC" Style="{StaticResource Section}"/>
+                            <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                                <StackPanel>
+                                    <Border Background="{DynamicResource Field}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="12" Padding="14,12" Margin="0,0,0,10">
+                                        <DockPanel>
+                                            <Border Style="{StaticResource IconBox}" Width="40" Height="40" Margin="0,0,14,0" VerticalAlignment="Center"><TextBlock Style="{StaticResource TileGlyph}" FontSize="18" Text="&#xE950;"/></Border>
+                                            <TextBlock x:Name="SysCpuCores" DockPanel.Dock="Right" Text="" Style="{StaticResource MonoText}" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock Tag="t:sys.cpu" Text="PROCESSOR" Style="{StaticResource StatLabel}"/>
+                                                <TextBlock x:Name="SysCpu" Text="-" FontSize="16" FontWeight="SemiBold" Margin="0,2,0,0" TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
+                                        </DockPanel>
+                                    </Border>
+                                    <Border Background="{DynamicResource Field}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="12" Padding="14,12" Margin="0,0,0,10">
+                                        <DockPanel>
+                                            <Border Style="{StaticResource IconBox}" Width="40" Height="40" Margin="0,0,14,0" VerticalAlignment="Center"><TextBlock Style="{StaticResource TileGlyph}" FontSize="18" Text="&#xE964;"/></Border>
+                                            <TextBlock x:Name="SysRamRight" DockPanel.Dock="Right" Text="" Style="{StaticResource MonoText}" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock Tag="t:sys.ram" Text="MEMORY" Style="{StaticResource StatLabel}"/>
+                                                <TextBlock x:Name="SysRam" Text="-" FontSize="16" FontWeight="SemiBold" Margin="0,2,0,0" TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
+                                        </DockPanel>
+                                    </Border>
+                                    <Border Background="{DynamicResource Field}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="12" Padding="14,12" Margin="0">
+                                        <DockPanel>
+                                            <Border Style="{StaticResource IconBox}" Width="40" Height="40" Margin="0,0,14,0" VerticalAlignment="Center"><TextBlock Style="{StaticResource TileGlyph}" FontSize="18" Text="&#xE7F4;"/></Border>
+                                            <TextBlock x:Name="SysGpuDriver" DockPanel.Dock="Right" Text="" Style="{StaticResource MonoText}" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock Tag="t:sys.gpu" Text="GRAPHICS" Style="{StaticResource StatLabel}"/>
+                                                <TextBlock x:Name="SysGpu" Text="-" FontSize="16" FontWeight="SemiBold" Margin="0,2,0,0" TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
+                                        </DockPanel>
+                                    </Border>
+                                    <Border Height="1" Background="{DynamicResource Line}" Margin="0,14,0,12"/>
+                                    <DockPanel Margin="0,0,0,6">
+                                        <Button x:Name="SysCopyOs" DockPanel.Dock="Right" Style="{StaticResource Bare}" Padding="7,4" Margin="8,0,0,0" ToolTip="Copy">
+                                            <TextBlock Style="{StaticResource Glyph}" Text="&#xE8C8;" FontSize="12" Foreground="{DynamicResource AccentText}"/>
+                                        </Button>
+                                        <TextBlock Tag="t:sys.os" Text="Windows" Style="{StaticResource Muted}" FontSize="12" Width="130" VerticalAlignment="Center" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock x:Name="SysOs" Text="-" FontFamily="{StaticResource MonoFont}" FontSize="12" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                    </DockPanel>
+                                    <DockPanel Margin="0,0,0,6">
+                                        <Button x:Name="SysCopyArch" DockPanel.Dock="Right" Style="{StaticResource Bare}" Padding="7,4" Margin="8,0,0,0" ToolTip="Copy">
+                                            <TextBlock Style="{StaticResource Glyph}" Text="&#xE8C8;" FontSize="12" Foreground="{DynamicResource AccentText}"/>
+                                        </Button>
+                                        <TextBlock Tag="t:sys.arch" Text="Architecture" Style="{StaticResource Muted}" FontSize="12" Width="130" VerticalAlignment="Center" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock x:Name="SysArch" Text="-" FontFamily="{StaticResource MonoFont}" FontSize="12" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                    </DockPanel>
+                                    <DockPanel Margin="0,0,0,6">
+                                        <Button x:Name="SysCopyPc" DockPanel.Dock="Right" Style="{StaticResource Bare}" Padding="7,4" Margin="8,0,0,0" ToolTip="Copy">
+                                            <TextBlock Style="{StaticResource Glyph}" Text="&#xE8C8;" FontSize="12" Foreground="{DynamicResource AccentText}"/>
+                                        </Button>
+                                        <TextBlock Tag="t:sys.pc" Text="Computer name" Style="{StaticResource Muted}" FontSize="12" Width="130" VerticalAlignment="Center" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock x:Name="SysPc" Text="-" FontFamily="{StaticResource MonoFont}" FontSize="12" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                    </DockPanel>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource Card}" Padding="16,14,16,4" Margin="0,0,0,22">
+                                <StackPanel>
+                                    <TextBlock Tag="t:sys.live" Text="LIVE USAGE" Style="{StaticResource StatLabel}" Margin="0,0,0,12"/>
+                                    <DockPanel Margin="0,0,0,10">
+                                        <TextBlock x:Name="SysCpuPct" DockPanel.Dock="Right" Text="-" Style="{StaticResource MonoText}" Foreground="{DynamicResource AccentText}" Width="44" TextAlignment="Right" VerticalAlignment="Center"/>
+                                        <TextBlock Text="CPU" Style="{StaticResource StatLabel}" Width="70" VerticalAlignment="Center"/>
+                                        <ProgressBar x:Name="SysCpuBar" Style="{StaticResource Meter}" Height="4" VerticalAlignment="Center"/>
+                                    </DockPanel>
+                                    <DockPanel Margin="0,0,0,10">
+                                        <TextBlock x:Name="SysRamPct" DockPanel.Dock="Right" Text="-" Style="{StaticResource MonoText}" Foreground="{DynamicResource AccentText}" Width="44" TextAlignment="Right" VerticalAlignment="Center"/>
+                                        <TextBlock Text="RAM" Style="{StaticResource StatLabel}" Width="70" VerticalAlignment="Center"/>
+                                        <ProgressBar x:Name="SysRamBar" Style="{StaticResource Meter}" Height="4" VerticalAlignment="Center"/>
+                                    </DockPanel>
+                                    <DockPanel Margin="0,0,0,10">
+                                        <TextBlock x:Name="SysDiskPct" DockPanel.Dock="Right" Text="-" Style="{StaticResource MonoText}" Foreground="{DynamicResource AccentText}" Width="44" TextAlignment="Right" VerticalAlignment="Center"/>
+                                        <TextBlock x:Name="SysDiskLabel" Text="DISK C:" Style="{StaticResource StatLabel}" Width="70" VerticalAlignment="Center"/>
+                                        <ProgressBar x:Name="SysDiskBar" Style="{StaticResource Meter}" Height="4" VerticalAlignment="Center"/>
+                                    </DockPanel>
+                                </StackPanel>
+                            </Border>
+                            <TextBlock Tag="t:qt.tools" Text="Tools" Style="{StaticResource Section}"/>
                             <UniformGrid x:Name="ToolsGrid" Columns="3" Margin="-5,-5,-5,10"/>
                             <Border Style="{StaticResource Card}" Padding="14,12" Margin="0,4,0,16">
                                 <StackPanel>

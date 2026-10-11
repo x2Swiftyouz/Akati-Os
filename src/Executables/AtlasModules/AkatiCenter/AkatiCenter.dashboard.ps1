@@ -27,10 +27,17 @@ $specWork = {
         $cv = Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion'
         $r.Os = "$($os.Caption)  ·  $($cv.DisplayVersion)  ·  Build $($cv.CurrentBuild).$($cv.UBR)"
         $r.Ram = [double]$os.TotalVisibleMemorySize * 1KB
-        $r.Cpu = ((Get-CimInstance Win32_Processor | Select-Object -First 1).Name -replace '\s+', ' ').Trim()
+        $cpus = @(Get-CimInstance Win32_Processor)
+        $r.Cpu = (($cpus | Select-Object -First 1).Name -replace '\s+', ' ').Trim()
+        $r.Cores = [int]($cpus | Measure-Object -Property NumberOfCores -Sum).Sum
+        $r.Threads = [int]($cpus | Measure-Object -Property NumberOfLogicalProcessors -Sum).Sum
         $all = @(Get-CimInstance Win32_VideoController)
         $gpu = @($all | Where-Object { $_.Name -notmatch 'Basic Display|Remote' } | Select-Object -First 1)
-        $r.Gpu = if ($gpu.Count) { $gpu[0].Name } else { @($all | Select-Object -First 1)[0].Name }
+        if (!$gpu.Count) { $gpu = @($all | Select-Object -First 1) }
+        $r.Gpu = $gpu[0].Name; $r.GpuDriver = [string]$gpu[0].DriverVersion
+        # For the System info on Quick tools: Windows name and version, architecture (no hardware IDs)
+        $r.OsName = "$($os.Caption) $($cv.DisplayVersion) ($($cv.CurrentBuild).$($cv.UBR))".Trim()
+        $r.Arch = [string]$os.OSArchitecture
     } catch { }
     $r
 }
@@ -40,6 +47,25 @@ function Show-Specs($r) {
     if ($r.Cpu) { $ui.CpuName.Text = $r.Cpu }
     if ($r.Gpu) { $ui.GpuName.Text = $r.Gpu }
     if ($r.Ram) { $ui.RamName.Text = Format-Size $r.Ram }
+    # System info (Quick tools)
+    if ($r.Cpu) { $ui.SysCpu.Text = $r.Cpu }
+    if ($r.Threads) { $ui.SysCpuCores.Text = (T 'sys.cores') -f $r.Cores, $r.Threads }
+    if ($r.Ram) { $ui.SysRam.Text = Format-Size $r.Ram }
+    if ($r.Gpu) { $ui.SysGpu.Text = $r.Gpu }
+    if ($r.GpuDriver) { $ui.SysGpuDriver.Text = (T 'sys.driver') -f $r.GpuDriver }
+    if ($r.OsName) { $ui.SysOs.Text = $r.OsName }
+    if ($r.Arch) { $ui.SysArch.Text = $r.Arch }
+    $script:specs = $r
+}
+$ui.SysPc.Text = $env:COMPUTERNAME
+# Copy buttons of the System info rows: the value goes to the clipboard, the status bar says so
+foreach ($pair in @(@('SysCopyOs', 'SysOs'), @('SysCopyArch', 'SysArch'), @('SysCopyPc', 'SysPc'))) {
+    $ui[$pair[0]].Tag = $pair[1]; $ui[$pair[0]].ToolTip = T 'sys.copy'
+    $ui[$pair[0]].Add_Click({
+        $value = $ui[$this.Tag].Text
+        if (!$value -or $value -eq '-') { return }
+        try { [System.Windows.Clipboard]::SetText($value); Set-Status ((T 'sys.copied') -f $value) } catch { Set-Status $_.Exception.Message }
+    })
 }
 if ($Screenshot) { Show-Specs (& $specWork) } else { Start-Work $specWork @() { param($r) Show-Specs (Get-LastOutput $r) } $null }
 
@@ -78,12 +104,13 @@ $script:diskUsed = -1; $script:diskAt = [datetime]::MinValue
 function Update-DiskCard {
     $script:diskAt = (Get-Date).AddSeconds(30)
     $letter = ([IO.Path]::GetPathRoot($windir)).TrimEnd('\')
-    $ui.DiskLabel.Text = (T 'dash.disk') -f $letter
+    $ui.DiskLabel.Text = (T 'dash.disk') -f $letter; $ui.SysDiskLabel.Text = $ui.DiskLabel.Text
     try { $d = New-Object IO.DriveInfo $letter; $total = [double]$d.TotalSize; $free = [double]$d.TotalFreeSpace } catch { $total = 0 }
     if ($total -le 0) { $ui.DiskValue.Text = '-'; $ui.DiskDetail.Text = '-'; $ui.DiskFree.Text = ''; $ui.DiskBar.Value = 0; return }
     $script:diskUsed = [int][Math]::Round(100 * ($total - $free) / $total)
     if (!(Test-Counting $ui.DiskValue)) { $ui.DiskValue.Text = "$($script:diskUsed)%" }
     $ui.DiskBar.Value = $script:diskUsed
+    $ui.SysDiskBar.Value = $script:diskUsed; $ui.SysDiskPct.Text = "$($script:diskUsed)%"
     $ui.DiskDetail.Text = Format-Pair ($total - $free) $total
     $ui.DiskFree.Text = (T 'dash.disk.free') -f (Format-Size $free)
     # Orange from 85% used, red from 95% (like the other tiles)
@@ -216,7 +243,10 @@ function Format-Speed([double]$bytesPerSec) {
 function Update-Stats {
     if (!(Test-Counting $ui.CpuValue)) { $ui.CpuValue.Text = "$($stats.Cpu)%" }; $ui.CpuBar.Value = $stats.Cpu
     if (!(Test-Counting $ui.RamValue)) { $ui.RamValue.Text = "$($stats.Ram)%" }; $ui.RamBar.Value = $stats.Ram
-    if ($stats.RamTotal) { $ui.RamDetail.Text = Format-Pair $stats.RamUsed $stats.RamTotal }
+    if ($stats.RamTotal) { $ui.RamDetail.Text = Format-Pair $stats.RamUsed $stats.RamTotal; $ui.SysRamRight.Text = Format-Pair $stats.RamUsed $stats.RamTotal }
+    # Live usage on Quick tools: the same numbers, no second polling loop
+    $ui.SysCpuBar.Value = $stats.Cpu; $ui.SysCpuPct.Text = "$($stats.Cpu)%"
+    $ui.SysRamBar.Value = $stats.Ram; $ui.SysRamPct.Text = "$($stats.Ram)%"
     $ui.CpuDetail.Text = (T 'dash.threads') -f [Environment]::ProcessorCount
     $ui.GpuDetail.Text = if ($stats.GpuTemp -gt 0) { '3D  ·  {0} °C' -f $stats.GpuTemp } else { '3D' }
     if ((Get-Date) -gt $script:diskAt) { Update-DiskCard }

@@ -58,7 +58,7 @@ foreach ($ci in $cleanItems) {
     [System.Windows.Controls.Grid]::SetColumn($right, 3)
     [void]$grid.Children.Add($check); [void]$grid.Children.Add($chip); [void]$grid.Children.Add($text); [void]$grid.Children.Add($right)
     $border.Child = $grid
-    $ci.SizeText = $size; $ci.CountText = $count; $ci.Bar = $bar; $ci.Check = $check; $ci.Bytes = 0; $ci.Count = -1
+    $ci.SizeText = $size; $ci.CountText = $count; $ci.Bar = $bar; $ci.Check = $check; $ci.Bytes = 0; $ci.FileCount = -1
     [void]$ui.CleanList.Children.Add($border)
 }
 Update-Separators $ui.CleanList
@@ -74,7 +74,7 @@ function Update-CleanTotal {
     $ui.CleanShare.Value = if ($all -gt 0) { 100 * $total / $all } else { 0 }
     foreach ($ci in $cleanItems) {
         $ci.Bar.Value = if ($all -gt 0) { 100 * $ci.Bytes / $all } else { 0 }
-        $ci.CountText.Text = if ($ci.Count -ge 0) { (T 'cleaner.files') -f $ci.Count } else { '' }
+        $ci.CountText.Text = if ($ci.FileCount -ge 0) { (T 'cleaner.files') -f $ci.FileCount } else { '' }
     }
 }
 # Sizes and file counts from a scan (also used by the screenshot mode with sample numbers)
@@ -82,7 +82,7 @@ function Show-CleanSizes($sizes) {
     $counts = if ($sizes -is [hashtable] -and $sizes['_counts'] -is [hashtable]) { $sizes['_counts'] } else { @{} }
     foreach ($ci in $cleanItems) {
         $ci.Bytes = if ($sizes) { [double]$sizes[$ci.Key] } else { 0 }
-        $ci.Count = if ($counts.ContainsKey($ci.Key)) { [int]$counts[$ci.Key] } else { -1 }
+        $ci.FileCount = if ($counts.ContainsKey($ci.Key)) { [int]$counts[$ci.Key] } else { -1 }
         $ci.SizeText.Text = Format-Size $ci.Bytes
     }
     if ($ui.CleanTotal.Text -eq '-') { $ui.CleanTotal.Text = Format-Size 0 }

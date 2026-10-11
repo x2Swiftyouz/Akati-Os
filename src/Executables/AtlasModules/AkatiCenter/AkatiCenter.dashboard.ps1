@@ -54,11 +54,11 @@ function Show-Disks {
         $row.Margin = '0,0,0,10'
         $top = New-Object System.Windows.Controls.Grid
         $name = New-Text ("$($d.Name.TrimEnd('\'))  " + $(if ($d.VolumeLabel) { $d.VolumeLabel } else { T 'disk.local' })) 13 'SemiBold'
-        $free = New-Text ((T 'disk.free') -f (Format-Size $d.TotalFreeSpace), (Format-Size $d.TotalSize)) 12
-        $free.Foreground = $window.FindResource('MutedBrush'); $free.HorizontalAlignment = 'Right'
+        $free = New-Text ((T 'disk.free') -f (Format-Size $d.TotalFreeSpace), (Format-Size $d.TotalSize)) 11
+        $free.Style = $window.FindResource('MonoText'); $free.HorizontalAlignment = 'Right'; $free.VerticalAlignment = 'Center'
         [void]$top.Children.Add($name); [void]$top.Children.Add($free)
         $bar = New-Object System.Windows.Controls.ProgressBar
-        $bar.Style = $window.FindResource('Meter'); $bar.Margin = '0,6,0,0'; $bar.Value = $used
+        $bar.Style = $window.FindResource('Meter'); $bar.Height = 4; $bar.Margin = '0,7,0,0'; $bar.Value = $used
         if ($used -ge 90) { $bar.Foreground = '#FF453A' }
         [void]$row.Children.Add($top); [void]$row.Children.Add($bar)
         # Less than 15% free: a shortcut to the Cleaner
@@ -70,6 +70,29 @@ function Show-Disks {
         }
         [void]$ui.DisksPanel.Children.Add($row)
     }
+    Update-DiskCard
+}
+
+# Stat tile of the Windows drive (C:): used space in percent, used / total in GB and the free space
+$script:diskUsed = -1; $script:diskAt = [datetime]::MinValue
+function Update-DiskCard {
+    $script:diskAt = (Get-Date).AddSeconds(30)
+    $letter = ([IO.Path]::GetPathRoot($windir)).TrimEnd('\')
+    $ui.DiskLabel.Text = (T 'dash.disk') -f $letter
+    try { $d = New-Object IO.DriveInfo $letter; $total = [double]$d.TotalSize; $free = [double]$d.TotalFreeSpace } catch { $total = 0 }
+    if ($total -le 0) { $ui.DiskValue.Text = '-'; $ui.DiskDetail.Text = '-'; $ui.DiskFree.Text = ''; $ui.DiskBar.Value = 0; return }
+    $script:diskUsed = [int][Math]::Round(100 * ($total - $free) / $total)
+    if (!(Test-Counting $ui.DiskValue)) { $ui.DiskValue.Text = "$($script:diskUsed)%" }
+    $ui.DiskBar.Value = $script:diskUsed
+    $ui.DiskDetail.Text = Format-Pair ($total - $free) $total
+    $ui.DiskFree.Text = (T 'dash.disk.free') -f (Format-Size $free)
+    # Orange from 85% used, red from 95% (like the other tiles)
+    Set-Level $ui.DiskValue $ui.DiskBar $script:diskUsed
+}
+# "1.4 / 4.0 GB": used and total in the same unit, for the small monospace lines
+function Format-Pair([double]$used, [double]$total) {
+    $unit, $div = if ($total -ge 1TB) { 'TB', 1TB } else { 'GB', 1GB }
+    '{0:N1} / {1:N1} {2}' -f ($used / $div), ($total / $div), $unit
 }
 
 # Usage is read in a background runspace so the window never stutters
@@ -193,7 +216,10 @@ function Format-Speed([double]$bytesPerSec) {
 function Update-Stats {
     if (!(Test-Counting $ui.CpuValue)) { $ui.CpuValue.Text = "$($stats.Cpu)%" }; $ui.CpuBar.Value = $stats.Cpu
     if (!(Test-Counting $ui.RamValue)) { $ui.RamValue.Text = "$($stats.Ram)%" }; $ui.RamBar.Value = $stats.Ram
-    if ($stats.RamTotal) { $ui.RamDetail.Text = '{0} / {1}' -f (Format-Size $stats.RamUsed), (Format-Size $stats.RamTotal) }
+    if ($stats.RamTotal) { $ui.RamDetail.Text = Format-Pair $stats.RamUsed $stats.RamTotal }
+    $ui.CpuDetail.Text = (T 'dash.threads') -f [Environment]::ProcessorCount
+    $ui.GpuDetail.Text = if ($stats.GpuTemp -gt 0) { '3D  ·  {0} °C' -f $stats.GpuTemp } else { '3D' }
+    if ((Get-Date) -gt $script:diskAt) { Update-DiskCard }
     if ($stats.Gpu -ge 0) { if (!(Test-Counting $ui.GpuValue)) { $ui.GpuValue.Text = "$($stats.Gpu)%" }; $ui.GpuBar.Value = $stats.Gpu } else { $ui.GpuValue.Text = '-'; $ui.GpuBar.Value = 0 }
     Set-Level $ui.CpuValue $ui.CpuBar $stats.Cpu
     Set-Level $ui.RamValue $ui.RamBar $stats.Ram
@@ -201,7 +227,7 @@ function Update-Stats {
     # No graphics card that Windows reports usage for (virtual machines): CPU and RAM share the row
     $gpuShown = $stats.Gpu -ge 0 -and @($gpuNames).Count -gt 0
     $ui.GpuCard.Visibility = if ($gpuShown) { 'Visible' } else { 'Collapsed' }
-    $ui.UsageGrid.Columns = if ($gpuShown) { 3 } else { 2 }
+    $ui.UsageGrid.Columns = if ($gpuShown) { 4 } else { 3 }
     if ($stats.Seq -ne $script:lastSeq) {
         $script:lastSeq = $stats.Seq
         Update-Spark 'Cpu' $stats.Cpu; Update-Spark 'Ram' $stats.Ram; Update-Spark 'Gpu' ([Math]::Max(0, $stats.Gpu))
@@ -336,6 +362,11 @@ function Show-TopApps {
 }
 
 $ui.TopByCpu.Add_Checked({ Show-TopApps })
+# Quick access tiles (Game boost, Clean, Tweaks and Updates have their handlers next to their pages)
+$ui.QuickApps.Add_Click({ $ui.NavGaming.IsChecked = $true })
+$ui.QuickTools.Add_Click({ $ui.NavQuicktools.IsChecked = $true })
+$ui.QuickHealth.Add_Click({ $ui.NavHealth.IsChecked = $true })
+$ui.QuickRam.Add_Click({ try { Invoke-FreeRam } catch { Set-Status $_.Exception.Message } })
 $ui.TopByRam.Add_Checked({ Show-TopApps })
 
 # Desktop right-click menu (AkatiMenu.ps1): rebuilt shortly after something it shows changed
@@ -364,7 +395,8 @@ function Update-DesktopMenu {
 # Customize dashboard: each card can be hidden and moved. Saved as DashLayout, for example
 # "usage,hero,-chips,..." (a "-" in front = hidden); cards missing from it (new ones) go last.
 # ---------------------------------------------------------------------------------------------
-$dashCards = [ordered]@{ hero = 'DashHero'; chips = 'StatusChips'; specs = 'DashSpecs'; usage = 'UsageGrid'; storage = 'DashStorage'; top = 'DashTop'; week = 'DashWeek'; quick = 'DashQuick' }
+# In the order of the XAML: the tiles first (usage and Quick access), then the other cards
+$dashCards = [ordered]@{ hero = 'DashHero'; usage = 'UsageGrid'; quick = 'DashQuick'; chips = 'StatusChips'; specs = 'DashSpecs'; storage = 'DashStorage'; top = 'DashTop'; week = 'DashWeek' }
 $dashGlyphs = @{ hero = [char]0xE80F; chips = [char]0xE8FD; specs = [char]0xE950; usage = [char]0xE9D9; storage = [char]0xEDA2; top = [char]0xE9F5; week = [char]0xE787; quick = [char]0xE945 }
 function Get-DashLayout {
     $list = New-Object System.Collections.ArrayList

@@ -122,6 +122,9 @@ function Set-CenterAccent($a) {
     $res['Accent'] = [System.Windows.Media.SolidColorBrush]::new((ConvertTo-Color $a.Base))
     $res['Accent2'] = [System.Windows.Media.SolidColorBrush]::new((ConvertTo-Color $a.Light))
     $res['AccentGradient'] = [System.Windows.Media.LinearGradientBrush]::new((ConvertTo-Color $a.G1), (ConvertTo-Color $a.G2), [System.Windows.Point]::new(0, 0), [System.Windows.Point]::new(1, 1))
+    # The soft tint, border and text shades of the accent (selected sidebar item, tiles, big numbers)
+    $script:accentPair = @{ Base = $a.Base; Light = $a.Light }
+    Update-AccentBrushes
 }
 
 # Windows keeps the accent as 0xAABBGGRR (and a palette of 8 shades from light to dark)

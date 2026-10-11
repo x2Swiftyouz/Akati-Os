@@ -44,25 +44,31 @@ $cleanItems = @(
     @{ Key = 'recycle'; Glyph = [char]0xE74D; Recycle = $true }
 )
 
-# Size of each item
+# Size of each item. With $withCount (Akati OS Center) the number of files of each item is added under the
+# key "_counts"; -CleanNow calls it without, so its sizes stay the only keys.
 $measureWork = {
-    param($items)
+    param($items, $withCount)
     $out = @{}
+    $counts = @{}
     foreach ($i in $items) {
-        $sum = 0
+        $sum = 0; $n = 0
         if ($i.Recycle) {
-            try { (New-Object -ComObject Shell.Application).NameSpace(10).Items() | ForEach-Object { $sum += $_.Size } } catch { }
+            try { (New-Object -ComObject Shell.Application).NameSpace(10).Items() | ForEach-Object { $sum += $_.Size; $n++ } } catch { }
         }
         foreach ($f in @($i.Folders)) {
             if (!$f) { continue }
-            $sum += [double](Get-ChildItem -Path $f -Recurse -Force -File -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum
+            $m = Get-ChildItem -Path $f -Recurse -Force -File -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum
+            $sum += [double]$m.Sum; $n += [int]$m.Count
         }
         foreach ($f in @($i.Files)) {
             if (!$f) { continue }
-            $sum += [double](Get-ChildItem -Path $f -Force -File -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum
+            $m = Get-ChildItem -Path $f -Force -File -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum
+            $sum += [double]$m.Sum; $n += [int]$m.Count
         }
         $out[$i.Key] = [double]$sum
+        $counts[$i.Key] = $n
     }
+    if ($withCount) { $out['_counts'] = $counts }
     $out
 }
 

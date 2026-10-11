@@ -57,7 +57,7 @@ if ($Screenshot) {
     $ui.PcName.Text = 'GAMING-PC'; $ui.OsLine.Text = 'Windows 11 Pro  ·  25H2'
     $ui.CpuName.Text = 'AMD Ryzen 7 7800X3D 8-Core Processor'; $ui.GpuName.Text = 'NVIDIA GeForce RTX 4070'
     # The same sample PC in the System info of Quick tools
-    Show-Specs @{ Cpu = 'AMD Ryzen 7 7800X3D 8-Core Processor'; Cores = 8; Threads = 16; Ram = 32GB; Gpu = 'NVIDIA GeForce RTX 4070'; GpuDriver = '32.0.15.6094'
+    Show-Specs @{ Cpu = 'AMD Ryzen 7 7800X3D 8-Core Processor'; Cores = 8; Threads = 16; Ram = 16GB; Gpu = 'NVIDIA GeForce RTX 4070'; GpuDriver = '32.0.15.6094'
                   OsName = 'Windows 11 Pro 25H2 (26200.6584)'; Arch = '64-bit' }
     $ui.SysPc.Text = 'GAMING-PC'
     function Save-Shot([string]$file) {

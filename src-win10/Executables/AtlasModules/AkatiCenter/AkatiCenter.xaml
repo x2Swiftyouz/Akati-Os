@@ -790,7 +790,7 @@
                     </Button>
 
                     <!-- Pages in groups; the group headings hide in the narrow sidebar (Set-Compact) -->
-                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <ScrollViewer VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled">
                     <StackPanel>
                         <TextBlock Style="{StaticResource GroupHead}" Margin="10,2,0,5" Tag="t:side.group.main" Text="MAIN"/>
                         <RadioButton x:Name="NavDashboard" Style="{StaticResource Nav}" IsChecked="True">

@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- Akati OS Center: Quick tools (new page, Ctrl+8): Task Manager, Device Manager, Performance Options, Flush DNS (runs in the background, the result goes to the log), Services, Disk Management, Event Viewer, System Configuration, Network connections, Sound, Power options, Windows Update, Resource Monitor, System Information, DirectX Diagnostic, Display, Startup apps and Free up RAM, each as a card, with an activity log. All of them are also in the Ctrl+K search
+- Quick tools: "This PC" at the top: processor with cores and threads, memory, graphics card with its driver version, Windows version, architecture and computer name (each with a copy button), and live CPU, RAM and drive C: bars. No hardware IDs are shown
+- Tweaks: profiles. Gaming turns on Game Mode, Max performance and Timer resolution, and turns off the Sticky Keys shortcuts, mouse acceleration, sound ducking, Nagle and the startup delay, and keeps Edge out of the background. Normal puts the same switches back to their Windows defaults. "+ Save current" keeps every switch as it is now as your own profile. A profile first lists what changes and warns when a restart is needed; every change goes to the change history (Undo on the Health page)
+- Tweaks: an Action log with the time of every switch, profile, DNS change and reset in this session
+- Dashboard: stat tiles for CPU, RAM, the graphics card and drive C: (percentage, used and total, a thin bar) and a Quick access grid: Game boost, Gaming apps, Quick tools, Clean, Tweaks, Health, Free up RAM and Updates
+- Cleaner: Select all and Clear, a short tag, the folder and the number of files of each item, a bar with its share of everything found, and a summary next to the list (space to free, items selected, total found) with a log
+- Game boost > FiveM: a toolkit with action cards (raise the priority of FiveM and GTA V now, pause background downloads and start them again, reset the network with Flush DNS and Winsock, clear the cache, check the graphics, audio and network drivers) and a colored result log
+
+### Changed
+- Akati OS Center has a new look: near-black backgrounds with thin borders, rounder cards, the accent color for numbers and highlights, and a monospace font for small data lines and logs. The light look and every accent color still work
+- The sidebar is grouped (Main, Gaming, System, Tools, Personal) with line icons in the accent color; the open page has a soft accent box instead of a solid one. The group headings hide in the narrow sidebar
+- Tweaks: the switches are cards, in two columns when the window is wide enough, with badges for "Needs restart", "Security setting" and the Gaming profile
+- Pages in the sidebar order: Ctrl+1 to Ctrl+9 open the first nine, About is reached with Ctrl+Tab or Ctrl+K (Ctrl+0 stays the text size reset)
+
 ## v1.10.2
 
 ### Changed

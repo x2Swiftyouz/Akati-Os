@@ -27,10 +27,17 @@ $specWork = {
         $cv = Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion'
         $r.Os = "$($os.Caption)  ·  $($cv.DisplayVersion)  ·  Build $($cv.CurrentBuild).$($cv.UBR)"
         $r.Ram = [double]$os.TotalVisibleMemorySize * 1KB
-        $r.Cpu = ((Get-CimInstance Win32_Processor | Select-Object -First 1).Name -replace '\s+', ' ').Trim()
+        $cpus = @(Get-CimInstance Win32_Processor)
+        $r.Cpu = (($cpus | Select-Object -First 1).Name -replace '\s+', ' ').Trim()
+        $r.Cores = [int]($cpus | Measure-Object -Property NumberOfCores -Sum).Sum
+        $r.Threads = [int]($cpus | Measure-Object -Property NumberOfLogicalProcessors -Sum).Sum
         $all = @(Get-CimInstance Win32_VideoController)
         $gpu = @($all | Where-Object { $_.Name -notmatch 'Basic Display|Remote' } | Select-Object -First 1)
-        $r.Gpu = if ($gpu.Count) { $gpu[0].Name } else { @($all | Select-Object -First 1)[0].Name }
+        if (!$gpu.Count) { $gpu = @($all | Select-Object -First 1) }
+        $r.Gpu = $gpu[0].Name; $r.GpuDriver = [string]$gpu[0].DriverVersion
+        # For the System info on Quick tools: Windows name and version, architecture (no hardware IDs)
+        $r.OsName = "$($os.Caption) $($cv.DisplayVersion) ($($cv.CurrentBuild).$($cv.UBR))".Trim()
+        $r.Arch = [string]$os.OSArchitecture
     } catch { }
     $r
 }
@@ -40,6 +47,25 @@ function Show-Specs($r) {
     if ($r.Cpu) { $ui.CpuName.Text = $r.Cpu }
     if ($r.Gpu) { $ui.GpuName.Text = $r.Gpu }
     if ($r.Ram) { $ui.RamName.Text = Format-Size $r.Ram }
+    # System info (Quick tools)
+    if ($r.Cpu) { $ui.SysCpu.Text = $r.Cpu }
+    if ($r.Threads) { $ui.SysCpuCores.Text = (T 'sys.cores') -f $r.Cores, $r.Threads }
+    if ($r.Ram) { $ui.SysRam.Text = Format-Size $r.Ram }
+    if ($r.Gpu) { $ui.SysGpu.Text = $r.Gpu }
+    if ($r.GpuDriver) { $ui.SysGpuDriver.Text = (T 'sys.driver') -f $r.GpuDriver }
+    if ($r.OsName) { $ui.SysOs.Text = $r.OsName }
+    if ($r.Arch) { $ui.SysArch.Text = $r.Arch }
+    $script:specs = $r
+}
+$ui.SysPc.Text = $env:COMPUTERNAME
+# Copy buttons of the System info rows: the value goes to the clipboard, the status bar says so
+foreach ($pair in @(@('SysCopyOs', 'SysOs'), @('SysCopyArch', 'SysArch'), @('SysCopyPc', 'SysPc'))) {
+    $ui[$pair[0]].Tag = $pair[1]; $ui[$pair[0]].ToolTip = T 'sys.copy'
+    $ui[$pair[0]].Add_Click({
+        $value = $ui[$this.Tag].Text
+        if (!$value -or $value -eq '-') { return }
+        try { [System.Windows.Clipboard]::SetText($value); Set-Status ((T 'sys.copied') -f $value) } catch { Set-Status $_.Exception.Message }
+    })
 }
 if ($Screenshot) { Show-Specs (& $specWork) } else { Start-Work $specWork @() { param($r) Show-Specs (Get-LastOutput $r) } $null }
 
@@ -54,11 +80,11 @@ function Show-Disks {
         $row.Margin = '0,0,0,10'
         $top = New-Object System.Windows.Controls.Grid
         $name = New-Text ("$($d.Name.TrimEnd('\'))  " + $(if ($d.VolumeLabel) { $d.VolumeLabel } else { T 'disk.local' })) 13 'SemiBold'
-        $free = New-Text ((T 'disk.free') -f (Format-Size $d.TotalFreeSpace), (Format-Size $d.TotalSize)) 12
-        $free.Foreground = $window.FindResource('MutedBrush'); $free.HorizontalAlignment = 'Right'
+        $free = New-Text ((T 'disk.free') -f (Format-Size $d.TotalFreeSpace), (Format-Size $d.TotalSize)) 11
+        $free.Style = $window.FindResource('MonoText'); $free.HorizontalAlignment = 'Right'; $free.VerticalAlignment = 'Center'
         [void]$top.Children.Add($name); [void]$top.Children.Add($free)
         $bar = New-Object System.Windows.Controls.ProgressBar
-        $bar.Style = $window.FindResource('Meter'); $bar.Margin = '0,6,0,0'; $bar.Value = $used
+        $bar.Style = $window.FindResource('Meter'); $bar.Height = 4; $bar.Margin = '0,7,0,0'; $bar.Value = $used
         if ($used -ge 90) { $bar.Foreground = '#FF453A' }
         [void]$row.Children.Add($top); [void]$row.Children.Add($bar)
         # Less than 15% free: a shortcut to the Cleaner
@@ -70,6 +96,30 @@ function Show-Disks {
         }
         [void]$ui.DisksPanel.Children.Add($row)
     }
+    Update-DiskCard
+}
+
+# Stat tile of the Windows drive (C:): used space in percent, used / total in GB and the free space
+$script:diskUsed = -1; $script:diskAt = [datetime]::MinValue
+function Update-DiskCard {
+    $script:diskAt = (Get-Date).AddSeconds(30)
+    $letter = ([IO.Path]::GetPathRoot($windir)).TrimEnd('\')
+    $ui.DiskLabel.Text = (T 'dash.disk') -f $letter; $ui.SysDiskLabel.Text = $ui.DiskLabel.Text
+    try { $d = New-Object IO.DriveInfo $letter; $total = [double]$d.TotalSize; $free = [double]$d.TotalFreeSpace } catch { $total = 0 }
+    if ($total -le 0) { $ui.DiskValue.Text = '-'; $ui.DiskDetail.Text = '-'; $ui.DiskFree.Text = ''; $ui.DiskBar.Value = 0; return }
+    $script:diskUsed = [int][Math]::Round(100 * ($total - $free) / $total)
+    if (!(Test-Counting $ui.DiskValue)) { $ui.DiskValue.Text = "$($script:diskUsed)%" }
+    $ui.DiskBar.Value = $script:diskUsed
+    $ui.SysDiskBar.Value = $script:diskUsed; $ui.SysDiskPct.Text = "$($script:diskUsed)%"
+    $ui.DiskDetail.Text = Format-Pair ($total - $free) $total
+    $ui.DiskFree.Text = (T 'dash.disk.free') -f (Format-Size $free)
+    # Orange from 85% used, red from 95% (like the other tiles)
+    Set-Level $ui.DiskValue $ui.DiskBar $script:diskUsed
+}
+# "1.4 / 4.0 GB": used and total in the same unit, for the small monospace lines
+function Format-Pair([double]$used, [double]$total) {
+    $unit, $div = if ($total -ge 1TB) { 'TB', 1TB } else { 'GB', 1GB }
+    '{0:N1} / {1:N1} {2}' -f ($used / $div), ($total / $div), $unit
 }
 
 # Usage is read in a background runspace so the window never stutters
@@ -193,7 +243,13 @@ function Format-Speed([double]$bytesPerSec) {
 function Update-Stats {
     if (!(Test-Counting $ui.CpuValue)) { $ui.CpuValue.Text = "$($stats.Cpu)%" }; $ui.CpuBar.Value = $stats.Cpu
     if (!(Test-Counting $ui.RamValue)) { $ui.RamValue.Text = "$($stats.Ram)%" }; $ui.RamBar.Value = $stats.Ram
-    if ($stats.RamTotal) { $ui.RamDetail.Text = '{0} / {1}' -f (Format-Size $stats.RamUsed), (Format-Size $stats.RamTotal) }
+    if ($stats.RamTotal) { $ui.RamDetail.Text = Format-Pair $stats.RamUsed $stats.RamTotal; $ui.SysRamRight.Text = Format-Pair $stats.RamUsed $stats.RamTotal }
+    # Live usage on Quick tools: the same numbers, no second polling loop
+    $ui.SysCpuBar.Value = $stats.Cpu; $ui.SysCpuPct.Text = "$($stats.Cpu)%"
+    $ui.SysRamBar.Value = $stats.Ram; $ui.SysRamPct.Text = "$($stats.Ram)%"
+    $ui.CpuDetail.Text = (T 'dash.threads') -f [Environment]::ProcessorCount
+    $ui.GpuDetail.Text = if ($stats.GpuTemp -gt 0) { '3D  ·  {0} °C' -f $stats.GpuTemp } else { '3D' }
+    if ((Get-Date) -gt $script:diskAt) { Update-DiskCard }
     if ($stats.Gpu -ge 0) { if (!(Test-Counting $ui.GpuValue)) { $ui.GpuValue.Text = "$($stats.Gpu)%" }; $ui.GpuBar.Value = $stats.Gpu } else { $ui.GpuValue.Text = '-'; $ui.GpuBar.Value = 0 }
     Set-Level $ui.CpuValue $ui.CpuBar $stats.Cpu
     Set-Level $ui.RamValue $ui.RamBar $stats.Ram
@@ -201,7 +257,7 @@ function Update-Stats {
     # No graphics card that Windows reports usage for (virtual machines): CPU and RAM share the row
     $gpuShown = $stats.Gpu -ge 0 -and @($gpuNames).Count -gt 0
     $ui.GpuCard.Visibility = if ($gpuShown) { 'Visible' } else { 'Collapsed' }
-    $ui.UsageGrid.Columns = if ($gpuShown) { 3 } else { 2 }
+    $ui.UsageGrid.Columns = if ($gpuShown) { 4 } else { 3 }
     if ($stats.Seq -ne $script:lastSeq) {
         $script:lastSeq = $stats.Seq
         Update-Spark 'Cpu' $stats.Cpu; Update-Spark 'Ram' $stats.Ram; Update-Spark 'Gpu' ([Math]::Max(0, $stats.Gpu))
@@ -336,6 +392,11 @@ function Show-TopApps {
 }
 
 $ui.TopByCpu.Add_Checked({ Show-TopApps })
+# Quick access tiles (Game boost, Clean, Tweaks and Updates have their handlers next to their pages)
+$ui.QuickApps.Add_Click({ $ui.NavGaming.IsChecked = $true })
+$ui.QuickTools.Add_Click({ $ui.NavQuicktools.IsChecked = $true })
+$ui.QuickHealth.Add_Click({ $ui.NavHealth.IsChecked = $true })
+$ui.QuickRam.Add_Click({ try { Invoke-FreeRam } catch { Set-Status $_.Exception.Message } })
 $ui.TopByRam.Add_Checked({ Show-TopApps })
 
 # Desktop right-click menu (AkatiMenu.ps1): rebuilt shortly after something it shows changed
@@ -364,7 +425,8 @@ function Update-DesktopMenu {
 # Customize dashboard: each card can be hidden and moved. Saved as DashLayout, for example
 # "usage,hero,-chips,..." (a "-" in front = hidden); cards missing from it (new ones) go last.
 # ---------------------------------------------------------------------------------------------
-$dashCards = [ordered]@{ hero = 'DashHero'; chips = 'StatusChips'; specs = 'DashSpecs'; usage = 'UsageGrid'; storage = 'DashStorage'; top = 'DashTop'; week = 'DashWeek'; quick = 'DashQuick' }
+# In the order of the XAML: the tiles first (usage and Quick access), then the other cards
+$dashCards = [ordered]@{ hero = 'DashHero'; usage = 'UsageGrid'; quick = 'DashQuick'; chips = 'StatusChips'; specs = 'DashSpecs'; storage = 'DashStorage'; top = 'DashTop'; week = 'DashWeek' }
 $dashGlyphs = @{ hero = [char]0xE80F; chips = [char]0xE8FD; specs = [char]0xE950; usage = [char]0xE9D9; storage = [char]0xEDA2; top = [char]0xE9F5; week = [char]0xE787; quick = [char]0xE945 }
 function Get-DashLayout {
     $list = New-Object System.Collections.ArrayList

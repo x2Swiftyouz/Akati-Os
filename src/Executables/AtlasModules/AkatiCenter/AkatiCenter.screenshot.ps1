@@ -15,6 +15,28 @@ if ($Screenshot) {
     Save-Setting WeekStart (Get-WeekStart (Get-Date)); Save-Setting WeekCleanBytes '1932735283'; Save-Setting WeekBoostMinutes '415'; Save-Setting WeekBoosts '6'
     Save-Setting ScoreHistory ([string[]]@(0..13 | ForEach-Object { '{0}={1}' -f (Get-Date).Date.AddDays($_ - 13).ToString('yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture), (72 + [int](12 * $_ / 13) + @(0, 2, -1, 1)[$_ % 4]) }))
     Save-Setting LastBoost ('{0}|83|2|4' -f (Get-Date).AddHours(-2).ToString('s', [Globalization.CultureInfo]::InvariantCulture))
+    # A saved custom profile, so the Tweaks page shows all four profile tiles
+    Save-Setting TweakProfile 'gamemode=1;timer=1;access=0;mouseaccel=0;ducking=0;nagle=0;edgebg=1;startdelay=0;hotkeys=1'
+    Save-Setting TweakProfileAt ((Get-Date).AddDays(-1).ToString('s', [Globalization.CultureInfo]::InvariantCulture))
+    Update-ProfileTiles
+    # Sample cleaner results (sizes and file counts): the CI runner has almost nothing to clean
+    $cleanSample = @{ temp = 1.42GB; wintemp = 386MB; update = 2.1GB; dumps = 74MB; logs = 52MB; thumbs = 118MB; apps = 640MB; browser = 910MB; shaders = 1.2GB; recycle = 0
+                      _counts = @{ temp = 4812; wintemp = 933; update = 214; dumps = 12; logs = 37; thumbs = 9; apps = 2874; browser = 6120; shaders = 1530; recycle = 0 } }
+    # Sample log lines in the window language (Tweaks, Quick tools, Cleaner)
+    function Add-SampleLogs {
+        foreach ($n in 'TweakLog', 'ToolsLog', 'CleanLog') { Clear-Log $n }
+        Add-Log 'TweakLog' ((T 'profile.applying') -f (T 'profile.gaming'), 3)
+        Add-Log 'TweakLog' ((T 'toast.on') -f (T 'tw.timer')) ; Add-Log 'TweakLog' ((T 'toast.off') -f (T 'tw.mouseaccel'))
+        Add-Log 'ToolsLog' ((T 'qt.opened') -f (T 'qt.taskmgr'), 'taskmgr.exe')
+        Add-Log 'ToolsLog' ((T 'qt.running') -f (T 'qt.flushdns'))
+        Add-Log 'ToolsLog' ('{0}: {1}' -f (T 'qt.flushdns'), 'Successfully flushed the DNS Resolver Cache.')
+        Add-Log 'CleanLog' ((T 'cleaner.log.scan') -f (Format-Size 6.9GB), $cleanItems.Count)
+        # FiveM result log: each kind of line once
+        $script:fivemLog.Clear()
+        Add-FivemLog (T 'fivem.log.prio') 'step'; Add-FivemLog (T 'fivem.log.noproc') 'warn'
+        Add-FivemLog (T 'fivem.log.drivers') 'step'; Add-FivemLog 'GPU   NVIDIA GeForce RTX 4070  32.0.15.6094  2024-09-20' 'info'
+        Add-FivemLog ((T 'fivem.log.drivers.done') -f 1) 'done'
+    }
     Update-BoostCard
     $stats.Run = $false
     # A minute of sample usage for the lines in the CPU and RAM cards (CI takes one sample only)
@@ -34,6 +56,10 @@ if ($Screenshot) {
     $ui.EditionText.Text = 'Windows 11'; $ui.AboutVersion.Text = "$version  ·  Windows 11"
     $ui.PcName.Text = 'GAMING-PC'; $ui.OsLine.Text = 'Windows 11 Pro  ·  25H2'
     $ui.CpuName.Text = 'AMD Ryzen 7 7800X3D 8-Core Processor'; $ui.GpuName.Text = 'NVIDIA GeForce RTX 4070'
+    # The same sample PC in the System info of Quick tools
+    Show-Specs @{ Cpu = 'AMD Ryzen 7 7800X3D 8-Core Processor'; Cores = 8; Threads = 16; Ram = 16GB; Gpu = 'NVIDIA GeForce RTX 4070'; GpuDriver = '32.0.15.6094'
+                  OsName = 'Windows 11 Pro 25H2 (26200.6584)'; Arch = '64-bit' }
+    $ui.SysPc.Text = 'GAMING-PC'
     function Save-Shot([string]$file) {
         $size = New-Object System.Windows.Size $window.Width, $window.Height
         $rootEl.Measure($size)
@@ -50,10 +76,11 @@ if ($Screenshot) {
         $script:lang = $l
         Update-Language
         $ui.UpdateHint.Text = (T 'update.latest') -f $version; $ui.UpdateDot.Fill = $window.FindResource('Good')
+        Add-SampleLogs
         foreach ($p in $pages) {
             $ui["Nav$(Get-PageId $p)"].IsChecked = $true
             Show-Page $p
-            if ($p -eq 'cleaner') { $ui.CleanTotal.Text = '0 KB' }
+            if ($p -eq 'cleaner') { Show-CleanSizes $cleanSample }
             if ($p -eq 'gaming') {
                 # Show the progress bar and queue states once
                 $apps[2].State = 'install'; Update-AppRow $apps[2]; Set-Ring $apps[2].Ring 45; $apps[2].Sub.Text = (T 'stage.download') + ' 45%'; $apps[2].Sub.Foreground = $window.FindResource('Accent2')
@@ -87,6 +114,18 @@ if ($Screenshot) {
                     $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 60)); $sv.UpdateLayout()
                     Save-Shot "$p-$l-services.png"
                 }
+                if ($p -eq 'dashboard') {
+                    # The stat tiles and the Quick access grid
+                    $top = $ui.UsageGrid.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
+                    $sv.UpdateLayout(); $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 20)); $sv.UpdateLayout()
+                    Save-Shot "$p-$l-mid.png"
+                }
+                if ($p -eq 'tweaks') {
+                    # The profiles, the Action log and the first switch cards
+                    $top = $ui.ProfileGrid.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
+                    $sv.UpdateLayout(); $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 40)); $sv.UpdateLayout()
+                    Save-Shot "$p-$l-profiles.png"
+                }
                 if ($p -eq 'appearance') {
                     # The look and text size cards
                     $top = $ui.Zoom100.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
@@ -94,7 +133,7 @@ if ($Screenshot) {
                     Save-Shot "$p-$l-mid.png"
                 }
                 if ($p -eq 'boost') {
-                    # My games with one game (CI runner: Notepad) and the FiveM card
+                    # My games with one game (CI runner: Notepad) and the FiveM toolkit
                     if (!(Test-Path $gamesKey)) { New-Item -Path $gamesKey -Force | Out-Null }
                     Set-ItemProperty -Path $gamesKey -Name (Join-Path $windir 'notepad.exe') -Value 1 -Type DWord -Force
                     Set-GameProfile (Join-Path $windir 'notepad.exe') 'boost' 1; Set-GameProfile (Join-Path $windir 'notepad.exe') 'hvci' 0
@@ -102,6 +141,10 @@ if ($Screenshot) {
                     $top = $ui.GamesList.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
                     $sv.UpdateLayout(); $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 80)); $sv.UpdateLayout()
                     Save-Shot "$p-$l-mid.png"
+                    # The FiveM toolkit: action cards and the result log
+                    $top = $ui.FivemPrio.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
+                    $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 120)); $sv.UpdateLayout()
+                    Save-Shot "$p-$l-fivem.png"
                 }
                 $sv.UpdateLayout(); $sv.ScrollToVerticalOffset(100000); $sv.UpdateLayout()
                 Save-Shot "$p-$l-2.png"
@@ -127,7 +170,8 @@ if ($Screenshot) {
         $script:lang = $l
         Update-Language
         $ui.UpdateHint.Text = (T 'update.latest') -f $version; $ui.UpdateDot.Fill = $window.FindResource('Good')
-        foreach ($p in 'dashboard', 'boost', 'health', 'tweaks') { $ui["Nav$(Get-PageId $p)"].IsChecked = $true; Show-Page $p; Save-Shot "$p-$l.png" }
+        Add-SampleLogs
+        foreach ($p in 'dashboard', 'boost', 'health', 'tweaks', 'cleaner', 'quicktools') { $ui["Nav$(Get-PageId $p)"].IsChecked = $true; Show-Page $p; Save-Shot "$p-$l.png" }
         $ui.Welcome.Visibility = 'Visible'; Save-Shot "welcome-$l.png"; $ui.Welcome.Visibility = 'Collapsed'
     }
     $script:lang = 'en'; Update-Language
@@ -165,9 +209,13 @@ if ($Screenshot) {
     $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 150)); $sv.UpdateLayout(); Save-Shot 'tweaks-en-irq.png'
     $sv.ScrollToVerticalOffset($top + 260); $sv.UpdateLayout(); Save-Shot 'tweaks-en-irq2.png'
     $sv.ScrollToVerticalOffset(0)
+    # A narrow window (the smallest size): one column of switch cards, the cleaner summary under its list
+    $wide = $window.Width; $window.Width = $window.MinWidth
+    foreach ($p in 'tweaks', 'cleaner', 'dashboard') { $ui["Nav$(Get-PageId $p)"].IsChecked = $true; Save-Shot "narrow-$p.png" }
+    $window.Width = $wide
     # The light look
     Set-CenterLook 'light'
-    foreach ($p in 'dashboard', 'gaming', 'tweaks') { $ui["Nav$(Get-PageId $p)"].IsChecked = $true; Save-Shot "light-$p.png" }
+    foreach ($p in 'dashboard', 'gaming', 'tweaks', 'cleaner', 'quicktools') { $ui["Nav$(Get-PageId $p)"].IsChecked = $true; Save-Shot "light-$p.png" }
     Set-CenterLook 'dark'
     # The Akati OS cursors must load in Windows
     foreach ($c in Get-ChildItem -LiteralPath $akatiCursors -File) {

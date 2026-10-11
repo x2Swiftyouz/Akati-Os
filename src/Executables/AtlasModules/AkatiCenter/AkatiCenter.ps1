@@ -196,6 +196,22 @@ function Set-Language {
     }
     $ui.LangLabel.Text = T 'lang'
     $ui.PageTitle.Text = T "nav.$script:page"
+    Update-NavHeads
+    foreach ($name in 'TweakLog', 'ToolsLog', 'CleanLog') { Show-Log $name }
+}
+# Sidebar group headings: upper case with a little space between the letters (WPF has no letter spacing).
+# Thai has no capitals and its vowel marks must stay on their letter, so Thai headings are left as they are.
+function Update-NavHeads {
+    foreach ($h in @($ui.NavDashboard.Parent.Children | Where-Object { $_ -is [System.Windows.Controls.TextBlock] })) {
+        $text = T $h.Tag.Substring(2)
+        if ($text -notmatch '[\u0E00-\u0E7F]') {
+            $parts = New-Object System.Collections.ArrayList
+            $e = [Globalization.StringInfo]::GetTextElementEnumerator($text.ToUpper((Get-LangCulture)))
+            while ($e.MoveNext()) { [void]$parts.Add($e.GetTextElement()) }
+            $text = $parts -join [string][char]0x200A
+        }
+        $h.Text = $text
+    }
 }
 
 function Set-Status([string]$text, [bool]$busy = $false) {
@@ -204,17 +220,39 @@ function Set-Status([string]$text, [bool]$busy = $false) {
     $ui.StatusDot.Fill = if ($busy) { $window.FindResource('Accent2') } else { $window.FindResource('Good') }
 }
 
+# Monospace logs with the time of each line: TweakLog (Tweaks), ToolsLog (Quick tools), CleanLog (Cleaner).
+# Kept while the window is open (the last 200 lines); the change history on the Health page is the saved record.
+$script:logs = @{}
+function Add-Log([string]$name, [string]$text) {
+    if (!$script:logs.ContainsKey($name)) { $script:logs[$name] = New-Object System.Collections.ArrayList }
+    $list = $script:logs[$name]
+    [void]$list.Add(('[{0}]  {1}' -f (Get-Date).ToString('HH:mm:ss', [Globalization.CultureInfo]::InvariantCulture), $text))
+    while ($list.Count -gt 200) { $list.RemoveAt(0) }
+    Show-Log $name
+}
+function Show-Log([string]$name) {
+    $box = $ui[$name]
+    if (!$box) { return }
+    $list = $script:logs[$name]
+    if ($list -and $list.Count) { $box.Text = $list -join "`r`n"; $box.ScrollToEnd() } else { $box.Text = T 'log.empty' }
+}
+function Clear-Log([string]$name) { $script:logs.Remove($name); Show-Log $name }
+
 # ---------------------------------------------------------------------------------------------
 # Look: dark or light. The XAML uses these brushes as DynamicResource; their colors are changed in place,
 # so elements that hold a brush from code change too. Mica: see-through versions of the two backgrounds.
 # ---------------------------------------------------------------------------------------------
+# Dark: near-black backgrounds with thin borders. LogBg: the monospace logs; NavHover: a sidebar item under the mouse;
+# Danger / Warn: the red and amber badges (Soft: their see-through backgrounds).
 $looks = @{
-    dark  = @{ Text = '#F5F5F7'; Text2 = '#EBEBF0'; Text3 = '#D1D1D6'; RootBg = '#1C1C1E'; SidebarBg = '#232325'; CardBg = '#2A2A2C'; CardBorder = '#38383A'
-               Line = '#38383A'; Fill = '#3A3A3C'; FillHover = '#48484A'; Field = '#2E2E30'; Popup = '#2C2C2E'; Handle = '#5A5A5E'; SegmentOn = '#4A4A4D'
-               MutedBrush = '#98989D'; Good = '#5FD38D'; CardBorderHover = '#4C4C50'; MicaRoot = '#D01C1C1E'; MicaSidebar = '#90232325' }
+    dark  = @{ Text = '#F5F5F7'; Text2 = '#EBEBF0'; Text3 = '#D1D1D6'; RootBg = '#0D0D10'; SidebarBg = '#111114'; CardBg = '#16161A'; CardBorder = '#26262D'
+               Line = '#24242A'; Fill = '#24242B'; FillHover = '#30303A'; Field = '#1A1A1F'; Popup = '#1C1C22'; Handle = '#4A4A54'; SegmentOn = '#34343D'
+               MutedBrush = '#8E8E96'; Good = '#5FD38D'; CardBorderHover = '#3A3A44'; MicaRoot = '#D80D0D10'; MicaSidebar = '#A0111114'
+               LogBg = '#0A0A0D'; NavHover = '#1B1B21'; Danger = '#FF6B63'; DangerSoft = '#26FF453A'; Warn = '#FFB340'; WarnSoft = '#26FF9F0A' }
     light = @{ Text = '#1D1D1F'; Text2 = '#1D1D1F'; Text3 = '#3C3C43'; RootBg = '#F5F5F7'; SidebarBg = '#E9E9EE'; CardBg = '#FFFFFF'; CardBorder = '#DEDEE3'
-               Line = '#E1E1E6'; Fill = '#EDEDF1'; FillHover = '#E0E0E5'; Field = '#E2E2E7'; Popup = '#FFFFFF'; Handle = '#B8B8BE'; SegmentOn = '#FFFFFF'
-               MutedBrush = '#6E6E73'; Good = '#1F9D57'; CardBorderHover = '#C8C8CF'; MicaRoot = '#D0F5F5F7'; MicaSidebar = '#90E9E9EE' }
+               Line = '#E1E1E6'; Fill = '#EDEDF1'; FillHover = '#E0E0E5'; Field = '#F0F0F3'; Popup = '#FFFFFF'; Handle = '#B8B8BE'; SegmentOn = '#FFFFFF'
+               MutedBrush = '#6E6E73'; Good = '#1F9D57'; CardBorderHover = '#C8C8CF'; MicaRoot = '#D0F5F5F7'; MicaSidebar = '#90E9E9EE'
+               LogBg = '#F4F4F7'; NavHover = '#DDDDE3'; Danger = '#D70015'; DangerSoft = '#1FFF3B30'; Warn = '#A05A00'; WarnSoft = '#24FF9500' }
 }
 function Set-ThemeBrush([string]$key, [string]$hex) {
     $color = [System.Windows.Media.ColorConverter]::ConvertFromString($hex)
@@ -230,10 +268,24 @@ function Get-LookName {
     if ($choice -eq 'time') { $h = (Get-Date).Hour; if ($h -ge 7 -and $h -lt 19) { return 'light' } else { return 'dark' } }
     if ((Get-RegValue 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize' 'AppsUseLightTheme') -eq 1) { 'light' } else { 'dark' }
 }
+# The accent as a soft tint (selected sidebar item, icon boxes), a border and a text color. The text color is the
+# light shade on the dark look and the base shade on the light look, so it stays readable on both.
+$script:accentPair = @{ Base = '#8A3FD6'; Light = '#B07CF0' }
+function Update-AccentBrushes {
+    $base = [System.Windows.Media.ColorConverter]::ConvertFromString($script:accentPair.Base)
+    $light = $script:look -eq 'light'
+    $text = if ($light) { $base } else { [System.Windows.Media.ColorConverter]::ConvertFromString($script:accentPair.Light) }
+    $res = $window.Resources
+    # ::new, not New-Object (WPF does not take a PSObject as a brush)
+    $res['AccentText'] = [System.Windows.Media.SolidColorBrush]::new($text)
+    $res['AccentSoft'] = [System.Windows.Media.SolidColorBrush]::new([System.Windows.Media.Color]::FromArgb($(if ($light) { 0x1F } else { 0x26 }), $base.R, $base.G, $base.B))
+    $res['AccentLine'] = [System.Windows.Media.SolidColorBrush]::new([System.Windows.Media.Color]::FromArgb($(if ($light) { 0x70 } else { 0x80 }), $base.R, $base.G, $base.B))
+}
 function Set-CenterLook([string]$name) {
     $script:look = $name
     $palette = $looks[$name]
     foreach ($key in $palette.Keys) { if ($key -notlike 'Mica*') { Set-ThemeBrush $key $palette[$key] } }
+    Update-AccentBrushes
     if ($script:micaHwnd) {
         Set-ThemeBrush 'RootBg' $palette.MicaRoot; Set-ThemeBrush 'SidebarBg' $palette.MicaSidebar
         $dark = if ($name -eq 'dark') { 1 } else { 0 }
@@ -315,12 +367,15 @@ if ($null -ne $script:exitNow) { exit $script:exitNow }
 . (Join-Path $appDir 'AkatiCenter.appearance.ps1')
 . (Join-Path $appDir 'AkatiCenter.system.ps1')
 . (Join-Path $appDir 'AkatiCenter.health.ps1')
+. (Join-Path $appDir 'AkatiCenter.quicktools.ps1')
 
 # ---------------------------------------------------------------------------------------------
 # Navigation, title bar, language
 # ---------------------------------------------------------------------------------------------
 Add-Mark 'Navigation, title bar, language'
-$pages = 'dashboard', 'gaming', 'boost', 'tweaks', 'health', 'cleaner', 'uninstall', 'appearance', 'about'
+# In the order of the sidebar: Ctrl+1 to Ctrl+9 open the first nine, About is the tenth (Ctrl+Tab, Ctrl+K).
+# Ctrl+0 stays the text size reset.
+$pages = 'dashboard', 'gaming', 'boost', 'tweaks', 'health', 'cleaner', 'uninstall', 'quicktools', 'appearance', 'about'
 $script:page = 'dashboard'
 function Get-PageId([string]$p) { [Globalization.CultureInfo]::InvariantCulture.TextInfo.ToTitleCase($p) }
 # Numbers count up from 0 when a page opens (Akati Score, usage): ease-out over about 0.7 s.
@@ -353,6 +408,7 @@ function Show-Page([string]$name) {
     if ($name -eq 'tweaks') { Initialize-Tweaks }
     if ($name -eq 'gaming') { Initialize-Apps }
     if ($name -eq 'appearance') { Initialize-Appearance }
+    if ($name -eq 'quicktools') { Initialize-QuickTools }
     if ($name -eq 'uninstall' -and !$script:uninstLoaded) { $script:uninstLoaded = $true; Start-UninstLoad }
     if ($name -eq 'boost' -and !$script:startupShown) { $script:startupShown = $true; Show-StartupItems; Start-BgTasks; Test-BalTray }
     if ($name -eq 'boost') { Show-BalLog }
@@ -383,6 +439,7 @@ function Show-Page([string]$name) {
         Update-Week
         Start-CountUp $ui.CpuValue $stats.Cpu $percentText; Start-CountUp $ui.RamValue $stats.Ram $percentText
         if ($stats.Gpu -ge 0) { Start-CountUp $ui.GpuValue $stats.Gpu $percentText }
+        if ($script:diskUsed -ge 0) { Start-CountUp $ui.DiskValue $script:diskUsed $percentText }
     }
     if ($name -eq 'health') {
         if ($ui.ScoreValue.Text -match '^\d+$') { Start-CountUp $ui.ScoreValue ([int]$ui.ScoreValue.Text) $numberText 900 }
@@ -505,6 +562,9 @@ function Get-SpotlightItems {
         & $add ([IO.Path]::GetFileNameWithoutExtension($g)) '' (T 'spot.game') ([char]0xE7FC) { param($d) Start-Process explorer.exe -ArgumentList "`"$d`"" } $g
     }
     foreach ($ci in $cleanItems) { & $add (T "clean.$($ci.Key)") (Get-Both "clean.$($ci.Key)") (T 'nav.cleaner') $ci.Glyph { param($d) $ui.NavCleaner.IsChecked = $true } $null }
+    foreach ($qt in $quickTools) {
+        & $add (T "qt.$($qt.Key)") ((Get-Both "qt.$($qt.Key)") + ' ' + $qt.Words) (T 'nav.quicktools') $qt.Glyph { param($d) Invoke-QuickTool $d } $qt (Get-Both "qt.$($qt.Key).d")
+    }
     & $add (T 'act.freeram') (Get-Both 'act.freeram') (T 'spot.action') ([char]0xE964) { param($d) Invoke-FreeRam } $null
     & $add (T 'act.flushdns') (Get-Both 'act.flushdns') (T 'spot.action') ([char]0xE774) { param($d) & ipconfig.exe /flushdns *> $null; Set-Status (T 'status.dnsflushed') } $null
     # Windows starts Explorer again by itself (AutoRestartShell), as the user and not as administrator
@@ -648,13 +708,19 @@ function Set-AppLanguage([string]$l) {
     Update-Language
 }
 # Narrow sidebar: icons only, the page names show as tooltips
-$navButtons = @($ui.NavDashboard, $ui.NavGaming, $ui.NavBoost, $ui.NavTweaks, $ui.NavHealth, $ui.NavCleaner, $ui.NavUninstall, $ui.NavAppearance, $ui.NavAbout)
+$navButtons = @($pages | ForEach-Object { $ui["Nav$(Get-PageId $_)"] })
 $script:compact = $false
 function Set-Compact([bool]$on) {
     $script:compact = $on
     $ui.SideColumn.Width = New-Object System.Windows.GridLength ($(if ($on) { 96 } else { 248 }))
     $vis = if ($on) { 'Collapsed' } else { 'Visible' }
     $ui.Brand.Visibility = $vis; $ui.SpotlightButton.Visibility = $vis; $ui.SideBottom.Visibility = $vis
+    # Group headings: hidden in the narrow sidebar, a small gap keeps the groups apart
+    foreach ($h in @($ui.NavDashboard.Parent.Children | Where-Object { $_ -is [System.Windows.Controls.TextBlock] })) {
+        $h.Visibility = $vis
+    }
+    foreach ($b in $navButtons) { $b.Margin = '0,1' }
+    if ($on) { foreach ($n in 'NavGaming', 'NavTweaks', 'NavUninstall', 'NavAppearance') { $ui[$n].Margin = '0,9,0,1' } }
     foreach ($b in $navButtons) {
         $label = $b.Content.Children[1]
         $label.Visibility = $vis
@@ -706,6 +772,10 @@ function Update-Language {
     Update-BoostCard
     Set-PingButton
     Show-SystemList
+    Update-ProfileTiles
+    Update-CleanTotal
+    if ($script:specs) { Show-Specs $script:specs }
+    foreach ($n in 'SysCopyOs', 'SysCopyArch', 'SysCopyPc') { $ui[$n].ToolTip = T 'sys.copy' }
 }
 
 # Welcome, the first time Akati OS Center opens

@@ -407,15 +407,44 @@ function Update-Fivem {
     $found = Test-Path -LiteralPath $fivemExe
     $ui.FivemState.Text = if ($found) { (T 'fivem.found') -f $fivemDir } else { T 'fivem.none' }
     foreach ($b in $ui.FivemClear, $ui.FivemOpen, $ui.FivemAdd) { $b.IsEnabled = $found }
+    if (!$script:fivemLog.Count) { Show-FivemLog }
     $ui.FivemServerHint.Visibility = if ($ui.FivemServer.Text) { 'Collapsed' } else { 'Visible' }
 }
 $ui.FivemServer.Text = [string](Get-RegValue $settingsKey 'FivemServer')
 $ui.FivemServer.Add_TextChanged({ $ui.FivemServerHint.Visibility = if ($this.Text) { 'Collapsed' } else { 'Visible' } })
 $ui.FivemOpen.Add_Click({ Start-Process explorer.exe -ArgumentList "`"$fivemDir`"" })
 $ui.FivemAdd.Add_Click({ Add-Game $fivemExe; Set-Status (T 'fivem.added') })
+# Result log of the FiveM toolkit: one colored line per step (step = accent, done = green, warn = amber,
+# error = red, info = normal text), with the time in front. Kept while the window is open.
+$script:fivemLog = New-Object System.Collections.ArrayList
+function Add-FivemLog([string]$text, [string]$kind = 'info') {
+    [void]$script:fivemLog.Add(@{ Time = (Get-Date).ToString('HH:mm:ss', [Globalization.CultureInfo]::InvariantCulture); Text = $text; Kind = $kind })
+    while ($script:fivemLog.Count -gt 100) { $script:fivemLog.RemoveAt(0) }
+    Show-FivemLog
+}
+function Show-FivemLog {
+    $ui.FivemLog.Children.Clear()
+    if (!$script:fivemLog.Count) {
+        $t = New-Text (T 'log.empty') 11; $t.SetResourceReference([System.Windows.Controls.TextBlock]::ForegroundProperty, 'MutedBrush')
+        [void]$ui.FivemLog.Children.Add($t); return
+    }
+    $colors = @{ step = 'AccentText'; done = 'Good'; warn = 'Warn'; error = 'Danger'; info = 'Text3' }
+    foreach ($line in $script:fivemLog) {
+        $tb = New-Object System.Windows.Controls.TextBlock
+        $tb.TextWrapping = 'Wrap'; $tb.Margin = '0,1'
+        $time = New-Object System.Windows.Documents.Run ("[$($line.Time)]  ")
+        $time.SetResourceReference([System.Windows.Documents.TextElement]::ForegroundProperty, 'MutedBrush')
+        $msg = New-Object System.Windows.Documents.Run $line.Text
+        $msg.SetResourceReference([System.Windows.Documents.TextElement]::ForegroundProperty, $colors[$line.Kind])
+        [void]$tb.Inlines.Add($time); [void]$tb.Inlines.Add($msg)
+        [void]$ui.FivemLog.Children.Add($tb)
+    }
+    $ui.FivemLogScroll.ScrollToEnd()
+}
 # The cache folders FiveM rebuilds by itself; game files, settings and saved data stay
 $ui.FivemClear.Add_Click({
-    if (Get-Process -Name 'FiveM*' -ErrorAction SilentlyContinue) { Set-Status (T 'fivem.running'); return }
+    Add-FivemLog (T 'fivem.log.clear') 'step'
+    if (Get-Process -Name 'FiveM*' -ErrorAction SilentlyContinue) { Set-Status (T 'fivem.running'); Add-FivemLog (T 'fivem.running') 'warn'; return }
     $bytes = 0
     foreach ($name in 'cache', 'server-cache', 'server-cache-priv') {
         $dir = Join-Path $fivemData $name
@@ -424,6 +453,90 @@ $ui.FivemClear.Add_Click({
         Remove-Item -LiteralPath $dir -Recurse -Force -ErrorAction SilentlyContinue
     }
     Set-Status ((T 'fivem.cleared') -f (Format-Size $bytes))
+    Add-FivemLog ((T 'fivem.cleared') -f (Format-Size $bytes)) 'done'
+})
+# High priority for the running game now (FiveM starts GTA V as FiveM_<build>_GTAProcess). Only for this
+# session: the game starts with its normal priority next time (High priority in My games keeps it).
+$ui.FivemPrio.Add_Click({
+    Add-FivemLog (T 'fivem.log.prio') 'step'
+    $procs = @(Get-Process -Name 'FiveM', 'FiveM_*GTAProcess', 'GTA5' -ErrorAction SilentlyContinue)
+    if (!$procs.Count) { Add-FivemLog (T 'fivem.log.noproc') 'warn'; Set-Status (T 'fivem.log.noproc'); return }
+    $done = @(foreach ($p in $procs) {
+        try { $p.PriorityClass = 'High'; $p.ProcessName } catch { Add-FivemLog "$($p.ProcessName): $($_.Exception.Message)" 'error' }
+    })
+    if ($done.Count) { Add-FivemLog ((T 'fivem.log.prio.done') -f (($done | Select-Object -Unique) -join ', ')) 'done'; Set-Status ((T 'fivem.log.prio.done') -f (($done | Select-Object -Unique) -join ', ')) }
+})
+# Background downloads: the update and download services of Game boost (Windows Update, BITS, Delivery
+# Optimization), stopped like Game boost does with sc.exe. A second click starts the paused ones again;
+# Windows also starts them by itself when they are needed.
+$fivemDownloadServices = @($boostServices | Where-Object { $_ -in 'wuauserv', 'BITS', 'DoSvc' })
+$ui.FivemPause.Add_Click({
+    $paused = @(Get-RegValue $settingsKey 'FivemPaused' | Where-Object { $_ })
+    $resume = $paused.Count -gt 0
+    Add-FivemLog (T $(if ($resume) { 'fivem.log.resume' } else { 'fivem.log.pause' })) 'step'
+    $ui.FivemPause.IsEnabled = $false
+    Start-Work {
+        param($names, $resume)
+        if ($resume) { foreach ($n in $names) { & sc.exe start $n | Out-Null }; return , @($names) }
+        $running = @(Get-Service -Name $names -ErrorAction SilentlyContinue | Where-Object { $_.Status -eq 'Running' } | ForEach-Object { $_.Name })
+        foreach ($n in $running) { & sc.exe stop $n | Out-Null }
+        return , $running
+    } @(([string[]]$(if ($resume) { $paused } else { $fivemDownloadServices })), $resume) {
+        param($r, $resume)
+        $ui.FivemPause.IsEnabled = $true
+        $names = @(Get-LastOutput $r | Where-Object { $_ })
+        if ($resume) {
+            Remove-ItemProperty -Path $settingsKey -Name FivemPaused -ErrorAction SilentlyContinue
+            Add-FivemLog ((T 'fivem.log.resume.done') -f ($names -join ', ')) 'done'
+        } elseif ($names.Count) {
+            Save-Setting FivemPaused ([string[]]$names)
+            Add-FivemLog ((T 'fivem.log.pause.done') -f ($names -join ', ')) 'done'
+        } else { Add-FivemLog (T 'fivem.log.pause.none') 'warn' }
+    } $resume
+})
+# Network reset: flush the DNS cache and reset the Winsock catalog. Winsock is read when Windows starts, so a
+# restart is needed (the restart bar shows).
+$ui.FivemNet.Add_Click({
+    if (!$Screenshot -and [System.Windows.MessageBox]::Show((T 'fivem.net.ask'), 'Akati OS Center', 'YesNo', 'Warning') -ne 'Yes') { return }
+    Add-FivemLog (T 'fivem.log.net') 'step'
+    $ui.FivemNet.IsEnabled = $false
+    Start-Work {
+        $out = @()
+        $out += (& ipconfig.exe /flushdns 2>&1 | Out-String).Trim()
+        $out += (& netsh.exe winsock reset 2>&1 | Out-String).Trim()
+        @{ Code = $LASTEXITCODE; Text = (($out -join ' ') -replace '\s+', ' ') }
+    } @() {
+        param($r)
+        $ui.FivemNet.IsEnabled = $true
+        $res = Get-LastOutput $r
+        if ($res -is [hashtable] -and $res.Code -eq 0) {
+            Add-FivemLog (T 'fivem.log.net.done') 'done'
+            Add-FivemLog (T 'tw.badge.restart') 'warn'
+            Set-RestartNeeded; Set-Status (T 'fivem.log.net.done')
+        } else { Add-FivemLog $(if ($res -is [hashtable]) { $res.Text } else { T 'fivem.log.fail' }) 'error' }
+    } $null
+})
+# Drivers: name, version and date of the graphics, audio and network drivers (read in the background).
+# Only real devices (PCI, USB, HD audio); no hardware IDs are shown.
+$ui.FivemDrivers.Add_Click({
+    Add-FivemLog (T 'fivem.log.drivers') 'step'
+    $ui.FivemDrivers.IsEnabled = $false
+    Start-Work {
+        @(Get-CimInstance Win32_PnPSignedDriver -ErrorAction SilentlyContinue |
+            Where-Object { $_.DeviceClass -in 'DISPLAY', 'MEDIA', 'NET' -and $_.DeviceName -and $_.DriverVersion -and $_.DeviceID -match '^(PCI|USB|HDAUDIO)\\' } |
+            Sort-Object DeviceClass, DeviceName | ForEach-Object {
+                $date = if ($_.DriverDate) { ([datetime]$_.DriverDate).ToString('yyyy-MM-dd') } else { '-' }
+                @{ Class = [string]$_.DeviceClass; Name = [string]$_.DeviceName; Version = [string]$_.DriverVersion; Date = $date }
+            })
+    } @() {
+        param($r)
+        $ui.FivemDrivers.IsEnabled = $true
+        $list = @($r | ForEach-Object { if ($_ -is [psobject]) { $_.psobject.BaseObject } else { $_ } } | Where-Object { $_ -is [hashtable] })
+        if (!$list.Count) { Add-FivemLog (T 'fivem.log.drivers.none') 'warn'; return }
+        $labels = @{ DISPLAY = 'GPU'; MEDIA = 'AUDIO'; NET = 'NET' }
+        foreach ($d in $list) { Add-FivemLog ('{0,-5} {1}  {2}  {3}' -f $labels[$d.Class], $d.Name, $d.Version, $d.Date) 'info' }
+        Add-FivemLog ((T 'fivem.log.drivers.done') -f $list.Count) 'done'
+    } $null
 })
 # Connection time: TCP connect to the server (FiveM uses port 30120 when none is given), the average of 3 tries
 $ui.FivemPing.Add_Click({

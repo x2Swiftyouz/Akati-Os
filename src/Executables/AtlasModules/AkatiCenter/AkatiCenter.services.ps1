@@ -31,7 +31,7 @@ $svcInfo = [ordered]@{
     SSDPSRV = @('careful', 3); upnphost = @('careful', 3, 'SSDPSRV'); lmhosts = @('careful', 3); RasMan = @('careful', 3); SstpSvc = @('careful', 3, 'RasMan')
     seclogon = @('careful', 3); SensorService = @('careful', 3); SensrSvc = @('careful', 3, 'SensorService'); SensorDataService = @('careful', 3, 'SensorService')
     NvContainerLocalSystem = @('careful', 2); W32Time = @('careful', 3); DPS = @('careful', 2); WdiServiceHost = @('careful', 3, 'DPS')
-    WdiSystemHost = @('careful', 3, 'DPS'); wuauserv = @('careful', 3); BITS = @('careful', 3)
+    WdiSystemHost = @('careful', 3, 'DPS'); wuauserv = @('careful', 3); BITS = @('careful', 3); DoSvc = @('careful', 2)
     # Keep on: Windows or common hardware needs them
     Themes = @('keep', 2); WlanSvc = @('keep', 2); LanmanWorkstation = @('keep', 2); ShellHWDetection = @('keep', 2); InstallService = @('keep', 3)
     TokenBroker = @('keep', 3); FrameServer = @('keep', 3); UsoSvc = @('keep', 2); DusmSvc = @('keep', 2); WaaSMedicSvc = @('keep', 3)
@@ -160,6 +160,7 @@ function Invoke-ServiceSwitch($toggle) {
 }
 # Sets the start type of a service (4 = turned off) with history, Undo, and the Windows Update check lists. A service
 # turned off is also stopped now (not the services that depend on it); one turned on as automatic is started.
+# A key administrators cannot change (WaaSMedicSvc and others) is set in the background as TrustedInstaller ($svcStartWork).
 function Set-ServiceStart([string]$name, [int]$to, [switch]$Quiet) {
     if ($name -in $criticalServices -or $to -notin 2, 3, 4) { return }
     $key = "$servicesKey\$name"
@@ -167,7 +168,18 @@ function Set-ServiceStart([string]$name, [int]$to, [switch]$Quiet) {
     $from = [int](Get-RegValue $key 'Start')
     if ($from -eq $to) { Update-ServiceRow $name; return }
     try { Set-ItemProperty -Path $key -Name Start -Value $to -Type DWord -Force -ErrorAction Stop }
-    catch { Set-Status "$name`: $($_.Exception.Message)"; Update-ServiceRow $name; return }
+    catch {
+        Start-Work $svcStartWork @($false, $null, @{ $name = $to }) {
+            param($r, $c)
+            $err = Get-LastOutput $r
+            if ($err -is [string] -and $err) { Set-Status "$($c.Name): $err"; Update-ServiceRow $c.Name }
+            else { Complete-ServiceStart $c.Name $c.To $c.From $c.Quiet }
+        } @{ Name = $name; To = $to; From = $from; Quiet = [bool]$Quiet }
+        return
+    }
+    Complete-ServiceStart $name $to $from ([bool]$Quiet)
+}
+function Complete-ServiceStart([string]$name, [int]$to, [int]$from, [bool]$Quiet) {
     Add-ChangeHistory "svc:$name" "$to,$from"
     Update-WuTrack @("svc:$name") ($to -ne 4)
     $msg = (T $(if ($to -eq 4) { 'toast.off' } else { 'toast.on' })) -f (Get-ServiceLabel $name)

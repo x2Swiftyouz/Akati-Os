@@ -113,7 +113,7 @@ $wuSeedServices = [string[]]@(@($serviceGroups.Values | ForEach-Object { $_.Keys
     'wercplsupport', 'UCPD', 'diagnosticshub.standardcollector.service', 'MSDTC', 'SysMain', 'WSearch', 'RemoteRegistry'))
 # The Tweaks switches that turn services off ($serviceGroups) and the AtlasOS settings (folder) for baseline entries
 $wuTweakServices = @{ extrasvc = 'extra'; svcxbox = 'xbox'; svciphelper = 'iphelper'; svchello = 'hello'; svcscanner = 'scanner'; svchotspot = 'hotspot'
-                      svcnotify = 'notify'; svccdp = 'cdp'; svcprint = 'print'; svcbt = 'bluetooth' }
+                      svcnotify = 'notify'; svccdp = 'cdp'; svcprint = 'print'; svcbt = 'bluetooth'; svcwu = 'wu'; svctime = 'time'; svcdo = 'dosvc' }
 $wuAtlasKeys = @{ 'Recall' = @('pol:recall'); 'Microsoft Copilot' = @('pol:copilot'); 'Printing' = @('svc:Spooler', 'svc:PrintNotify'); 'Superfetch' = @('svc:SysMain')
                   'Search Indexing' = @('svc:WSearch'); 'Bluetooth' = @('svc:bthserv', 'svc:BTAGService', 'svc:BthAvctpSvc'); 'Microsoft Store' = @('app:Microsoft.WindowsStore') }
 function Save-List([string]$name, [string[]]$list) {

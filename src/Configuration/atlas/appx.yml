@@ -60,6 +60,8 @@ actions:
   - !appx: {name: 'Microsoft.People*', type: family}
   - !appx: {name: 'Microsoft.PowerAutomateDesktop*', type: family}
   - !appx: {name: 'Microsoft.ScreenSketch*', type: family, option: 'remove-snipping-tool'}
+    # Akati OS: Paint (option "remove-paint", ticked by default); installed again from the Microsoft Store
+  - !appx: {name: 'Microsoft.Paint*', type: family, option: 'remove-paint'}
   - !appx: {name: 'Microsoft.SkypeApp*', type: family}
   - !appx: {name: 'Microsoft.Todos*', type: family}
   - !appx: {name: 'Microsoft.WindowsAlarms*', type: family}

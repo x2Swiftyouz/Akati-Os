@@ -82,3 +82,4 @@ actions:
   - !task: {path: 'tweaks.yml'}
   # Akati OS: after all AtlasOS tasks, which would turn search indexing back on
   - !task: {path: 'tweaks\misc\akati-services.yml'}
+  - !task: {path: 'tweaks\misc\akati-more-services.yml'}

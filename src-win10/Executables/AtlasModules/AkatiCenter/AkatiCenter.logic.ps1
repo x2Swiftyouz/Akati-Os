@@ -208,7 +208,7 @@ function ConvertFrom-ProfileText([string]$text) {
 $gameTweakSkip = 'store', 'tray', 'desktopmenu', 'hotkeys', 'widget', 'schedtheme', 'updatenotify', 'darkmode', 'accentbars', 'transparency'
 # Switches that need a restart (the Restart switches of AkatiCenter.tweaks.ps1; tools/test-center.ps1 checks the list)
 $restartTweaks = 'hags', 'timer', 'access', 'nagle', 'mpo', 'msi', 'memcomp', 'extrasvc', 'svcxbox', 'svciphelper', 'svchello', 'svcscanner',
-    'svchotspot', 'svcnotify', 'svccdp', 'svcprint', 'svcbt', 'vbs'
+    'svchotspot', 'svcnotify', 'svccdp', 'svcprint', 'svcbt', 'svcwu', 'svctime', 'svcdo', 'vbs'
 # What a game profile changes: the switches of $map that differ from $current (key -> $true or $false; $null or missing
 # when it cannot be read here). $restart: keys that need a restart, skipped and reported. $only: when given, the only
 # keys that can be set here (the icon next to the clock: switches without administrator rights); the others are

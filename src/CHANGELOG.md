@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- Setup: "Turn off Windows Update completely" on the Windows Update page (not the default). It also turns off the Windows Update, Update Orchestrator and Windows Update Medic services, so the PC gets no updates at all, security updates included, until you turn it back on in Akati OS Center > Tweaks > Services
+- Setup: two "More services to turn off" pages, all ticked: Xbox services (Game Pass and the Xbox app sign-in need them; Xbox controllers keep working), Bluetooth (headsets, controllers and mice stop working), Windows Time (the clock no longer syncs by itself) and Delivery Optimization (Store and Windows Update downloads may be slower). Services this Windows does not have are skipped
+- Setup: "Remove Paint", ticked by default. Install Paint again from the Microsoft Store
+- Tweaks > Services: switches for Windows Update, Windows Time and Delivery Optimization, to turn them back on with the Windows default start types. Service keys that administrators cannot change are set as TrustedInstaller
+
+### Changed
+- Tweaks > Services: "Turn off Xbox services" leaves the Xbox controller service on. Switching it off also turns the controller service back on when an older version turned it off
+- Tweaks > Services: the Bluetooth switch also shows when Bluetooth is off, so you can turn it back on after setup
+- Service helper: Delivery Optimization has a short explanation and a Careful badge
+
 ## v1.12.0
 
 ### Added

@@ -30,8 +30,9 @@ Change later: Akati OS Center > Tweaks > Security > Mitigations
 
 - **Disable Automatic Windows Updates** (default): Windows does not install updates by itself. You still get update notifications. Install updates yourself in Settings, regularly.
 - **Enable Automatic Windows Updates**: the normal Windows behaviour.
+- **Turn off Windows Update completely** (`updates-off`, not the default): does what the first option does, and also disables (`Start` = 4) the Windows Update services: Windows Update (`wuauserv`), Update Orchestrator (`UsoSvc`) and Windows Update Medic (`WaaSMedicSvc`, set as TrustedInstaller). **This PC gets no updates at all while it is on, security updates included.** Turn it back on any time: Akati OS Center > Tweaks > **Services** > **Turn off Windows Update**, switch it off (Start back to the Windows defaults: `wuauserv` 3, `UsoSvc` 2, `WaaSMedicSvc` 3), then restart.
 
-**ภาษาไทย**: ค่าเริ่มต้นคือปิดการอัปเดตอัตโนมัติ Windows จะแค่แจ้งเตือน คุณต้องเข้า Settings ไปอัปเดตเองเป็นประจำ เพราะอัปเดตความปลอดภัยสำคัญมาก
+**ภาษาไทย**: ค่าเริ่มต้นคือปิดการอัปเดตอัตโนมัติ Windows จะแค่แจ้งเตือน คุณต้องเข้า Settings ไปอัปเดตเองเป็นประจำ เพราะอัปเดตความปลอดภัยสำคัญมาก ตัวเลือก "Turn off Windows Update completely" จะปิด Windows Update ทั้งหมด เครื่องจะไม่ได้รับอัปเดตความปลอดภัยเลยตราบที่ยังปิดอยู่ เปิดกลับได้ที่ Akati OS Center > ปรับแต่ง > Services > ปิด Windows Update (ปิดสวิตช์) แล้วรีสตาร์ต
 Change later: Akati OS Center > Tweaks > General Configuration > Automatic Updates
 
 ## General options
@@ -50,10 +51,11 @@ Change later: Akati OS Center > Tweaks > General Configuration (Hibernation, Pow
 ## Software options
 
 - **Remove Snipping Tool App**: removes the Snipping Tool app.
+- **Remove Paint** (ticked by default): removes Paint. Windows 11: the Paint app (`Microsoft.Paint`); install it again from the Microsoft Store. Windows 10: classic Paint (the Windows capability `Microsoft.Windows.MSPaint`) and the Store Paint app when it is installed; install classic Paint again from Settings > Apps > Optional features (Add a feature > Microsoft Paint).
 - **Remove Microsoft Edge**: removes Edge. Install another browser first, or tick "Install a Browser".
 - **Install a Browser**: shows the browser page (see [Web browsers](#web-browsers)).
 
-**ภาษาไทย**: เลือกเอา Snipping Tool หรือ Microsoft Edge ออก ถ้าเอา Edge ออกให้ติ๊ก "Install a Browser" ด้วย จะได้มีเบราว์เซอร์ใช้
+**ภาษาไทย**: "Remove Paint" ติ๊กไว้เป็นค่าเริ่มต้น จะลบ Paint ออก ติดตั้งกลับได้จาก Microsoft Store (Windows 11) หรือ Settings > Optional features (Windows 10) เลือกเอา Snipping Tool หรือ Microsoft Edge ออก ถ้าเอา Edge ออกให้ติ๊ก "Install a Browser" ด้วย จะได้มีเบราว์เซอร์ใช้
 
 ## Web browsers
 
@@ -94,11 +96,26 @@ Untick it if you use a printer or share files between PCs at home. A restart (se
 
 **Turn off more unused services** is ticked by default. It disables (`Start` = 4) AllJoyn Router (`AJRouter`), Fax, Downloaded Maps Manager (`MapsBroker`), Phone Service (`PhoneSvc`), Retail Demo (`RetailDemo`), Windows Insider (`wisvc`), Smart Card (`SCardSvr`, `ScDeviceEnum`, `SCPolicySvc`), Parental Controls (`WpcMonSvc`), Payments and NFC (`SEMgrSvc`), Wallet (`WalletService`), Windows Media Player network sharing (`WMPNetworkSvc`), Recommended Troubleshooting (`TroubleshootingSvc`), WAP Push (`dmwappushservice`), Remote Desktop (`TermService`, `SessionEnv`, `UmRdpService`), WinRM, smart card certificates (`CertPropSvc`), the Hyper-V guest services (`vmic*`, only used when Windows runs inside Hyper-V) and the Edge updaters (`edgeupdate`, `edgeupdatem`). Services this Windows does not have are skipped. Untick it if you use a smart card, offline maps, parental controls or Remote Desktop into this PC. Akati OS Center > Tweaks > **Services** > **Turn off more unused services** turns them off or back to the Windows defaults.
 
-The same **Services** section has switches that are not part of setup, for things some players use: **Xbox services** (Xbox app, Game Pass, cloud saves, controller accessories), **IP Helper** (Teredo for Xbox Live party chat), **Windows Hello biometrics**, **scanners and cameras (WIA)**, **Mobile hotspot**, **notification service** and **Connected Devices** (Phone Link, Nearby sharing). On means turned off from the next start; off puts back the Windows default start type.
+The same **Services** section has switches that are not part of setup, for things some players use: **IP Helper** (Teredo for Xbox Live party chat), **Windows Hello biometrics**, **scanners and cameras (WIA)**, **Mobile hotspot**, **notification service** and **Connected Devices** (Phone Link, Nearby sharing). On means turned off from the next start; off puts back the Windows default start type.
 
 **ภาษาไทย**: "Turn off more unused services" ติ๊กไว้เป็นค่าเริ่มต้น ปิด service ที่เครื่องเล่นเกมแทบไม่ได้ใช้เพิ่มอีก 30 ตัว (แผนที่ออฟไลน์, Phone, Smart card, Payments และ NFC, Wallet, การควบคุมโดยผู้ปกครอง, Retail demo, Windows Insider, AllJoyn, Fax, การแชร์สื่อของ Windows Media Player, Recommended troubleshooting, Remote Desktop, WinRM, service ของ Hyper-V guest และตัวอัปเดต Edge) ถ้าใช้ smart card แผนที่ออฟไลน์ การควบคุมโดยผู้ปกครอง หรือรีโมตเข้าเครื่องนี้ ให้เอาติ๊กออก เปิดกลับได้ที่ Akati OS Center > ปรับแต่ง > Services ซึ่งมีสวิตช์แยกสำหรับ Xbox services, IP Helper, Windows Hello, สแกนเนอร์, Mobile hotspot, การแจ้งเตือน และ Connected Devices ด้วย (ไม่ได้ปิดตอนติดตั้ง)
 
 **ภาษาไทย**: "Turn off unused services" ติ๊กไว้เป็นค่าเริ่มต้น จะรันสคริปต์เดิมของ AtlasOS เพื่อปิดบริการที่เครื่องเล่นเกมส่วนใหญ่ไม่ได้ใช้ ได้แก่ การพิมพ์ (Print Spooler), การทำดัชนีค้นหา (Windows Search; ช่องค้นหาใน Start ยังหาแอปและการตั้งค่าได้ แต่ค้นหาไฟล์ช้าลง), SuperFetch (SysMain), การค้นหาเครื่องในเครือข่าย และ MSDTC (บริการที่ใช้กับโปรแกรมฐานข้อมูล/เซิร์ฟเวอร์ เกมไม่ได้ใช้) ถ้าใช้เครื่องพิมพ์หรือแชร์ไฟล์ในบ้านให้เอาติ๊กออก หรือเปิดกลับทีหลังได้ใน Akati OS Center > ปรับแต่ง
+
+## More services to turn off
+
+Two setup pages, every option ticked by default. Each one disables services (`Start` = 4) from the next start, only when the service exists on this Windows (services it does not have are skipped). Each has a switch in Akati OS Center > Tweaks > **Services** that turns it off or back to the Windows default start types.
+
+| Option | Services (Windows default) | What stops working | Switch |
+|---|---|---|---|
+| **Turn off Xbox services** (`disable-xbox-services`) | `XblAuthManager` (3), `XblGameSave` (3), `XboxNetApiSvc` (3) | Xbox Game Pass and the Xbox app sign-in, Xbox cloud saves. `XboxGipSvc` stays on, so Xbox controllers keep working | Turn off Xbox services |
+| **Turn off Bluetooth** (`disable-bluetooth`) | `bthserv` (3), `BTAGService` (3), `BthAvctpSvc` (3) | Bluetooth headsets, controllers and mice. Runs on PCs without Bluetooth too | Turn off Bluetooth services (shown when the PC has no Bluetooth adapter or Bluetooth is off) |
+| **Turn off Windows Time** (`disable-time-service`) | `W32Time` (3) | The clock no longer syncs automatically (setup syncs it once before) | Turn off Windows Time |
+| **Turn off Delivery Optimization** (`disable-delivery-optimization`) | `DoSvc` (2), set as TrustedInstaller | Microsoft Store and Windows Update downloads may be slower | Turn off Delivery Optimization |
+
+Untick Xbox services if you play Game Pass games, and Bluetooth if you use a Bluetooth headset, controller or mouse.
+
+**ภาษาไทย**: มี 2 หน้า ทุกตัวเลือกติ๊กไว้เป็นค่าเริ่มต้น: ปิด Xbox services (Game Pass และการล็อกอินแอป Xbox จะใช้ไม่ได้ แต่ service ของจอย Xbox ยังเปิดอยู่ จอยจึงใช้ได้ตามปกติ), ปิด Bluetooth (หูฟัง จอย และเมาส์ Bluetooth จะใช้ไม่ได้), ปิด Windows Time (นาฬิกาจะไม่ตั้งเวลาเองอีก) และปิด Delivery Optimization (ดาวน์โหลดจาก Store และ Windows Update อาจช้าลง) เปิดกลับได้ที่ Akati OS Center > ปรับแต่ง > Services
 
 ## Notifications and Game Bar
 

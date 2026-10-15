@@ -1,6 +1,6 @@
 # Changelog: Akati OS for Windows 10
 
-## Unreleased
+## v1.13.0
 
 ### Added
 - Setup: "Turn off Windows Update completely" on the Windows Update page (not the default). It also turns off the Windows Update, Update Orchestrator and Windows Update Medic services, so the PC gets no updates at all, security updates included, until you turn it back on in Akati OS Center > Tweaks > Services

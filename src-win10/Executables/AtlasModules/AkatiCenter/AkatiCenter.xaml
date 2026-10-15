@@ -906,6 +906,21 @@
 
                     <!-- Dashboard -->
                     <ScrollViewer x:Name="PageDashboard" VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                        <!-- Start here: five first steps after setup, ticked from what this PC shows, until Hide (AkatiCenter.setup.ps1) -->
+                        <Border x:Name="StartCard" Style="{StaticResource Card}" Margin="0,0,0,14" Visibility="Collapsed">
+                            <StackPanel>
+                                <DockPanel Margin="0,0,0,6">
+                                    <Button x:Name="StartHide" DockPanel.Dock="Right" Style="{StaticResource Pill}" Padding="12,4" VerticalAlignment="Center" Tag="t:start.hide" Content="Hide"/>
+                                    <Border DockPanel.Dock="Left" Style="{StaticResource IconBox}" Margin="0,0,14,0" VerticalAlignment="Center"><TextBlock Style="{StaticResource TileGlyph}" Text="&#xE7C1;"/></Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Tag="t:start.title" Text="Start here" FontWeight="SemiBold" FontSize="15"/>
+                                        <TextBlock x:Name="StartSub" Text="" Style="{StaticResource Muted}" FontSize="12" Margin="0,2,0,0" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </DockPanel>
+                                <StackPanel x:Name="StartList"/>
+                            </StackPanel>
+                        </Border>
                         <!-- The cards can be hidden and moved (Customize dashboard): DashPanel children before DashEditBar -->
                         <StackPanel x:Name="DashPanel">
                             <Grid x:Name="DashHero" Margin="0,0,0,14" Height="140">
@@ -938,7 +953,7 @@
                                             <TextBlock Style="{StaticResource Glyph}" Text="&#xE946;" FontSize="13" Foreground="{DynamicResource AccentText}" Margin="0,0,8,0"/>
                                             <TextBlock Tag="t:version" Text="Akati OS version" Style="{StaticResource StatLabel}" VerticalAlignment="Center"/>
                                         </StackPanel>
-                                        <TextBlock x:Name="VersionBig" Text="v1.13.0" Style="{StaticResource StatValue}" Margin="0,8,0,0"/>
+                                        <TextBlock x:Name="VersionBig" Text="v1.14.0" Style="{StaticResource StatValue}" Margin="0,8,0,0"/>
                                         <TextBlock x:Name="EditionText" Text="Windows 11" Style="{StaticResource MonoText}"/>
                                         <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                                             <Ellipse x:Name="UpdateDot" Width="7" Height="7" Fill="{DynamicResource MutedBrush}" Margin="0,0,7,0" VerticalAlignment="Center"/>
@@ -1168,6 +1183,7 @@
                                 </StackPanel>
                             </Border>
                         </StackPanel>
+                        </StackPanel>
                     </ScrollViewer>
 
                     <!-- Gaming apps -->
@@ -1196,6 +1212,19 @@
                             </Border>
                             <!-- One section per category, filled by AkatiCenter.ps1 -->
                             <StackPanel x:Name="AppsGroups"/>
+                            <!-- Game runtimes: Visual C++, DirectX and .NET, installed or missing, with Install missing (AkatiCenter.runtimes.ps1) -->
+                            <StackPanel x:Name="RuntimeSection">
+                                <DockPanel>
+                                    <Button x:Name="RuntimeInstall" DockPanel.Dock="Right" Style="{StaticResource PillAccent}" VerticalAlignment="Bottom" Margin="0,0,0,8" IsEnabled="False">
+                                        <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE896;" FontSize="13" Margin="0,0,8,0"/><TextBlock Tag="t:rt.install" Text="Install missing"/></StackPanel>
+                                    </Button>
+                                    <TextBlock Tag="t:rt.title" Text="Game runtimes" Style="{StaticResource Section}"/>
+                                </DockPanel>
+                                <TextBlock Tag="t:rt.sub" Text="Many games need these Microsoft runtimes." Style="{StaticResource Muted}" FontSize="12" Margin="4,-4,0,10" TextWrapping="Wrap"/>
+                                <Border Style="{StaticResource Card}" Padding="0" Margin="0,0,0,20">
+                                    <StackPanel x:Name="RuntimeList"/>
+                                </Border>
+                            </StackPanel>
                             <TextBlock Tag="t:gpu.title" Text="GPU drivers" Style="{StaticResource Section}"/>
                             <Border Style="{StaticResource Card}" Margin="0,0,0,16">
                                 <StackPanel>
@@ -1905,6 +1934,23 @@
                                     </DockPanel>
                                 </StackPanel>
                             </Border>
+                            <!-- What setup changed: the setup options against this PC now, read only (AkatiCenter.setup.ps1) -->
+                            <StackPanel x:Name="SetupSection">
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Bottom" Margin="0,0,0,8">
+                                        <Button x:Name="SetupRefresh" Style="{StaticResource Pill}" Padding="10,3" Margin="0,0,8,0" Tag="t:doc.run" Content="Check again"/>
+                                        <Button x:Name="SetupExport" Style="{StaticResource Pill}" Padding="10,3" Tag="t:setup.export" Content="Export report"/>
+                                    </StackPanel>
+                                    <TextBlock Tag="t:setup.title" Text="What setup changed" Style="{StaticResource Section}"/>
+                                </DockPanel>
+                                <TextBlock x:Name="SetupSub" Text="" Style="{StaticResource Muted}" FontSize="12" Margin="4,-4,0,10" TextWrapping="Wrap"/>
+                                <Border Style="{StaticResource Card}" Padding="0" Margin="0,0,0,22">
+                                    <StackPanel>
+                                        <TextBlock x:Name="SetupEmpty" Text="" Margin="14,12" TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource Warn}" Visibility="Collapsed"/>
+                                        <StackPanel x:Name="SetupList"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
                             <DockPanel>
                                 <Button x:Name="HistoryClear" DockPanel.Dock="Right" Style="{StaticResource Pill}" VerticalAlignment="Bottom" Margin="0,0,0,8" Padding="10,3" Tag="t:history.clear" Content="Clear"/>
                                 <TextBlock Tag="t:history.title" Text="Change history" Style="{StaticResource Section}"/>
@@ -1916,14 +1962,31 @@
                                 </StackPanel>
                             </Border>
                             <TextBlock Tag="t:backup.title" Text="Backup" Style="{StaticResource Section}"/>
-                            <Border Style="{StaticResource Card}" Margin="0,0,0,16">
-                                <DockPanel>
-                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                                        <Button x:Name="BackupSave" Style="{StaticResource Secondary}" Margin="0,0,8,0" Tag="t:backup.save" Content="Save backup"/>
-                                        <Button x:Name="BackupLoad" Style="{StaticResource Primary}" Tag="t:backup.load" Content="Restore"/>
-                                    </StackPanel>
-                                    <TextBlock Tag="t:backup.sub" Text="Save your settings, My games and every switch to a file." Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,0,16,0" VerticalAlignment="Center"/>
-                                </DockPanel>
+                            <!-- Akati settings (Export / Import, settings only) and Backup (settings and every switch), side by side in one card -->
+                            <Border x:Name="BackupSection" Style="{StaticResource Card}" Margin="0,0,0,16">
+                                <StackPanel>
+                                    <DockPanel>
+                                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Button x:Name="SettingsExport" Style="{StaticResource Secondary}" Margin="0,0,8,0" Tag="t:set.export" Content="Export Akati settings"/>
+                                            <Button x:Name="SettingsImport" Style="{StaticResource Primary}" Tag="t:set.import" Content="Import Akati settings"/>
+                                        </StackPanel>
+                                        <StackPanel Margin="0,0,16,0" VerticalAlignment="Center">
+                                            <TextBlock Tag="t:set.title" Text="Akati settings" FontWeight="SemiBold"/>
+                                            <TextBlock Tag="t:set.sub" Text="Theme, accent, Tweaks profile, My games and more, in one file." Style="{StaticResource Muted}" FontSize="12" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </DockPanel>
+                                    <Border Height="1" Background="{DynamicResource Line}" Margin="0,12"/>
+                                    <DockPanel>
+                                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Button x:Name="BackupSave" Style="{StaticResource Secondary}" Margin="0,0,8,0" Tag="t:backup.save" Content="Save backup"/>
+                                            <Button x:Name="BackupLoad" Style="{StaticResource Primary}" Tag="t:backup.load" Content="Restore"/>
+                                        </StackPanel>
+                                        <StackPanel Margin="0,0,16,0" VerticalAlignment="Center">
+                                            <TextBlock Tag="t:backup.switches" Text="Settings and switches" FontWeight="SemiBold"/>
+                                            <TextBlock Tag="t:backup.sub" Text="Save your settings, My games and every switch to a file." Style="{StaticResource Muted}" FontSize="12" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </DockPanel>
+                                </StackPanel>
                             </Border>
                         </StackPanel>
                     </ScrollViewer>
@@ -2289,7 +2352,7 @@
                                     <Image x:Name="AboutLogo" Width="72" Height="72" Margin="0,0,20,0"/>
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock Text="Akati OS" FontSize="26" FontWeight="Bold"/>
-                                        <TextBlock x:Name="AboutVersion" Text="v1.13.0" Style="{StaticResource Muted}"/>
+                                        <TextBlock x:Name="AboutVersion" Text="v1.14.0" Style="{StaticResource Muted}"/>
                                         <TextBlock x:Name="UpdateStatus" Text="" Margin="0,6,0,0" TextWrapping="Wrap"/>
                                         <Button x:Name="UpdateDownload" Style="{StaticResource PillAccent}" HorizontalAlignment="Left" Margin="0,10,0,0" Padding="14,5" Visibility="Collapsed">
                                             <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Glyph}" Text="&#xE896;" FontSize="12" Margin="0,0,8,0"/><TextBlock Tag="t:update.download" Text="Download the update"/></StackPanel>

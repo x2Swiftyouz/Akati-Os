@@ -1,0 +1,39 @@
+---
+title: Akati OS Setup Options
+description: Records the options picked in AME Wizard in HKLM\SOFTWARE\AkatiOS\Options, for Akati OS Center > Health > What setup changed (Akati OS)
+actions:
+    # One REG_DWORD (1) per option that was picked; an option that was not picked gets no value. Akati OS Center only
+    # reads them, to compare the options with the PC later. The list of an earlier setup is removed first.
+  - !writeStatus: {status: 'Saving the setup options'}
+  - !registryKey: {path: 'HKLM\SOFTWARE\AkatiOS\Options', operation: delete}
+  - !registryValue: {path: 'HKLM\SOFTWARE\AkatiOS\Options', value: 'defender-enable', data: '1', type: REG_DWORD, option: 'defender-enable'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\AkatiOS\Options', value: 'defender-disable', data: '1', type: REG_DWORD, option: 'defender-disable'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\AkatiOS\Options', value: 'mitigations-default', data: '1', type: REG_DWORD, option: 'mitigations-default'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\AkatiOS\Options', value: 'mitigations-disable', data: '1', type: REG_DWORD, option: 'mitigations-disable'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\AkatiOS\Options', value: 'auto-updates-disable', data: '1', type: REG_DWORD, option: 'auto-updates-disable'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\AkatiOS\Options', value: 'auto-updates-default', data: '1', type: REG_DWORD, option: 'auto-updates-default'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\AkatiOS\Options', value: 'updates-off', data: '1', type: REG_DWORD, option: 'updates-off'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\AkatiOS\Options', value: 'disable-hibernation', data: '1', type: REG_DWORD, option: 'disable-hibernation'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\AkatiOS\Options', value: 'disable-power-saving', data: '1', type: REG_DWORD, option: 'disable-power-saving'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\AkatiOS\Options', value: 'disable-core-isolation', data: '1', type: REG_DWORD, option: 'disable-core-isolation'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\AkatiOS\Options', value: 'remove-snipping-tool', data: '1', type: REG_DWORD, option: 'remove-snipping-tool'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\AkatiOS\Options', value: 'remove-paint', data: '1', type: REG_DWORD, option: 'remove-paint'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\AkatiOS\Options', value: 'uninstall-edge', data: '1', type: REG_DWORD, option: 'uninstall-edge'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\AkatiOS\Options', value: 'install-another-browser', data: '1', type: REG_DWORD, option: 'install-another-browser'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\AkatiOS\Options', value: 'remove-store', data: '1', type: REG_DWORD, option: 'remove-store'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\AkatiOS\Options', value: 'disable-unused-services', data: '1', type: REG_DWORD, option: 'disable-unused-services'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\AkatiOS\Options', value: 'disable-extra-services', data: '1', type: REG_DWORD, option: 'disable-extra-services'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\AkatiOS\Options', value: 'disable-xbox-services', data: '1', type: REG_DWORD, option: 'disable-xbox-services'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\AkatiOS\Options', value: 'disable-bluetooth', data: '1', type: REG_DWORD, option: 'disable-bluetooth'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\AkatiOS\Options', value: 'disable-time-service', data: '1', type: REG_DWORD, option: 'disable-time-service'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\AkatiOS\Options', value: 'disable-delivery-optimization', data: '1', type: REG_DWORD, option: 'disable-delivery-optimization'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\AkatiOS\Options', value: 'disable-notifications', data: '1', type: REG_DWORD, option: 'disable-notifications'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\AkatiOS\Options', value: 'disable-game-bar', data: '1', type: REG_DWORD, option: 'disable-game-bar'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\AkatiOS\Options', value: 'tray-icon', data: '1', type: REG_DWORD, option: 'tray-icon'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\AkatiOS\Options', value: 'enable-timer-resolution', data: '1', type: REG_DWORD, option: 'enable-timer-resolution'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\AkatiOS\Options', value: 'disable-accessibility-shortcuts', data: '1', type: REG_DWORD, option: 'disable-accessibility-shortcuts'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\AkatiOS\Options', value: 'desktop-menu', data: '1', type: REG_DWORD, option: 'desktop-menu'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\AkatiOS\Options', value: 'browser-brave', data: '1', type: REG_DWORD, option: 'browser-brave'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\AkatiOS\Options', value: 'browser-librewolf', data: '1', type: REG_DWORD, option: 'browser-librewolf'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\AkatiOS\Options', value: 'browser-firefox', data: '1', type: REG_DWORD, option: 'browser-firefox'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\AkatiOS\Options', value: 'browser-chrome', data: '1', type: REG_DWORD, option: 'browser-chrome'}

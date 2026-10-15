@@ -336,3 +336,59 @@ function Test-ServiceChangeable([string]$name, [string]$level, [bool]$updating) 
     if ($name -eq 'wuauserv' -and $updating) { return $false }
     $level -in 'safe', 'careful'
 }
+
+# ---------------------------------------------------------------------------------------------
+# What setup changed (Health). The state of one setup option on this PC now: $picked is $true or $false, or $null when the
+# setup did not record its options (Akati OS before 1.14). $changedLater: this PC shows that it was done and changed
+# afterwards (the change history of Akati OS Center, or the Windows Update baseline made after setup).
+# Returns done, changed (changed later), notdone, notpicked or unknown.
+# ---------------------------------------------------------------------------------------------
+function Get-SetupItemState($picked, [bool]$asExpected, [bool]$changedLater) {
+    if ($null -eq $picked) { return 'unknown' }
+    if (!$picked) { return 'notpicked' }
+    if ($asExpected) { return 'done' }
+    if ($changedLater) { return 'changed' }
+    'notdone'
+}
+# True when the change history ("time|key|state") has a change of one of $keys (a switch key, or svc:<service>)
+function Test-HistoryKey([string[]]$history, [string[]]$keys) {
+    foreach ($line in @($history)) {
+        $k = ([string]$line -split '\|', 3)[1]
+        if ($k -and $k -in @($keys)) { return $true }
+    }
+    $false
+}
+# True when the Windows Update baseline (WuBaseline) has one of $keys (svc:<service> or app:<package name>): it was off
+# or removed when Akati OS Center first opened after setup
+function Test-BaselineKey([string[]]$baseline, [string[]]$keys) {
+    foreach ($e in @($baseline)) {
+        $p = ConvertFrom-WuEntry $e
+        if ($p -and $p.Key -in @($keys)) { return $true }
+    }
+    $false
+}
+
+# ---------------------------------------------------------------------------------------------
+# Game runtimes (Gaming apps): the names their installers give their entry in Apps & features.
+# Visual C++: $year 2005, 2008, 2010, 2012, 2013, or 2015 for the one runtime of 2015 to 2022 and later
+# ("2015-2022", "2017", "2019", "v14"). $arch x64 or x86 (2005 x86 has no architecture in its name).
+# ---------------------------------------------------------------------------------------------
+function Test-VcRuntimeName([string]$name, [string]$year, [string]$arch) {
+    $years = if ($year -eq '2015') { '(2015|2017|2019|2022|v14)' } else { [regex]::Escape($year) }
+    if ($name -notmatch "^Microsoft Visual C\+\+ $years\b.*\bRedistributable") { return $false }
+    $is64 = $name -match '\bx64\b|amd64'
+    if ($arch -eq 'x64') { $is64 } else { !$is64 }
+}
+# .NET Desktop Runtime: "Microsoft Windows Desktop Runtime - 8.0.11 (x64)"
+function Test-DotNetRuntimeName([string]$name, [int]$major) {
+    $name -match "^Microsoft Windows Desktop Runtime - $major\.\d" -and $name -match '\(x64\)'
+}
+
+# ---------------------------------------------------------------------------------------------
+# Export and import of Akati settings (Health > Backup): the values of HKCU\Software\AkatiOS\Center that belong to
+# this PC only (window places, the state of running work, the Windows Update baseline, the change history with its Undo)
+# stay out of the file
+# ---------------------------------------------------------------------------------------------
+$localSettings = 'History', 'GameTweaks', 'CenterAlive', 'WuBaseline', 'WuKeep', 'WuSeeded', 'WuCheckAt', 'MenuAction', 'MenuResult', 'MenuApps',
+    'WindowX', 'WindowY', 'WidgetX', 'WidgetY', 'LastVersion', 'NotifiedVersion', 'BalanceLog'
+function Test-PortableSetting([string]$name) { $name -and $name -notlike 'PS*' -and $name -notin $localSettings }

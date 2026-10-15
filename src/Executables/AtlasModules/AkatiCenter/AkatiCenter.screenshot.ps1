@@ -175,6 +175,15 @@ if ($Screenshot) {
         Save-Shot "welcome-$l.png"
         $ui.Welcome.Visibility = 'Collapsed'
         Show-WhatsNew; Save-Shot "whatsnew-$l.png"; $ui.WhatsNew.Visibility = 'Collapsed'
+        # Start here on the Dashboard with a sample PC (three steps done)
+        $ui.NavDashboard.IsChecked = $true; $ui.StartCard.Visibility = 'Visible'
+        Show-StartCard @(
+            @{ N = 1; Done = $true; Go = 'start.1.go'; Vendor = 'nvidia'; Sub = (T 'start.1.ok') -f 'NVIDIA GeForce RTX 4070' }
+            @{ N = 2; Done = $true; Go = 'start.2.go'; Sub = (T 'start.2.ok') -f 'Steam, Epic Games Launcher' }
+            @{ N = 3; Done = $true; Go = 'start.3.go'; Sub = (T 'start.3.ok') -f (T 'profile.gaming') }
+            @{ N = 4; Done = $false; Go = 'start.4.go'; Sub = T 'start.4.d' }
+            @{ N = 5; Done = $false; Go = 'start.5.go'; Sub = T 'start.5.d' })
+        Save-Shot "start-$l.png"; $ui.StartCard.Visibility = 'Collapsed'
         Open-Spotlight; $ui.SpotlightBox.Text = 'dns'; Save-Shot "spotlight-$l.png"; Close-Spotlight
         # Narrow sidebar, restart bar, the message after a change and one "What it changes" box open
         Set-Compact $true; $ui.RestartBar.Visibility = 'Visible'; Show-Toast ((T 'toast.on') -f (T 'tw.timer')) @{}
@@ -241,6 +250,21 @@ if ($Screenshot) {
     # The change history with a service and an app
     $top = $ui.HistoryList.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
     $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 80)); $sv.UpdateLayout(); Save-Shot 'health-en-history.png'; $sv.ScrollToVerticalOffset(0)
+    # What setup changed (sample PC: one item changed later, one not done, some not picked) and the Backup card
+    $top = $ui.SetupSection.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
+    $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 20)); $sv.UpdateLayout(); Save-Shot 'health-en-setup.png'
+    $top = $ui.BackupSection.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
+    $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 200)); $sv.UpdateLayout(); Save-Shot 'health-en-backup.png'; $sv.ScrollToVerticalOffset(0)
+    # The import dialog with a sample file
+    Set-AskContent (T 'set.ask') 'YesNo' 'Question' @(((T 'set.b.settings') -f 31), ((T 'set.b.games') -f 3), ((T 'set.b.profiles') -f 5)) (T 'set.note'); Save-Shot 'dialog-en-import.png'; $ui.Ask.Visibility = 'Collapsed'
+    # Game runtimes (sample PC: some missing) with the progress card of an install
+    $ui.NavGaming.IsChecked = $true; $sv = $ui.PageGaming; $sv.UpdateLayout()
+    $top = $ui.RuntimeSection.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
+    $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 20)); $sv.UpdateLayout()
+    $script:progSample = $true
+    Show-Progress 'runtimes' ((T 'status.installing') -f 'Visual C++ 2015-2022 (x86)') 25 ((T 'prog.queued') -f 2) { param($s) } $null
+    Save-Shot 'gaming-en-runtimes.png'; Hide-Progress 'runtimes'; $script:progSample = $false; $sv.ScrollToVerticalOffset(0)
+    $ui.NavHealth.IsChecked = $true; $sv = $ui.PageHealth
     $ui.NavQuicktools.IsChecked = $true; $sv = $ui.PageQuicktools; $sv.UpdateLayout()
     $top = $ui.NetUseSection.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
     $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 60)); $sv.UpdateLayout(); Save-Shot 'quicktools-en-net.png'; $sv.ScrollToVerticalOffset(0)

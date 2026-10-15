@@ -182,5 +182,37 @@ Check 'service keep' (Test-ServiceChangeable 'Themes' 'keep' $false) 'False'
 Check 'service update running' (Test-ServiceChangeable 'wuauserv' 'careful' $true) 'False'
 Check 'service update idle' (Test-ServiceChangeable 'wuauserv' 'careful' $false) 'True'
 
+# What setup changed
+Check 'setup done' (Get-SetupItemState $true $true $false) 'done'
+Check 'setup changed' (Get-SetupItemState $true $false $true) 'changed'
+Check 'setup not done' (Get-SetupItemState $true $false $false) 'notdone'
+Check 'setup not picked' (Get-SetupItemState $false $false $true) 'notpicked'
+Check 'setup not recorded' (Get-SetupItemState $null $true $false) 'unknown'
+$hist = @('2026-10-01T10:00:00|svcxbox|0', '2026-10-02T10:00:00|svc:W32Time|3,4', 'bad')
+Check 'history key' (Test-HistoryKey $hist @('svcbt', 'svc:W32Time')) 'True'
+Check 'history key none' (Test-HistoryKey $hist @('timer')) 'False'
+Check 'baseline key' (Test-BaselineKey @('svc:DoSvc=4', 'app:Microsoft.WindowsStore') @('app:Microsoft.WindowsStore')) 'True'
+Check 'baseline key none' (Test-BaselineKey @('svc:DoSvc=4') @('svc:W32Time')) 'False'
+
+# Game runtimes: names in Apps & features
+Check 'vc 2022 x64' (Test-VcRuntimeName 'Microsoft Visual C++ 2015-2022 Redistributable (x64) - 14.40.33810' '2015' 'x64') 'True'
+Check 'vc 2022 not x86' (Test-VcRuntimeName 'Microsoft Visual C++ 2015-2022 Redistributable (x64) - 14.40.33810' '2015' 'x86') 'False'
+Check 'vc 2019 x86' (Test-VcRuntimeName 'Microsoft Visual C++ 2019 Redistributable (x86) - 14.29.30133' '2015' 'x86') 'True'
+Check 'vc v14 x64' (Test-VcRuntimeName 'Microsoft Visual C++ v14 Redistributable (x64) - 14.44.35211' '2015' 'x64') 'True'
+Check 'vc minimum runtime' (Test-VcRuntimeName 'Microsoft Visual C++ 2022 X64 Minimum Runtime - 14.40.33810' '2015' 'x64') 'False'
+Check 'vc 2010 x64' (Test-VcRuntimeName 'Microsoft Visual C++ 2010  x64 Redistributable - 10.0.40219' '2010' 'x64') 'True'
+Check 'vc 2008 x86' (Test-VcRuntimeName 'Microsoft Visual C++ 2008 Redistributable - x86 9.0.30729.6161' '2008' 'x86') 'True'
+Check 'vc 2005 x86' (Test-VcRuntimeName 'Microsoft Visual C++ 2005 Redistributable' '2005' 'x86') 'True'
+Check 'vc 2005 x64 not x86' (Test-VcRuntimeName 'Microsoft Visual C++ 2005 Redistributable (x64)' '2005' 'x86') 'False'
+Check 'vc 2013 not 2012' (Test-VcRuntimeName 'Microsoft Visual C++ 2013 Redistributable (x64) - 12.0.40664' '2012' 'x64') 'False'
+Check 'dotnet 8' (Test-DotNetRuntimeName 'Microsoft Windows Desktop Runtime - 8.0.11 (x64)' 8) 'True'
+Check 'dotnet 8 x86' (Test-DotNetRuntimeName 'Microsoft Windows Desktop Runtime - 8.0.11 (x86)' 8) 'False'
+Check 'dotnet 10 not 1' (Test-DotNetRuntimeName 'Microsoft Windows Desktop Runtime - 10.0.0 (x64)' 1) 'False'
+
+# Akati settings export: what belongs to this PC stays out
+Check 'setting portable' (Test-PortableSetting 'Accent') 'True'
+Check 'setting local' (Test-PortableSetting 'WindowX') 'False'
+Check 'setting history' (Test-PortableSetting 'History') 'False'
+
 Write-Host "$script:count checks, $script:failed failed"
 if ($script:failed) { exit 1 }

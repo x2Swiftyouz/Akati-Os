@@ -1,6 +1,6 @@
 # Changelog: Akati OS for Windows 10
 
-## Unreleased
+## v1.14.0
 
 ### Added
 - Health: "What setup changed", a read-only list that compares the options you picked in setup with this PC now: the services you turned off (more unused services, Xbox, Bluetooth, Windows Time, Delivery Optimization, Windows Update), the removed apps (Microsoft Store, Paint, Snipping Tool, Edge), automatic updates, hibernation, the power plan, timer resolution, notifications and Game Bar. Each shows Done, Not done, Changed later or Not picked, with a short hint. Defender real-time protection is only shown, never changed. On a trimmed Windows image the hint says parts of Windows may be missing and suggests a stock Windows ISO from Microsoft. "Export report" saves it as a text file on the desktop

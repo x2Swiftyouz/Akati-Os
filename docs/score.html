@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Akati Score · Akati OS</title>
+<meta name="description" content="An Akati Score card shared from Akati OS Center, the free gaming playbook for AME Wizard, based on AtlasOS.">
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Akati OS">
+<meta property="og:title" content="Akati Score">
+<meta property="og:description" content="An Akati Score card shared from Akati OS Center, the free gaming playbook for AME Wizard.">
+<meta property="og:url" content="https://x2swiftyouz.github.io/Akati-Os/score.html">
+<meta property="og:image" content="https://x2swiftyouz.github.io/Akati-Os/images/social-preview.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta property="og:image:alt" content="Akati OS logo with the text: Free gaming playbook for AME Wizard">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://x2swiftyouz.github.io/Akati-Os/images/social-preview.png">
+<meta name="theme-color" content="#0f0d14" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f6f4fa" media="(prefers-color-scheme: light)">
+<link rel="canonical" href="https://x2swiftyouz.github.io/Akati-Os/score.html">
+<link rel="icon" type="image/png" href="images/logo.png">
+<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+<script>
+  // Theme chosen with the button in the header (otherwise the system setting); set before the page draws
+  try { var akatiTheme = localStorage.getItem('akati-theme'); if (akatiTheme === 'light' || akatiTheme === 'dark') document.documentElement.setAttribute('data-theme', akatiTheme); } catch (e) {}
+</script>
+<style>
+  :root {
+    --bg: #0f0d14; --bg2: #16131d; --card: #1a1723; --line: #2a2636; --line2: #3a3449; --text: #f4f2f8; --muted: #a6a1b3;
+    --accent: #a35cf0; --accent2: #e559a9; --good: #5fd38d; --link: #b98af5; --pink: #f08cc4; --on: #8346d6;
+    --shadow: rgba(0,0,0,.55); --glow: .5; --grid: rgba(255,255,255,.04); --nav: rgba(15,13,20,.72);
+    color-scheme: dark;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) { --bg: #f6f4fa; --bg2: #efebf6; --card: #ffffff; --line: #e3dfeb; --line2: #d5cfe1; --text: #1d1a24; --muted: #5f5a6d; --good: #1b7a43; --link: #7a3fc8; --pink: #b42a78; --shadow: rgba(50,25,90,.2); --glow: .28; --grid: rgba(70,35,130,.06); --nav: rgba(246,244,250,.78); color-scheme: light; }
+  }
+  :root[data-theme="light"] { --bg: #f6f4fa; --bg2: #efebf6; --card: #ffffff; --line: #e3dfeb; --line2: #d5cfe1; --text: #1d1a24; --muted: #5f5a6d; --good: #1b7a43; --link: #7a3fc8; --pink: #b42a78; --shadow: rgba(50,25,90,.2); --glow: .28; --grid: rgba(70,35,130,.06); --nav: rgba(246,244,250,.78); color-scheme: light; }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 "Segoe UI Variable Text", "Segoe UI", "Leelawadee UI", system-ui, sans-serif; overflow-wrap: break-word; -webkit-font-smoothing: antialiased; }
+  h1, h2, h3 { font-family: "Segoe UI Variable Display", "Segoe UI", "Leelawadee UI", system-ui, sans-serif; }
+  a { color: var(--link); }
+  img { max-width: 100%; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+  button:focus-visible, a:focus-visible, summary:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
+  [data-l]:not(.show) { display: none; }
+  .i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+  /* Navbar */
+  nav.top { position: sticky; top: 0; z-index: 50; background: var(--nav); -webkit-backdrop-filter: saturate(160%) blur(16px); backdrop-filter: saturate(160%) blur(16px); border-bottom: 1px solid transparent; transition: border-color .3s; }
+  nav.top.scrolled, nav.top.open { border-bottom-color: var(--line); }
+  .nav-in { display: flex; align-items: center; gap: 20px; height: 64px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 17px; text-decoration: none; color: var(--text); flex: none; }
+  .brand img { width: 30px; height: 30px; }
+  .links { display: flex; align-items: center; gap: 2px; margin: 0 auto; }
+  .links a { padding: 7px 12px; border-radius: 10px; color: var(--muted); text-decoration: none; font-size: 14.5px; font-weight: 500; white-space: nowrap; }
+  .links a:hover, .links a[aria-current] { color: var(--text); background: color-mix(in srgb, var(--text) 7%, transparent); }
+  .tools { display: flex; align-items: center; gap: 10px; flex: none; }
+  .lang { display: flex; border: 1px solid var(--line2); border-radius: 10px; overflow: hidden; flex-shrink: 0; }
+  .lang button { background: none; border: 0; color: var(--muted); padding: 5px 10px; cursor: pointer; font: inherit; font-size: 13px; }
+  .lang button:hover { color: var(--text); }
+  .lang button.on { background: var(--on); color: #fff; }
+  .theme, .menu { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; flex-shrink: 0; padding: 0; border: 1px solid var(--line2); border-radius: 10px; background: none; color: var(--muted); cursor: pointer; }
+  .theme:hover, .menu:hover { color: var(--text); }
+  .theme svg { width: 16px; height: 16px; }
+  .theme .sun { display: none; }
+  .theme.to-light .sun { display: block; }
+  .theme.to-light .moon { display: none; }
+  .menu { display: none; }
+  .btn-nav { padding: 7px 16px; border-radius: 10px; font-size: 14px; font-weight: 600; color: #fff; text-decoration: none; background: linear-gradient(135deg, var(--accent), var(--accent2)); white-space: nowrap; }
+  .btn-nav:hover { filter: brightness(1.08); }
+
+  /* Buttons */
+  .btn { display: inline-flex; align-items: center; gap: 12px; padding: 14px 22px; border-radius: 14px; text-decoration: none; font-weight: 600; line-height: 1.25; text-align: left; border: 1px solid var(--line2); color: var(--text); background: var(--card); transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+  .btn:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--accent) 50%, var(--line2)); }
+  .btn .t { display: flex; flex-direction: column; }
+  .btn small { font-weight: 400; font-size: 12px; color: var(--muted); }
+  .btn.primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; border: 0; box-shadow: 0 14px 34px -12px color-mix(in srgb, var(--accent) 80%, transparent); }
+  .btn.primary small { color: rgba(255,255,255,.86); }
+  .btn.primary:hover { box-shadow: 0 18px 40px -12px color-mix(in srgb, var(--accent2) 80%, transparent); }
+  .btn.sm { padding: 8px 14px; border-radius: 11px; font-size: 14px; gap: 8px; background: transparent; }
+  .btn.sm .i { width: 16px; height: 16px; }
+  .buttons { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+  .btn { position: relative; }
+  .btn.sm .t { flex-direction: row; align-items: baseline; gap: 8px; }
+  .rec { position: absolute; top: -11px; right: 12px; padding: 1px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; line-height: 1.6; white-space: nowrap; color: #2a1450; background: #fff; box-shadow: 0 4px 14px -4px rgba(40,10,80,.5); }
+  .btn.sm .rec { display: none; }
+
+  /* Hero */
+  .hero { position: relative; isolation: isolate; overflow: hidden; padding: 84px 0 0; text-align: center; }
+  .hero::before { content: ""; position: absolute; inset: 0; z-index: -2; pointer-events: none; background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px); background-size: 56px 56px; -webkit-mask-image: radial-gradient(70% 55% at 50% 0%, #000 25%, transparent 80%); mask-image: radial-gradient(70% 55% at 50% 0%, #000 25%, transparent 80%); }
+  .hero::after { content: ""; position: absolute; z-index: -2; pointer-events: none; left: 50%; top: -320px; width: 1200px; height: 760px; transform: translateX(-50%); opacity: var(--glow); background: radial-gradient(closest-side at 38% 50%, var(--accent), transparent), radial-gradient(closest-side at 66% 55%, var(--accent2), transparent); filter: blur(40px); }
+  .pill { display: inline-flex; align-items: center; gap: 10px; max-width: 100%; padding: 5px 14px 5px 5px; border-radius: 999px; border: 1px solid var(--line2); background: color-mix(in srgb, var(--card) 70%, transparent); color: var(--text); text-decoration: none; font-size: 14px; transition: border-color .2s; }
+  .pill:hover { border-color: color-mix(in srgb, var(--accent) 60%, var(--line2)); }
+  .pill-tag { padding: 2px 10px; border-radius: 999px; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; font-weight: 600; font-size: 12px; flex: none; }
+  .pill .i { width: 15px; height: 15px; color: var(--muted); }
+  .hero h1 { font-size: clamp(42px, 7.6vw, 92px); line-height: 1.02; letter-spacing: -.035em; font-weight: 800; margin: 26px auto 22px; max-width: 980px; }
+  .grad { background: linear-gradient(100deg, var(--accent) 10%, var(--accent2) 90%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero p.lead { font-size: clamp(17px, 1.9vw, 20px); color: var(--muted); max-width: 700px; margin: 0 auto 34px; }
+  .alt { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; align-items: center; margin-top: 16px; }
+  .alt .btn.sm { flex-direction: row; }
+  .note { font-size: 13px; color: var(--muted); margin: 20px auto 0; max-width: 680px; }
+  .showcase { position: relative; max-width: 1060px; margin: 64px auto 0; padding-bottom: 88px; }
+  .showcase::before { content: ""; position: absolute; z-index: -1; inset: 8% 6% 22%; border-radius: 50%; background: linear-gradient(120deg, var(--accent), var(--accent2)); filter: blur(90px); opacity: var(--glow); }
+  .showcase img { display: block; width: 100%; height: auto; border-radius: 14px; border: 1px solid var(--line2); box-shadow: 0 50px 110px -30px var(--shadow); }
+  @keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+  .rise { animation: rise .8s cubic-bezier(.2,.7,.2,1) both; animation-delay: calc(var(--d, 0) * 90ms); }
+
+  /* Sections */
+  section { padding: 112px 0; }
+  .head { text-align: center; max-width: 780px; margin: 0 auto 64px; }
+  .eyebrow { display: inline-block; font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--link); margin-bottom: 12px; }
+  h2 { font-size: clamp(30px, 4.4vw, 52px); line-height: 1.08; letter-spacing: -.03em; font-weight: 800; margin: 0 0 16px; }
+  .sub { color: var(--muted); font-size: 18px; margin: 0; }
+  html[lang="th"] h1, html[lang="th"] h2, html[lang="th"] h3 { letter-spacing: 0; line-height: 1.3; }
+  html[lang="th"] .eyebrow { letter-spacing: .02em; }
+
+  /* Footer */
+  footer { border-top: 1px solid var(--line); padding: 64px 0 36px; color: var(--muted); font-size: 14px; }
+  .fgrid { display: grid; grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr)); gap: 40px; }
+  .fgrid h4 { color: var(--text); font-size: 14px; margin: 4px 0 14px; }
+  .fgrid ul { list-style: none; padding: 0; margin: 0; }
+  .fgrid li { margin-bottom: 10px; }
+  .fgrid a { color: var(--muted); text-decoration: none; }
+  .fgrid a:hover { color: var(--text); }
+  .fgrid a.brand { color: var(--text); }
+  .fbrand p { margin: 14px 0 0; max-width: 340px; }
+  .fbrand .credit { font-size: 13px; }
+  .fbrand .credit a { color: var(--link); text-decoration: underline; }
+  .fbottom { margin-top: 48px; padding-top: 22px; border-top: 1px solid var(--line); font-size: 13px; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .rise { animation: none; }
+    .btn { transition: none; }
+    .btn:hover { transform: none; }
+  }
+  @media (max-width: 1100px) {
+    .menu { display: inline-flex; }
+    .tools { margin-left: auto; }
+    .links { display: none; position: absolute; top: 64px; left: 0; right: 0; margin: 0; flex-direction: column; align-items: stretch; gap: 2px; padding: 8px 16px 16px; background: var(--bg); border-bottom: 1px solid var(--line); box-shadow: 0 24px 40px -20px var(--shadow); }
+    nav.top.open .links { display: flex; }
+    .links a { padding: 11px 12px; font-size: 16px; }
+  }
+  @media (max-width: 900px) {
+    .fgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .fbrand { grid-column: 1 / -1; }
+  }
+  @media (max-width: 640px) {
+    .wrap { padding: 0 16px; }
+    .nav-in { gap: 8px; height: 60px; }
+    .links { top: 60px; }
+    .brand { font-size: 16px; gap: 8px; }
+    .brand img { width: 28px; height: 28px; }
+    .tools { gap: 6px; }
+    .btn-nav { display: none; }
+    .lang button { padding: 5px 7px; font-size: 12px; }
+    .theme, .menu { width: 32px; height: 32px; }
+    .hero.small { padding: 44px 0 40px; }
+    .rel { padding: 20px 18px; border-radius: 18px; }
+    .rel-head h2 { font-size: 24px; }
+    section.releases { padding-bottom: 80px; }
+  }
+  /* Score card */
+  :root { --warn: #f2b45a; }
+  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --warn: #9a5b00; } }
+  :root[data-theme="light"] { --warn: #9a5b00; }
+  html[lang="th"] h1, html[lang="th"] h2 { letter-spacing: 0; line-height: 1.3; }
+  .hero.small { padding: 64px 0 28px; }
+  .hero.small h1 { margin: 0 auto 12px; font-size: clamp(38px, 6vw, 64px); }
+  .hero.small p.lead { margin-bottom: 0; }
+  section.share { padding: 0 0 96px; }
+  .scard { position: relative; isolation: isolate; max-width: 520px; margin: 0 auto; padding: 26px 28px 28px; border-radius: 24px; background: var(--card); border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line)); box-shadow: 0 40px 90px -40px color-mix(in srgb, var(--accent) 70%, transparent); overflow: hidden; }
+  .scard::before { content: ""; position: absolute; z-index: -1; left: 50%; top: -140px; width: 420px; height: 300px; transform: translateX(-50%); border-radius: 50%; background: linear-gradient(120deg, var(--accent), var(--accent2)); filter: blur(70px); opacity: calc(var(--glow) * .55); pointer-events: none; }
+  .s-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .s-brand { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: .08em; font-size: 14px; }
+  .s-brand img { width: 28px; height: 28px; }
+  .s-date { color: var(--muted); font-size: 14px; }
+  .ring { position: relative; width: 210px; height: 210px; margin: 22px auto 6px; }
+  .ring svg { display: block; width: 100%; height: 100%; transform: rotate(-90deg); }
+  .ring .track { fill: none; stroke: var(--line2); stroke-width: 12; }
+  .ring .bar { fill: none; stroke: url(#ring-grad); stroke-width: 12; stroke-linecap: round; transition: stroke-dashoffset 1s cubic-bezier(.2,.7,.2,1); }
+  .ring-in { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .ring-n { font-family: "Segoe UI Variable Display", "Segoe UI", "Leelawadee UI", system-ui, sans-serif; font-size: 68px; font-weight: 800; line-height: 1; letter-spacing: -.03em; }
+  .ring-l { margin-top: 6px; font-size: 12px; font-weight: 700; letter-spacing: .14em; color: var(--muted); }
+  .s-status { text-align: center; margin: 8px 0 0; font-size: 19px; font-weight: 700; }
+  .s-status .great { color: var(--good); }
+  .s-status .good { color: var(--link); }
+  .s-status .low { color: var(--warn); }
+  .s-status .none { color: var(--muted); font-weight: 600; font-size: 16px; }
+  dl.parts { margin: 22px 0 0; padding: 0; border-top: 1px solid var(--line); }
+  .part { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--line); }
+  .part dt { font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--link); padding-top: 2px; }
+  .part dd { margin: 0; font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+  .s-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 24px; }
+  .s-actions .btn { padding: 12px 18px; }
+  .s-note { max-width: 520px; margin: 18px auto 0; text-align: center; color: var(--muted); font-size: 13.5px; }
+  @media (prefers-reduced-motion: reduce) { .ring .bar { transition: none; } }
+  @media (max-width: 640px) {
+    .hero.small { padding: 40px 0 22px; }
+    .scard { padding: 20px 18px 22px; border-radius: 20px; }
+    .ring { width: 180px; height: 180px; }
+    .ring-n { font-size: 58px; }
+    .part { grid-template-columns: 84px minmax(0, 1fr); gap: 10px; }
+    .part dt { letter-spacing: .04em; }
+    .s-actions .btn { width: 100%; justify-content: center; }
+  }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-dl" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M3 5h6a3 3 0 0 1 3 3v12a2.5 2.5 0 0 0-2.5-2.5H3zM21 5h-6a3 3 0 0 0-3 3v12a2.5 2.5 0 0 1 2.5-2.5H21z"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h4"/></symbol>
+  <symbol id="i-pad" viewBox="0 0 24 24"><path d="M7 7h10a5 5 0 0 1 5 5v1.5a3.5 3.5 0 0 1-6.3 2.1L14.5 14h-5l-1.2 1.6A3.5 3.5 0 0 1 2 13.5V12a5 5 0 0 1 5-5zM7.5 9.5v4M5.5 11.5h4M16 10.5h.01M18 12.5h.01"/></symbol>
+  <symbol id="i-gauge" viewBox="0 0 24 24"><path d="M3.5 17a8.5 8.5 0 1 1 17 0M12 17l4.5-6M7 17h.01M17 17h.01"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7.5 3v5.5c0 4.6-3.1 8.3-7.5 9.5-4.4-1.2-7.5-4.9-7.5-9.5V6zM8.8 12l2.2 2.2 4.2-4.4"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9zM18.5 15.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></symbol>
+  <symbol id="i-pulse" viewBox="0 0 24 24"><path d="M3 12h4l2.5-6 5 12 2.5-6h4"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></symbol>
+  <symbol id="i-code" viewBox="0 0 24 24"><path d="M8 8l-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+</svg>
+
+<nav class="top" id="top">
+  <div class="wrap nav-in">
+    <a class="brand" href="./"><img src="images/logo.png" alt="" width="30" height="30">Akati OS</a>
+    <div class="links" id="links">
+      <a href="./#features"><span data-l="en">Features</span><span data-l="th">ฟีเจอร์</span><span data-l="vi">Tính năng</span><span data-l="id">Fitur</span></a>
+      <a href="./#install"><span data-l="en">Install</span><span data-l="th">วิธีติดตั้ง</span><span data-l="vi">Cài đặt</span><span data-l="id">Instal</span></a>
+      <a href="docs.html"><span data-l="en">Docs</span><span data-l="th">คู่มือ</span><span data-l="vi">Tài liệu</span><span data-l="id">Dokumentasi</span></a>
+      <a href="./#compare"><span data-l="en">Compare</span><span data-l="th">เปรียบเทียบ</span><span data-l="vi">So sánh</span><span data-l="id">Perbandingan</span></a>
+      <a href="./#faq">FAQ</a>
+      <a href="changelog.html"><span data-l="en">Changelog</span><span data-l="th">ประวัติเวอร์ชัน</span><span data-l="vi">Nhật ký thay đổi</span><span data-l="id">Catatan rilis</span></a>
+      <a href="https://github.com/x2Swiftyouz/Akati-Os">GitHub</a>
+    </div>
+    <div class="tools">
+      <div class="lang" role="group" aria-label="Language">
+        <button data-set="en" lang="en">EN</button><button data-set="th" lang="th">ไทย</button><button data-set="vi" lang="vi">VI</button><button data-set="id" lang="id">ID</button>
+      </div>
+      <button class="theme" id="theme" type="button" aria-label="Switch theme" title="Switch theme"><svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg><svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="currentColor"/><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg></button>
+      <a class="btn-nav" href="./#download"><span data-l="en">Download</span><span data-l="th">ดาวน์โหลด</span><span data-l="vi">Tải về</span><span data-l="id">Unduh</span></a>
+      <button class="menu" id="menu" type="button" aria-expanded="false" aria-controls="links" aria-label="Menu"><svg class="i" aria-hidden="true"><use href="#i-menu"/></svg></button>
+    </div>
+  </div>
+</nav>
+
+<header class="hero small">
+  <div class="wrap">
+    <h1 class="rise"><span data-l="en">Akati <span class="grad">Score</span></span><span data-l="th">Akati <span class="grad">Score</span></span><span data-l="vi">Akati <span class="grad">Score</span></span><span data-l="id">Akati <span class="grad">Score</span></span></h1>
+    <div class="rise" style="--d:1">
+      <p class="lead" data-l="en">A score card shared from Akati OS Center.</p>
+      <p class="lead" data-l="th">การ์ดคะแนนที่แชร์มาจาก Akati OS Center</p>
+      <p class="lead" data-l="vi">Thẻ điểm được chia sẻ từ Akati OS Center.</p>
+      <p class="lead" data-l="id">Kartu skor yang dibagikan dari Akati OS Center.</p>
+    </div>
+  </div>
+</header>
+
+<section class="share">
+  <div class="wrap">
+    <article class="scard rise" style="--d:2" aria-labelledby="score-label">
+      <div class="s-top">
+        <span class="s-brand"><img src="images/logo.png" alt="" width="28" height="28">AKATI OS</span>
+        <span class="s-date" id="s-date" hidden></span>
+      </div>
+      <div class="ring">
+        <svg viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+          <defs><linearGradient id="ring-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a35cf0"/><stop offset="1" stop-color="#e559a9"/></linearGradient></defs>
+          <circle class="track" cx="60" cy="60" r="52"/>
+          <circle class="bar" id="ring-bar" cx="60" cy="60" r="52" stroke-dasharray="326.73" stroke-dashoffset="326.73"/>
+        </svg>
+        <div class="ring-in">
+          <span class="ring-n" id="s-num">–</span>
+          <span class="ring-l" id="score-label">AKATI SCORE</span>
+        </div>
+      </div>
+      <p class="s-status" id="s-status" aria-live="polite">
+        <span class="great" data-s="great" hidden><span data-l="en">Ready for games</span><span data-l="th">พร้อมเล่นเกม</span><span data-l="vi">Sẵn sàng chơi game</span><span data-l="id">Siap untuk game</span></span>
+        <span class="good" data-s="good" hidden><span data-l="en">Good, a few things can be better</span><span data-l="th">ดี มีบางอย่างปรับให้ดีขึ้นได้</span><span data-l="vi">Tốt, vài thứ có thể cải thiện</span><span data-l="id">Bagus, beberapa hal bisa lebih baik</span></span>
+        <span class="low" data-s="low" hidden><span data-l="en">Several things slow this PC down</span><span data-l="th">มีหลายอย่างทำให้เครื่องช้า</span><span data-l="vi">Một số thứ đang làm chậm PC</span><span data-l="id">Beberapa hal memperlambat PC ini</span></span>
+        <span class="none" data-s="none"><span data-l="en">This link has no Akati Score.</span><span data-l="th">ลิงก์นี้ไม่มี Akati Score</span><span data-l="vi">Liên kết này không có Akati Score.</span><span data-l="id">Tautan ini tidak berisi Akati Score.</span></span>
+      </p>
+      <dl class="parts" id="s-parts" hidden>
+        <div class="part" data-k="cpu" hidden><dt>CPU</dt><dd></dd></div>
+        <div class="part" data-k="gpu" hidden><dt>GPU</dt><dd></dd></div>
+        <div class="part" data-k="ram" hidden><dt>RAM</dt><dd></dd></div>
+        <div class="part" data-k="w" hidden><dt>Windows</dt><dd></dd></div>
+        <div class="part" data-k="v" hidden><dt>Akati OS</dt><dd></dd></div>
+      </dl>
+      <div class="s-actions">
+        <a class="btn primary" href="./#download"><svg class="i" aria-hidden="true"><use href="#i-dl"/></svg><span class="t"><span><span data-l="en">Get Akati OS</span><span data-l="th">รับ Akati OS</span><span data-l="vi">Tải Akati OS</span><span data-l="id">Dapatkan Akati OS</span></span><small><span data-l="en">Free · Windows 11 and 10</span><span data-l="th">ฟรี · Windows 11 และ 10</span><span data-l="vi">Miễn phí · Windows 11 và 10</span><span data-l="id">Gratis · Windows 11 dan 10</span></small></span></a>
+        <a class="btn" href="docs.html#doctor"><svg class="i" aria-hidden="true"><use href="#i-gauge"/></svg><span class="t"><span><span data-l="en">What is the Akati Score?</span><span data-l="th">Akati Score คืออะไร</span><span data-l="vi">Akati Score là gì?</span><span data-l="id">Apa itu Akati Score?</span></span><small><span data-l="en">In the docs</span><span data-l="th">ในคู่มือ</span><span data-l="vi">Trong tài liệu</span><span data-l="id">Di dokumentasi</span></small></span></a>
+      </div>
+    </article>
+    <p class="s-note">
+      <span data-l="en">Numbers come from the link you opened; Akati OS does not store them.</span>
+      <span data-l="th">ตัวเลขมาจากลิงก์ที่คุณเปิด Akati OS ไม่ได้เก็บไว้</span>
+      <span data-l="vi">Các con số đến từ liên kết bạn đã mở; Akati OS không lưu chúng.</span>
+      <span data-l="id">Angka-angka ini berasal dari tautan yang kamu buka; Akati OS tidak menyimpannya.</span>
+    </p>
+    <noscript><p class="s-note">Turn on JavaScript to see the score from this link.</p></noscript>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="fgrid">
+      <div class="fbrand">
+        <a class="brand" href="./"><img src="images/logo.png" alt="" width="30" height="30" loading="lazy">Akati OS</a>
+        <p data-l="en">A free gaming playbook for AME Wizard.</p>
+        <p data-l="th">Playbook สำหรับเล่นเกม ใช้กับ AME Wizard ได้ฟรี</p>
+        <p data-l="vi">Playbook chơi game miễn phí cho AME Wizard.</p>
+        <p data-l="id">Playbook gaming gratis untuk AME Wizard.</p>
+        <p class="credit" data-l="en">Based on <a href="https://github.com/Atlas-OS/Atlas">AtlasOS</a> (GPL-3.0), not an official AtlasOS project. The base tweaks are the work of the AtlasOS team.</p>
+        <p class="credit" data-l="th">ดัดแปลงจาก <a href="https://github.com/Atlas-OS/Atlas">AtlasOS</a> (GPL-3.0) ไม่ใช่โปรเจกต์ทางการของ AtlasOS การปรับแต่งพื้นฐานเป็นผลงานของทีม AtlasOS</p>
+        <p class="credit" data-l="vi">Dựa trên <a href="https://github.com/Atlas-OS/Atlas">AtlasOS</a> (GPL-3.0), không phải dự án chính thức của AtlasOS. Các tinh chỉnh nền tảng là công sức của nhóm AtlasOS.</p>
+        <p class="credit" data-l="id">Berbasis <a href="https://github.com/Atlas-OS/Atlas">AtlasOS</a> (GPL-3.0), bukan proyek resmi AtlasOS. Tweak dasarnya adalah karya tim AtlasOS.</p>
+      </div>
+      <div>
+        <h4>Akati OS</h4>
+        <ul>
+          <li><a href="./#features"><span data-l="en">Features</span><span data-l="th">ฟีเจอร์</span><span data-l="vi">Tính năng</span><span data-l="id">Fitur</span></a></li>
+          <li><a href="./#install"><span data-l="en">Install</span><span data-l="th">วิธีติดตั้ง</span><span data-l="vi">Cài đặt</span><span data-l="id">Instal</span></a></li>
+          <li><a href="docs.html"><span data-l="en">Docs</span><span data-l="th">คู่มือ</span><span data-l="vi">Tài liệu</span><span data-l="id">Dokumentasi</span></a></li>
+          <li><a href="./#compare"><span data-l="en">Compare</span><span data-l="th">เปรียบเทียบ</span><span data-l="vi">So sánh</span><span data-l="id">Perbandingan</span></a></li>
+          <li><a href="./#faq">FAQ</a></li>
+          <li><a href="changelog.html"><span data-l="en">Changelog</span><span data-l="th">ประวัติเวอร์ชัน</span><span data-l="vi">Nhật ký thay đổi</span><span data-l="id">Catatan rilis</span></a></li>
+        </ul>
+      </div>
+      <div>
+        <h4><span data-l="en">Project</span><span data-l="th">โปรเจกต์</span><span data-l="vi">Dự án</span><span data-l="id">Proyek</span></h4>
+        <ul>
+          <li><a href="https://github.com/x2Swiftyouz/Akati-Os"><span data-l="en">Source code</span><span data-l="th">ซอร์สโค้ด</span><span data-l="vi">Mã nguồn</span><span data-l="id">Kode sumber</span></a></li>
+          <li><a href="https://github.com/x2Swiftyouz/Akati-Os/releases">GitHub Releases</a></li>
+          <li><a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/OPTIONS.md"><span data-l="en">Options guide</span><span data-l="th">คู่มือตัวเลือก</span><span data-l="vi">Hướng dẫn tùy chọn</span><span data-l="id">Panduan opsi</span></a></li>
+          <li><a href="https://github.com/x2Swiftyouz/Akati-Os/issues/new/choose"><span data-l="en">Report a problem</span><span data-l="th">แจ้งปัญหา</span><span data-l="vi">Báo lỗi</span><span data-l="id">Laporkan masalah</span></a></li>
+        </ul>
+      </div>
+      <div>
+        <h4><span data-l="en">Credits</span><span data-l="th">เครดิต</span><span data-l="vi">Ghi công</span><span data-l="id">Kredit</span></h4>
+        <ul>
+          <li><a href="https://github.com/Atlas-OS/Atlas">AtlasOS</a></li>
+          <li><a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/docs/CHANGES-FROM-ATLAS.md">Changes from AtlasOS</a></li>
+          <li><a href="https://ameliorated.io"><span data-l="en">AME Wizard by Ameliorated</span><span data-l="th">AME Wizard โดย Ameliorated</span><span data-l="vi">AME Wizard của Ameliorated</span><span data-l="id">AME Wizard oleh Ameliorated</span></a></li>
+          <li><a href="https://github.com/x2Swiftyouz/Akati-Os/blob/main/LICENSE"><span data-l="en">License: GPL-3.0</span><span data-l="th">สัญญาอนุญาต: GPL-3.0</span><span data-l="vi">Giấy phép: GPL-3.0</span><span data-l="id">Lisensi: GPL-3.0</span></a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="fbottom">
+      <span data-l="en">Akati OS · GPL-3.0 · Based on AtlasOS, not an official AtlasOS project. AME Wizard by Ameliorated.</span>
+      <span data-l="th">Akati OS · GPL-3.0 · ดัดแปลงจาก AtlasOS ไม่ใช่โปรเจกต์ทางการของ AtlasOS · AME Wizard โดย Ameliorated</span>
+      <span data-l="vi">Akati OS · GPL-3.0 · Dựa trên AtlasOS, không phải dự án chính thức của AtlasOS. AME Wizard của Ameliorated.</span>
+      <span data-l="id">Akati OS · GPL-3.0 · Berbasis AtlasOS, bukan proyek resmi AtlasOS. AME Wizard oleh Ameliorated.</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    // Language: the browser language when it is one of these, remembered when changed
+    var LANGS = ['en', 'th', 'vi', 'id'];
+    var LOCALE = { en: 'en-GB', th: 'th-TH', vi: 'vi-VN', id: 'id-ID' };
+    var saved = null;
+    try { saved = localStorage.getItem('akati-lang'); } catch (e) {}
+    function browserLang() {
+      var list = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language || ''];
+      for (var i = 0; i < list.length; i++) {
+        var p = String(list[i] || '').toLowerCase().slice(0, 2);
+        if (LANGS.indexOf(p) >= 0) return p;
+      }
+      return 'en';
+    }
+    var lang = LANGS.indexOf(saved) >= 0 ? saved : browserLang();
+
+    // Theme: follows the system until the button is used, then the choice is remembered
+    var THEME_LABEL = {
+      en: { light: 'Switch to light theme', dark: 'Switch to dark theme' },
+      th: { light: 'เปลี่ยนเป็นธีมสว่าง', dark: 'เปลี่ยนเป็นธีมมืด' },
+      vi: { light: 'Chuyển sang giao diện sáng', dark: 'Chuyển sang giao diện tối' },
+      id: { light: 'Ganti ke tema terang', dark: 'Ganti ke tema gelap' }
+    };
+    var root = document.documentElement;
+    var lightQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: light)') : null;
+    function chosenTheme() { var t = root.getAttribute('data-theme'); return (t === 'light' || t === 'dark') ? t : null; }
+    function currentTheme() { return chosenTheme() || (lightQuery && lightQuery.matches ? 'light' : 'dark'); }
+    function paintTheme() {
+      var next = currentTheme() === 'dark' ? 'light' : 'dark';
+      var b = document.getElementById('theme');
+      b.classList.toggle('to-light', next === 'light');
+      b.setAttribute('aria-label', THEME_LABEL[lang][next]);
+      b.title = THEME_LABEL[lang][next];
+      var chosen = chosenTheme();
+      document.querySelectorAll('meta[name="theme-color"]').forEach(function (m) {
+        if (!m.getAttribute('data-c')) m.setAttribute('data-c', m.content);
+        m.content = chosen ? (chosen === 'light' ? '#f6f4fa' : '#0f0d14') : m.getAttribute('data-c');
+      });
+    }
+    document.getElementById('theme').addEventListener('click', function () {
+      var t = currentTheme() === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', t);
+      try { localStorage.setItem('akati-theme', t); } catch (e) {}
+      paintTheme();
+    });
+    if (lightQuery) {
+      if (lightQuery.addEventListener) lightQuery.addEventListener('change', paintTheme);
+      else if (lightQuery.addListener) lightQuery.addListener(paintTheme);
+    }
+
+    // Navbar: menu button on small screens, a line under the bar once the page scrolls
+    var MENU_LABEL = { en: 'Menu', th: 'เมนู', vi: 'Menu', id: 'Menu' };
+    var nav = document.getElementById('top');
+    var menu = document.getElementById('menu');
+    function closeMenu() { nav.classList.remove('open'); menu.setAttribute('aria-expanded', 'false'); }
+    menu.addEventListener('click', function () {
+      var open = nav.classList.toggle('open');
+      menu.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    document.querySelectorAll('#links a').forEach(function (a) { a.addEventListener('click', closeMenu); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeMenu(); });
+    function onScroll() { nav.classList.toggle('scrolled', window.scrollY > 8); }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    // The score card. Every value comes only from the query string of this URL: nothing is sent,
+    // fetched or stored. Numbers are clamped, texts are cleaned and shortened and always written
+    // with textContent, never as HTML.
+    var params;
+    try { params = new URLSearchParams(location.search); } catch (e) { params = { get: function () { return null; } }; }
+    function num(v) {
+      if (v === null || v === undefined) return null;
+      v = String(v).trim();
+      if (!/^-?\d{1,12}(\.\d{1,6})?$/.test(v)) return null;
+      var n = Math.round(parseFloat(v));
+      if (!isFinite(n)) return null;
+      return Math.max(0, Math.min(100, n));
+    }
+    function text(v) {
+      if (v === null || v === undefined) return '';
+      // Control, zero-width and text direction characters become spaces
+      v = String(v).replace(/[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u2028-\u202e\u2060-\u2069\ufeff]/g, ' ').replace(/\s+/g, ' ').trim();
+      var chars = Array.from ? Array.from(v) : v.split('');
+      if (chars.length > 60) v = chars.slice(0, 59).join('').trim() + '…';
+      return v;
+    }
+    function date(v) {
+      v = String(v || '').trim();
+      var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v);
+      if (!m) return null;
+      var d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+      if (isNaN(d.getTime()) || d.getUTCFullYear() !== +m[1] || d.getUTCMonth() !== +m[2] - 1 || d.getUTCDate() !== +m[3]) return null;
+      if (+m[1] < 2020 || +m[1] > 2100) return null;
+      return d;
+    }
+    var score = num(params.get('s'));
+    var when = date(params.get('d'));
+    var parts = {
+      cpu: text(params.get('cpu')),
+      gpu: text(params.get('gpu')),
+      ram: text(params.get('ram')),
+      w: text(params.get('w')),
+      v: text(params.get('v'))
+    };
+    if (/^\d{1,2}$/.test(parts.w)) parts.w = 'Windows ' + parts.w;
+    else if (parts.w && !/^windows\b/i.test(parts.w)) parts.w = 'Windows ' + parts.w;
+    parts.w = text(parts.w);
+
+    var level = score === null ? 'none' : score >= 85 ? 'great' : score >= 65 ? 'good' : 'low';
+    document.querySelectorAll('#s-status [data-s]').forEach(function (s) { s.hidden = s.getAttribute('data-s') !== level; });
+    document.getElementById('s-num').textContent = score === null ? '–' : String(score);
+    if (score !== null) {
+      var bar = document.getElementById('ring-bar');
+      var full = 2 * Math.PI * 52;
+      requestAnimationFrame(function () { requestAnimationFrame(function () { bar.style.strokeDashoffset = String(full * (1 - score / 100)); }); });
+      document.title = 'Akati Score ' + score + ' · Akati OS';
+    }
+    var any = false;
+    document.querySelectorAll('#s-parts .part').forEach(function (row) {
+      var val = parts[row.getAttribute('data-k')];
+      row.hidden = !val;
+      if (val) { row.querySelector('dd').textContent = val; any = true; }
+    });
+    document.getElementById('s-parts').hidden = !any;
+    function paintDate() {
+      var el = document.getElementById('s-date');
+      el.hidden = !when;
+      if (!when) return;
+      var s;
+      try { s = when.toLocaleDateString(LOCALE[lang], { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }); }
+      catch (e) { s = when.toISOString().slice(0, 10); }
+      el.textContent = s;
+    }
+
+    function set(l) {
+      lang = l;
+      root.lang = l;
+      document.querySelectorAll('[data-l]').forEach(function (el) { el.classList.toggle('show', el.getAttribute('data-l') === l); });
+      document.querySelectorAll('[data-set]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-set') === l); b.setAttribute('aria-pressed', b.getAttribute('data-set') === l ? 'true' : 'false'); });
+      menu.setAttribute('aria-label', MENU_LABEL[l]);
+      paintTheme();
+      paintDate();
+    }
+    document.querySelectorAll('[data-set]').forEach(function (b) {
+      b.addEventListener('click', function () { set(b.getAttribute('data-set')); try { localStorage.setItem('akati-lang', lang); } catch (e) {} });
+    });
+    set(lang);
+  })();
+</script>
+</body>
+</html>

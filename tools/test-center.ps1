@@ -76,6 +76,12 @@ $gameApps = Get-Content -Raw -Encoding UTF8 (Join-Path $root 'src/Executables/At
 $appKeys = [regex]::Matches($ps1, "@\{ Key = '(\w+)';\s+Cat = ") | ForEach-Object { $_.Groups[1].Value }
 if (!$appKeys) { Fail 'No gaming apps found in AkatiCenter.ps1' }
 foreach ($k in $appKeys) { if ($gameApps -notmatch "(?m)^\s+$k\s+= @\{") { Fail "GAMEAPPS.ps1 cannot install '$k'" } }
+# Game runtimes: every part but .NET Framework 3.5 (DISM) installs through GAMEAPPS.ps1
+$runtimesText = Get-Content -Raw -Encoding UTF8 (Join-Path $center 'AkatiCenter.runtimes.ps1')
+$rtKeys = @([regex]::Matches($runtimesText, "@\{ Key = '(\w+)'; (Vc|File|DotNet) ") | ForEach-Object { $_.Groups[1].Value })
+foreach ($y in '2013', '2012', '2010', '2008', '2005') { foreach ($a in 'x64', 'x86') { $rtKeys += "VC$y$a" } }
+if ($rtKeys.Count -lt 15) { Fail 'No game runtimes found in AkatiCenter.runtimes.ps1' }
+foreach ($k in $rtKeys) { if ($gameApps -notmatch "(?m)^\s+$k\s+= @\{") { Fail "GAMEAPPS.ps1 cannot install the runtime '$k'" } }
 
 # The services the setup option turns off are the ones the Tweaks switch turns back on
 $extraBlock = [regex]::Match($ps1, '(?s)extra\s+=\s+\[ordered\]@\{(.*?)\}').Groups[1].Value

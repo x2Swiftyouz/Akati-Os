@@ -46,6 +46,23 @@ $apps = @{
     GOG       = @{ Id = 'GOG.Galaxy';             Installed = { Test-Path "${env:ProgramFiles(x86)}\GOG Galaxy\GalaxyClient.exe" } }
     Rockstar  = @{ Id = 'RockstarGames.Launcher'; Installed = { Test-Path "$env:ProgramFiles\Rockstar Games\Launcher\Launcher.exe" } }
     Afterburner = @{ Id = 'Guru3D.Afterburner';   Installed = { Test-Path "${env:ProgramFiles(x86)}\MSI Afterburner\MSIAfterburner.exe" } }
+    # Game runtimes (Akati OS Center > Gaming apps > Game runtimes): Microsoft packages in WinGet. WinGet finds the
+    # Visual C++ and .NET runtimes in Apps & features; DirectX (June 2010) has no entry there, so its d3dx9 file is looked for.
+    VC2015x64 = @{ Id = 'Microsoft.VCRedist.2015+.x64' }
+    VC2015x86 = @{ Id = 'Microsoft.VCRedist.2015+.x86' }
+    VC2013x64 = @{ Id = 'Microsoft.VCRedist.2013.x64' }
+    VC2013x86 = @{ Id = 'Microsoft.VCRedist.2013.x86' }
+    VC2012x64 = @{ Id = 'Microsoft.VCRedist.2012.x64' }
+    VC2012x86 = @{ Id = 'Microsoft.VCRedist.2012.x86' }
+    VC2010x64 = @{ Id = 'Microsoft.VCRedist.2010.x64' }
+    VC2010x86 = @{ Id = 'Microsoft.VCRedist.2010.x86' }
+    VC2008x64 = @{ Id = 'Microsoft.VCRedist.2008.x64' }
+    VC2008x86 = @{ Id = 'Microsoft.VCRedist.2008.x86' }
+    VC2005x64 = @{ Id = 'Microsoft.VCRedist.2005.x64' }
+    VC2005x86 = @{ Id = 'Microsoft.VCRedist.2005.x86' }
+    DirectX   = @{ Id = 'Microsoft.DirectX'; Installed = { (Test-Path "$env:windir\SysWOW64\d3dx9_43.dll") -or (Test-Path "$env:windir\System32\d3dx9_43.dll") } }
+    DotNet8   = @{ Id = 'Microsoft.DotNet.DesktopRuntime.8' }
+    DotNet10  = @{ Id = 'Microsoft.DotNet.DesktopRuntime.10' }
 }
 
 if (!$apps.ContainsKey($App)) { Write-Error "Unknown app: $App"; exit 0 }

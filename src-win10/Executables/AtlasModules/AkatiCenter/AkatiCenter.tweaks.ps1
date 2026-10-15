@@ -302,7 +302,8 @@ foreach ($k in $tweakProfiles.gaming.Keys) {
 function Get-CustomProfile { ConvertFrom-ProfileText ([string](Get-RegValue $settingsKey 'TweakProfile')) }
 # Shows what changes and asks first (with a warning when a change needs a restart), then sets each switch
 # like a click: Invoke-Tweak, the change history (Health page, Undo) and the Action log
-function Invoke-TweakProfile([string]$title, $map) {
+# $id: gaming, normal or custom, kept as ProfileApplied for Start here on the Dashboard
+function Invoke-TweakProfile([string]$title, $map, [string]$id = '') {
     Initialize-Tweaks
     $changes = New-Object System.Collections.ArrayList
     foreach ($k in $map.Keys) {
@@ -311,7 +312,7 @@ function Invoke-TweakProfile([string]$title, $map) {
         if (!$t -or !$t.Toggle -or !$t.Toggle.IsEnabled) { continue }
         if ([bool]$t.Toggle.IsChecked -ne [bool]$map[$k]) { [void]$changes.Add(@{ Tweak = $t; On = [bool]$map[$k] }) }
     }
-    if (!$changes.Count) { Set-Status ((T 'profile.same') -f $title); Add-Log 'TweakLog' ((T 'profile.same') -f $title); return }
+    if (!$changes.Count) { Set-Status ((T 'profile.same') -f $title); Add-Log 'TweakLog' ((T 'profile.same') -f $title); Save-ProfileApplied $id; return }
     $restart = @($changes | Where-Object { $_.Tweak.Restart }).Count -gt 0
     # One line per switch in the dialog list
     $lines = @(foreach ($c in $changes) {
@@ -322,7 +323,7 @@ function Invoke-TweakProfile([string]$title, $map) {
     if (!$Screenshot -and (Show-Ask $msg 'YesNo' $(if ($restart) { 'Warning' } else { 'Question' }) $lines $note) -ne 'Yes') {
         Add-Log 'TweakLog' ((T 'profile.cancel') -f $title); return
     }
-    $job = @{ Title = $title; Changes = $changes; Restart = $restart }
+    $job = @{ Title = $title; Changes = $changes; Restart = $restart; Id = $id }
     # Health > Restore points: a restore point first (on at first). The switches change after it, made or not.
     if (!$Screenshot -and $ui.RpProfile.IsChecked) {
         Add-Log 'TweakLog' (T 'status.restoring')
@@ -336,6 +337,10 @@ function Complete-TweakProfile($job) {
     foreach ($c in $job.Changes) { $c.Tweak.Toggle.IsChecked = $c.On; Invoke-Tweak $c.Tweak $c.On; Add-History $c.Tweak.Key $c.On }
     if ($job.Restart) { Set-RestartNeeded }
     Set-Status ((T 'profile.applied') -f $job.Title, $job.Changes.Count)
+    Save-ProfileApplied $job.Id
+}
+function Save-ProfileApplied([string]$id) {
+    if ($id -and !$Screenshot) { Save-Setting ProfileApplied ('{0}|{1}' -f $id, (Get-Date).ToString('s', [Globalization.CultureInfo]::InvariantCulture)) }
 }
 function Update-ProfileTiles {
     $map = Get-CustomProfile
@@ -349,9 +354,9 @@ function Update-ProfileTiles {
         $ui.ProfileCustomSub.Text = (T 'profile.custom.d') -f $map.Count, $when
     }
 }
-$ui.ProfileGaming.Add_Click({ Invoke-TweakProfile (T 'profile.gaming') $tweakProfiles.gaming })
-$ui.ProfileNormal.Add_Click({ Invoke-TweakProfile (T 'profile.normal') $tweakProfiles.normal })
-$ui.ProfileCustom.Add_Click({ Invoke-TweakProfile (T 'profile.custom') (Get-CustomProfile) })
+$ui.ProfileGaming.Add_Click({ Invoke-TweakProfile (T 'profile.gaming') $tweakProfiles.gaming 'gaming' })
+$ui.ProfileNormal.Add_Click({ Invoke-TweakProfile (T 'profile.normal') $tweakProfiles.normal 'normal' })
+$ui.ProfileCustom.Add_Click({ Invoke-TweakProfile (T 'profile.custom') (Get-CustomProfile) 'custom' })
 $ui.ProfileSave.Add_Click({
     Initialize-Tweaks
     # Like the backup: switches that are read and not slow (Microsoft Store)

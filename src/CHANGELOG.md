@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- Health: "What setup changed", a read-only list that compares the options you picked in setup with this PC now: the services you turned off (more unused services, Xbox, Bluetooth, Windows Time, Delivery Optimization, Windows Update), the removed apps (Microsoft Store, Paint, Snipping Tool, Edge), automatic updates, hibernation, the power plan, timer resolution, notifications and Game Bar. Each shows Done, Not done, Changed later or Not picked, with a short hint. Defender real-time protection is only shown, never changed. On a trimmed Windows image the hint says parts of Windows may be missing and suggests a stock Windows ISO from Microsoft. "Export report" saves it as a text file on the desktop
+- Setup: the options you pick are saved in HKLM\SOFTWARE\AkatiOS\Options (one value per option), so Akati OS Center can show what setup changed. A PC set up with an older version shows only how it is now
+- Gaming apps: Game runtimes, with Visual C++ 2015-2022 (x64 and x86), DirectX End-User Runtime (June 2010), .NET Desktop Runtime 8 and 10, .NET Framework 3.5 and the older Visual C++ 2005 to 2013 (not ticked at first). Each shows Installed or Missing; "Install missing" installs the ticked ones from Microsoft through WinGet, one after another and never next to an app install. .NET Framework 3.5 is turned on through Windows Update
+- Health > Backup: "Export Akati settings" and "Import Akati settings", one JSON file with the settings of Akati OS Center (theme, accent, style preset, text size, Tweaks profile, process rules, badges and their dates), My games and the game profiles. Import shows what it replaces first and then offers to apply the theme and accent again. Window places, the change history and other values that belong to one PC stay out; no hardware IDs
+- Dashboard: "Start here", five first steps after setup (graphics driver, game launchers, a Tweaks profile, the speed test, Akati Doctor), each ticked when this PC shows it is done, until you hide it. Ctrl+K > Start here shows it again
+- Ctrl+K finds What setup changed, Game runtimes, Export Akati settings and Start here
+
+### Changed
+- Health > Backup: Save backup and Restore use the same file contents as Export Akati settings plus every switch, and leave out the values that belong to one PC
+
 ## v1.13.0
 
 ### Added

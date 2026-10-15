@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Akati OS Center: Health > What setup changed (the setup options against this PC now, read only) and the Start here
     card of the Dashboard (the first steps after setup).
@@ -170,13 +170,17 @@ function Get-SetupLine($row) {
 function Show-SetupReport($r) {
     $script:setupResult = $r
     $ui.SetupList.Children.Clear()
-    if ($r -isnot [hashtable]) { $ui.SetupEmpty.Text = T 'setup.loading'; $ui.SetupEmpty.Visibility = 'Visible'; $ui.SetupSub.Text = T 'setup.sub'; return }
+    if ($r -isnot [hashtable]) {
+        $ui.SetupEmpty.Text = T 'setup.loading'; $ui.SetupEmpty.SetResourceReference([System.Windows.Controls.TextBlock]::ForegroundProperty, 'MutedBrush')
+        $ui.SetupEmpty.Visibility = 'Visible'; $ui.SetupSub.Text = T 'setup.sub'; return
+    }
     $rows = Get-SetupRows $r
     $script:setupRows = $rows
     $notes = @()
     if ($r.Options -isnot [hashtable]) { $notes += T 'setup.norecord' }
     if ($r.Missing.Count -or !$r.AppxOk) { $notes += T 'setup.trimmed' }
     $ui.SetupEmpty.Text = $notes -join "`n"
+    $ui.SetupEmpty.SetResourceReference([System.Windows.Controls.TextBlock]::ForegroundProperty, 'Warn')
     $ui.SetupEmpty.Visibility = if ($notes.Count) { 'Visible' } else { 'Collapsed' }
     foreach ($row in $rows) {
         $parts = New-Row ([string][char]$row.Item.Glyph) (T "setup.i.$($row.Item.Id)") $null (New-StateBadge $row.State) $null

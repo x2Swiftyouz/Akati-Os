@@ -311,6 +311,8 @@ function Update-AppGroups {
 }
 
 function Start-NextApp {
+    # Game runtimes install first (AkatiCenter.runtimes.ps1 starts the queue again when they are done)
+    if ($script:rtBusy) { return }
     # Discord keeps updating itself after its installer ("finish"); the next app does not wait for that
     if (@($apps | Where-Object { $_.State -in 'install', 'update' -and $_.Stage -ne 'finish' }).Count) { return }
     $next = $apps | Where-Object { $_.State -eq 'queued' } | Select-Object -First 1

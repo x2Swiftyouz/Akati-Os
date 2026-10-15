@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Akati OS Center: Gaming apps > Game runtimes: the Microsoft runtimes many games need (Visual C++, DirectX, .NET).
     Dot-sourced by AkatiCenter.ps1 (runs in its scope: $ui, $window, T and the other parts).

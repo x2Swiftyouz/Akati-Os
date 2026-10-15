@@ -250,7 +250,12 @@ function Start-Health {
     Start-DiskHealth; Update-RestoreInfo
     if ($Screenshot) { Show-Doctor (& $doctorWork); Show-HealthInfo (& $healthWork); return }
     $ui.DoctorRun.IsEnabled = $false; $ui.DoctorSummary.Text = T 'doc.checking'
-    Start-Work $doctorWork @($logicFile) { param($r) Show-Doctor (Get-LastOutput $r); $ui.DoctorRun.IsEnabled = $true } $null
+    Start-Work $doctorWork @($logicFile) {
+        param($r)
+        Show-Doctor (Get-LastOutput $r); $ui.DoctorRun.IsEnabled = $true
+        # Start here (Dashboard): Akati Doctor ran from this page
+        if ($script:doctorResult -is [hashtable]) { Save-Setting DoctorRan ((Get-Date).ToString('s', [Globalization.CultureInfo]::InvariantCulture)) }
+    } $null
     Start-Work $healthWork @() { param($r) Show-HealthInfo (Get-LastOutput $r) } $null
 }
 $ui.DoctorRun.Add_Click({ Start-Health })
@@ -579,20 +584,111 @@ function Show-History {
 }
 $ui.HistoryClear.Add_Click({ Remove-ItemProperty -Path $settingsKey -Name History -ErrorAction SilentlyContinue; Show-History })
 
-# Backup: settings of Akati OS Center, My games with their profiles and the state of every switch, in one JSON file
+# ---------------------------------------------------------------------------------------------
+# Akati settings in one JSON file, to keep or to move to another PC: the settings of Akati OS Center (theme, accent,
+# style preset, text size, Tweaks profile, process rules, badges and their dates, speed and score history...) with their
+# registry type, My games and the game profiles. What belongs to this PC only stays out (Test-PortableSetting: window
+# places, the change history, the Windows Update baseline, the state of running work). No hardware IDs: none of these
+# values holds one. Import writes only to HKCU\Software\AkatiOS\Center and its Games and GameProfiles keys.
+# Backup (below) adds the state of every switch to the same file and sets them when it is restored.
+# ---------------------------------------------------------------------------------------------
+$settingTypes = 'String', 'ExpandString', 'DWord', 'QWord', 'MultiString'
+function Get-AkatiSettingsData {
+    $data = [ordered]@{ AkatiOS = $version; Kind = 'settings'; Date = (Get-Date).ToString('s', [Globalization.CultureInfo]::InvariantCulture)
+                        Settings = [ordered]@{}; Types = [ordered]@{}; Games = @(); Profiles = [ordered]@{} }
+    if (Test-Path $settingsKey) {
+        $key = Get-Item -Path $settingsKey
+        foreach ($n in @($key.GetValueNames() | Sort-Object)) {
+            if (!(Test-PortableSetting $n)) { continue }
+            $kind = [string]$key.GetValueKind($n)
+            if ($kind -notin $settingTypes) { continue }
+            $data.Settings[$n] = $key.GetValue($n, $null, 'DoNotExpandEnvironmentNames')
+            $data.Types[$n] = $kind
+        }
+    }
+    if (Test-Path $gamesKey) { $data.Games = @((Get-Item $gamesKey).Property) }
+    if (Test-Path $profilesKey) { foreach ($p in (Get-ItemProperty -Path $profilesKey).PSObject.Properties) { if ($p.Name -notlike 'PS*') { $data.Profiles[$p.Name] = $p.Value } } }
+    $data
+}
+# A file of Export (Kind settings) or of Backup: $null when it is neither
+function Read-AkatiSettingsFile([string]$file) {
+    $data = try { [IO.File]::ReadAllText($file) | ConvertFrom-Json } catch { $null }
+    if (!$data -or !$data.AkatiOS -or !$data.Settings) { return $null }
+    $data
+}
+# What an import replaces, one line each (the dialog)
+function Get-AkatiSettingsLines($data) {
+    $n = @($data.Settings.PSObject.Properties | Where-Object { Test-PortableSetting $_.Name }).Count
+    @(((T 'set.b.settings') -f $n), ((T 'set.b.games') -f @($data.Games | Where-Object { $_ }).Count), ((T 'set.b.profiles') -f @($data.Profiles.PSObject.Properties).Count))
+}
+# Writes the settings, adds the games (a game already in My games stays as it is) and sets the game profiles
+function Restore-AkatiSettings($data) {
+    if (!(Test-Path $settingsKey)) { New-Item -Path $settingsKey -Force | Out-Null }
+    $types = $data.Types
+    foreach ($p in @($data.Settings.PSObject.Properties)) {
+        if (!(Test-PortableSetting $p.Name)) { continue }
+        $v = $p.Value
+        $kind = if ($types -and $types.($p.Name) -in $settingTypes) { [string]$types.($p.Name) }
+                elseif ($v -is [array]) { 'MultiString' } elseif ($v -is [int] -or $v -is [long]) { 'DWord' } else { 'String' }
+        if ($null -eq $v) { continue }
+        $value = switch ($kind) { 'MultiString' { [string[]]@($v) } 'DWord' { [int]$v } 'QWord' { [long]$v } default { [string]$v } }
+        Set-ItemProperty -Path $settingsKey -Name $p.Name -Value $value -Type $kind -Force
+    }
+    if (@($data.Games | Where-Object { $_ }).Count) {
+        if (!(Test-Path $gamesKey)) { New-Item -Path $gamesKey -Force | Out-Null }
+        foreach ($g in @($data.Games)) { if ($g -and $null -eq (Get-RegValue $gamesKey $g)) { Set-ItemProperty -Path $gamesKey -Name $g -Value 1 -Type DWord -Force } }
+    }
+    foreach ($p in @($data.Profiles.PSObject.Properties)) {
+        if (!(Test-Path $profilesKey)) { New-Item -Path $profilesKey -Force | Out-Null }
+        Set-ItemProperty -Path $profilesKey -Name $p.Name -Value ([int]$p.Value) -Type DWord -Force
+    }
+}
+# After an import: the pages that show these settings, then the theme and accent of the file if wanted (Use-Accent
+# also sets the Windows accent color, as the Appearance page does)
+function Update-AfterImport($data) {
+    Show-Games; Show-Rules; Show-Badges; Update-ProfileTiles; Show-SpeedResults; Show-ScoreChart; Update-Week
+    Request-MenuUpdate
+    if ($data.Settings.Language -in $languages.Keys -and $data.Settings.Language -ne $lang) { Set-AppLanguage $data.Settings.Language }
+    $s = $data.Settings
+    $hasLook = [string]$s.CenterLook -in 'auto', 'dark', 'light', 'time'
+    $acc = $accents | Where-Object { $_.Key -eq [string]$s.Accent } | Select-Object -First 1
+    $hasAccent = $acc -or ([string]$s.Accent -eq 'wallpaper' -and $null -ne $s.AccentHue)
+    if (($hasLook -or $hasAccent) -and (Show-Ask (T 'set.reapply') 'YesNo' 'Question') -eq 'Yes') {
+        if ($hasLook) { $ui["Look$([Globalization.CultureInfo]::InvariantCulture.TextInfo.ToTitleCase([string]$s.CenterLook))"].IsChecked = $true; Set-CenterLook (Get-LookName) }
+        if ($acc) { Use-Accent $acc }
+        elseif ($hasAccent) { $wallSwatch.IsChecked = $true; Use-Accent (New-HueAccent ([double]$s.AccentHue)) }
+        if ([int]$s.Zoom -in $zoomSteps) { $ui["Zoom$([int]$s.Zoom)"].IsChecked = $true }
+    }
+}
+$ui.SettingsExport.Add_Click({
+    $d = New-Object Microsoft.Win32.SaveFileDialog
+    $d.Filter = 'Akati OS settings (*.json)|*.json'; $d.FileName = "AkatiOS-settings-$(Get-Date -Format yyyy-MM-dd).json"
+    if (!$d.ShowDialog($window)) { return }
+    try {
+        [IO.File]::WriteAllText($d.FileName, (Get-AkatiSettingsData | ConvertTo-Json -Depth 5), (New-Object System.Text.UTF8Encoding $false))
+        Set-Status ((T 'set.saved') -f (Split-Path $d.FileName -Leaf))
+    } catch { Set-Status $_.Exception.Message }
+})
+$ui.SettingsImport.Add_Click({
+    $d = New-Object Microsoft.Win32.OpenFileDialog
+    $d.Filter = 'Akati OS settings (*.json)|*.json'
+    if (!$d.ShowDialog($window)) { return }
+    $data = Read-AkatiSettingsFile $d.FileName
+    if (!$data) { Set-Status (T 'backup.bad'); return }
+    if ((Show-Ask (T 'set.ask') 'YesNo' 'Question' (Get-AkatiSettingsLines $data) (T 'set.note')) -ne 'Yes') { return }
+    try { Restore-AkatiSettings $data } catch { Set-Status $_.Exception.Message; return }
+    Set-Status (T 'set.done')
+    Update-AfterImport $data
+})
+
+# Backup: the Akati settings above and the state of every switch, in one JSON file; Restore also sets the switches
 $ui.BackupSave.Add_Click({
     Initialize-Tweaks
     $d = New-Object Microsoft.Win32.SaveFileDialog
     $d.Filter = 'Akati OS backup (*.json)|*.json'; $d.FileName = "AkatiOS-backup-$(Get-Date -Format yyyy-MM-dd).json"
     if (!$d.ShowDialog($window)) { return }
-    $data = [ordered]@{ AkatiOS = $version; Date = (Get-Date).ToString('s'); Settings = [ordered]@{}; Games = @(); Profiles = [ordered]@{}; Tweaks = [ordered]@{} }
-    if (Test-Path $settingsKey) {
-        foreach ($p in (Get-ItemProperty -Path $settingsKey).PSObject.Properties) {
-            if ($p.Name -notlike 'PS*' -and $p.Name -ne 'History' -and $p.Value -isnot [byte[]]) { $data.Settings[$p.Name] = $p.Value }
-        }
-    }
-    if (Test-Path $gamesKey) { $data.Games = @((Get-Item $gamesKey).Property) }
-    if (Test-Path $profilesKey) { foreach ($p in (Get-ItemProperty -Path $profilesKey).PSObject.Properties) { if ($p.Name -notlike 'PS*') { $data.Profiles[$p.Name] = $p.Value } } }
+    $data = Get-AkatiSettingsData
+    $data.Kind = 'backup'; $data.Tweaks = [ordered]@{}
     # Slow switches (Microsoft Store) are left out
     foreach ($t in $tweaks) { if ($t.Toggle -and $t.Toggle.IsEnabled -and !$t.Slow -and $null -ne $t.Toggle.IsChecked) { $data.Tweaks[$t.Key] = [bool]$t.Toggle.IsChecked } }
     try {
@@ -605,24 +701,10 @@ $ui.BackupLoad.Add_Click({
     $d = New-Object Microsoft.Win32.OpenFileDialog
     $d.Filter = 'Akati OS backup (*.json)|*.json'
     if (!$d.ShowDialog($window)) { return }
-    $data = try { [IO.File]::ReadAllText($d.FileName) | ConvertFrom-Json } catch { $null }
-    if (!$data -or !$data.AkatiOS) { Set-Status (T 'backup.bad'); return }
-    if ((Show-Ask (T 'backup.ask') 'YesNo' 'Question') -ne 'Yes') { return }
-    if (!(Test-Path $settingsKey)) { New-Item -Path $settingsKey -Force | Out-Null }
-    foreach ($p in @($data.Settings.PSObject.Properties)) {
-        $v = $p.Value
-        if ($v -is [array]) { Set-ItemProperty -Path $settingsKey -Name $p.Name -Value ([string[]]@($v)) -Type MultiString -Force }
-        elseif ($v -is [int] -or $v -is [long]) { Set-ItemProperty -Path $settingsKey -Name $p.Name -Value ([int]$v) -Type DWord -Force }
-        elseif ($null -ne $v) { Set-ItemProperty -Path $settingsKey -Name $p.Name -Value ([string]$v) -Type String -Force }
-    }
-    if (@($data.Games).Count) {
-        if (!(Test-Path $gamesKey)) { New-Item -Path $gamesKey -Force | Out-Null }
-        foreach ($g in @($data.Games)) { if ($g) { Set-ItemProperty -Path $gamesKey -Name $g -Value 1 -Type DWord -Force } }
-    }
-    foreach ($p in @($data.Profiles.PSObject.Properties)) {
-        if (!(Test-Path $profilesKey)) { New-Item -Path $profilesKey -Force | Out-Null }
-        Set-ItemProperty -Path $profilesKey -Name $p.Name -Value ([int]$p.Value) -Type DWord -Force
-    }
+    $data = Read-AkatiSettingsFile $d.FileName
+    if (!$data) { Set-Status (T 'backup.bad'); return }
+    if ((Show-Ask (T 'backup.ask') 'YesNo' 'Question' (Get-AkatiSettingsLines $data)) -ne 'Yes') { return }
+    try { Restore-AkatiSettings $data } catch { Set-Status $_.Exception.Message; return }
     $changed = 0
     foreach ($p in @($data.Tweaks.PSObject.Properties)) {
         $t = $tweaks | Where-Object { $_.Key -eq $p.Name } | Select-Object -First 1
@@ -630,10 +712,8 @@ $ui.BackupLoad.Add_Click({
         $t.Toggle.IsChecked = [bool]$p.Value; Invoke-Tweak $t ([bool]$p.Value); Add-History $t.Key ([bool]$p.Value)
         $changed++
     }
-    Show-Games
-    Request-MenuUpdate
-    if ($data.Settings.Language -in $languages.Keys -and $data.Settings.Language -ne $lang) { Set-AppLanguage $data.Settings.Language }
     Set-Status ((T 'backup.restored') -f $changed)
+    Update-AfterImport $data
 })
 
 # ---------------------------------------------------------------------------------------------

@@ -625,9 +625,9 @@ function Get-SpotlightItems {
     & $add (T 'badge.title') ((Get-Both 'badge.title') + ' achievements badges') (T 'nav.health') ([char]0xE735) { param($d) Show-Element 'health' $d } $ui.BadgeSection (Get-Both 'badge.sub')
     & $add (T 'games.tw.spot') ((Get-Both 'games.tw.spot') + ' game profile tweaks play') (T 'spot.setting') ([char]0xE7FC) { param($d) Show-Element 'boost' $d } $ui.GamesList (Get-Both 'games.tw.tip')
     & $add (T 'setup.title') ((Get-Both 'setup.title') + ' setup options report ame wizard playbook defender') (T 'nav.health') ([char]0xE9D9) { param($d) Show-Element 'health' $d } $ui.SetupSection (Get-Both 'setup.sub')
-    & $add (T 'setup.export') ((Get-Both 'setup.export') + ' setup report txt desktop') (T 'spot.action') ([char]0xE896) { param($d) Show-Element 'health' $d } $ui.SetupSection $null
+    & $add (T 'setup.export') ((Get-Both 'setup.export') + ' setup report txt desktop') (T 'nav.health') ([char]0xE896) { param($d) Show-Element 'health' $d } $ui.SetupSection $null
     & $add (T 'rt.title') ((Get-Both 'rt.title') + ' runtimes visual c++ vcredist directx dotnet .net framework 3.5 redistributable') (T 'nav.gaming') ([char]0xE943) { param($d) Show-Element 'gaming' $d } $ui.RuntimeSection (Get-Both 'rt.sub')
-    & $add (T 'set.export') ((Get-Both 'set.export') + ' ' + (Get-Both 'set.import') + ' backup settings json move') (T 'nav.health') ([char]0xE8C8) { param($d) Show-Element 'health' $d } $ui.BackupSection (Get-Both 'set.sub')
+    & $add (T 'set.export') ((Get-Both 'set.export') + ' ' + (Get-Both 'set.import') + ' backup settings json move') (T 'nav.health') ([char]0xE8C8) { param($d) Show-Element 'health' $d } $ui.BackupSection.Child (Get-Both 'set.sub')
     & $add (T 'start.title') ((Get-Both 'start.title') + ' first steps checklist driver launchers') (T 'nav.dashboard') ([char]0xE7C1) { param($d) Show-StartAgain } $null
     return $items
 }

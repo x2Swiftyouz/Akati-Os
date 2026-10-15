@@ -395,6 +395,8 @@ if ($null -ne $script:exitNow) { exit $script:exitNow }
 . (Join-Path $appDir 'AkatiCenter.services.ps1')
 . (Join-Path $appDir 'AkatiCenter.badges.ps1')
 . (Join-Path $appDir 'AkatiCenter.quicktools.ps1')
+. (Join-Path $appDir 'AkatiCenter.runtimes.ps1')
+. (Join-Path $appDir 'AkatiCenter.setup.ps1')
 
 # ---------------------------------------------------------------------------------------------
 # Navigation, title bar, language
@@ -433,7 +435,7 @@ $numberText = { param($v) [string][int][Math]::Round($v) }
 function Show-Page([string]$name) {
     $script:page = $name
     if ($name -eq 'tweaks') { Initialize-Tweaks; Show-Privacy }
-    if ($name -eq 'gaming') { Initialize-Apps }
+    if ($name -eq 'gaming') { Initialize-Apps; Initialize-Runtimes }
     if ($name -eq 'appearance') { Initialize-Appearance }
     if ($name -eq 'quicktools') { Initialize-QuickTools }
     if ($name -eq 'uninstall' -and !$script:uninstLoaded) { $script:uninstLoaded = $true; Start-UninstLoad }
@@ -463,6 +465,7 @@ function Show-Page([string]$name) {
     if ($name -eq 'cleaner' -and $ui.CleanTotal.Text -eq '-') { Start-Scan }
     if ($name -eq 'boost') { Update-BoostCard }
     if ($name -eq 'dashboard') {
+        Update-StartCard
         Update-Week
         Start-CountUp $ui.CpuValue $stats.Cpu $percentText; Start-CountUp $ui.RamValue $stats.Ram $percentText
         if ($stats.Gpu -ge 0) { Start-CountUp $ui.GpuValue $stats.Gpu $percentText }
@@ -470,7 +473,7 @@ function Show-Page([string]$name) {
     }
     if ($name -eq 'health') {
         if ($ui.ScoreValue.Text -match '^\d+$') { Start-CountUp $ui.ScoreValue ([int]$ui.ScoreValue.Text) $numberText 900 }
-        if (!$script:healthLoaded) { $script:healthLoaded = $true; Start-Health }
+        if (!$script:healthLoaded) { $script:healthLoaded = $true; Start-Health; Start-SetupReport }
         Show-History; Update-WuState; Update-TempText
         Update-Badges -Now; Show-Badges
     }
@@ -621,6 +624,11 @@ function Get-SpotlightItems {
     & $add (T 'wuback.check') ((Get-Both 'wuback.check') + ' windows update services apps policy') (T 'spot.action') ([char]0xE895) { param($d) Show-Element 'health' $d; Start-WuCheck -Manual } $ui.WuBackCard
     & $add (T 'badge.title') ((Get-Both 'badge.title') + ' achievements badges') (T 'nav.health') ([char]0xE735) { param($d) Show-Element 'health' $d } $ui.BadgeSection (Get-Both 'badge.sub')
     & $add (T 'games.tw.spot') ((Get-Both 'games.tw.spot') + ' game profile tweaks play') (T 'spot.setting') ([char]0xE7FC) { param($d) Show-Element 'boost' $d } $ui.GamesList (Get-Both 'games.tw.tip')
+    & $add (T 'setup.title') ((Get-Both 'setup.title') + ' setup options report ame wizard playbook defender') (T 'nav.health') ([char]0xE9D9) { param($d) Show-Element 'health' $d } $ui.SetupSection (Get-Both 'setup.sub')
+    & $add (T 'setup.export') ((Get-Both 'setup.export') + ' setup report txt desktop') (T 'spot.action') ([char]0xE896) { param($d) Show-Element 'health' $d } $ui.SetupSection $null
+    & $add (T 'rt.title') ((Get-Both 'rt.title') + ' runtimes visual c++ vcredist directx dotnet .net framework 3.5 redistributable') (T 'nav.gaming') ([char]0xE943) { param($d) Show-Element 'gaming' $d } $ui.RuntimeSection (Get-Both 'rt.sub')
+    & $add (T 'set.export') ((Get-Both 'set.export') + ' ' + (Get-Both 'set.import') + ' backup settings json move') (T 'nav.health') ([char]0xE8C8) { param($d) Show-Element 'health' $d } $ui.BackupSection (Get-Both 'set.sub')
+    & $add (T 'start.title') ((Get-Both 'start.title') + ' first steps checklist driver launchers') (T 'nav.dashboard') ([char]0xE7C1) { param($d) Show-StartAgain } $null
     return $items
 }
 function Update-SpotSelection {
@@ -825,6 +833,9 @@ function Update-Language {
     if ($script:svcResult) { Show-Services }
     Show-WuBack $script:wuBack
     Show-Badges
+    if ($script:setupResult) { Show-SetupReport $script:setupResult }
+    Show-Runtimes
+    if ($ui.StartCard.Visibility -eq 'Visible') { Update-StartCard }
     # The rows of Network use are made again, for the End task text
     $script:netRows = @{}
     if ($script:netResult) { Show-NetUse $script:netResult }

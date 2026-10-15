@@ -385,6 +385,8 @@ function Add-PresetButtons {
                 $ui["Look$($p.Look)"].IsChecked = $true
                 Set-Cursors $p.Cursor
                 Set-Sounds $p.Sound
+                # Kept with the Akati settings (Health > Backup > Export Akati settings)
+                Save-Setting StylePreset $p.Key
                 Set-Status ((T 'status.preset') -f (T "preset.$($p.Key)"))
             } catch { Set-Status $_.Exception.Message }
         })

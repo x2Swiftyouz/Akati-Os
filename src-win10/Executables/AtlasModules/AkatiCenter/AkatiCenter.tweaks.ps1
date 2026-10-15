@@ -31,7 +31,9 @@ function Get-GpuMsiKeys {
 # Group: the section on the Tweaks page (none = Gaming). Script: an unchanged AtlasOS script in AtlasDesktop,
 # run with /silent in the background. Work: a script block run in the background, param($on).
 # Windows services Akati OS can turn off (Start = 4), each with its Windows default start type (2 automatic,
-# 3 manual). extra: the setup option "disable-extra-services" and one switch; the others: one switch each.
+# 3 manual). extra: the setup option "disable-extra-services" and one switch; the others: one switch each. Setup options
+# (akati-more-services.yml) also turn off wu ("updates-off"), xbox, bluetooth, time and dosvc; their switches turn them back on.
+# XboxGipSvc (Xbox controllers) is not in the xbox group: it stays on.
 # Services this Windows does not have are skipped, so no empty service keys are made.
 $serviceGroups = @{
     extra    = [ordered]@{ AJRouter = 3; Fax = 3; MapsBroker = 2; PhoneSvc = 3; RetailDemo = 3; wisvc = 3; SCardSvr = 3; ScDeviceEnum = 3
@@ -39,7 +41,10 @@ $serviceGroups = @{
                            dmwappushservice = 3; TermService = 3; SessionEnv = 3; UmRdpService = 3; WinRM = 3; CertPropSvc = 3
                            vmickvpexchange = 3; vmicguestinterface = 3; vmicshutdown = 3; vmicheartbeat = 3; vmicvmsession = 3
                            vmicrdv = 3; vmictimesync = 3; vmicvss = 3; edgeupdate = 2; edgeupdatem = 3 }
-    xbox     = [ordered]@{ XblAuthManager = 3; XblGameSave = 3; XboxNetApiSvc = 3; XboxGipSvc = 3 }
+    xbox     = [ordered]@{ XblAuthManager = 3; XblGameSave = 3; XboxNetApiSvc = 3 }
+    wu       = [ordered]@{ wuauserv = 3; UsoSvc = 2; WaaSMedicSvc = 3 }
+    time     = @{ W32Time = 3 }
+    dosvc    = @{ DoSvc = 2 }
     iphelper = @{ iphlpsvc = 2 }
     hello    = @{ WbioSrvc = 3 }
     scanner  = @{ stisvc = 3 }
@@ -66,6 +71,33 @@ function Set-ServicesOff($group, [bool]$off) {
     foreach ($name in $group.Keys) {
         if (Test-Path "$servicesKey\$name") { Set-ItemProperty -Path "$servicesKey\$name" -Name Start -Value $(if ($off) { 4 } else { $group[$name] }) -Type DWord -Force }
     }
+}
+# Some service keys refuse changes from administrators (Windows Update Medic, and on some builds Update Orchestrator and
+# Delivery Optimization). Background work, param($off, $script, $group): sets Start of each service of $group that
+# exists (4 when $off, else its Windows default); the ones refused are set by a one-time task that runs as
+# TrustedInstaller. Returns an error message when a service still has the wrong start type.
+$svcStartWork = {
+    param([bool]$off, $script, $group)
+    $base = 'HKLM:\SYSTEM\CurrentControlSet\Services'
+    $want = [ordered]@{}
+    foreach ($n in @($group.Keys)) { if (Test-Path "$base\$n") { $want[$n] = if ($off) { 4 } else { [int]$group[$n] } } }
+    $refused = @(foreach ($n in @($want.Keys)) {
+        try { Set-ItemProperty -Path "$base\$n" -Name Start -Value $want[$n] -Type DWord -Force -ErrorAction Stop } catch { $n }
+    })
+    if (!$refused.Count) { return }
+    $cmd = (@($refused | ForEach-Object { "reg add `"HKLM\SYSTEM\CurrentControlSet\Services\$_`" /v Start /t REG_DWORD /d $($want[$_]) /f" }) -join ' & ')
+    $task = 'Akati OS service start'
+    try {
+        Start-Service -Name TrustedInstaller -ErrorAction SilentlyContinue
+        $action = New-ScheduledTaskAction -Execute 'cmd.exe' -Argument "/c $cmd"
+        Register-ScheduledTask -TaskPath '\AkatiOS\' -TaskName $task -Action $action -User 'NT AUTHORITY\SYSTEM' -RunLevel Highest -Force -ErrorAction Stop | Out-Null
+        $sched = New-Object -ComObject 'Schedule.Service'; $sched.Connect()
+        $running = $sched.GetFolder('\AkatiOS').GetTask($task).RunEx($null, 0, 0, 'NT SERVICE\TrustedInstaller')
+        $deadline = (Get-Date).AddSeconds(20)
+        do { Start-Sleep -Milliseconds 400; try { $running.Refresh() } catch { break } } while ($running.State -eq 4 -and (Get-Date) -lt $deadline)
+    } catch { } finally { Unregister-ScheduledTask -TaskPath '\AkatiOS\' -TaskName $task -Confirm:$false -ErrorAction SilentlyContinue }
+    $left = @($refused | Where-Object { [int](Get-ItemProperty -Path "$base\$_" -Name Start -ErrorAction SilentlyContinue).Start -ne $want[$_] })
+    if ($left.Count) { "Access denied: $($left -join ', ')" }
 }
 $personalizeKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize'
 $tweaks = @(
@@ -147,8 +179,20 @@ $tweaks = @(
     # Tweaks > Services: on = turned off from the next start, off = back to the Windows default start type
     @{ Key = 'extrasvc'; Group = 'services'; Glyph = [char]0xE912; Restart = $true; Default = $false
        Get = { Test-ServicesOff $serviceGroups.extra }; Set = { param($on) Set-ServicesOff $serviceGroups.extra $on } }
+    # Xbox controllers (XboxGipSvc) stay on; an older Akati OS Center turned them off with the others, so turning the
+    # switch off also gives XboxGipSvc its Windows default back
     @{ Key = 'svcxbox'; Group = 'services'; Glyph = [char]0xE7FC; Restart = $true; Default = $false
-       Get = { Test-ServicesOff $serviceGroups.xbox }; Set = { param($on) Set-ServicesOff $serviceGroups.xbox $on } }
+       Get = { Test-ServicesOff $serviceGroups.xbox }
+       Set = { param($on)
+               Set-ServicesOff $serviceGroups.xbox $on
+               if (!$on -and (Get-RegValue "$servicesKey\XboxGipSvc" 'Start') -eq 4) { Set-ItemProperty -Path "$servicesKey\XboxGipSvc" -Name Start -Value 3 -Type DWord -Force } } }
+    # Windows Update completely off (setup option "updates-off"): no updates at all, security updates included
+    @{ Key = 'svcwu'; Group = 'services'; Glyph = [char]0xE895; Restart = $true; Default = $false; Arg = $serviceGroups.wu
+       Get = { Test-ServicesOff $serviceGroups.wu }; Work = $svcStartWork }
+    @{ Key = 'svctime'; Group = 'services'; Glyph = [char]0xE823; Restart = $true; Default = $false
+       Get = { Test-ServicesOff $serviceGroups.time }; Set = { param($on) Set-ServicesOff $serviceGroups.time $on } }
+    @{ Key = 'svcdo'; Group = 'services'; Glyph = [char]0xE896; Restart = $true; Default = $false; Arg = $serviceGroups.dosvc
+       Get = { Test-ServicesOff $serviceGroups.dosvc }; Work = $svcStartWork }
     @{ Key = 'svciphelper'; Group = 'services'; Glyph = [char]0xE968; Restart = $true; Default = $false
        Get = { Test-ServicesOff $serviceGroups.iphelper }; Set = { param($on) Set-ServicesOff $serviceGroups.iphelper $on } }
     @{ Key = 'svchello'; Group = 'services'; Glyph = [char]0xE928; Restart = $true; Default = $false
@@ -408,7 +452,7 @@ function Invoke-Tweak($t, [bool]$on) {
         return
     }
     if ($t.Work) {
-        Start-Work $t.Work @($on, $menuScript) $finish $context
+        Start-Work $t.Work @($on, $menuScript, $t.Arg) $finish $context
         if ($t.Key -eq 'desktopmenu' -and $on) { Request-MenuUpdate }
         return
     }

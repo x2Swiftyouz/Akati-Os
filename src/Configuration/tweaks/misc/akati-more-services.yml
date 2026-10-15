@@ -1,0 +1,72 @@
+---
+title: Akati OS More Services
+description: Turns Windows Update off completely, and turns off the Xbox, Bluetooth, Windows Time and Delivery Optimization services, when selected during setup (Akati OS)
+actions:
+    # Each group is disabled from the next start (Start = 4). Services this Windows does not have are skipped, so no
+    # empty service keys are made. Each group is turned back on (the Windows default start types) with its switch in
+    # Akati OS Center > Tweaks. Runs after akati-services.yml, at the end of the setup, so nothing else needs these
+    # services any more.
+
+    # Turn off Windows Update completely (option "updates-off", not the default): what "auto-updates-disable" does,
+    # plus the Windows Update services set to Disabled. No security updates arrive while this is on. The keys of
+    # UsoSvc and WaaSMedicSvc cannot be changed by administrators, so this runs as TrustedInstaller.
+    # Defaults: wuauserv 3, UsoSvc 2, WaaSMedicSvc 3 (the "Turn off Windows Update" switch in Akati OS Center).
+  - !writeStatus: {status: 'Turning off Windows Update', option: 'updates-off'}
+  - !cmd:
+    command: '"AtlasDesktop\3. General Configuration\Automatic Updates\Disable Automatic Updates (default).cmd" /silent'
+    exeDir: true
+    wait: true
+    runas: currentUserElevated
+    option: 'updates-off'
+  - !powerShell:
+    command: |
+      foreach ($name in 'wuauserv', 'UsoSvc', 'WaaSMedicSvc') {
+          $key = 'HKLM:\SYSTEM\CurrentControlSet\Services\' + $name
+          if (Test-Path $key) { Set-ItemProperty -Path $key -Name Start -Value 4 -Type DWord }
+      }
+    wait: true
+    runas: trustedInstaller
+    option: 'updates-off'
+
+    # Xbox services (option, ticked by default): Xbox Live sign-in, Xbox cloud saves and Xbox networking. Game Pass
+    # and the Xbox app sign-in need them. XboxGipSvc stays on: Xbox controllers use it. Defaults: 3, 3, 3.
+  - !writeStatus: {status: 'Turning off Xbox services', option: 'disable-xbox-services'}
+  - !powerShell:
+    command: |
+      foreach ($name in 'XblAuthManager', 'XblGameSave', 'XboxNetApiSvc') {
+          $key = 'HKLM:\SYSTEM\CurrentControlSet\Services\' + $name
+          if (Test-Path $key) { Set-ItemProperty -Path $key -Name Start -Value 4 -Type DWord }
+      }
+    wait: true
+    option: 'disable-xbox-services'
+
+    # Bluetooth (option, ticked by default): Bluetooth headsets, controllers and mice stop working. Runs also on PCs
+    # without Bluetooth (missing services are skipped). Defaults: bthserv 3, BTAGService 3, BthAvctpSvc 3.
+  - !writeStatus: {status: 'Turning off Bluetooth', option: 'disable-bluetooth'}
+  - !powerShell:
+    command: |
+      foreach ($name in 'bthserv', 'BTAGService', 'BthAvctpSvc') {
+          $key = 'HKLM:\SYSTEM\CurrentControlSet\Services\' + $name
+          if (Test-Path $key) { Set-ItemProperty -Path $key -Name Start -Value 4 -Type DWord }
+      }
+    wait: true
+    option: 'disable-bluetooth'
+
+    # Windows Time (option, ticked by default): the clock no longer syncs automatically. Default: 3.
+    # config-time.yml (earlier in the setup) has already synced the clock once.
+  - !writeStatus: {status: 'Turning off Windows Time', option: 'disable-time-service'}
+  - !powerShell:
+    command: |
+      if (Test-Path 'HKLM:\SYSTEM\CurrentControlSet\Services\W32Time') { Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Services\W32Time' -Name Start -Value 4 -Type DWord }
+    wait: true
+    option: 'disable-time-service'
+
+    # Delivery Optimization (option, ticked by default): Microsoft Store and Windows Update downloads may be slower.
+    # Default: 2. Its key cannot always be changed by administrators, so this runs as TrustedInstaller.
+  - !writeStatus: {status: 'Turning off Delivery Optimization', option: 'disable-delivery-optimization'}
+  - !powerShell:
+    command: |
+      if (Test-Path 'HKLM:\SYSTEM\CurrentControlSet\Services\DoSvc') { Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Services\DoSvc' -Name Start -Value 4 -Type DWord }
+    wait: true
+    runas: trustedInstaller
+    option: 'disable-delivery-optimization'

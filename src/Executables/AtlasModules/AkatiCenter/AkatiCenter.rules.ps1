@@ -61,7 +61,25 @@ foreach ($n in 20, 30, 50) { $ui["BalLimit$n"].Add_Checked({ Save-Setting Balanc
 function Test-BalTray {
     if ($Screenshot) { return }
     Start-Work { [bool]@(Get-CimInstance Win32_Process -Filter "Name='powershell.exe'" -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like '*AkatiTray.ps1*' -and $_.CommandLine -notlike '*-Install*' }).Count } @() {
-        param($r) $ui.BalTray.Visibility = if ((Get-LastOutput $r) -eq $true) { 'Collapsed' } else { 'Visible' } } $null
+        param($r) $vis = if ((Get-LastOutput $r) -eq $true) { 'Collapsed' } else { 'Visible' }; $ui.BalTray.Visibility = $vis; $ui.TempAlertTray.Visibility = $vis } $null
+}
+
+# Temperature alert while gaming (the icon next to the clock checks, AkatiTray.ps1): TempAlert (0 off, on when missing),
+# TempCpuMax (80, 85, 90 or 95, default 90) and TempGpuMax (75, 80, 85 or 90, default 85)
+$ui.TempAlertOn.IsChecked = (Get-RegValue $settingsKey 'TempAlert') -ne 0
+$ui.TempAlertOn.Add_Click({ Save-Setting TempAlert ([int][bool]$this.IsChecked); Set-Status (T $(if ($this.IsChecked) { 'talert.on' } else { 'talert.off' })) })
+$tempCpuMax = [int](Get-RegValue $settingsKey 'TempCpuMax'); if ($tempCpuMax -in 80, 85, 90, 95) { $ui["TempCpu$tempCpuMax"].IsChecked = $true }
+$tempGpuMax = [int](Get-RegValue $settingsKey 'TempGpuMax'); if ($tempGpuMax -in 75, 80, 85, 90) { $ui["TempGpu$tempGpuMax"].IsChecked = $true }
+foreach ($n in 80, 85, 90, 95) { $ui["TempCpu$n"].Add_Click({ $v = [int]$this.Name.Substring(7); Save-Setting TempCpuMax $v; Set-Status ((T 'talert.saved') -f "CPU $v °C") }) }
+foreach ($n in 75, 80, 85, 90) { $ui["TempGpu$n"].Add_Click({ $v = [int]$this.Name.Substring(7); Save-Setting TempGpuMax $v; Set-Status ((T 'talert.saved') -f "GPU $v °C") }) }
+# What this PC reports (the Dashboard reads the temperatures every few seconds): none means the alert does nothing here
+function Update-TempAlert {
+    if ($stats.Seq -lt 1 -and !$Screenshot) { $ui.TempAlertNote.Visibility = 'Collapsed'; return }
+    $parts = @()
+    if ($stats.CpuTemp -gt 0) { $parts += (T 'chip.temp.sys') -f $stats.CpuTemp }
+    if ($stats.GpuTemp -gt 0) { $parts += (T 'chip.temp.gpu') -f $stats.GpuTemp }
+    $ui.TempAlertNote.Text = if ($parts.Count) { (T 'talert.reads') -f ($parts -join ' · ') } else { T 'talert.none' }
+    $ui.TempAlertNote.Visibility = 'Visible'
 }
 # Add rule: running apps with a window as chips, the processors as chips, a priority
 $ui.RuleAdd.Add_Click({

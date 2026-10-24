@@ -393,8 +393,11 @@ if ($null -ne $script:exitNow) { exit $script:exitNow }
 . (Join-Path $appDir 'AkatiCenter.health.ps1')
 . (Join-Path $appDir 'AkatiCenter.privacy.ps1')
 . (Join-Path $appDir 'AkatiCenter.services.ps1')
+. (Join-Path $appDir 'AkatiCenter.tasks.ps1')
+. (Join-Path $appDir 'AkatiCenter.pagefile.ps1')
 . (Join-Path $appDir 'AkatiCenter.badges.ps1')
 . (Join-Path $appDir 'AkatiCenter.quicktools.ps1')
+. (Join-Path $appDir 'AkatiCenter.mousetest.ps1')
 . (Join-Path $appDir 'AkatiCenter.runtimes.ps1')
 . (Join-Path $appDir 'AkatiCenter.setup.ps1')
 
@@ -434,13 +437,13 @@ $numberText = { param($v) [string][int][Math]::Round($v) }
 
 function Show-Page([string]$name) {
     $script:page = $name
-    if ($name -eq 'tweaks') { Initialize-Tweaks; Show-Privacy }
+    if ($name -eq 'tweaks') { Initialize-Tweaks; Show-Privacy; if (!$script:pfResult) { Start-PageFileLoad } }
     if ($name -eq 'gaming') { Initialize-Apps; Initialize-Runtimes }
     if ($name -eq 'appearance') { Initialize-Appearance }
     if ($name -eq 'quicktools') { Initialize-QuickTools }
     if ($name -eq 'uninstall' -and !$script:uninstLoaded) { $script:uninstLoaded = $true; Start-UninstLoad }
     if ($name -eq 'boost' -and !$script:startupShown) { $script:startupShown = $true; Show-StartupItems; Start-BgTasks; Test-BalTray }
-    if ($name -eq 'boost') { Show-BalLog }
+    if ($name -eq 'boost') { Show-BalLog; Update-TempAlert }
     foreach ($p in $pages) {
         $el = $ui["Page$(Get-PageId $p)"]
         if ($p -ne $name) { $el.Visibility = 'Collapsed'; continue }
@@ -576,15 +579,19 @@ function Show-Element([string]$page, $element) {
 function Get-SpotlightItems {
     Initialize-Tweaks; Initialize-Apps
     $items = New-Object System.Collections.ArrayList
-    # Name: the title and other names of the item (both languages, keywords); Desc: its description
-    $add = { param($text, $search, $sub, $glyph, $action, $data, $desc)
-             [void]$items.Add(@{ Id = $(if ($search) { [string]$search } else { [string]$text }); Text = $text; Name = "$text $search".ToLowerInvariant(); Desc = "$desc".ToLowerInvariant(); Sub = $sub; Glyph = [string]$glyph; Action = $action; Data = $data }) }
-    foreach ($p in $pages) { & $add (T "nav.$p") (Get-Both "nav.$p") (T 'spot.page') ([char]0xE8A5) { param($d) $ui["Nav$(Get-PageId $d)"].IsChecked = $true } $p }
+    # Name: the title and other names of the item (both languages, keywords); Desc: its description; Syn: intent words of
+    # $intents in every language ("slow internet", "เน็ตช้า"), found after the direct matches (Get-SpotRank)
+    $add = { param($text, $search, $sub, $glyph, $action, $data, $desc, [string[]]$intents)
+             $syn = (@($intents | Where-Object { $_ } | ForEach-Object { Get-Both "spot.i.$_" }) -join ' ').ToLowerInvariant()
+             [void]$items.Add(@{ Id = $(if ($search) { [string]$search } else { [string]$text }); Text = $text; Name = "$text $search".ToLowerInvariant(); Desc = "$desc".ToLowerInvariant(); Syn = $syn; Sub = $sub; Glyph = [string]$glyph; Action = $action; Data = $data }) }
+    $pageIntents = @{ cleaner = @('slowpc'); boost = @('stutter', 'slownet') }
+    $tweakIntents = @{ timer = @('stutter'); nagle = @('slownet') }
+    foreach ($p in $pages) { & $add (T "nav.$p") (Get-Both "nav.$p") (T 'spot.page') ([char]0xE8A5) { param($d) $ui["Nav$(Get-PageId $d)"].IsChecked = $true } $p $null $pageIntents[$p] }
     foreach ($t in $tweaks) {
         if (!$t.Row) { continue }
-        & $add (T "tw.$($t.Key)") (Get-Both "tw.$($t.Key)") (T 'spot.setting') $t.Glyph { param($d) Show-Element 'tweaks' $d } $t.Row (Get-Both "tw.$($t.Key).d")
+        & $add (T "tw.$($t.Key)") (Get-Both "tw.$($t.Key)") (T 'spot.setting') $t.Glyph { param($d) Show-Element 'tweaks' $d } $t.Row (Get-Both "tw.$($t.Key).d") $tweakIntents[$t.Key]
     }
-    & $add (T 'tw.dns') ((Get-Both 'tw.dns') + ' cloudflare google 1.1.1.1 8.8.8.8') (T 'spot.setting') ([char]0xE774) { param($d) Show-Element 'tweaks' $d } $dnsRow.Row
+    & $add (T 'tw.dns') ((Get-Both 'tw.dns') + ' cloudflare google 1.1.1.1 8.8.8.8') (T 'spot.setting') ([char]0xE774) { param($d) Show-Element 'tweaks' $d } $dnsRow.Row $null @('slownet')
     & $add (T 'tw.refresh') ((Get-Both 'tw.refresh') + ' hz') (T 'spot.setting') ([char]0xE7F8) { param($d) Show-Element 'tweaks' $d } $refreshRow.Row
     foreach ($a in $apps) {
         & $add $a.Name '' (T 'spot.app') ([char]0xE7FC) { param($d) if (Test-App $d) { Open-App $d } else { Show-Element 'gaming' $d.RowParts.Row } } $a (Get-Both "app.desc.$($a.Key)")
@@ -594,14 +601,15 @@ function Get-SpotlightItems {
     }
     foreach ($ci in $cleanItems) { & $add (T "clean.$($ci.Key)") (Get-Both "clean.$($ci.Key)") (T 'nav.cleaner') $ci.Glyph { param($d) $ui.NavCleaner.IsChecked = $true } $null }
     foreach ($qt in $quickTools) {
-        & $add (T "qt.$($qt.Key)") ((Get-Both "qt.$($qt.Key)") + ' ' + $qt.Words) (T 'nav.quicktools') $qt.Glyph { param($d) Invoke-QuickTool $d } $qt (Get-Both "qt.$($qt.Key).d")
+        $qtIntents = if ($qt.Intents) { $qt.Intents } elseif ($qt.Key -eq 'startup') { @('slowpc') } elseif ($qt.Key -eq 'flushdns') { @('slownet') } else { $null }
+        & $add (T "qt.$($qt.Key)") ((Get-Both "qt.$($qt.Key)") + ' ' + $qt.Words) (T 'nav.quicktools') $qt.Glyph { param($d) Invoke-QuickTool $d } $qt (Get-Both "qt.$($qt.Key).d") $qtIntents
     }
     & $add (T 'act.freeram') (Get-Both 'act.freeram') (T 'spot.action') ([char]0xE964) { param($d) Invoke-FreeRam } $null
-    & $add (T 'act.flushdns') (Get-Both 'act.flushdns') (T 'spot.action') ([char]0xE774) { param($d) & ipconfig.exe /flushdns *> $null; Set-Status (T 'status.dnsflushed') } $null
+    & $add (T 'act.flushdns') (Get-Both 'act.flushdns') (T 'spot.action') ([char]0xE774) { param($d) & ipconfig.exe /flushdns *> $null; Set-Status (T 'status.dnsflushed') } $null $null @('slownet')
     # Windows starts Explorer again by itself (AutoRestartShell), as the user and not as administrator
     & $add (T 'act.explorer') (Get-Both 'act.explorer') (T 'spot.action') ([char]0xE72C) { param($d) Stop-Process -Name explorer -Force -ErrorAction SilentlyContinue } $null
-    & $add (T 'act.boost') ((Get-Both 'act.boost') + ' game mode') (T 'spot.action') ([char]0xE945) { param($d) $ui.BoostButton.RaiseEvent((New-Object System.Windows.RoutedEventArgs ([System.Windows.Controls.Primitives.ButtonBase]::ClickEvent))) } $null
-    & $add (T 'act.ping') (Get-Both 'act.ping') (T 'spot.action') ([char]0xE768) { param($d) $ui.NavBoost.IsChecked = $true; $script:pingOn = $true; $script:pingNext = [datetime]::MinValue; Set-PingButton } $null
+    & $add (T 'act.boost') ((Get-Both 'act.boost') + ' game mode') (T 'spot.action') ([char]0xE945) { param($d) $ui.BoostButton.RaiseEvent((New-Object System.Windows.RoutedEventArgs ([System.Windows.Controls.Primitives.ButtonBase]::ClickEvent))) } $null $null @('stutter')
+    & $add (T 'act.ping') (Get-Both 'act.ping') (T 'spot.action') ([char]0xE768) { param($d) $ui.NavBoost.IsChecked = $true; $script:pingOn = $true; $script:pingNext = [datetime]::MinValue; Set-PingButton } $null $null @('slownet')
     & $add (T 'act.update') (Get-Both 'act.update') (T 'spot.action') ([char]0xE895) { param($d) $ui.NavAbout.IsChecked = $true; Start-UpdateCheck } $null
     & $add (T 'act.lang') (Get-Both 'act.lang') (T 'spot.action') ([char]0xE774) { param($d) $keys = @($languages.Keys); Set-AppLanguage $keys[([array]::IndexOf($keys, $lang) + 1) % $keys.Count] } $null
     & $add (T 'act.report') (Get-Both 'act.report') (T 'spot.action') ([char]0xE7BA) { param($d) $ui.ReportButton.RaiseEvent((New-Object System.Windows.RoutedEventArgs ([System.Windows.Controls.Primitives.ButtonBase]::ClickEvent))) } $null
@@ -613,14 +621,24 @@ function Get-SpotlightItems {
         Show-Element 'tweaks' $ui.IrqShow.Parent.Parent } $null
     & $add (T 'games.scan') (Get-Both 'games.scan') (T 'spot.action') ([char]0xE721) { param($d) $ui.NavBoost.IsChecked = $true; $ui.GameScanButton.RaiseEvent((New-Object System.Windows.RoutedEventArgs ([System.Windows.Controls.Primitives.ButtonBase]::ClickEvent))) } $null
     & $add (T 'smart.title') ((Get-Both 'smart.title') + ' smart ssd nvme hdd drive temperature wear') (T 'nav.health') ([char]0xEDA2) { param($d) Show-Element 'health' $d } $ui.DiskSection (Get-Both 'smart.sub')
-    & $add (T 'speed.title') ((Get-Both 'speed.title') + ' speed test internet download upload mbps jitter') (T 'spot.action') ([char]0xEC4A) { param($d) Show-Element 'boost' $d; Start-SpeedTest } $ui.SpeedSection (Get-Both 'speed.sub')
-    & $add (T 'netuse.title') ((Get-Both 'netuse.title') + ' network connections bandwidth per app end task') (T 'nav.quicktools') ([char]0xE774) { param($d) Show-Element 'quicktools' $d } $ui.NetUseSection (Get-Both 'netuse.sub')
+    & $add (T 'speed.title') ((Get-Both 'speed.title') + ' speed test internet download upload mbps jitter') (T 'spot.action') ([char]0xEC4A) { param($d) Show-Element 'boost' $d; Start-SpeedTest } $ui.SpeedSection (Get-Both 'speed.sub') @('slownet')
+    & $add (T 'netuse.title') ((Get-Both 'netuse.title') + ' network connections bandwidth per app end task') (T 'nav.quicktools') ([char]0xE774) { param($d) Show-Element 'quicktools' $d } $ui.NetUseSection (Get-Both 'netuse.sub') @('slownet')
     & $add (T 'rp.weekly') ((Get-Both 'rp.weekly') + ' restore point system restore') (T 'spot.setting') ([char]0xE81C) { param($d) Show-Element 'health' $d } $ui.RpWeeklyRow (Get-Both 'rp.weekly.d')
     & $add (T 'rp.profile') ((Get-Both 'rp.profile') + ' restore point system restore') (T 'spot.setting') ([char]0xE81C) { param($d) Show-Element 'health' $d } $ui.RpProfileRow (Get-Both 'rp.profile.d')
     & $add (T 'privacy.title') ((Get-Both 'privacy.title') + ' privacy telemetry advertising location recall copilot diagnostics') (T 'spot.setting') ([char]0xE72E) { param($d) Show-Element 'tweaks' $d } $ui.PrivacySection (Get-Both 'privacy.sub')
     & $add (T 'svc.title') ((Get-Both 'svc.title') + ' services service disable startup') (T 'spot.setting') ([char]0xE912) { param($d)
         if ($ui.SvcPanel.Visibility -ne 'Visible') { $ui.SvcShow.RaiseEvent((New-Object System.Windows.RoutedEventArgs ([System.Windows.Controls.Primitives.ButtonBase]::ClickEvent))) }
-        Show-Element 'tweaks' $d } $ui.SvcSection (Get-Both 'svc.sub')
+        Show-Element 'tweaks' $d } $ui.SvcSection (Get-Both 'svc.sub') @('slowpc')
+    & $add (T 'task.title') ((Get-Both 'task.title') + ' scheduled tasks task scheduler telemetry background') (T 'spot.setting') ([char]0xE787) { param($d)
+        if ($ui.TaskPanel.Visibility -ne 'Visible') { $ui.TaskShow.RaiseEvent((New-Object System.Windows.RoutedEventArgs ([System.Windows.Controls.Primitives.ButtonBase]::ClickEvent))) }
+        Show-Element 'tweaks' $d } $ui.TaskSection (Get-Both 'task.sub') @('slowpc')
+    & $add (T 'pf.title') ((Get-Both 'pf.title') + ' page file pagefile virtual memory swap') (T 'spot.setting') ([char]0xEDA2) { param($d) Show-Element 'tweaks' $d } $ui.PfSection (Get-Both 'pf.sub') @('slowpc')
+    & $add (T 'sys.rebar') ((Get-Both 'sys.rebar') + ' rebar resizable bar smart access memory sam above 4g bios') (T 'nav.quicktools') ([char]0xE7F4) { param($d) Show-Element 'quicktools' $d } $ui.SysRebarRow $null @('stutter')
+    & $add (T 'talert.title') ((Get-Both 'talert.title') + ' temperature alert overheating cpu gpu') (T 'spot.setting') ([char]0xE7BA) { param($d) Show-Element 'boost' $d } $ui.TempAlertCard (Get-Both 'talert.sub') @('hot', 'stutter')
+    & $add (T 'health.speed') ((Get-Both 'health.speed') + ' temperature cpu gpu boot time') (T 'nav.health') ([char]0xE7BA) { param($d) Show-Element 'health' $d } $ui.TempDetail.Parent.Parent $null @('hot', 'stutter')
+    & $add (T 'startup.title') ((Get-Both 'startup.title') + ' startup apps sign in') (T 'nav.boost') ([char]0xE7E8) { param($d) Show-Element 'boost' $d } $ui.StartupList.Parent.Parent (Get-Both 'startup.sub') @('slowpc')
+    & $add (T 'profile.title') ((Get-Both 'profile.title') + ' tweaks profile gaming') (T 'spot.setting') ([char]0xE7FC) { param($d) Show-Element 'tweaks' $d } $ui.ProfileGrid $null @('stutter')
+    & $add (T 'fivem.net') ((Get-Both 'fivem.net') + ' fivem winsock network reset') (T 'nav.boost') ([char]0xE774) { param($d) Show-Element 'boost' $d } $ui.FivemNet (Get-Both 'fivem.net.d') @('slownet')
     & $add (T 'wuback.check') ((Get-Both 'wuback.check') + ' windows update services apps policy') (T 'spot.action') ([char]0xE895) { param($d) Show-Element 'health' $d; Start-WuCheck -Manual } $ui.WuBackCard
     & $add (T 'badge.title') ((Get-Both 'badge.title') + ' achievements badges') (T 'nav.health') ([char]0xE735) { param($d) Show-Element 'health' $d } $ui.BadgeSection (Get-Both 'badge.sub')
     & $add (T 'games.tw.spot') ((Get-Both 'games.tw.spot') + ' game profile tweaks play') (T 'spot.setting') ([char]0xE7FC) { param($d) Show-Element 'boost' $d } $ui.GamesList (Get-Both 'games.tw.tip')
@@ -689,12 +707,12 @@ function Update-Spotlight {
         if (!$recent) { $ui.SpotlightLine.Visibility = 'Collapsed'; return }
         $groups[(T 'spot.recent')] = $recent
     } else {
-        # Order: the title starts with the search, then every word in the names, then words found in the description
+        # Order: the title starts with the search, then every word in the names, then words found in the description,
+        # then the intent words, then the search typed with the Thai keyboard layout (Get-SpotRank)
         $ranked = for ($i = 0; $i -lt $script:spotItems.Count; $i++) {
             $item = $script:spotItems[$i]
-            if (!($words | Where-Object { !(Test-SpotWord $item.Name $_) })) { $rank = if ($item.Text.ToLowerInvariant().StartsWith($q)) { 0 } else { 1 } }
-            elseif (!($words | Where-Object { !(Test-SpotWord "$($item.Name) $($item.Desc)" $_) })) { $rank = 2 }
-            else { continue }
+            $rank = Get-SpotRank $q ([string]$item.Text) ([string]$item.Name) ([string]$item.Desc) ([string]$item.Syn)
+            if ($rank -lt 0) { continue }
             [pscustomobject]@{ Item = $item; Rank = $rank; Index = $i }
         }
         $found = @($ranked | Sort-Object Rank, Index | Select-Object -First 8 | ForEach-Object { $_.Item })
@@ -831,6 +849,12 @@ function Update-Language {
     if ($script:page -eq 'tweaks') { Show-Privacy }
     if ($ui.SvcPanel.Visibility -eq 'Visible') { $ui.SvcShowText.Text = T 'svc.hide' }
     if ($script:svcResult) { Show-Services }
+    if ($ui.TaskPanel.Visibility -eq 'Visible') { $ui.TaskShowText.Text = T 'svc.hide' }
+    if ($script:taskResult) { Show-Tasks }
+    Show-PageFile
+    Update-RebarRow $null
+    Update-TempAlert
+    if ($ui.MouseTest.Visibility -eq 'Visible' -and !$script:mouseRun) { $ui.MouseAreaText.Text = T 'mouse.ready'; $ui.MouseStart.Content = T $(if ($ui.MouseAvg.Text -eq '-') { 'mouse.start' } else { 'mouse.again' }) }
     Show-WuBack $script:wuBack
     Show-Badges
     if ($script:setupResult) { Show-SetupReport $script:setupResult }
@@ -923,7 +947,8 @@ $window.Add_PreviewKeyDown({
         Show-Keys; $e.Handled = $true; return
     }
     if ($key -eq 'Escape') {
-        if ($ui.Keys.Visibility -eq 'Visible') { $ui.Keys.Visibility = 'Collapsed'; $e.Handled = $true }
+        if ($ui.MouseTest.Visibility -eq 'Visible') { Close-MouseTest; $e.Handled = $true }
+        elseif ($ui.Keys.Visibility -eq 'Visible') { $ui.Keys.Visibility = 'Collapsed'; $e.Handled = $true }
         elseif ($ui.Tour.Visibility -eq 'Visible') { Stop-Tour; $e.Handled = $true }
         elseif ($ui.Welcome.Visibility -eq 'Visible') { Close-Welcome; $e.Handled = $true }
         elseif ($ui.WhatsNew.Visibility -eq 'Visible') { $ui.WhatsNew.Visibility = 'Collapsed'; Save-Setting LastVersion $version; $e.Handled = $true }

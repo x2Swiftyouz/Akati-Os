@@ -67,6 +67,16 @@ foreach ($pair in @(@('SysCopyOs', 'SysOs'), @('SysCopyArch', 'SysArch'), @('Sys
         try { [System.Windows.Clipboard]::SetText($value); Set-Status ((T 'sys.copied') -f $value) } catch { Set-Status $_.Exception.Message }
     })
 }
+# Quick tools > This PC: Resizable BAR, from Akati Doctor (it runs a few seconds after start): on, off, or cannot check
+$script:rebarState = $null
+function Update-RebarRow($state) {
+    if ($state) { $script:rebarState = [string]$state }
+    $s = $script:rebarState
+    $ui.SysRebar.Text = T $(switch ($s) { 'on' { 'rebar.on' } 'off' { 'rebar.off' } 'unknown' { 'rebar.unknown' } default { 'rebar.checking' } })
+    $ui.SysRebarHow.Visibility = if ($s -eq 'off') { 'Visible' } else { 'Collapsed' }
+}
+Update-RebarRow $null
+$ui.SysRebarHow.Add_Click({ Show-Message (T 'doc.rebar.howto') 'Information' @() (T 'sys.rebar') })
 if ($Screenshot) { Show-Specs (& $specWork) } else { Start-Work $specWork @() { param($r) Show-Specs (Get-LastOutput $r) } $null }
 
 # Storage: every local drive with a bar

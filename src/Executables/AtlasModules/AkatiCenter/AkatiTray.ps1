@@ -14,6 +14,8 @@
     when the game closes. Switches that need administrator rights or a restart are skipped and written to
     %ProgramData%\AkatiOS\AkatiTray.log (Play in Akati OS Center sets the administrator ones).
     Once a week it checks, read only, whether Windows Update turned back on what Akati OS turned off, and says so.
+    While a game from My games runs it checks the CPU and GPU temperature every 12 seconds and warns once per game
+    session when one stays at or above the limit set in Akati OS Center (TempAlert, TempCpuMax, TempGpuMax).
     -Install   (administrator) registers the sign-in task for this user and starts the icon now.
     -Setup     (administrator, used by the playbook) starts -Install in its own hidden process and returns at once,
                so setup in AME Wizard never waits for the Task Scheduler (it once hung there for minutes).
@@ -463,6 +465,32 @@ function Invoke-WuWeekly {
     $script:balloonPage = 'health'
     $notify.ShowBalloonTip(10000, ((T 'wuBack') -f $found.Count), (T 'wuBackTip'), [System.Windows.Forms.ToolTipIcon]::Info)
 }
+# Temperature alert while gaming (set in Akati OS Center > Game boost): only while a game of My games runs, every 4th
+# tick (12 seconds), the CPU and GPU temperature (Get-AkatiTemps). At or above the limit (TempCpuMax 90, TempGpuMax 85
+# by default) for 3 checks in a row: one message for this game session. Nothing outside games; a PC that reports no
+# temperature is asked 3 times per game session, then left alone.
+$script:tempWatch = $null
+function Invoke-TempWatch([bool]$gaming) {
+    if (!$gaming) { $script:tempWatch = $null; return }
+    if (!$script:tempWatch) { $script:tempWatch = @{ Tick = 0; Cpu = 0; Gpu = 0; Shown = $false; None = 0 } }
+    $w = $script:tempWatch
+    $w.Tick++
+    if ($w.Shown -or $w.None -ge 3 -or $w.Tick % 4 -ne 1 -or (Get-Setting 'TempAlert') -eq 0) { return }
+    $t = Get-AkatiTemps
+    if ($t.Cpu -lt 0 -and $t.Gpu -lt 0) { $w.None++; return }
+    $cpuMax = [int](Get-Setting 'TempCpuMax'); if ($cpuMax -lt 50) { $cpuMax = 90 }
+    $gpuMax = [int](Get-Setting 'TempGpuMax'); if ($gpuMax -lt 50) { $gpuMax = 85 }
+    $w.Cpu = if ($t.Cpu -ge $cpuMax) { $w.Cpu + 1 } else { 0 }
+    $w.Gpu = if ($t.Gpu -ge $gpuMax) { $w.Gpu + 1 } else { 0 }
+    $hot = @()
+    if ($w.Cpu -ge 3) { $hot += "CPU $($t.Cpu) °C" }
+    if ($w.Gpu -ge 3) { $hot += "GPU $($t.Gpu) °C" }
+    if (!$hot.Count) { return }
+    $w.Shown = $true
+    $script:balloonPage = 'boost'
+    $notify.ShowBalloonTip(10000, ((T 'tempHot') -f ($hot -join ', ')), (T 'tempHotTip'), [System.Windows.Forms.ToolTipIcon]::Warning)
+    Write-TrayLog "temperature alert: $($hot -join ', ')"
+}
 
 $timer = New-Object System.Windows.Forms.Timer
 $timer.Interval = 3000
@@ -511,6 +539,7 @@ $timer.Add_Tick({
         if ($script:ticks % 20 -eq 0) { Save-PlayTime; Update-ScheduledTheme }
     } catch { }
     try { Invoke-TrayGameTweaks ([string[]]@(if ($seen) { $seen.Keys })) } catch { }
+    try { Invoke-TempWatch ([bool]($seen -and $seen.Count)) } catch { }
     # The weekly check: 15 seconds after sign-in, then every 10 minutes it looks whether a week has passed
     if ($script:ticks % 200 -eq 5) { try { Invoke-WuWeekly } catch { } }
     if ((Get-Setting 'AutoBoost') -ne 1) { $script:autoStarted = $null; return }

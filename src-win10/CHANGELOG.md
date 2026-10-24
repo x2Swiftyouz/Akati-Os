@@ -1,5 +1,19 @@
 # Changelog: Akati OS for Windows 10
 
+## Unreleased
+
+### Added
+- Akati Doctor and Quick tools > This PC: Resizable BAR. On NVIDIA cards the driver tool tells whether it is on; other cards show "Cannot check on this graphics card". When it is off, Akati Doctor shows it as information (not a problem, not counted in the Akati Score) with how to turn on Above 4G Decoding and Resizable BAR in the BIOS
+- Tweaks > Page file: shows how Windows uses a drive as extra memory now (Windows manages it, or the size and the drive) and the RAM. Let Windows manage it (recommended), set a custom size with a suggestion for your RAM (16 GB RAM: 4096 to 8192 MB), or move it to another fixed drive (SSDs first). Akati OS Center asks first, the change needs a restart and is in Health > Change history with Undo. It never offers "no page file", and warns when a PC has none
+- Quick tools > Mouse test: move the mouse in a box for 5 seconds to see the average and peak report rate (polling rate), counted from the raw mouse input, with a short note on what the number means. When raw input cannot be read, the result says it is approximate
+- Tweaks > Scheduled task helper: the tasks that run in the background, with a short explanation and a badge (Safe to turn off, Careful, Keep on, Unknown) for about 60 known Windows tasks (telemetry, Customer Experience, compatibility appraiser, maps, Xbox, feedback, error reporting, disk diagnostics and more). Only Safe and Careful ones get a switch; Careful asks first. Defender, TPM, sign-in and security tasks are never changed, and neither are Windows Update tasks while an update installs. Every change is in Health > Change history with Undo. Search box; the list loads when you open it
+- Game boost: Temperature alert while gaming (on at first). While a game from My games runs, the icon next to the clock checks the CPU and GPU temperature every 12 seconds and shows one message per game when one stays at or above your limit (CPU 90 °C, GPU 85 °C at first) for three checks. Nothing runs outside games, and it does nothing on a PC that reports no temperatures
+- Ctrl+K finds the page file, the scheduled task helper, Resizable BAR, the mouse test, the temperature alert, temperatures, startup apps, profiles and the FiveM network reset
+
+### Changed
+- Ctrl+K understands what you want in all four languages: "เน็ตช้า", "ปิงสูง" or "slow internet" find DNS, the speed test, network use and the FiveM network reset; "เครื่องช้า" finds the Cleaner, startup apps and the service helper; "เกมกระตุก" finds Game boost, Tweaks profiles, temperatures and timer resolution. These come after direct matches. Words can be in any order, Thai works with or without spaces, and English typed with the Thai keyboard layout by mistake is understood
+- Temperatures: when Windows does not give the ACPI temperature to Akati OS Center directly, the Thermal Zone Information counter is read instead (the same sensor)
+
 ## v1.14.0
 
 ### Added

@@ -1382,6 +1382,44 @@
                                     <TextBlock x:Name="RuleEmpty" Tag="t:rules.empty" Text="No rules yet." Style="{StaticResource Muted}" Margin="0,8,0,0"/>
                                 </StackPanel>
                             </Border>
+                            <!-- Temperature alert while gaming: the icon next to the clock checks, set here (AkatiCenter.rules.ps1) -->
+                            <Border x:Name="TempAlertCard" Style="{StaticResource Card}" Padding="8" Margin="0,0,0,16">
+                                <StackPanel Margin="14,8,14,8">
+                                    <DockPanel>
+                                        <CheckBox x:Name="TempAlertOn" DockPanel.Dock="Right" Style="{StaticResource Switch}" VerticalAlignment="Top"/>
+                                        <StackPanel Margin="0,0,12,0">
+                                            <TextBlock Tag="t:talert.title" Text="Temperature alert while gaming" Style="{StaticResource CardTitle}"/>
+                                            <TextBlock Tag="t:talert.sub" Text="While a game from My games runs, the icon next to the clock checks the CPU and GPU temperature." Style="{StaticResource Muted}" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </DockPanel>
+                                    <WrapPanel Margin="0,10,0,0">
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,18,6">
+                                            <TextBlock Tag="t:talert.cpu" Text="CPU limit" Style="{StaticResource Muted}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                            <Border Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="7" Padding="2">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <RadioButton x:Name="TempCpu80" Style="{StaticResource Segment}" GroupName="TempCpu" Content="80 &#xB0;C"/>
+                                                    <RadioButton x:Name="TempCpu85" Style="{StaticResource Segment}" GroupName="TempCpu" Content="85 &#xB0;C"/>
+                                                    <RadioButton x:Name="TempCpu90" Style="{StaticResource Segment}" GroupName="TempCpu" Content="90 &#xB0;C" IsChecked="True"/>
+                                                    <RadioButton x:Name="TempCpu95" Style="{StaticResource Segment}" GroupName="TempCpu" Content="95 &#xB0;C"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                            <TextBlock Tag="t:talert.gpu" Text="GPU limit" Style="{StaticResource Muted}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                            <Border Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="7" Padding="2">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <RadioButton x:Name="TempGpu75" Style="{StaticResource Segment}" GroupName="TempGpu" Content="75 &#xB0;C"/>
+                                                    <RadioButton x:Name="TempGpu80" Style="{StaticResource Segment}" GroupName="TempGpu" Content="80 &#xB0;C"/>
+                                                    <RadioButton x:Name="TempGpu85" Style="{StaticResource Segment}" GroupName="TempGpu" Content="85 &#xB0;C" IsChecked="True"/>
+                                                    <RadioButton x:Name="TempGpu90" Style="{StaticResource Segment}" GroupName="TempGpu" Content="90 &#xB0;C"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </StackPanel>
+                                    </WrapPanel>
+                                    <TextBlock x:Name="TempAlertNote" Text="" Style="{StaticResource Muted}" FontSize="12" TextWrapping="Wrap" Margin="0,6,0,0" Visibility="Collapsed"/>
+                                    <TextBlock x:Name="TempAlertTray" Tag="t:bal.notray" Text="The icon next to the clock does this: turn it on in Tweaks > System." Foreground="#FF9F0A" TextWrapping="Wrap" Margin="0,6,0,0" Visibility="Collapsed"/>
+                                </StackPanel>
+                            </Border>
                             <!-- Anti-cheat mode: Memory integrity (HVCI) on for Valorant, off for FiveM -->
                             <Border Style="{StaticResource Card}" Margin="0,0,0,16">
                                 <StackPanel>
@@ -1647,6 +1685,60 @@
                             <Grid x:Name="TweaksList" Margin="0,0,0,22"/>
                             <!-- More sections (latency, network, graphics, memory), filled by AkatiCenter.ps1 -->
                             <StackPanel x:Name="TweakGroups"/>
+                            <!-- Page file: how Windows uses a drive as extra memory (AkatiCenter.pagefile.ps1) -->
+                            <StackPanel x:Name="PfSection">
+                                <TextBlock Tag="t:pf.title" Text="Page file" Style="{StaticResource Section}"/>
+                                <Border Style="{StaticResource Card}" Margin="0,0,0,22">
+                                    <StackPanel>
+                                        <TextBlock Tag="t:pf.sub" Text="Windows uses part of a drive as extra memory when the RAM is full." Style="{StaticResource Muted}" TextWrapping="Wrap"/>
+                                        <Grid Margin="0,12,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Margin="0,0,16,0">
+                                                <TextBlock Tag="t:pf.now" Text="NOW" Style="{StaticResource StatLabel}"/>
+                                                <TextBlock x:Name="PfState" Text="Reading the page file..." FontSize="15" FontWeight="SemiBold" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                                <TextBlock x:Name="PfSize" Text="" Style="{StaticResource Muted}" FontSize="12" Margin="0,2,0,0"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1" MinWidth="90">
+                                                <TextBlock Tag="t:pf.ram" Text="RAM" Style="{StaticResource StatLabel}"/>
+                                                <TextBlock x:Name="PfRam" Text="-" FontSize="15" FontWeight="SemiBold" Margin="0,4,0,0"/>
+                                            </StackPanel>
+                                        </Grid>
+                                        <TextBlock x:Name="PfWarn" Tag="t:pf.warn.none" Text="This PC has no page file. Let Windows manage it." Foreground="{DynamicResource Warn}" TextWrapping="Wrap" Margin="0,10,0,0" Visibility="Collapsed"/>
+                                        <Border Height="1" Background="{DynamicResource Line}" Margin="0,14,0,12"/>
+                                        <DockPanel Margin="0,0,0,12">
+                                            <Button x:Name="PfAuto" DockPanel.Dock="Right" Style="{StaticResource PillAccent}" VerticalAlignment="Center" Margin="12,0,0,0" Tag="t:pf.use" Content="Use this"/>
+                                            <StackPanel>
+                                                <TextBlock Tag="t:pf.auto" Text="Let Windows manage" FontWeight="SemiBold"/>
+                                                <TextBlock Tag="t:pf.auto.d" Text="Recommended. Windows picks the size and the drive." Style="{StaticResource Muted}" FontSize="12" Margin="0,2,0,0" TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                        </DockPanel>
+                                        <DockPanel Margin="0,0,0,12">
+                                            <Button x:Name="PfCustom" DockPanel.Dock="Right" Style="{StaticResource Pill}" VerticalAlignment="Center" Margin="10,0,0,0" Tag="t:pf.apply" Content="Apply"/>
+                                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
+                                                <TextBox x:Name="PfMin" Width="64" Background="{DynamicResource Field}" Foreground="{DynamicResource Text2}" CaretBrush="{DynamicResource Text2}" BorderBrush="{DynamicResource Line}" Padding="6,4" VerticalContentAlignment="Center" FontFamily="{StaticResource MonoFont}"/>
+                                                <TextBlock Text="-" Style="{StaticResource Muted}" VerticalAlignment="Center" Margin="6,0"/>
+                                                <TextBox x:Name="PfMax" Width="64" Background="{DynamicResource Field}" Foreground="{DynamicResource Text2}" CaretBrush="{DynamicResource Text2}" BorderBrush="{DynamicResource Line}" Padding="6,4" VerticalContentAlignment="Center" FontFamily="{StaticResource MonoFont}"/>
+                                                <TextBlock Text="MB" Style="{StaticResource Muted}" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                                            </StackPanel>
+                                            <StackPanel>
+                                                <TextBlock Tag="t:pf.custom" Text="Custom size" FontWeight="SemiBold"/>
+                                                <TextBlock x:Name="PfSuggest" Text="" Style="{StaticResource Muted}" FontSize="12" Margin="0,2,0,0" TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                        </DockPanel>
+                                        <DockPanel>
+                                            <Button x:Name="PfMove" DockPanel.Dock="Right" Style="{StaticResource Pill}" VerticalAlignment="Top" Margin="12,0,0,0" Tag="t:pf.move.button" Content="Move"/>
+                                            <StackPanel>
+                                                <TextBlock Tag="t:pf.move" Text="Move to another drive" FontWeight="SemiBold"/>
+                                                <TextBlock Tag="t:pf.move.d" Text="Fixed drives only, SSDs first." Style="{StaticResource Muted}" FontSize="12" Margin="0,2,0,0" TextWrapping="Wrap"/>
+                                                <WrapPanel x:Name="PfDrives" Margin="0,8,0,0"/>
+                                            </StackPanel>
+                                        </DockPanel>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
                             <!-- Service helper: running and automatic services with a short explanation and a badge (AkatiCenter.services.ps1) -->
                             <StackPanel x:Name="SvcSection">
                                 <TextBlock Tag="t:svc.title" Text="Service helper" Style="{StaticResource Section}"/>
@@ -1671,6 +1763,34 @@
                                             </Border>
                                             <TextBlock x:Name="SvcState" Text="" Style="{StaticResource Muted}" FontSize="12" Margin="8,0,8,6"/>
                                             <StackPanel x:Name="SvcList"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                            <!-- Scheduled task helper: background tasks with a short explanation and a badge (AkatiCenter.tasks.ps1) -->
+                            <StackPanel x:Name="TaskSection">
+                                <TextBlock Tag="t:task.title" Text="Scheduled task helper" Style="{StaticResource Section}"/>
+                                <Border Style="{StaticResource Card}" Padding="8" Margin="0,0,0,22">
+                                    <StackPanel>
+                                        <DockPanel Margin="14,8,14,6">
+                                            <Button x:Name="TaskShow" DockPanel.Dock="Right" Style="{StaticResource PillAccent}" VerticalAlignment="Top"><TextBlock x:Name="TaskShowText" Tag="t:task.show" Text="Show tasks"/></Button>
+                                            <StackPanel Margin="0,0,12,0">
+                                                <TextBlock Tag="t:task.head" Text="Which background tasks can be turned off" Style="{StaticResource CardTitle}"/>
+                                                <TextBlock Tag="t:task.sub" Text="Tasks that Windows and apps run on a schedule, with a short explanation." Style="{StaticResource Muted}" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                        </DockPanel>
+                                        <StackPanel x:Name="TaskPanel" Visibility="Collapsed" Margin="6,4,6,6">
+                                            <Border Background="{DynamicResource Field}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="8" Padding="10,6" Margin="8,4,8,8">
+                                                <DockPanel>
+                                                    <TextBlock Style="{StaticResource Glyph}" Text="&#xE721;" FontSize="13" Foreground="{DynamicResource MutedBrush}" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                                    <Grid>
+                                                        <TextBlock x:Name="TaskSearchHint" Tag="t:task.search" Text="Search tasks" Foreground="{DynamicResource MutedBrush}" FontSize="13" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                                                        <TextBox x:Name="TaskSearch" Background="Transparent" BorderThickness="0" Foreground="{DynamicResource Text}" CaretBrush="{DynamicResource Text}" FontSize="13" VerticalContentAlignment="Center"/>
+                                                    </Grid>
+                                                </DockPanel>
+                                            </Border>
+                                            <TextBlock x:Name="TaskState" Text="" Style="{StaticResource Muted}" FontSize="12" Margin="8,0,8,6"/>
+                                            <StackPanel x:Name="TaskList"/>
                                         </StackPanel>
                                     </StackPanel>
                                 </Border>
@@ -2179,6 +2299,14 @@
                                         <TextBlock Tag="t:sys.pc" Text="Computer name" Style="{StaticResource Muted}" FontSize="12" Width="130" VerticalAlignment="Center" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
                                         <TextBlock x:Name="SysPc" Text="-" FontFamily="{StaticResource MonoFont}" FontSize="12" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                                     </DockPanel>
+                                    <!-- Resizable BAR: from Akati Doctor (Get-RebarState); "cannot check" when the card does not report it -->
+                                    <DockPanel x:Name="SysRebarRow" Margin="0,0,0,6">
+                                        <Button x:Name="SysRebarHow" DockPanel.Dock="Right" Style="{StaticResource Bare}" Padding="7,4" Margin="8,0,0,0" Visibility="Collapsed">
+                                            <TextBlock Tag="t:doc.fix.rebar" Text="How to turn on" FontSize="12" Foreground="{DynamicResource AccentText}"/>
+                                        </Button>
+                                        <TextBlock Tag="t:sys.rebar" Text="Resizable BAR" Style="{StaticResource Muted}" FontSize="12" Width="130" VerticalAlignment="Center" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock x:Name="SysRebar" Text="Checking..." FontFamily="{StaticResource MonoFont}" FontSize="12" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                    </DockPanel>
                                 </StackPanel>
                             </Border>
                             <Border Style="{StaticResource Card}" Padding="16,14,16,4" Margin="0,0,0,22">
@@ -2557,6 +2685,45 @@
                         </DockPanel>
                         <Border x:Name="SpotlightLine" Height="1" Background="{DynamicResource Line}" Visibility="Collapsed"/>
                         <StackPanel x:Name="SpotlightResults" Margin="6"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Mouse test (Quick tools): move the mouse in the box for 5 seconds; the report rate from raw input (AkatiCenter.mousetest.ps1) -->
+            <Grid x:Name="MouseTest" Grid.ColumnSpan="2" Visibility="Collapsed">
+                <Border Background="#99000000" CornerRadius="14"/>
+                <Border Background="{DynamicResource Popup}" BorderBrush="{DynamicResource FillHover}" BorderThickness="1" CornerRadius="14" Width="500" MaxWidth="560"
+                        VerticalAlignment="Center" HorizontalAlignment="Center" Padding="24,22">
+                    <Border.Effect><DropShadowEffect BlurRadius="30" ShadowDepth="6" Opacity="0.5"/></Border.Effect>
+                    <StackPanel>
+                        <DockPanel>
+                            <Button x:Name="MouseClose" DockPanel.Dock="Right" Style="{StaticResource Bare}" Padding="7" VerticalAlignment="Top">
+                                <TextBlock Style="{StaticResource Glyph}" Text="&#xE711;" FontSize="12"/>
+                            </Button>
+                            <Border Style="{StaticResource IconBox}" Width="40" Height="40" Margin="0,0,14,0" VerticalAlignment="Top"><TextBlock Style="{StaticResource TileGlyph}" FontSize="18" Text="&#xE962;"/></Border>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Tag="t:mouse.title" Text="Mouse test" FontSize="16" FontWeight="SemiBold"/>
+                                <TextBlock Tag="t:mouse.sub" Text="Press Start, then move the mouse quickly in circles inside the box for 5 seconds." Foreground="{DynamicResource Text3}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                            </StackPanel>
+                        </DockPanel>
+                        <Border x:Name="MouseArea" Height="170" Margin="0,16,0,0" CornerRadius="10" Background="{DynamicResource Field}" BorderBrush="{DynamicResource Line}" BorderThickness="1" Cursor="Cross">
+                            <TextBlock x:Name="MouseAreaText" Text="" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Margin="16" Foreground="{DynamicResource MutedBrush}" IsHitTestVisible="False"/>
+                        </Border>
+                        <ProgressBar x:Name="MouseBar" Style="{StaticResource Meter}" Height="4" Margin="0,10,0,0" Maximum="100" Value="0"/>
+                        <UniformGrid Columns="2" Margin="0,14,0,0">
+                            <StackPanel>
+                                <TextBlock Tag="t:mouse.avg" Text="AVERAGE" Style="{StaticResource StatLabel}"/>
+                                <TextBlock x:Name="MouseAvg" Text="-" Style="{StaticResource StatValue}" FontSize="26"/>
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Tag="t:mouse.peak" Text="PEAK" Style="{StaticResource StatLabel}"/>
+                                <TextBlock x:Name="MousePeak" Text="-" Style="{StaticResource StatValue}" FontSize="26"/>
+                            </StackPanel>
+                        </UniformGrid>
+                        <TextBlock x:Name="MouseNote" Text="" Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,10,0,0"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
+                            <Button x:Name="MouseStart" Style="{StaticResource Primary}" MinWidth="110" Content="Start"/>
+                        </StackPanel>
                     </StackPanel>
                 </Border>
             </Grid>

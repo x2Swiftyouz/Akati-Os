@@ -24,6 +24,8 @@ if ($Screenshot) {
     $ago = { param($d) (Get-Date).Date.AddDays(-$d).ToString('yyyy-MM-dd', $inv) }
     Save-Setting Badges ([string[]]@("firstclean=$(& $ago 40)", "clean1gb=$(& $ago 26)", "firstboost=$(& $ago 39)", "days7=$(& $ago 7)", "profile=$(& $ago 1)", "speedtest=$(& $ago 0)"))
     Save-Setting History ([string[]]@("$((Get-Date).AddMinutes(-3).ToString('s', $inv))|svc:MapsBroker|4,2", "$((Get-Date).AddMinutes(-4).ToString('s', $inv))|app:Microsoft.BingNews|removed",
+                                      "$((Get-Date).AddMinutes(-20).ToString('s', $inv))|task:\Microsoft\Windows\Maps\MapsUpdateTask|0,1",
+                                      "$((Get-Date).AddMinutes(-30).ToString('s', $inv))|pagefile|?:\pagefile.sys,C:\pagefile.sys 1024 2048",
                                       "$((Get-Date).AddHours(-1).ToString('s', $inv))|gamemode|1"))
     Start-WuCheck
     # Sample speed tests (before and after a DNS change) and network use per app (one Windows service without End task)
@@ -78,6 +80,7 @@ if ($Screenshot) {
     Show-Specs @{ Cpu = 'AMD Ryzen 7 7800X3D 8-Core Processor'; Cores = 8; Threads = 16; Ram = 16GB; Gpu = 'NVIDIA GeForce RTX 4070'; GpuDriver = '32.0.15.6094'
                   OsName = 'Windows 11 Pro 25H2 (26200.6584)'; Arch = '64-bit' }
     $ui.SysPc.Text = 'GAMING-PC'
+    Update-RebarRow 'off'
     function Save-Shot([string]$file) {
         $size = New-Object System.Windows.Size $window.Width, $window.Height
         $rootEl.Measure($size)
@@ -289,7 +292,25 @@ if ($Screenshot) {
     $top = $ui.PrivacySection.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
     $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 20)); $sv.UpdateLayout(); Save-Shot 'tweaks-en-privacy.png'
     $ui.SvcShow.RaiseEvent((New-Object System.Windows.RoutedEventArgs ([System.Windows.Controls.Primitives.ButtonBase]::ClickEvent)))
+    # Page file (sample PC: a custom size on C:) and the scheduled task helper (sample tasks)
+    Start-PageFileLoad; $sv.UpdateLayout()
+    $top = $ui.PfSection.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
+    $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 20)); $sv.UpdateLayout(); Save-Shot 'tweaks-en-pagefile.png'
+    $ui.TaskShow.RaiseEvent((New-Object System.Windows.RoutedEventArgs ([System.Windows.Controls.Primitives.ButtonBase]::ClickEvent)))
+    $sv.UpdateLayout()
+    $top = $ui.TaskSection.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
+    $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 20)); $sv.UpdateLayout(); Save-Shot 'tweaks-en-tasks.png'
+    $ui.TaskShow.RaiseEvent((New-Object System.Windows.RoutedEventArgs ([System.Windows.Controls.Primitives.ButtonBase]::ClickEvent)))
     $sv.ScrollToVerticalOffset(0)
+    # Mouse test with a sample result, and the temperature alert on Game boost (sample temperatures)
+    $ui.NavQuicktools.IsChecked = $true
+    Show-MouseTest; Show-MouseResult @{ Avg = 996; Peak = 1010; Reports = 4980 } $false; $ui.MouseStart.Content = T 'mouse.again'
+    Save-Shot 'quicktools-en-mouse.png'; $ui.MouseTest.Visibility = 'Collapsed'
+    $ui.NavBoost.IsChecked = $true; $sv = $ui.PageBoost; $sv.UpdateLayout()
+    $stats.CpuTemp = 64; $stats.GpuTemp = 58; Update-TempAlert
+    $top = $ui.TempAlertCard.TranslatePoint((New-Object System.Windows.Point 0, 0), $sv.Content).Y
+    $sv.ScrollToVerticalOffset([Math]::Max(0, $top - 40)); $sv.UpdateLayout(); Save-Shot 'boost-en-tempalert.png'; $sv.ScrollToVerticalOffset(0)
+    $ui.NavTweaks.IsChecked = $true; $sv = $ui.PageTweaks
     # A narrow window (the smallest size): one column of switch cards, the cleaner summary under its list
     $wide = $window.Width; $window.Width = $window.MinWidth
     foreach ($p in 'tweaks', 'cleaner', 'dashboard') { $ui["Nav$(Get-PageId $p)"].IsChecked = $true; Save-Shot "narrow-$p.png" }

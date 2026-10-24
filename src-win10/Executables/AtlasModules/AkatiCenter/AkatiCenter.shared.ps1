@@ -141,3 +141,25 @@ function New-WuBaseline([string[]]$services) {
     }
     , [string[]]@($list)
 }
+
+# ---------------------------------------------------------------------------------------------
+# Temperatures in degrees C, -1 when this PC does not report one: the GPU from the NVIDIA driver tool, the CPU from the
+# ACPI thermal zones (MSAcpi_ThermalZoneTemperature needs administrator rights; the Thermal Zone Information counter,
+# the same zones, works for the icon next to the clock too). Many PCs report no zone; no sensor driver is installed for
+# this (anti-cheats block the usual ones). Used by the Dashboard, Health and the temperature alert while gaming.
+# ---------------------------------------------------------------------------------------------
+function Get-AkatiTemps {
+    $gpu = -1
+    foreach ($smi in "$env:windir\System32\nvidia-smi.exe", "$env:ProgramFiles\NVIDIA Corporation\NVSMI\nvidia-smi.exe") {
+        if (!(Test-Path $smi)) { continue }
+        try { $v = [string]@(& $smi --query-gpu=temperature.gpu --format=csv,noheader,nounits 2>$null)[0]; if ($v.Trim() -match '^\d+$') { $gpu = [int]$v.Trim() } } catch { }
+        break
+    }
+    $zones = @()
+    try { $zones = @(Get-CimInstance -Namespace 'root/wmi' -ClassName MSAcpi_ThermalZoneTemperature -ErrorAction Stop | ForEach-Object { $_.CurrentTemperature / 10 - 273.15 }) } catch { }
+    if (!@($zones | Where-Object { $_ -gt 5 -and $_ -lt 125 }).Count) {
+        try { $zones = @(Get-CimInstance Win32_PerfFormattedData_Counters_ThermalZoneInformation -ErrorAction Stop | ForEach-Object { [double]$_.Temperature - 273.15 }) } catch { }
+    }
+    $zones = @($zones | Where-Object { $_ -gt 5 -and $_ -lt 125 })
+    @{ Cpu = $(if ($zones.Count) { [int]($zones | Measure-Object -Maximum).Maximum } else { -1 }); Gpu = $gpu }
+}

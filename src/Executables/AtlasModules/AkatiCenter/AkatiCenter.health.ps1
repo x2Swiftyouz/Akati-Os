@@ -12,7 +12,9 @@ $orange = (New-Object System.Windows.Media.BrushConverter).ConvertFromString('#F
 
 # Akati Doctor: each check is $true when fine. Runs in the background: only the functions of AkatiCenter.logic.ps1
 # ($logic, dot-sourced there; not needed when it runs here in screenshot mode)
-$doctorChecks = 'tray', 'menu', 'power', 'battery', 'refresh', 'xmp', 'disk', 'smart', 'restart', 'hvci', 'devices', 'crash', 'activation'
+$doctorChecks = 'tray', 'menu', 'power', 'battery', 'refresh', 'xmp', 'rebar', 'disk', 'smart', 'restart', 'hvci', 'devices', 'crash', 'activation'
+# Checks that only inform: shown with an info icon, not counted as a problem or in the Akati Score
+$doctorInfo = @('rebar')
 $logicFile = Join-Path $appDir 'AkatiCenter.logic.ps1'
 $doctorWork = {
     param($logic)
@@ -85,6 +87,14 @@ $doctorWork = {
         })
         if ($disks.Count) { $r.smart = !$badDisks.Count; $r.smartBad = $badDisks -join ', ' } else { $r.skip += 'smart' }
     } catch { $r.skip += 'smart' }
+    # Resizable BAR: only the NVIDIA driver tool reports it reliably (Get-RebarState); other cards and older drivers are
+    # left out of the list (Quick tools > This PC says it cannot be checked)
+    $r.rebarState = 'unknown'
+    $gpuNames = @(Get-CimInstance Win32_VideoController -ErrorAction SilentlyContinue | ForEach-Object { [string]$_.Name } | Where-Object { $_ -notmatch 'Basic Display|Remote' })
+    $smi = @("$env:windir\System32\nvidia-smi.exe", "$env:ProgramFiles\NVIDIA Corporation\NVSMI\nvidia-smi.exe") | Where-Object { Test-Path $_ } | Select-Object -First 1
+    if ($smi -and $gpuNames.Count -and $gpuNames[0] -match 'NVIDIA') { try { $r.rebarState = Get-RebarState ([string[]]@(& $smi -q 2>$null)) } catch { } }
+    $r.rebar = $r.rebarState -ne 'off'
+    if ($r.rebarState -eq 'unknown') { $r.skip += 'rebar' }
     $r
 }
 # Startup time (Diagnostics-Performance log) and crashes of the last 30 days
@@ -107,25 +117,30 @@ $healthWork = {
     $r
 }
 function Show-Doctor($r) {
+    # Screenshot mode: a sample graphics card with Resizable BAR off (the CI runner has none)
+    if ($Screenshot -and $r -is [hashtable]) { $r.rebarState = 'off'; $r.rebar = $false; $r.skip = @($r.skip | Where-Object { $_ -ne 'rebar' }) }
     $script:doctorResult = $r
     $ui.DoctorList.Children.Clear()
     if ($r -isnot [hashtable]) { $ui.DoctorSummary.Text = T 'doc.failed'; return }
+    Update-RebarRow $r.rebarState
     $bad = 0
     foreach ($k in $doctorChecks) {
         if ($k -in @($r.skip)) { continue }
         $ok = [bool]$r[$k]
-        if (!$ok) { $bad++ }
+        $info = !$ok -and $k -in $doctorInfo
+        if (!$ok -and !$info) { $bad++ }
         $arg = switch ($k) { 'disk' { $r.diskFree } 'smart' { $r.smartBad } 'devices' { $r.devicesBad } 'crash' { $r.crashCount }
                              'refresh' { , @($r.hzNow, $r.hzMax) } 'xmp' { , @($r.ramNow, $r.ramMax) } default { '' } }
         $right = New-Object System.Windows.Controls.Border
         if (!$ok) {
             $right = New-Object System.Windows.Controls.Button
-            $right.Style = $window.FindResource('PillAccent'); $right.Padding = '12,4'; $right.Content = T "doc.fix.$k"; $right.Tag = $k
+            $right.Style = $window.FindResource($(if ($info) { 'Pill' } else { 'PillAccent' })); $right.Padding = '12,4'; $right.Content = T "doc.fix.$k"; $right.Tag = $k
             $right.Add_Click({ Invoke-DoctorFix $this.Tag })
         }
-        $row = New-Row ([string][char]$(if ($ok) { 0xE73E } else { 0xE7BA })) ((T "doc.$k.$(if ($ok) { 'ok' } else { 'bad' })") -f $arg) $null $right $null
+        $row = New-Row ([string][char]$(if ($ok) { 0xE73E } elseif ($info) { 0xE946 } else { 0xE7BA })) ((T "doc.$k.$(if ($ok) { 'ok' } else { 'bad' })") -f $arg) $null $right $null
         $row.Sub.Visibility = 'Collapsed'
-        $row.Icon.Child.Foreground = if ($ok) { $window.FindResource('Good') } else { $orange }
+        if ($info) { $row.Icon.Child.SetResourceReference([System.Windows.Controls.TextBlock]::ForegroundProperty, 'AccentText') }
+        else { $row.Icon.Child.Foreground = if ($ok) { $window.FindResource('Good') } else { $orange } }
         [void]$ui.DoctorList.Children.Add($row.Row)
     }
     # Repair Windows files: DISM then SFC in a window (Akati OS Center runs as administrator)
@@ -158,7 +173,7 @@ function Get-StartupOnCount {
 function Get-AkatiScore {
     $r = $script:doctorResult
     if ($r -isnot [hashtable]) { return $null }
-    $issues = @($doctorChecks | Where-Object { !$r[$_] -and $_ -notin @($r.skip) }).Count
+    $issues = @($doctorChecks | Where-Object { !$r[$_] -and $_ -notin @($r.skip) -and $_ -notin $doctorInfo }).Count
     Get-ScorePoints $issues (Get-StartupOnCount) $stats.Ram $stats.Ping ([int]$r.diskFree)
 }
 function Get-ScoreBrush([int]$s) {
@@ -209,6 +224,7 @@ function Invoke-DoctorFix([string]$k) {
         }
         # The BIOS setting cannot be changed from Windows: how to turn it on
         'xmp' { [void](Show-Ask (T 'doc.xmp.howto') 'OK' 'Information') }
+        'rebar' { Show-Message (T 'doc.rebar.howto') 'Information' @() (T 'sys.rebar') }
     }
 }
 # The number on Health in the sidebar: Akati Doctor findings and what Windows Update turned back on
@@ -543,6 +559,22 @@ function New-ChangeRow([string]$kind, [string]$id, [string]$state) {
             $undo.Tag = @{ Id = $id; From = $from }
             $undo.Add_Click({ Set-WuPolicy $this.Tag.Id $this.Tag.From })
         }
+        'task' {
+            $title = (T 'history.task') -f $id.Substring($id.LastIndexOf('\') + 1); $glyph = 0xE787
+            $sub = T $(if ($to -eq '0') { 'history.off' } else { 'history.on' })
+            $undo.IsEnabled = $from -match '^[01]$' -and (Test-TaskUndo $id $to)
+            $undo.Tag = @{ Id = $id; From = $from }
+            $undo.Add_Click({ Set-TaskEnabled $this.Tag.Id ($this.Tag.From -eq '1') })
+        }
+        'pagefile' {
+            # The state holds lines of PagingFiles joined with ; (new,before)
+            $parts = "$state,".Split(',')
+            $title = T 'pf.title'; $glyph = 0xEDA2
+            $sub = (T 'history.pf') -f (Format-PageFileSetup (ConvertFrom-PagingFiles ($parts[0] -split ';')))
+            $undo.IsEnabled = [bool]$parts[1]
+            $undo.Tag = $parts[1]
+            $undo.Add_Click({ Undo-PageFile $this.Tag })
+        }
         default {
             $title = (T 'history.app') -f $id; $glyph = 0xE74D; $sub = T 'history.removed'
             $undo = New-Object System.Windows.Controls.Border
@@ -559,7 +591,7 @@ function Show-History {
     foreach ($item in @(Get-RegValue $settingsKey 'History' | Where-Object { $_ })) {
         $time, $key, $state = $item -split '\|', 3
         $when = try { [datetime]::ParseExact($time, 's', [Globalization.CultureInfo]::InvariantCulture).ToString('d MMM HH:mm', $c) } catch { $time }
-        if ($key -match '^(svc|pol|app):([\w.\-]+)$') {
+        if ($key -match '^(svc|pol|app):([\w.\-]+)$' -or $key -match '^(task):(\\.+)$' -or $key -match '^(pagefile)()$') {
             $row = New-ChangeRow $Matches[1] $Matches[2] $state
             $row.Sub.Text += ' · ' + $when
             [void]$ui.HistoryList.Children.Add($row.Row)

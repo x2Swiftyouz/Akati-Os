@@ -67,6 +67,16 @@ foreach ($pair in @(@('SysCopyOs', 'SysOs'), @('SysCopyArch', 'SysArch'), @('Sys
         try { [System.Windows.Clipboard]::SetText($value); Set-Status ((T 'sys.copied') -f $value) } catch { Set-Status $_.Exception.Message }
     })
 }
+# Quick tools > This PC: Resizable BAR, from Akati Doctor (it runs a few seconds after start): on, off, or cannot check
+$script:rebarState = $null
+function Update-RebarRow($state) {
+    if ($state) { $script:rebarState = [string]$state }
+    $s = $script:rebarState
+    $ui.SysRebar.Text = T $(switch ($s) { 'on' { 'rebar.on' } 'off' { 'rebar.off' } 'unknown' { 'rebar.unknown' } default { 'rebar.checking' } })
+    $ui.SysRebarHow.Visibility = if ($s -eq 'off') { 'Visible' } else { 'Collapsed' }
+}
+Update-RebarRow $null
+$ui.SysRebarHow.Add_Click({ Show-Message (T 'doc.rebar.howto') 'Information' @() (T 'sys.rebar') })
 if ($Screenshot) { Show-Specs (& $specWork) } else { Start-Work $specWork @() { param($r) Show-Specs (Get-LastOutput $r) } $null }
 
 # Storage: every local drive with a bar
@@ -182,27 +192,15 @@ $statsSample = {
             } catch { }
             $stats.Ping = $ms
         }
-        # Temperatures every 5th sample: the NVIDIA driver tool and the ACPI thermal zone. Many PCs report
-        # no zone; no extra driver is installed for this (anti-cheats block the usual sensor drivers)
-        if ($n % 5 -eq 0) {
-            $gpuTemp = -1
-            foreach ($smi in "$env:windir\System32\nvidia-smi.exe", "$env:ProgramFiles\NVIDIA Corporation\NVSMI\nvidia-smi.exe") {
-                if (Test-Path $smi) { try { $gpuTemp = [int](@(& $smi --query-gpu=temperature.gpu --format=csv,noheader,nounits)[0]) } catch { }; break }
-            }
-            $stats.GpuTemp = $gpuTemp
-            try {
-                $zones = @(Get-CimInstance -Namespace 'root/wmi' -ClassName MSAcpi_ThermalZoneTemperature -ErrorAction Stop |
-                    ForEach-Object { $_.CurrentTemperature / 10 - 273.15 } | Where-Object { $_ -gt 5 -and $_ -lt 125 })
-                $stats.CpuTemp = if ($zones.Count) { [int]($zones | Measure-Object -Maximum).Maximum } else { -1 }
-            } catch { $stats.CpuTemp = -1 }
-        }
+        # Temperatures every 5th sample (Get-AkatiTemps, AkatiCenter.shared.ps1: the NVIDIA driver tool and the ACPI thermal zones)
+        if ($n % 5 -eq 0) { $t = Get-AkatiTemps; $stats.GpuTemp = $t.Gpu; $stats.CpuTemp = $t.Cpu }
         if ($n -eq 0) {
             try { $stats.Boot = (Get-CimInstance Win32_OperatingSystem).LastBootUpTime } catch { }
             try { $stats.Defender = if ((Get-MpComputerStatus -ErrorAction Stop).RealTimeProtectionEnabled) { 1 } else { 0 } } catch { $stats.Defender = 0 }
         }
         $stats.Seq++
 }
-$statsWork = "param(`$stats)`n`$sample = {$statsSample}`nwhile (`$stats.Run) { & `$sample `$stats; Start-Sleep -Milliseconds 1500 }"
+$statsWork = "param(`$stats)`nfunction Get-AkatiTemps {`n$((Get-Command Get-AkatiTemps).Definition)`n}`n`$sample = {$statsSample}`nwhile (`$stats.Run) { & `$sample `$stats; Start-Sleep -Milliseconds 1500 }"
 $statsPs = [PowerShell]::Create()
 [void]$statsPs.AddScript($statsWork).AddArgument($stats)
 

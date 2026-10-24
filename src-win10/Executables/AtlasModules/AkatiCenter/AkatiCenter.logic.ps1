@@ -26,8 +26,46 @@ function New-HueAccent([double]$hue) {
 
 # Ctrl+K: a word matches at the start of a word ("ram" finds "Free up RAM", not "frame"); Thai has no spaces
 function Test-SpotWord([string]$text, [string]$word) {
-    if ($word -match '[\u0E00-\u0E7F]') { return $text.Contains($word) }
+    # Thai: also with the spaces left out, so "เน็ต ช้า" and "เน็ตช้า" find each other
+    if ($word -match '[\u0E00-\u0E7F]') { return $text.Contains($word) -or $text.Replace(' ', '').Contains($word) }
     return $text -match ('(^|[^\p{L}\p{N}])' + [regex]::Escape($word))
+}
+function Test-SpotWords([string]$text, [string[]]$words) {
+    foreach ($w in $words) { if ($w -and !(Test-SpotWord $text $w)) { return $false } }
+    $true
+}
+# English typed with the Thai keyboard layout (Kedmanee) by mistake: "กืห" is "dns". Only the letter and number keys.
+$thaiKeys = 'ๆไำพะัีรนยบลฟหกดเ้่าสวผปแอิืทมใฝๅภถุึคตจ๐ฎฑธํ๊ณฯญฐฤฆฏโฌ็๋ษศซฉฮฺ์ฒฬฦ'
+$latinKeys = 'qwertyuiop[]asdfghjkl;zxcvbnm,./14567890qertyuiop[asdfghjkl;cvbn,./'
+function ConvertFrom-ThaiKeys([string]$text) {
+    $sb = New-Object System.Text.StringBuilder
+    foreach ($c in $text.ToCharArray()) {
+        $i = $thaiKeys.IndexOf($c)
+        [void]$sb.Append($(if ($i -ge 0) { $latinKeys[$i] } else { $c }))
+    }
+    $sb.ToString()
+}
+# Ctrl+K ranking of one item: 0 the title starts with the search, 1 every word is in the names, 2 in the names or the
+# description, 3 in the intent words ("slow internet", "เน็ตช้า"), 4 the search typed with the Thai keyboard layout
+# by mistake matches one of these. -1: no match. Words can be in any order.
+function Get-SpotRank([string]$query, [string]$title, [string]$name, [string]$desc, [string]$syn) {
+    $q = $query.Trim().ToLowerInvariant()
+    if (!$q) { return -1 }
+    foreach ($attempt in 0, 1) {
+        if ($attempt -eq 1) {
+            if ($q -notmatch '[\u0E00-\u0E7F]') { break }
+            $latin = ConvertFrom-ThaiKeys $q
+            if ($latin -eq $q) { break }
+            $q = $latin
+        }
+        $words = @($q -split '\s+' | Where-Object { $_ })
+        $rank = -1
+        if (Test-SpotWords $name $words) { $rank = if ($title.ToLowerInvariant().StartsWith($q)) { 0 } else { 1 } }
+        elseif (Test-SpotWords "$name $desc" $words) { $rank = 2 }
+        elseif ($syn -and (Test-SpotWords "$name $desc $syn".ToLowerInvariant() $words)) { $rank = 3 }
+        if ($rank -ge 0) { return $(if ($attempt -eq 1) { 4 } else { $rank }) }
+    }
+    -1
 }
 
 # Akati Score (0-100): Akati Doctor 40, startup apps 15, memory in use 15, ping 15, free space 15.
@@ -392,3 +430,111 @@ function Test-DotNetRuntimeName([string]$name, [int]$major) {
 $localSettings = 'History', 'GameTweaks', 'CenterAlive', 'WuBaseline', 'WuKeep', 'WuSeeded', 'WuCheckAt', 'MenuAction', 'MenuResult', 'MenuApps',
     'WindowX', 'WindowY', 'WidgetX', 'WidgetY', 'LastVersion', 'NotifiedVersion', 'BalanceLog'
 function Test-PortableSetting([string]$name) { $name -and $name -notlike 'PS*' -and $name -notin $localSettings }
+
+# ---------------------------------------------------------------------------------------------
+# Resizable BAR (Akati Doctor, Quick tools > This PC): the output of "nvidia-smi -q" -> on, off or unknown. The driver
+# says it directly on newer versions ("Resizable BAR : Enabled"); otherwise the BAR1 size tells: about the size of the
+# video memory when it is on, 256 MiB when it is off. Only the first graphics card. Anything else is unknown (never a guess).
+# ---------------------------------------------------------------------------------------------
+function Get-RebarState([string[]]$lines) {
+    $fb = 0; $bar = 0; $section = ''; $gpus = 0
+    foreach ($line in @($lines)) {
+        if ($line -match '^GPU [0-9A-Fa-f]{4,}:') { $gpus++; if ($gpus -gt 1) { break }; continue }
+        if ($line -match '^\s*Resizable BAR\s*:\s*(\w+)') {
+            if ($Matches[1] -in 'Enabled', 'Yes', 'On') { return 'on' }
+            if ($Matches[1] -in 'Disabled', 'No', 'Off') { return 'off' }
+            continue
+        }
+        if ($line -match '^\s*FB Memory Usage') { $section = 'fb'; continue }
+        if ($line -match '^\s*BAR1 Memory Usage') { $section = 'bar'; continue }
+        if ($line -match '^\s*Total\s*:\s*(\d+)\s*MiB') {
+            if ($section -eq 'fb' -and !$fb) { $fb = [int]$Matches[1] } elseif ($section -eq 'bar' -and !$bar) { $bar = [int]$Matches[1] }
+            $section = ''
+        }
+    }
+    if ($fb -le 0 -or $bar -le 0) { return 'unknown' }
+    if ($bar -ge $fb * 0.9) { return 'on' }
+    if ($bar -le 512) { return 'off' }
+    'unknown'
+}
+
+# ---------------------------------------------------------------------------------------------
+# Mouse test (Quick tools): the times of the mouse reports in ms -> reports per second. Counted in windows of 100 ms;
+# the windows with at least half as many reports as the busiest one count for the average, so a short pause or the
+# slow start and end of a movement do not lower it. Error: too few reports to say.
+# ---------------------------------------------------------------------------------------------
+function Get-MouseRate([double[]]$times) {
+    $t = @($times | Sort-Object)
+    if ($t.Count -lt 20) { return @{ Error = 'mouse.nodata' } }
+    $bins = @{}
+    foreach ($x in $t) { $b = [int][Math]::Floor(($x - $t[0]) / 100); $bins[$b] = [int]$bins[$b] + 1 }
+    $counts = @($bins.Values | Sort-Object -Descending)
+    $peak = $counts[0]
+    $busy = @($counts | Where-Object { $_ -ge $peak / 2 })
+    @{ Avg = [int][Math]::Round(($busy | Measure-Object -Average).Average * 10); Peak = [int]($peak * 10); Reports = $t.Count }
+}
+# The usual polling rate closest to a measured one: 125, 500, 1000 or 2000 (2000 Hz and more)
+function Get-MouseRateClass([int]$hz) {
+    if ($hz -lt 250) { return 125 }
+    if ($hz -lt 750) { return 500 }
+    if ($hz -lt 1600) { return 1000 }
+    2000
+}
+
+# ---------------------------------------------------------------------------------------------
+# Page file (Tweaks): the PagingFiles registry value as a setup. "?:\pagefile.sys": Windows manages it on all drives;
+# "C:\pagefile.sys" or "C:\pagefile.sys 0 0": Windows picks the size on C:; "C:\pagefile.sys 4096 8192": a custom size
+# in MB. No line: no page file.
+# ---------------------------------------------------------------------------------------------
+function ConvertFrom-PagingFiles([string[]]$lines) {
+    $files = @(); $auto = $false
+    foreach ($l in @($lines | Where-Object { $_ -and $_.Trim() })) {
+        if ($l -match '^\s*\?:\\') { $auto = $true; continue }
+        if ($l -match '^\s*([A-Za-z]):\\\S+(?:\s+(\d+)\s+(\d+))?\s*$') { $files += @{ Drive = $Matches[1].ToUpperInvariant() + ':'; Min = [int]$Matches[2]; Max = [int]$Matches[3] } }
+    }
+    @{ Auto = $auto; Files = $files }
+}
+function ConvertTo-PagingFiles($setup) {
+    if ($setup.Auto) { return , [string[]]@('?:\pagefile.sys') }
+    , [string[]]@(foreach ($f in @($setup.Files)) { '{0}\pagefile.sys {1} {2}' -f $f.Drive, [int]$f.Min, [int]$f.Max })
+}
+# A custom size in MB for the RAM of this PC: less RAM needs more page file. 16 GB RAM: 4096 to 8192 MB.
+function Get-PageFileSuggestion([double]$ramBytes) {
+    $gb = [Math]::Ceiling($ramBytes / 1GB - 0.25)
+    if ($gb -le 8) { return @{ Min = 8192; Max = 16384 } }
+    if ($gb -le 16) { return @{ Min = 4096; Max = 8192 } }
+    @{ Min = 2048; Max = 8192 }
+}
+# '' when a custom size is fine, else the key of the text that says why not. $freeMb: free space on the drive.
+function Test-PageFileSize([int]$min, [int]$max, [double]$freeMb = -1) {
+    if ($min -lt 1024) { return 'pf.err.small' }
+    if ($max -lt $min) { return 'pf.err.order' }
+    if ($max -gt 65536) { return 'pf.err.big' }
+    if ($freeMb -ge 0 -and $max -gt $freeMb - 1024) { return 'pf.err.space' }
+    ''
+}
+
+# ---------------------------------------------------------------------------------------------
+# Scheduled task helper (Tweaks): tasks that are never offered for a change, whatever the list says: Defender, TPM,
+# sign-in and security, Akati OS itself, and Windows Update while it installs ($updating)
+# ---------------------------------------------------------------------------------------------
+$protectedTaskPaths = '\Microsoft\Windows\Windows Defender\', '\Microsoft\Windows\Defender\', '\Microsoft\Windows\TPM\', '\Microsoft\Windows\HelloFace\',
+    '\Microsoft\Windows\BitLocker\', '\Microsoft\Windows\CertificateServicesClient\', '\Microsoft\Windows\ExploitGuard\', '\Microsoft\Windows\AppID\',
+    '\Microsoft\Windows\Management\Provisioning\', '\Microsoft\Windows\User Profile Service\', '\Microsoft\Windows\WaaSMedic\', '\Microsoft\Windows\Ngc\',
+    '\Microsoft\Windows\Plug and Play\', '\Microsoft\Windows\SettingSync\', '\Microsoft\Windows\Shell\CreateObjectTask', '\Microsoft\Windows\Windows Activation Technologies\',
+    '\Microsoft\Windows\SoftwareProtectionPlatform\', '\Microsoft\Windows\Subscription\', '\Microsoft\Windows\EnterpriseMgmt\', '\Microsoft\Windows\Device Guard\',
+    '\Microsoft\Windows\Security\', '\Microsoft\Windows\SecureBoot\', '\AkatiOS\'
+function Test-TaskProtected([string]$path, [bool]$updating) {
+    foreach ($p in $protectedTaskPaths) { if ($path.StartsWith($p, [StringComparison]::OrdinalIgnoreCase)) { return $true } }
+    $updating -and ($path -like '\Microsoft\Windows\UpdateOrchestrator\*' -or $path -like '\Microsoft\Windows\WindowsUpdate\*')
+}
+function Test-TaskChangeable([string]$path, [string]$level, [bool]$updating) {
+    if (Test-TaskProtected $path $updating) { return $false }
+    $level -in 'safe', 'careful'
+}
+# The entry of the list for a task path: exact, or a name pattern with * (Edge and Google updaters, NVIDIA reporters)
+function Find-TaskEntry($list, [string]$path) {
+    if ($list.Contains($path)) { return $list[$path] }
+    foreach ($k in $list.Keys) { if ($k.Contains('*') -and $path -like $k) { return $list[$k] } }
+    $null
+}

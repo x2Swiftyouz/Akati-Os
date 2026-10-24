@@ -214,5 +214,70 @@ Check 'setting portable' (Test-PortableSetting 'Accent') 'True'
 Check 'setting local' (Test-PortableSetting 'WindowX') 'False'
 Check 'setting history' (Test-PortableSetting 'History') 'False'
 
+# Ctrl+K: Thai spacing, intent words, word order and the Thai keyboard layout
+Check 'spot Thai spacing' (Test-SpotWord 'เน็ต ช้า ปิงสูง' 'เน็ตช้า') $true
+Check 'spot rank title' (Get-SpotRank 'dns' 'DNS server' 'dns server' 'faster lookups' '') 0
+Check 'spot rank name' (Get-SpotRank 'server dns' 'DNS server' 'dns server' '' '') 1
+Check 'spot rank desc' (Get-SpotRank 'lookups' 'DNS server' 'dns server' 'faster lookups' '') 2
+Check 'spot rank intent' (Get-SpotRank 'เน็ตช้า' 'DNS server' 'dns server' '' 'slow internet เน็ตช้า ปิงสูง แลค') 3
+Check 'spot rank intent spaced' (Get-SpotRank 'เน็ต ช้า' 'DNS server' 'dns server' '' 'เน็ตช้า ปิงสูง') 3
+Check 'spot rank intent any order' (Get-SpotRank 'internet slow' 'Speed test' 'speed test' '' 'slow internet high ping') 3
+Check 'spot rank none' (Get-SpotRank 'printer' 'DNS server' 'dns server' '' 'slow internet') -1
+Check 'thai keys dns' (ConvertFrom-ThaiKeys 'กืห') 'dns'
+Check 'spot rank thai layout' (Get-SpotRank 'กืห' 'DNS server' 'dns server' '' '') 4
+Check 'spot rank thai word not layout' (Get-SpotRank 'ล้าง' 'ล้าง RAM' 'ล้าง ram free up ram' '' '') 0
+Check 'spot rank empty' (Get-SpotRank '  ' 'DNS' 'dns' '' '') -1
+
+# Resizable BAR from nvidia-smi -q
+$smiOn = @('Attached GPUs : 1', 'GPU 00000000:01:00.0', '    FB Memory Usage', '        Total                             : 12282 MiB', '        Used : 900 MiB',
+           '    BAR1 Memory Usage', '        Total                             : 16384 MiB', '        Used : 3 MiB')
+Check 'rebar on by size' (Get-RebarState $smiOn) 'on'
+$smiOff = @('GPU 00000000:01:00.0', '    FB Memory Usage', '        Total : 8188 MiB', '    BAR1 Memory Usage', '        Total : 256 MiB')
+Check 'rebar off by size' (Get-RebarState $smiOff) 'off'
+Check 'rebar direct' (Get-RebarState @('GPU 00000000:01:00.0', '    Resizable BAR                     : Disabled', '    BAR1 Memory Usage', '        Total : 16384 MiB')) 'off'
+Check 'rebar in between' (Get-RebarState @('GPU 00000000:01:00.0', '    FB Memory Usage', '        Total : 8188 MiB', '    BAR1 Memory Usage', '        Total : 2048 MiB')) 'unknown'
+Check 'rebar nothing' (Get-RebarState @('NVIDIA-SMI has failed')) 'unknown'
+Check 'rebar first gpu only' (Get-RebarState ($smiOff + @('GPU 00000000:02:00.0', '    Resizable BAR : Enabled'))) 'off'
+
+# Mouse test: 1000 Hz for 5 s, 125 Hz, a pause in the middle, too few reports
+Check 'mouse 1000' (Get-MouseRate @(0..4999 | ForEach-Object { [double]$_ })).Avg 1000
+Check 'mouse 1000 peak' (Get-MouseRate @(0..4999 | ForEach-Object { [double]$_ })).Peak 1000
+$m125 = Get-MouseRate @(0..624 | ForEach-Object { $_ * 8.0 })
+Check 'mouse 125 class' (Get-MouseRateClass $m125.Avg) 125
+Check 'mouse pause' (Get-MouseRate (@(0..1999 | ForEach-Object { [double]$_ }) + @(3000..4999 | ForEach-Object { [double]$_ }))).Avg 1000
+Check 'mouse slow edges' (Get-MouseRate (@(0..49 | ForEach-Object { $_ * 4.0 }) + @(200..4999 | ForEach-Object { [double]$_ }))).Avg 1000
+Check 'mouse too few' (Get-MouseRate @(1, 2, 3)).Error 'mouse.nodata'
+Check 'mouse class 500' (Get-MouseRateClass 480) 500
+Check 'mouse class 1000' (Get-MouseRateClass 990) 1000
+Check 'mouse class 2000' (Get-MouseRateClass 3900) 2000
+
+# Page file
+$pf = ConvertFrom-PagingFiles @('C:\pagefile.sys 4096 8192')
+Check 'pagefile custom' ('{0}{1}-{2}{3}' -f $pf.Files[0].Drive, $pf.Files[0].Min, $pf.Files[0].Max, $pf.Auto) 'C:4096-8192False'
+Check 'pagefile auto' (ConvertFrom-PagingFiles @('?:\pagefile.sys')).Auto 'True'
+Check 'pagefile system managed' (ConvertFrom-PagingFiles @('d:\pagefile.sys')).Files[0].Max 0
+Check 'pagefile none' @((ConvertFrom-PagingFiles @('')).Files).Count 0
+Check 'pagefile back' ((ConvertTo-PagingFiles @{ Auto = $false; Files = @(@{ Drive = 'D:'; Min = 0; Max = 0 }) }) -join ';') 'D:\pagefile.sys 0 0'
+Check 'pagefile back auto' ((ConvertTo-PagingFiles @{ Auto = $true; Files = @() }) -join ';') '?:\pagefile.sys'
+Check 'pagefile suggestion 16 GB' ('{0}-{1}' -f (Get-PageFileSuggestion (15.9GB)).Min, (Get-PageFileSuggestion (15.9GB)).Max) '4096-8192'
+Check 'pagefile suggestion 8 GB' (Get-PageFileSuggestion (7.9GB)).Min 8192
+Check 'pagefile suggestion 32 GB' (Get-PageFileSuggestion (31.9GB)).Min 2048
+Check 'pagefile size ok' (Test-PageFileSize 4096 8192 50000) ''
+Check 'pagefile size small' (Test-PageFileSize 200 8192) 'pf.err.small'
+Check 'pagefile size order' (Test-PageFileSize 8192 4096) 'pf.err.order'
+Check 'pagefile size space' (Test-PageFileSize 4096 8192 6000) 'pf.err.space'
+
+# Scheduled task helper
+Check 'task defender' (Test-TaskChangeable '\Microsoft\Windows\Windows Defender\Windows Defender Scheduled Scan' 'safe' $false) 'False'
+Check 'task tpm' (Test-TaskProtected '\Microsoft\Windows\TPM\Tpm-Maintenance' $false) 'True'
+Check 'task orchestrator updating' (Test-TaskChangeable '\Microsoft\Windows\UpdateOrchestrator\Schedule Scan' 'careful' $true) 'False'
+Check 'task orchestrator idle' (Test-TaskProtected '\Microsoft\Windows\UpdateOrchestrator\Schedule Scan' $false) 'False'
+Check 'task safe' (Test-TaskChangeable '\Microsoft\Windows\Maps\MapsUpdateTask' 'safe' $false) 'True'
+Check 'task keep' (Test-TaskChangeable '\Microsoft\Windows\Defrag\ScheduledDefrag' 'keep' $false) 'False'
+$tl = [ordered]@{ '\Microsoft\Windows\Maps\MapsUpdateTask' = @('safe', 'maps'); '\MicrosoftEdgeUpdateTaskMachineCore*' = @('careful', 'edgeupdate') }
+Check 'task entry exact' (Find-TaskEntry $tl '\Microsoft\Windows\Maps\MapsUpdateTask')[1] 'maps'
+Check 'task entry pattern' (Find-TaskEntry $tl '\MicrosoftEdgeUpdateTaskMachineCore{1A2B3C}')[1] 'edgeupdate'
+Check 'task entry none' ($null -eq (Find-TaskEntry $tl '\Vendor\Updater')) 'True'
+
 Write-Host "$script:count checks, $script:failed failed"
 if ($script:failed) { exit 1 }

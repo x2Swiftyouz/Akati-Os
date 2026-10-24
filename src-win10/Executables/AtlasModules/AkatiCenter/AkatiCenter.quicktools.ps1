@@ -28,6 +28,7 @@ $quickTools = @(
     @{ Key = 'display';   Glyph = [char]0xE7F8; File = 'ms-settings:display';              Words = 'display screen resolution scale' }
     @{ Key = 'startup';   Glyph = [char]0xE7E8; File = 'ms-settings:startupapps';          Words = 'startup apps' }
     @{ Key = 'freeram';   Glyph = [char]0xE964; Action = 'freeram';                        Words = 'ram memory standby' }
+    @{ Key = 'mousetest'; Glyph = [char]0xE962; Action = 'mousetest'; Run = 'WM_INPUT';     Words = 'mouse polling rate report rate hz'; Intents = @('mouse') }
 )
 
 # Runs one tool and writes it to the activity log. Programs start on their own; Flush DNS runs in the background
@@ -48,6 +49,7 @@ function Invoke-QuickTool($qt) {
             } $name
             return
         }
+        if ($qt.Action -eq 'mousetest') { Show-MouseTest; return }
         if ($qt.Action -eq 'freeram') { Invoke-FreeRam; Add-Log 'ToolsLog' ('{0}: {1}' -f $name, $ui.StatusText.Text); return }
         if ($qt.Arguments) { Start-Process -FilePath $qt.File -ArgumentList $qt.Arguments } else { Start-Process -FilePath $qt.File }
         Add-Log 'ToolsLog' ((T 'qt.opened') -f $name, $(if ($qt.Arguments) { "$($qt.File) $($qt.Arguments)" } else { $qt.File }))
@@ -74,7 +76,7 @@ function Initialize-QuickTools {
         $title = New-Text (T "qt.$($qt.Key)") 13 'SemiBold' "t:qt.$($qt.Key)"; $title.TextWrapping = 'NoWrap'; $title.TextTrimming = 'CharacterEllipsis'
         $sub = New-Text (T "qt.$($qt.Key).d") 12 'Normal' "t:qt.$($qt.Key).d"; $sub.Style = $window.FindResource('Muted'); $sub.Margin = '0,2,0,0'
         # What runs, in the small monospace font
-        $run = if ($qt.Command) { $qt.Command } elseif ($qt.Arguments) { $qt.Arguments } elseif ($qt.File) { $qt.File } else { 'PurgeStandbyList' }
+        $run = if ($qt.Command) { $qt.Command } elseif ($qt.Arguments) { $qt.Arguments } elseif ($qt.File) { $qt.File } elseif ($qt.Run) { $qt.Run } else { 'PurgeStandbyList' }
         $cmd = New-Text $run 11; $cmd.Style = $window.FindResource('MonoText'); $cmd.Margin = '0,5,0,0'; $cmd.Opacity = 0.85
         [void]$text.Children.Add($title); [void]$text.Children.Add($sub); [void]$text.Children.Add($cmd)
         [void]$dock.Children.Add($box); [void]$dock.Children.Add($text)

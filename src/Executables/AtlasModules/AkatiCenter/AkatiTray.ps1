@@ -127,6 +127,7 @@ $texts = @{
         tipKeys = 'Ctrl+Alt+B Game boost · Ctrl+Alt+R Free up RAM'
         update = 'Akati OS {0} is available'; updateTip = 'Click to see what is new and how to update.'
         wuBack = 'Windows Update turned some things back on ({0})'; wuBackTip = 'Click to see the list in Akati OS Center and turn them off again.'
+        tempHot = 'Your PC is running hot: {0}'; tempHotTip = 'It stayed at or above your limit while gaming. Check the fans and the airflow, and clean out dust. Click to change the limits.'
     }
     th = @{
         tip = 'Akati OS · CPU {0}% · RAM {1}%'; open = 'เปิด Akati OS Center'; freeram = 'ล้าง RAM'; apps = 'แอปของฉัน'
@@ -137,6 +138,7 @@ $texts = @{
         tipKeys = 'Ctrl+Alt+B บูสต์เกม · Ctrl+Alt+R ล้าง RAM'
         update = 'Akati OS {0} ออกแล้ว'; updateTip = 'คลิกเพื่อดูว่ามีอะไรใหม่และวิธีอัปเดต'
         wuBack = 'Windows Update เปิดบางอย่างกลับมา ({0})'; wuBackTip = 'คลิกเพื่อดูรายการใน Akati OS Center และปิดอีกครั้ง'
+        tempHot = 'เครื่องร้อนเกินไป: {0}'; tempHotTip = 'อุณหภูมิสูงถึงหรือเกินค่าที่ตั้งไว้ตอนเล่นเกม ลองเช็กพัดลม การระบายอากาศ และทำความสะอาดฝุ่น คลิกเพื่อเปลี่ยนค่า'
     }
     vi = @{
         tip = 'Akati OS · CPU {0}% · RAM {1}%'; open = 'Mở Akati OS Center'; freeram = 'Giải phóng RAM'; apps = 'Ứng dụng của tôi'
@@ -147,6 +149,7 @@ $texts = @{
         tipKeys = 'Ctrl+Alt+B Tăng tốc game · Ctrl+Alt+R Giải phóng RAM'
         update = 'Đã có Akati OS {0}'; updateTip = 'Nhấn để xem có gì mới và cách cập nhật.'
         wuBack = 'Windows Update đã bật lại một số thứ ({0})'; wuBackTip = 'Nhấn để xem danh sách trong Akati OS Center và tắt lại.'
+        tempHot = 'PC của bạn đang quá nóng: {0}'; tempHotTip = 'Nhiệt độ bằng hoặc vượt giới hạn của bạn khi chơi game. Hãy kiểm tra quạt, luồng gió và vệ sinh bụi. Nhấn để đổi giới hạn.'
     }
     id = @{
         tip = 'Akati OS · CPU {0}% · RAM {1}%'; open = 'Buka Akati OS Center'; freeram = 'Kosongkan RAM'; apps = 'Aplikasi saya'
@@ -157,6 +160,7 @@ $texts = @{
         tipKeys = 'Ctrl+Alt+B Game Boost · Ctrl+Alt+R Kosongkan RAM'
         update = 'Akati OS {0} sudah tersedia'; updateTip = 'Klik untuk melihat yang baru dan cara memperbarui.'
         wuBack = 'Windows Update menyalakan kembali beberapa hal ({0})'; wuBackTip = 'Klik untuk melihat daftarnya di Akati OS Center dan mematikannya lagi.'
+        tempHot = 'PC kamu terlalu panas: {0}'; tempHotTip = 'Suhunya mencapai atau melewati batasmu saat bermain. Periksa kipas dan aliran udara, dan bersihkan debu. Klik untuk mengubah batas.'
     }
 }
 function T([string]$key) { $l = (Get-ItemProperty -Path $userKey -Name Language -ErrorAction SilentlyContinue).Language; if (!$texts.ContainsKey([string]$l)) { $l = 'en' }; $texts[$l][$key] }
